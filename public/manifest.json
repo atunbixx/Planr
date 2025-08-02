@@ -1,0 +1,121 @@
+{
+  "name": "Wedding Planner - Plan Your Perfect Day",
+  "short_name": "Wedding Planner",
+  "description": "A comprehensive wedding planning app to help you organize your special day. Manage guests, vendors, budget, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#8B5CF6",
+  "scope": "/",
+  "id": "wedding-planner-v2",
+  "categories": ["lifestyle", "productivity", "events"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96x96.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128x128.svg",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144x144.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384x384.svg",
+      "sizes": "384x384",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192-maskable.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512x512-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Wedding Dashboard"
+    },
+    {
+      "src": "/screenshots/guests.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Guest Management"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "label": "Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Guest List",
+      "short_name": "Guests",
+      "description": "Manage your wedding guests",
+      "url": "/dashboard/guests",
+      "icons": [{ "src": "/icons/guests-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Budget Tracker",
+      "short_name": "Budget",
+      "description": "Track wedding expenses",
+      "url": "/dashboard/budget",
+      "icons": [{ "src": "/icons/budget-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "RSVP",
+      "short_name": "RSVP",
+      "description": "View RSVP responses",
+      "url": "/dashboard/rsvp",
+      "icons": [{ "src": "/icons/rsvp-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    }
+  ],
+  "prefer_related_applications": false,
+  "lang": "en-US",
+  "dir": "ltr"
+}

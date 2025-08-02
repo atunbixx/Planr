@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        .status { padding: 1rem; margin: 1rem 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Server Diagnostic Page</h1>
+    
+    <div class="status success">
+        <h2>✅ Basic Connectivity Test</h2>
+        <p>If you can see this page, your browser can load HTML files.</p>
+        <p>Time: <span id="time"></span></p>
+    </div>
+
+    <div class="status">
+        <h2>🌐 Network Information</h2>
+        <p>User Agent: <span id="userAgent"></span></p>
+        <p>Location: <span id="location"></span></p>
+        <p>Online Status: <span id="online"></span></p>
+    </div>
+
+    <div class="status">
+        <h2>🔗 Quick Tests</h2>
+        <button onclick="testLocalhost()">Test localhost:3000</button>
+        <button onclick="testLocalhost3001()">Test localhost:3001</button>
+        <button onclick="testIP()">Test 192.168.100.231:3001</button>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // Display current time
+        document.getElementById('time').textContent = new Date().toISOString();
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('location').textContent = window.location.href;
+        document.getElementById('online').textContent = navigator.onLine ? 'Online' : 'Offline';
+
+        function testURL(url, name) {
+            const results = document.getElementById('testResults');
+            results.innerHTML += `<p>Testing ${name}...</p>`;
+            
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        results.innerHTML += `<p class="success">✅ ${name} - SUCCESS (${response.status})</p>`;
+                    } else {
+                        results.innerHTML += `<p class="error">❌ ${name} - FAILED (${response.status})</p>`;
+                    }
+                })
+                .catch(error => {
+                    results.innerHTML += `<p class="error">❌ ${name} - ERROR: ${error.message}</p>`;
+                });
+        }
+
+        function testLocalhost() {
+            testURL('http://localhost:3000', 'localhost:3000');
+        }
+
+        function testLocalhost3001() {
+            testURL('http://localhost:3001', 'localhost:3001');
+        }
+
+        function testIP() {
+            testURL('http://192.168.100.231:3001', '192.168.100.231:3001');
+        }
+
+        // Auto-test on load
+        setTimeout(() => {
+            testLocalhost();
+            testLocalhost3001();
+            testIP();
+        }, 1000);
+    </script>
+</body>
+</html>

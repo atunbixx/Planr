@@ -1,0 +1,10 @@
+{
+  "default": [
+    {
+      "key": "auth_optimization_analysis",
+      "value": "Identified issues: 1) Redirect loops between /onboarding and /auth/signin with redirectTo param, 2) Fast Refresh full reloads causing excessive recompilation (762-900 modules), 3) AuthContext re-initializing multiple times causing auth state inconsistency, 4) Bundle jumping between 292 and 762 modules indicates code-splitting issues",
+      "namespace": "default",
+      "timestamp": 1754011927849
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <rect width="16" height="16" fill="#8B5CF6"/>
+  <rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1.2800000000000002" fill="white" opacity="0.9"/>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="4.8px" font-weight="bold" fill="#8B5CF6">WP</text>
+</svg>

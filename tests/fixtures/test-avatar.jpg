@@ -1,0 +1,14 @@
+// Binary file placeholder for test avatar image
+// In a real scenario, this would be an actual JPEG file
+// For testing purposes, we can use a small base64 encoded image
+
+const fs = require('fs');
+const path = require('path');
+
+// Create a 1x1 pixel transparent JPEG
+const base64Image = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k=';
+
+const buffer = Buffer.from(base64Image, 'base64');
+fs.writeFileSync(path.join(__dirname, 'test-avatar.jpg'), buffer);
+
+console.log('Test avatar image created successfully');

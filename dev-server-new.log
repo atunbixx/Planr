@@ -1,0 +1,853 @@
+
+> wedding-planner-v2@0.1.0 dev
+> next dev --port 4002
+
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:4002
+   - Network:      http://192.168.100.231:4002
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 1672ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 552ms (227 modules)
+ ○ Compiling /auth/signin ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (108kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled /auth/signin in 3s (1074 modules)
+ GET /auth/signin 200 in 3242ms
+ GET /auth/signin 200 in 35ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1288ms (1131 modules)
+ GET /favicon.ico 200 in 1519ms
+ GET / 200 in 1525ms
+ GET /_next/static/css/app/globals.css 404 in 1507ms
+ GET /auth/signin 200 in 108ms
+ GET /auth/signin 200 in 108ms
+ ✓ Compiled /dashboard in 398ms (1148 modules)
+ GET /dashboard 200 in 489ms
+ GET /dashboard 200 in 31ms
+ GET /auth/signin 200 in 51ms
+ GET /auth/signin 200 in 19ms
+ ✓ Compiled in 293ms (449 modules)
+ GET /auth/signin 200 in 37ms
+ ✓ Compiled in 138ms (449 modules)
+ ✓ Compiled in 132ms (449 modules)
+ ✓ Compiled in 124ms (449 modules)
+ ✓ Compiled in 123ms (449 modules)
+ ✓ Compiled in 117ms (449 modules)
+ ✓ Compiled in 120ms (449 modules)
+ ✓ Compiled in 116ms (449 modules)
+ ✓ Compiled in 128ms (449 modules)
+ ✓ Compiled in 124ms (449 modules)
+ ✓ Compiled in 128ms (449 modules)
+ ✓ Compiled in 119ms (449 modules)
+ ✓ Compiled in 111ms (449 modules)
+ ✓ Compiled in 115ms (449 modules)
+ ✓ Compiled in 142ms (449 modules)
+ ✓ Compiled in 149ms (449 modules)
+ ✓ Compiled in 192ms (449 modules)
+ ✓ Compiled in 130ms (449 modules)
+ ✓ Compiled in 120ms (449 modules)
+ ✓ Compiled in 121ms (449 modules)
+ ✓ Compiled in 125ms (449 modules)
+ ✓ Compiled in 112ms (449 modules)
+ ✓ Compiled in 118ms (449 modules)
+ ✓ Compiled in 118ms (449 modules)
+ ✓ Compiled in 115ms (449 modules)
+ ✓ Compiled in 141ms (449 modules)
+ ✓ Compiled in 133ms (449 modules)
+ ✓ Compiled in 242ms (449 modules)
+ ✓ Compiled in 179ms (449 modules)
+ ✓ Compiled in 121ms (449 modules)
+ ✓ Compiled in 163ms (449 modules)
+ ✓ Compiled in 337ms (449 modules)
+ ✓ Compiled in 167ms (449 modules)
+ ✓ Compiled in 117ms (449 modules)
+ ✓ Compiled in 137ms (449 modules)
+ ✓ Compiled in 150ms (449 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 748ms (1098 modules)
+ GET /auth/signin 200 in 459ms
+ ✓ Compiled in 369ms (449 modules)
+ ✓ Compiled in 173ms (449 modules)
+ ⨯ ./src/app/dashboard/layout.tsx
+Error:   [31mx[0m Unexpected eof
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/layout.tsx[0m:418:1]
+ [2m415[0m |       </div>
+ [2m416[0m |     </div>
+ [2m417[0m |   )
+ [2m418[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/dashboard/layout.tsx
+ ⨯ ./src/app/dashboard/layout.tsx
+Error:   [31mx[0m Unexpected eof
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/layout.tsx[0m:418:1]
+ [2m415[0m |       </div>
+ [2m416[0m |     </div>
+ [2m417[0m |   )
+ [2m418[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/dashboard/layout.tsx
+ ✓ Compiled in 341ms (449 modules)
+ ✓ Compiled in 118ms (449 modules)
+ ✓ Compiled in 1095ms (1098 modules)
+ ✓ Compiled in 150ms (449 modules)
+ ✓ Compiled in 202ms (449 modules)
+ ✓ Compiled in 214ms (449 modules)
+ ✓ Compiled in 165ms (449 modules)
+ ✓ Compiled in 195ms (449 modules)
+ ✓ Compiled in 145ms (449 modules)
+ ✓ Compiled in 573ms (449 modules)
+ ✓ Compiled in 157ms (449 modules)
+ ✓ Compiled in 223ms (449 modules)
+ ✓ Compiled in 161ms (449 modules)
+ ✓ Compiled in 286ms (1311 modules)
+ ✓ Compiled in 392ms (449 modules)
+ ✓ Compiled in 186ms (449 modules)
+ ✓ Compiled in 151ms (449 modules)
+ ✓ Compiled in 130ms (449 modules)
+ ✓ Compiled in 153ms (449 modules)
+ ✓ Compiled in 322ms (449 modules)
+ ✓ Compiled in 142ms (449 modules)
+ ✓ Compiled /dashboard in 318ms (660 modules)
+ GET /dashboard 200 in 418ms
+ ✓ Compiled in 269ms (449 modules)
+ ✓ Compiled in 322ms (449 modules)
+ ✓ Compiled in 117ms (449 modules)
+ ✓ Compiled in 117ms (449 modules)
+ ✓ Compiled in 189ms (449 modules)
+ ✓ Compiled in 211ms (449 modules)
+ ✓ Compiled in 192ms (449 modules)
+ ✓ Compiled /auth-debug in 265ms (1091 modules)
+ GET /auth-debug 200 in 461ms
+ ✓ Compiled in 274ms (451 modules)
+ ✓ Compiled in 229ms (451 modules)
+ ✓ Compiled /dashboard in 92ms (665 modules)
+ GET /dashboard 200 in 276ms
+ ✓ Compiled in 164ms (451 modules)
+ ✓ Compiled in 185ms (451 modules)
+ ✓ Compiled in 121ms (451 modules)
+ ✓ Compiled in 895ms (1100 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 200 in 835ms
+ ✓ Compiled in 831ms (451 modules)
+ ✓ Compiled in 587ms (1100 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 200 in 200ms
+ ✓ Compiled in 227ms (451 modules)
+ ✓ Compiled in 437ms (1100 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 200 in 221ms
+ ✓ Compiled in 204ms (451 modules)
+ ✓ Compiled in 166ms (451 modules)
+ ✓ Compiled /dashboard in 237ms (660 modules)
+ GET /dashboard 200 in 463ms
+ ✓ Compiled in 200ms (451 modules)
+ ✓ Compiled in 145ms (451 modules)
+ ✓ Compiled in 204ms (451 modules)
+ GET /dashboard 200 in 97ms
+ GET /auth/signin 200 in 24ms
+ ✓ Compiled in 161ms (451 modules)
+ ✓ Compiled in 645ms (1111 modules)
+ ✓ Compiled in 193ms (451 modules)
+ ✓ Compiled in 185ms (451 modules)
+🏠 Dashboard Layout State: {
+  loading: true,
+  user: false,
+  couple: false,
+  isDemoMode: false,
+  pathname: '/dashboard'
+}
+ GET /dashboard 200 in 167ms
+ ✓ Compiled in 115ms (451 modules)
+ ✓ Compiled in 545ms (1111 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 200 in 197ms
+ GET /auth/signin 200 in 34ms
+ ✓ Compiled in 179ms (451 modules)
+ ✓ Compiled in 187ms (451 modules)
+🏠 Dashboard Layout State: {
+  loading: true,
+  user: false,
+  couple: false,
+  isDemoMode: false,
+  pathname: '/dashboard'
+}
+ GET /dashboard 200 in 48ms
+ ✓ Compiled in 140ms (451 modules)
+ ✓ Compiled in 699ms (1111 modules)
+ ✓ Compiled in 166ms (451 modules)
+ ✓ Compiled in 149ms (451 modules)
+🏠 Dashboard Layout State: {
+  loading: true,
+  user: false,
+  couple: false,
+  isDemoMode: false,
+  isLocalhost: false,
+  pathname: '/dashboard'
+}
+ GET /dashboard 200 in 214ms
+ ✓ Compiled in 144ms (451 modules)
+ ✓ Compiled in 440ms (1111 modules)
+ ✓ Compiled in 159ms (451 modules)
+ ✓ Compiled in 297ms (1111 modules)
+ ✓ Compiled in 145ms (451 modules)
+ ✓ Compiled in 172ms (451 modules)
+🏠 Dashboard Layout State: {
+  loading: false,
+  user: true,
+  couple: true,
+  isDemoMode: false,
+  isDevelopment: true,
+  pathname: '/dashboard'
+}
+ GET /dashboard 200 in 231ms
+ ✓ Compiled in 118ms (451 modules)
+ ✓ Compiled in 221ms (451 modules)
+ ○ Compiling /dashboard/calendar ...
+ ✓ Compiled /dashboard/calendar in 2s (1868 modules)
+ GET /dashboard/calendar 200 in 2213ms
+ GET /dashboard/calendar 200 in 88ms
+ ○ Compiling /dashboard/photos ...
+ ✓ Compiled /dashboard/photos in 1451ms (2010 modules)
+ GET /dashboard/photos 200 in 1637ms
+ GET /dashboard/photos 200 in 50ms
+ GET /dashboard 200 in 43ms
+ ○ Compiling /dashboard/vendors ...
+ ✓ Compiled /dashboard/vendors in 552ms (2019 modules)
+ GET /dashboard/vendors 200 in 654ms
+ ○ Compiling /dashboard/messages ...
+ ⨯ ./node_modules/@emoji-mart/react/dist/module.js:2:1
+Module not found: Can't resolve 'emoji-mart'
+  1 | import $dvPge$react, {useRef as $dvPge$useRef, useEffect as $dvPge$useEffect} from "react";
+> 2 | import {Picker as $dvPge$Picker} from "emoji-mart";
+    | ^
+  3 |
+  4 |
+  5 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/messages/MessageInput.tsx
+./src/components/messages/MessageThread.tsx
+./src/app/dashboard/messages/page.tsx
+ ⨯ ./node_modules/@emoji-mart/react/dist/module.js:2:1
+Module not found: Can't resolve 'emoji-mart'
+  1 | import $dvPge$react, {useRef as $dvPge$useRef, useEffect as $dvPge$useEffect} from "react";
+> 2 | import {Picker as $dvPge$Picker} from "emoji-mart";
+    | ^
+  3 |
+  4 |
+  5 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/messages/MessageInput.tsx
+./src/components/messages/MessageThread.tsx
+./src/app/dashboard/messages/page.tsx
+ ⨯ ./node_modules/@emoji-mart/react/dist/module.js:2:1
+Module not found: Can't resolve 'emoji-mart'
+  1 | import $dvPge$react, {useRef as $dvPge$useRef, useEffect as $dvPge$useEffect} from "react";
+> 2 | import {Picker as $dvPge$Picker} from "emoji-mart";
+    | ^
+  3 |
+  4 |
+  5 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/messages/MessageInput.tsx
+./src/components/messages/MessageThread.tsx
+./src/app/dashboard/messages/page.tsx
+ GET /dashboard/messages 500 in 5392ms
+ GET /dashboard/messages 500 in 212ms
+ GET /dashboard/messages 500 in 54ms
+ GET /dashboard/messages 500 in 49ms
+ ⨯ ./node_modules/@emoji-mart/react/dist/module.js:2:1
+Module not found: Can't resolve 'emoji-mart'
+  1 | import $dvPge$react, {useRef as $dvPge$useRef, useEffect as $dvPge$useEffect} from "react";
+> 2 | import {Picker as $dvPge$Picker} from "emoji-mart";
+    | ^
+  3 |
+  4 |
+  5 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/messages/MessageInput.tsx
+./src/components/messages/MessageThread.tsx
+./src/app/dashboard/messages/page.tsx
+ ⨯ ./node_modules/@emoji-mart/react/dist/module.js:2:1
+Module not found: Can't resolve 'emoji-mart'
+  1 | import $dvPge$react, {useRef as $dvPge$useRef, useEffect as $dvPge$useEffect} from "react";
+> 2 | import {Picker as $dvPge$Picker} from "emoji-mart";
+    | ^
+  3 |
+  4 |
+  5 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/messages/MessageInput.tsx
+./src/components/messages/MessageThread.tsx
+./src/app/dashboard/messages/page.tsx
+ ⨯ ./node_modules/@emoji-mart/react/dist/module.js:2:1
+Module not found: Can't resolve 'emoji-mart'
+  1 | import $dvPge$react, {useRef as $dvPge$useRef, useEffect as $dvPge$useEffect} from "react";
+> 2 | import {Picker as $dvPge$Picker} from "emoji-mart";
+    | ^
+  3 |
+  4 |
+  5 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/messages/MessageInput.tsx
+./src/components/messages/MessageThread.tsx
+./src/app/dashboard/messages/page.tsx
+ ✓ Compiled /favicon.ico in 1544ms (2013 modules)
+ ○ Compiling /dashboard/messages ...
+ ✓ Compiled /dashboard/messages in 2s (2186 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+🏠 Dashboard Layout State: {
+  loading: false,
+  user: true,
+  couple: true,
+  isDemoMode: false,
+  isDevelopment: true,
+  pathname: '/dashboard/messages'
+}
+ GET /_next/static/webpack/1fae982a4fcaed25.webpack.hot-update.json 404 in 2628ms
+ GET /dashboard/messages 200 in 2581ms
+🏠 Dashboard Layout State: {
+  loading: false,
+  user: true,
+  couple: true,
+  isDemoMode: false,
+  isDevelopment: true,
+  pathname: '/dashboard/messages'
+}
+ GET /dashboard/messages 200 in 58ms
+🏠 Dashboard Layout State: {
+  loading: false,
+  user: true,
+  couple: true,
+  isDemoMode: false,
+  isDevelopment: true,
+  pathname: '/dashboard/messages'
+}
+ GET /dashboard/messages 200 in 54ms
+ GET /auth/signin 200 in 25ms
+ ✓ Compiled in 715ms (2186 modules)
+ ✓ Compiled in 378ms (1174 modules)
+ ✓ Compiled in 843ms (2013 modules)
+ ✓ Compiled in 192ms (1170 modules)
+ ✓ Compiled in 224ms (1170 modules)
+ ✓ Compiled in 312ms (1170 modules)
+ ✓ Compiled /dashboard/messages in 177ms (1011 modules)
+🏠 Dashboard Layout State: {
+  loading: false,
+  user: true,
+  couple: true,
+  isDemoMode: false,
+  isDevelopment: true,
+  pathname: '/dashboard/messages'
+}
+ GET /dashboard/messages 200 in 426ms
+ ✓ Compiled in 186ms (1170 modules)
+ ✓ Compiled in 483ms (1170 modules)
+ ✓ Compiled in 307ms (1170 modules)
+ ✓ Compiled in 487ms (1397 modules)
+ ✓ Compiled in 186ms (1170 modules)
+ ✓ Compiled in 1401ms (2013 modules)
+ ✓ Compiled in 185ms (1170 modules)
+ ✓ Compiled in 627ms (2013 modules)
+ ✓ Compiled in 180ms (1170 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (108kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled in 995ms (2013 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:213:19)
+  211 |       subscription.unsubscribe()
+  212 |     }
+> 213 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  214 |
+  215 |   const signIn = async (email: string, password: string) => {
+  216 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 215ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:213:19)
+  211 |       subscription.unsubscribe()
+  212 |     }
+> 213 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  214 |
+  215 |   const signIn = async (email: string, password: string) => {
+  216 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 90ms
+ ○ Compiling /dev-login ...
+ ✓ Compiled /dev-login in 1023ms (2030 modules)
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:213:19)
+  211 |       subscription.unsubscribe()
+  212 |     }
+> 213 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  214 |
+  215 |   const signIn = async (email: string, password: string) => {
+  216 |     try { {
+  digest: '2113649405'
+}
+ GET /dev-login?redirect=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 500 in 1255ms
+[ResponseAborted: ]
+ ✓ Compiled in 749ms (2030 modules)
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 500 in 144ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 103ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 109ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 1126ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /dev-login?redirect=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 500 in 704ms
+[ResponseAborted: ]
+ ✓ Compiled in 306ms (1174 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 45ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 48ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 44ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /auth/signin 500 in 89ms
+ ⨯ ReferenceError: isDevelopmentBypass is not defined
+    at AuthProvider (src/contexts/AuthContext.tsx:182:19)
+  180 |       subscription.unsubscribe()
+  181 |     }
+> 182 |   }, [initialized, isDevelopmentBypass, authChangeTimeout])
+      |                   ^
+  183 |
+  184 |   const signIn = async (email: string, password: string) => {
+  185 |     try { {
+  digest: '2113649405'
+}
+ GET /dev-login?redirect=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 500 in 57ms
+[ResponseAborted: ]
+ ✓ Compiled in 406ms (2030 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 200 in 316ms
+ GET /auth/signin 200 in 58ms
+ GET /auth/signin 200 in 75ms
+ GET /auth/signin 200 in 106ms
+ GET /dev-login?redirect=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 86ms
+ ✓ Compiled in 224ms (1174 modules)
+ ✓ Compiled in 415ms (1174 modules)
+ ✓ Compiled in 174ms (1174 modules)
+ ✓ Compiled in 234ms (1174 modules)
+ ✓ Compiled in 429ms (1174 modules)
+ ✓ Compiled in 194ms (1174 modules)
+ ✓ Compiled in 264ms (1174 modules)
+ ✓ Compiled in 328ms (1174 modules)
+ ✓ Compiled in 207ms (1174 modules)
+ ✓ Compiled in 186ms (1174 modules)
+ ✓ Compiled in 269ms (1174 modules)
+ ✓ Compiled in 568ms (1174 modules)
+ ✓ Compiled in 160ms (1174 modules)
+ ✓ Compiled in 306ms (1174 modules)
+ ✓ Compiled in 174ms (1174 modules)
+ ✓ Compiled in 210ms (1174 modules)
+ ✓ Compiled in 298ms (1174 modules)
+ ✓ Compiled in 369ms (1174 modules)
+ ✓ Compiled in 374ms (1174 modules)
+ ✓ Compiled in 502ms (1174 modules)
+ ✓ Compiled in 183ms (1174 modules)
+ ✓ Compiled in 290ms (1174 modules)
+ ✓ Compiled in 175ms (1174 modules)
+ ✓ Compiled in 230ms (1174 modules)
+ ✓ Compiled in 155ms (1174 modules)
+ ✓ Compiled in 551ms (1174 modules)
+ ✓ Compiled in 197ms (1174 modules)
+ ✓ Compiled in 172ms (1174 modules)
+ ✓ Compiled in 302ms (1174 modules)
+ ✓ Compiled in 179ms (1174 modules)
+ ✓ Compiled in 332ms (1174 modules)
+ ✓ Compiled in 343ms (1174 modules)
+ ✓ Compiled in 210ms (1174 modules)
+ ✓ Compiled in 163ms (1174 modules)
+ ✓ Compiled in 219ms (1174 modules)
+ ✓ Compiled in 188ms (1174 modules)
+ ✓ Compiled in 259ms (1174 modules)
+ ✓ Compiled in 251ms (1174 modules)
+ ✓ Compiled in 289ms (1174 modules)
+ ✓ Compiled in 344ms (1174 modules)
+ ✓ Compiled in 176ms (1174 modules)
+ ✓ Compiled in 190ms (1174 modules)
+ ✓ Compiled in 311ms (1174 modules)
+ ✓ Compiled in 164ms (1174 modules)
+ ✓ Compiled in 159ms (1174 modules)
+ ✓ Compiled in 363ms (1174 modules)
+ ✓ Compiled in 219ms (1174 modules)
+ ✓ Compiled in 172ms (1174 modules)
+ ✓ Compiled in 380ms (1174 modules)
+ ✓ Compiled in 591ms (1174 modules)
+ ✓ Compiled in 368ms (1174 modules)
+ ✓ Compiled in 196ms (1174 modules)
+ ✓ Compiled in 167ms (1174 modules)
+ ✓ Compiled in 238ms (1174 modules)
+ ✓ Compiled in 295ms (1174 modules)
+ ✓ Compiled in 317ms (1174 modules)
+ ✓ Compiled in 277ms (1174 modules)
+ ✓ Compiled in 586ms (1174 modules)
+ ✓ Compiled in 170ms (1174 modules)
+ ✓ Compiled in 164ms (1174 modules)
+ ✓ Compiled in 335ms (1174 modules)
+ ✓ Compiled in 174ms (1174 modules)
+ ✓ Compiled in 366ms (1174 modules)
+ ✓ Compiled in 161ms (1174 modules)
+ ✓ Compiled in 312ms (1174 modules)
+ ✓ Compiled in 189ms (1174 modules)
+ ✓ Compiled in 294ms (1174 modules)
+ ✓ Compiled in 259ms (1174 modules)
+ ✓ Compiled in 347ms (1174 modules)
+ ✓ Compiled in 168ms (1174 modules)
+ ✓ Compiled in 271ms (1174 modules)
+ ✓ Compiled in 181ms (1174 modules)
+ ✓ Compiled in 276ms (1174 modules)
+ ✓ Compiled in 334ms (1174 modules)
+ ✓ Compiled in 199ms (1174 modules)
+ ✓ Compiled in 160ms (1174 modules)
+ ✓ Compiled in 248ms (1174 modules)
+ ✓ Compiled in 179ms (1174 modules)
+ ✓ Compiled in 234ms (1174 modules)
+ ✓ Compiled in 276ms (1174 modules)
+ ✓ Compiled in 430ms (1174 modules)
+ ✓ Compiled in 213ms (1174 modules)
+ ✓ Compiled in 287ms (1174 modules)
+ ✓ Compiled in 213ms (1174 modules)
+ ✓ Compiled in 330ms (1174 modules)
+ ✓ Compiled in 240ms (1174 modules)
+ ✓ Compiled in 180ms (1174 modules)
+ ✓ Compiled in 327ms (1174 modules)
+ ✓ Compiled in 181ms (1174 modules)
+ ✓ Compiled in 293ms (1174 modules)
+ ✓ Compiled in 353ms (1174 modules)
+ ✓ Compiled in 506ms (1174 modules)
+ ✓ Compiled in 269ms (1174 modules)
+ ✓ Compiled in 315ms (1174 modules)
+ ✓ Compiled in 312ms (1174 modules)
+ ✓ Compiled in 623ms (1174 modules)
+ ✓ Compiled in 167ms (1174 modules)
+ ✓ Compiled in 236ms (1174 modules)
+ ✓ Compiled in 209ms (1174 modules)
+ ✓ Compiled in 163ms (1174 modules)
+ ✓ Compiled in 157ms (1174 modules)
+ ✓ Compiled in 180ms (1174 modules)
+ ✓ Compiled in 270ms (1174 modules)
+ ✓ Compiled in 210ms (1174 modules)
+ ✓ Compiled in 1347ms (2017 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /auth/signin 200 in 404ms
+ GET /auth/signin 200 in 122ms
+ ✓ Compiled /dev-login in 623ms (2030 modules)
+ GET /dev-login?redirect=%2F.well-known%2Fappspecific%2Fcom.chrome.devtools.json 200 in 602ms
+ ✓ Compiled in 307ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 389ms (2243 modules)
+ ✓ Compiled in 248ms (1174 modules)
+ ✓ Compiled in 164ms (1174 modules)
+ ✓ Compiled in 282ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 255ms (2230 modules)
+ ✓ Compiled in 184ms (1174 modules)
+ ✓ Compiled in 185ms (1174 modules)
+ ✓ Compiled in 634ms (1174 modules)
+ ✓ Compiled in 358ms (1174 modules)
+ ✓ Compiled in 269ms (1174 modules)
+ ✓ Compiled in 325ms (1174 modules)
+ ✓ Compiled in 1692ms (2244 modules)
+ ✓ Compiled in 702ms (1174 modules)
+   Reload env: .env.local
+ ✓ Compiled in 682ms (2230 modules)
+ ✓ Compiled in 971ms (2244 modules)
+ ✓ Compiled in 534ms (1174 modules)
+ ✓ Compiled in 234ms (1174 modules)
+   Reload env: .env.local
+ ✓ Compiled in 666ms (2230 modules)
+   Reload env: .env.local
+ ✓ Compiled in 435ms (2230 modules)
+ ✓ Compiled in 622ms (1174 modules)
+ ✓ Compiled in 224ms (1174 modules)
+ ✓ Compiled in 479ms (1174 modules)
+ ✓ Compiled in 538ms (1174 modules)
+ ✓ Compiled in 812ms (1174 modules)
+ ○ Compiling /dev-login ...
+ ✓ Compiled /dev-login in 779ms (856 modules)
+ GET /dev-login?redirect=%2Fprisma-setup 200 in 1038ms
+ GET /dev-login?redirect=%2Fprisma-setup 200 in 75ms
+ GET /dev-login?redirect=%2Fdashboard 200 in 79ms
+ GET /dev-login?redirect=%2Fdashboard 200 in 40ms
+ GET /dev-login?redirect=%2Fdashboard 200 in 40ms
+   Reload env: .env.local
+ ✓ Compiled in 856ms (2231 modules)
+ GET /dev-login?redirect=%2Fdashboard 200 in 76ms
+   Reload env: .env
+ ✓ Compiled in 472ms (2231 modules)
+ ✓ Compiled in 292ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 1043ms (2231 modules)
+ ✓ Compiled in 491ms (1174 modules)
+ ✓ Compiled in 318ms (1174 modules)
+ ✓ Compiled in 338ms (1174 modules)
+ ✓ Compiled in 316ms (1174 modules)
+ ✓ Compiled in 194ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 724ms (2231 modules)
+ ✓ Compiled in 182ms (1174 modules)
+ ✓ Compiled in 330ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 916ms (2231 modules)
+ ✓ Compiled in 192ms (1174 modules)
+ ✓ Compiled in 374ms (1174 modules)
+ ✓ Compiled in 191ms (1174 modules)
+ ✓ Compiled in 304ms (1174 modules)
+ ✓ Compiled in 186ms (1174 modules)
+ ✓ Compiled in 522ms (1174 modules)
+ ✓ Compiled in 412ms (1174 modules)
+ ✓ Compiled in 180ms (1174 modules)
+ ✓ Compiled in 249ms (1174 modules)
+ ✓ Compiled in 384ms (1174 modules)
+ ✓ Compiled in 175ms (1174 modules)
+ ✓ Compiled in 629ms (1174 modules)
+ ✓ Compiled in 238ms (1174 modules)
+ ✓ Compiled in 336ms (1174 modules)
+ ✓ Compiled in 352ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 1056ms (2231 modules)
+ ✓ Compiled in 359ms (1174 modules)
+ ✓ Compiled in 352ms (1174 modules)
+ ✓ Compiled in 616ms (1174 modules)
+ ✓ Compiled in 431ms (1174 modules)
+ ✓ Compiled in 391ms (1174 modules)
+ ✓ Compiled in 441ms (1174 modules)
+ ✓ Compiled in 372ms (1174 modules)
+ ✓ Compiled in 229ms (1174 modules)
+ ✓ Compiled in 307ms (1174 modules)
+ ✓ Compiled in 532ms (1174 modules)
+ ✓ Compiled in 349ms (1174 modules)
+ ✓ Compiled in 331ms (1174 modules)
+ ✓ Compiled in 716ms (1174 modules)
+ ✓ Compiled in 219ms (1174 modules)
+ ✓ Compiled in 200ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 900ms (2231 modules)
+ ✓ Compiled in 321ms (1174 modules)
+ ✓ Compiled in 659ms (1174 modules)
+ ✓ Compiled in 179ms (1174 modules)
+ ✓ Compiled in 346ms (1174 modules)
+ ✓ Compiled in 533ms (1174 modules)
+ ✓ Compiled in 352ms (1174 modules)
+ ✓ Compiled in 638ms (1174 modules)
+ ✓ Compiled in 273ms (1174 modules)
+ ✓ Compiled in 717ms (1174 modules)
+ ✓ Compiled in 214ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 289ms (2231 modules)
+ ✓ Compiled in 186ms (1174 modules)
+ ✓ Compiled in 287ms (1174 modules)
+ ✓ Compiled in 666ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 695ms (2231 modules)
+ ✓ Compiled in 188ms (1174 modules)
+ ✓ Compiled in 349ms (1174 modules)
+ ✓ Compiled in 520ms (1174 modules)
+ ✓ Compiled in 363ms (1174 modules)
+ ✓ Compiled in 1092ms (1174 modules)
+   Reload env: .env
+ ✓ Compiled in 544ms (2231 modules)
+ ✓ Compiled in 982ms (1174 modules)
+ ✓ Compiled in 921ms (1174 modules)
+ ✓ Compiled in 1108ms (1174 modules)
+ ✓ Compiled in 780ms (1174 modules)
+ ✓ Compiled in 222ms (1174 modules)
+ ✓ Compiled in 352ms (1174 modules)
+ ✓ Compiled in 557ms (1174 modules)
+ ✓ Compiled in 368ms (1174 modules)
+ ✓ Compiled in 367ms (1174 modules)
+ ✓ Compiled in 292ms (1174 modules)
+ ✓ Compiled in 220ms (1174 modules)
+ ✓ Compiled in 188ms (1174 modules)
+ ✓ Compiled in 251ms (1174 modules)
+ ✓ Compiled in 170ms (1174 modules)
+ ✓ Compiled in 316ms (1174 modules)
+ ✓ Compiled in 175ms (1174 modules)
+ ✓ Compiled in 211ms (1174 modules)
+ ✓ Compiled in 211ms (1174 modules)
+ ✓ Compiled in 299ms (1174 modules)
+ ✓ Compiled in 209ms (1174 modules)
+ ✓ Compiled in 397ms (1174 modules)
+ ✓ Compiled in 243ms (1174 modules)
+ ✓ Compiled in 384ms (1174 modules)
+ ✓ Compiled in 469ms (1174 modules)
+ ✓ Compiled in 307ms (1174 modules)
+ ✓ Compiled in 222ms (1174 modules)
+ ✓ Compiled in 243ms (1174 modules)
+ ✓ Compiled in 224ms (1174 modules)
+ ✓ Compiled in 170ms (1174 modules)
+ ✓ Compiled in 180ms (1174 modules)
+ ✓ Compiled in 248ms (1174 modules)
+ ✓ Compiled in 547ms (1174 modules)
+ ✓ Compiled in 214ms (1174 modules)
+ ✓ Compiled in 201ms (1174 modules)
+ ✓ Compiled in 368ms (1174 modules)
+ ✓ Compiled in 183ms (1174 modules)
+ ✓ Compiled in 400ms (1174 modules)
+ ✓ Compiled in 283ms (1174 modules)
+ ✓ Compiled in 211ms (1174 modules)
+ ✓ Compiled in 441ms (1174 modules)
+ ✓ Compiled in 391ms (1174 modules)
+ ✓ Compiled in 199ms (1174 modules)
+ ✓ Compiled in 337ms (1174 modules)
+ ✓ Compiled in 260ms (1174 modules)
+ ✓ Compiled in 215ms (1174 modules)
+ ✓ Compiled in 587ms (1174 modules)
+ ✓ Compiled in 326ms (1174 modules)
+ ✓ Compiled in 264ms (1174 modules)
+ ✓ Compiled in 227ms (1174 modules)
+ ✓ Compiled in 322ms (1174 modules)
+ ✓ Compiled in 172ms (1174 modules)
+ ✓ Compiled in 191ms (1174 modules)
+ ✓ Compiled in 167ms (1174 modules)
+ GET /dev-login?redirect=%2Fdashboard 200 in 415ms
+ ✓ Compiled in 309ms (1174 modules)
+ ✓ Compiled in 190ms (1174 modules)
+ GET /dev-login?redirect=%2Fdashboard 200 in 94ms
+ GET /dev-login?redirect=%2Fdashboard 200 in 63ms
+ ✓ Compiled in 275ms (1174 modules)
+ GET /dev-login?redirect=%2F 200 in 57ms
+ ✓ Compiled in 617ms (1174 modules)
+ GET /dev-login?redirect=%2F 200 in 55ms
+ GET /dev-login?redirect=%2Fdashboard 200 in 110ms
+ ✓ Compiled in 248ms (1174 modules)
+ GET /dev-login?redirect=%2Fdashboard 200 in 48ms
+ ✓ Compiled in 362ms (1174 modules)
+[?25h

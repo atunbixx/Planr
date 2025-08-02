@@ -1,0 +1,953 @@
+
+> wedding-planner-v2@0.1.0 dev
+> next dev --port 3000
+
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.100.231:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1422ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1276ms (875 modules)
+ GET / 200 in 1597ms
+ ✓ Compiled in 114ms (326 modules)
+ ✓ Compiled in 89ms (326 modules)
+ ✓ Compiled in 135ms (326 modules)
+ GET / 200 in 109ms
+ ✓ Compiled /auth/signin in 384ms (870 modules)
+ GET /auth/signin 200 in 497ms
+ GET /auth/signin 200 in 224ms
+ GET /auth/signin 200 in 72ms
+ GET /auth/signin 200 in 70ms
+ ✓ Compiled /auth/signup in 406ms (889 modules)
+ GET /auth/signup 200 in 487ms
+ GET / 200 in 31ms
+ GET /auth/signin 200 in 35ms
+ ✓ Compiled in 451ms (892 modules)
+ GET /auth/signin 200 in 72ms
+ ✓ Compiled in 65ms (337 modules)
+ GET /auth/signin 200 in 11ms
+ ✓ Compiled in 103ms (337 modules)
+ GET /auth/signin 200 in 58ms
+ ✓ Compiled in 84ms (337 modules)
+ GET /auth/signin 200 in 15ms
+ ✓ Compiled in 65ms (337 modules)
+ GET /auth/signin 200 in 20ms
+ ✓ Compiled in 129ms (337 modules)
+ GET /auth/signin 200 in 61ms
+ ✓ Compiled in 87ms (337 modules)
+ GET /auth/signin 200 in 22ms
+ GET /auth/signin 200 in 155ms
+ GET / 200 in 95ms
+ GET /auth/signin 200 in 33ms
+ GET /auth/signin 200 in 62ms
+ ✓ Compiled in 158ms (337 modules)
+ GET /auth/signin 200 in 14ms
+ ✓ Compiled in 220ms (337 modules)
+ GET /auth/signin 200 in 16ms
+ ✓ Compiled in 73ms (337 modules)
+ GET /auth/signin 200 in 14ms
+ ✓ Compiled in 70ms (337 modules)
+ GET /auth/signin 200 in 10ms
+ ✓ Compiled in 59ms (337 modules)
+ GET /auth/signin 200 in 10ms
+ ✓ Compiled in 83ms (337 modules)
+ GET /auth/signin 200 in 14ms
+ ✓ Compiled in 132ms (337 modules)
+ GET /auth/signin 200 in 14ms
+ ✓ Compiled in 146ms (337 modules)
+ GET /auth/signin 200 in 16ms
+ ✓ Compiled in 167ms (337 modules)
+ GET /auth/signin 200 in 17ms
+ ✓ Compiled in 73ms (337 modules)
+ GET /auth/signin 200 in 12ms
+ ✓ Compiled in 159ms (337 modules)
+ GET /auth/signin 200 in 16ms
+ ✓ Compiled in 153ms (337 modules)
+ GET /auth/signin 200 in 16ms
+ ✓ Compiled in 66ms (337 modules)
+ GET /auth/signin 200 in 13ms
+ ✓ Compiled in 64ms (337 modules)
+ GET /auth/signin 200 in 12ms
+ ✓ Compiled in 79ms (337 modules)
+ GET /auth/signin 200 in 13ms
+ ✓ Compiled in 164ms (337 modules)
+ GET /auth/signin 200 in 19ms
+ ✓ Compiled in 169ms (337 modules)
+ GET /auth/signin 200 in 72ms
+ ✓ Compiled in 81ms (337 modules)
+ GET /auth/signin 200 in 13ms
+ GET /auth/signin 200 in 98ms
+ ✓ Compiled in 161ms (337 modules)
+ GET /auth/signin 200 in 22ms
+ ✓ Compiled in 67ms (337 modules)
+ GET /auth/signin 200 in 53ms
+ ✓ Compiled in 76ms (337 modules)
+ GET /auth/signin 200 in 10ms
+ ✓ Compiled in 62ms (337 modules)
+ GET /auth/signin 200 in 13ms
+ ✓ Compiled in 61ms (337 modules)
+ GET /auth/signin 200 in 11ms
+ ✓ Compiled in 59ms (337 modules)
+ GET /auth/signin 200 in 13ms
+ GET /auth/signin 200 in 80ms
+ ✓ Compiled /studio-demo in 327ms (901 modules)
+ GET /studio-demo 200 in 567ms
+ GET / 200 in 105ms
+ ✓ Compiled in 205ms (347 modules)
+ GET /auth/signin 200 in 47ms
+ GET / 200 in 47ms
+ ✓ Compiled in 81ms (347 modules)
+ GET /auth/signin 200 in 24ms
+ GET / 200 in 25ms
+ ✓ Compiled in 158ms (347 modules)
+ GET / 200 in 25ms
+ GET /auth/signin 200 in 25ms
+ ✓ Compiled in 165ms (347 modules)
+ GET / 200 in 51ms
+ GET /auth/signin 200 in 51ms
+ ✓ Compiled in 68ms (347 modules)
+ GET / 200 in 20ms
+ GET /auth/signin 200 in 21ms
+ ✓ Compiled in 68ms (347 modules)
+ GET /auth/signin 200 in 24ms
+ GET / 200 in 24ms
+ ✓ Compiled in 67ms (347 modules)
+ GET /auth/signin 200 in 20ms
+ GET / 200 in 20ms
+ ✓ Compiled in 65ms (347 modules)
+ GET /auth/signin 200 in 19ms
+ GET / 200 in 20ms
+ ✓ Compiled in 87ms (347 modules)
+ GET /auth/signin 200 in 34ms
+ GET / 200 in 36ms
+ ✓ Compiled in 130ms (347 modules)
+ GET /auth/signin 200 in 88ms
+ GET / 200 in 87ms
+ ✓ Compiled in 98ms (347 modules)
+ GET /auth/signin 200 in 11ms
+ GET / 200 in 10ms
+ ✓ Compiled in 148ms (347 modules)
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 25ms
+ ✓ Compiled in 79ms (347 modules)
+ GET /auth/signin 200 in 20ms
+ GET / 200 in 19ms
+ ✓ Compiled in 73ms (347 modules)
+ GET /auth/signin 200 in 20ms
+ GET / 200 in 21ms
+ ✓ Compiled in 60ms (347 modules)
+ GET / 200 in 32ms
+ GET /auth/signin 200 in 34ms
+ ✓ Compiled in 87ms (347 modules)
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 25ms
+ ✓ Compiled in 89ms (347 modules)
+ GET / 200 in 55ms
+ GET /auth/signin 200 in 58ms
+ ✓ Compiled in 98ms (347 modules)
+ GET / 200 in 25ms
+ GET /auth/signin 200 in 25ms
+ ✓ Compiled in 71ms (347 modules)
+ GET /auth/signin 200 in 19ms
+ GET / 200 in 20ms
+ ✓ Compiled in 128ms (347 modules)
+ GET /auth/signin 200 in 19ms
+ GET / 200 in 20ms
+ ✓ Compiled in 69ms (347 modules)
+ GET /auth/signin 200 in 21ms
+ GET / 200 in 21ms
+ ✓ Compiled in 66ms (347 modules)
+ GET /auth/signin 200 in 19ms
+ GET / 200 in 19ms
+ ✓ Compiled in 58ms (347 modules)
+ GET /auth/signin 200 in 22ms
+ GET / 200 in 22ms
+ ✓ Compiled in 67ms (347 modules)
+ GET / 200 in 23ms
+ GET /auth/signin 200 in 23ms
+ ✓ Compiled in 78ms (347 modules)
+ GET /auth/signin 200 in 29ms
+ GET / 200 in 30ms
+ ✓ Compiled in 74ms (347 modules)
+ GET / 200 in 110ms
+ ✓ Compiled in 120ms (347 modules)
+ GET /auth/signin 200 in 119ms
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 23ms
+ ✓ Compiled in 126ms (347 modules)
+ GET /auth/signin 200 in 22ms
+ GET / 200 in 22ms
+ ✓ Compiled in 74ms (347 modules)
+ GET /auth/signin 200 in 26ms
+ GET / 200 in 25ms
+ ✓ Compiled in 67ms (347 modules)
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 30ms
+ ✓ Compiled in 89ms (347 modules)
+ GET /auth/signin 200 in 21ms
+ GET / 200 in 22ms
+ ✓ Compiled in 107ms (347 modules)
+ GET /auth/signin 200 in 79ms
+ GET / 200 in 78ms
+ ✓ Compiled in 103ms (347 modules)
+ GET /auth/signin 200 in 21ms
+ GET / 200 in 22ms
+ ✓ Compiled in 111ms (347 modules)
+ GET / 200 in 21ms
+ GET /auth/signin 200 in 23ms
+ ✓ Compiled in 72ms (347 modules)
+ GET / 200 in 21ms
+ GET /auth/signin 200 in 21ms
+ ✓ Compiled in 92ms (347 modules)
+ GET /auth/signin 200 in 23ms
+ GET / 200 in 23ms
+ ✓ Compiled in 75ms (347 modules)
+ GET / 200 in 33ms
+ GET /auth/signin 200 in 35ms
+   Reload env: .env.local
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 491ms (888 modules)
+ GET /auth/signin 200 in 251ms
+ GET / 200 in 482ms
+ GET /auth/signin 200 in 496ms
+ ✓ Compiled in 324ms (347 modules)
+ GET / 200 in 32ms
+ GET /auth/signin 200 in 31ms
+ ✓ Compiled in 99ms (347 modules)
+ GET /auth/signin 200 in 34ms
+ GET / 200 in 35ms
+ ✓ Compiled in 84ms (347 modules)
+ GET /auth/signin 200 in 37ms
+ GET / 200 in 36ms
+ ✓ Compiled in 92ms (347 modules)
+ GET /auth/signin 200 in 30ms
+ GET / 200 in 30ms
+ ✓ Compiled in 72ms (347 modules)
+ GET / 200 in 24ms
+ GET /auth/signin 200 in 24ms
+ ✓ Compiled in 148ms (347 modules)
+ GET /auth/signin 200 in 27ms
+ GET / 200 in 28ms
+ ✓ Compiled in 74ms (347 modules)
+ GET /auth/signin 200 in 19ms
+ GET / 200 in 19ms
+ ✓ Compiled in 75ms (347 modules)
+ GET /auth/signin 200 in 22ms
+ GET / 200 in 21ms
+ ✓ Compiled in 63ms (347 modules)
+ GET /auth/signin 200 in 18ms
+ GET / 200 in 19ms
+ ✓ Compiled in 60ms (347 modules)
+ GET /auth/signin 200 in 24ms
+ GET / 200 in 25ms
+ ✓ Compiled in 90ms (347 modules)
+ GET /auth/signin 200 in 82ms
+ GET / 200 in 83ms
+ ✓ Compiled in 92ms (347 modules)
+ GET /auth/signin 200 in 28ms
+ GET / 200 in 32ms
+ ✓ Compiled in 114ms (347 modules)
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 25ms
+ ✓ Compiled in 67ms (347 modules)
+ GET / 200 in 18ms
+ GET /auth/signin 200 in 18ms
+ ✓ Compiled in 67ms (347 modules)
+ GET / 200 in 21ms
+ GET /auth/signin 200 in 22ms
+ ✓ Compiled in 85ms (347 modules)
+ GET / 200 in 40ms
+ GET /auth/signin 200 in 42ms
+ ✓ Compiled in 71ms (347 modules)
+ GET /auth/signin 200 in 14ms
+ GET / 200 in 14ms
+ ✓ Compiled in 58ms (347 modules)
+ GET /auth/signin 200 in 20ms
+ GET / 200 in 20ms
+ ✓ Compiled in 121ms (347 modules)
+ GET /auth/signin 200 in 27ms
+ GET / 200 in 27ms
+ ✓ Compiled in 74ms (347 modules)
+ GET /auth/signin 200 in 33ms
+ GET / 200 in 34ms
+ ✓ Compiled in 105ms (347 modules)
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 24ms
+ GET /auth/signin 200 in 32ms
+ ✓ Compiled in 71ms (347 modules)
+ GET /auth/signin 200 in 19ms
+ GET / 200 in 19ms
+ ✓ Compiled in 71ms (347 modules)
+ GET / 200 in 37ms
+ GET /auth/signin 200 in 38ms
+ ✓ Compiled in 75ms (347 modules)
+ GET / 200 in 20ms
+ GET /auth/signin 200 in 20ms
+ ✓ Compiled in 65ms (347 modules)
+ GET /auth/signin 200 in 20ms
+ GET / 200 in 21ms
+ ✓ Compiled in 64ms (347 modules)
+ GET /auth/signin 200 in 23ms
+ GET / 200 in 24ms
+ ✓ Compiled in 65ms (347 modules)
+ GET /auth/signin 200 in 22ms
+ GET / 200 in 22ms
+ ✓ Compiled in 82ms (347 modules)
+ GET / 200 in 81ms
+ GET /auth/signin 200 in 83ms
+ ✓ Compiled in 91ms (347 modules)
+ GET /auth/signin 200 in 26ms
+ GET / 200 in 40ms
+ ✓ Compiled in 164ms (347 modules)
+ GET / 200 in 77ms
+ GET /auth/signin 200 in 91ms
+ ✓ Compiled in 113ms (347 modules)
+ GET /auth/signin 200 in 29ms
+ GET / 200 in 30ms
+ ✓ Compiled in 161ms (347 modules)
+ GET /auth/signin 200 in 96ms
+ GET / 200 in 97ms
+ ✓ Compiled in 104ms (347 modules)
+ GET /auth/signin 200 in 15ms
+ GET / 200 in 17ms
+ ✓ Compiled in 159ms (347 modules)
+ GET / 200 in 45ms
+ GET /auth/signin 200 in 44ms
+   Reload env: .env.local
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 283ms (888 modules)
+ GET / 200 in 234ms
+ GET /auth/signin 200 in 235ms
+ GET / 200 in 403ms
+ GET /auth/signin 200 in 420ms
+ ✓ Compiled in 70ms (347 modules)
+ GET /auth/signin 200 in 25ms
+ GET / 200 in 26ms
+ ✓ Compiled in 97ms (347 modules)
+ GET / 200 in 85ms
+ GET /auth/signin 200 in 85ms
+ ✓ Compiled in 93ms (347 modules)
+ GET /auth/signin 200 in 14ms
+ GET / 200 in 14ms
+ ✓ Compiled in 82ms (347 modules)
+ GET / 200 in 25ms
+ GET /auth/signin 200 in 26ms
+   Reload env: .env.local
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 278ms (888 modules)
+ GET /auth/signin 200 in 225ms
+ GET / 200 in 460ms
+ GET /auth/signin 200 in 458ms
+ ✓ Compiled in 69ms (347 modules)
+ GET / 200 in 33ms
+ GET /auth/signin 200 in 33ms
+ ✓ Compiled in 120ms (347 modules)
+ GET /auth/signin 200 in 75ms
+ GET / 200 in 75ms
+ ✓ Compiled in 86ms (347 modules)
+ GET /auth/signin 200 in 14ms
+ GET / 200 in 15ms
+ GET /auth/signin 200 in 59ms
+ GET / 200 in 74ms
+ GET / 200 in 69ms
+ GET /auth/signin 200 in 31ms
+ ✓ Compiled /dashboard in 338ms (906 modules)
+ GET /dashboard 200 in 408ms
+ ✓ Compiled /onboarding in 182ms (914 modules)
+ GET /onboarding 200 in 237ms
+ GET /onboarding 200 in 11ms
+ ✓ Compiled in 478ms (914 modules)
+ GET / 200 in 53ms
+ GET /onboarding 200 in 55ms
+ ✓ Compiled in 67ms (353 modules)
+ GET / 200 in 21ms
+ GET /onboarding 200 in 22ms
+ ✓ Compiled in 114ms (353 modules)
+ GET /onboarding 200 in 206ms
+ GET / 200 in 206ms
+ ✓ Compiled in 218ms (353 modules)
+ GET /onboarding 200 in 13ms
+ GET / 200 in 18ms
+ ✓ Compiled in 66ms (353 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 24ms
+ ✓ Compiled in 109ms (353 modules)
+ GET /onboarding 200 in 129ms
+ GET / 200 in 130ms
+ ✓ Compiled in 141ms (353 modules)
+ GET /onboarding 200 in 38ms
+ GET / 200 in 35ms
+ ✓ Compiled in 106ms (353 modules)
+ GET / 200 in 37ms
+ GET /onboarding 200 in 38ms
+ ✓ Compiled in 73ms (353 modules)
+ GET / 200 in 23ms
+ GET /onboarding 200 in 24ms
+ ✓ Compiled /auth/signin in 158ms (566 modules)
+ GET /auth/signin 200 in 323ms
+ GET /onboarding 200 in 187ms
+ GET / 200 in 30ms
+ ✓ Compiled in 72ms (353 modules)
+ GET / 200 in 24ms
+ GET /onboarding 200 in 26ms
+ ✓ Compiled in 139ms (353 modules)
+ GET /onboarding 200 in 43ms
+ GET / 200 in 43ms
+ ✓ Compiled in 104ms (353 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ ✓ Compiled in 87ms (353 modules)
+ GET /onboarding 200 in 66ms
+ GET / 200 in 67ms
+ ✓ Compiled in 120ms (353 modules)
+ GET / 200 in 31ms
+ GET /onboarding 200 in 44ms
+ GET /auth/signin 200 in 96ms
+ ✓ Compiled /dashboard in 206ms (540 modules)
+ GET /dashboard 200 in 340ms
+ GET /onboarding 200 in 124ms
+ ✓ Compiled / in 125ms (575 modules)
+ GET / 200 in 423ms
+ GET /dashboard 200 in 305ms
+ GET /onboarding 200 in 15ms
+ GET /onboarding 200 in 10ms
+ ✓ Compiled in 643ms (908 modules)
+ GET /onboarding 200 in 97ms
+ GET / 200 in 97ms
+ GET /onboarding 200 in 21ms
+ ✓ Compiled in 73ms (353 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 19ms
+ ✓ Compiled in 109ms (353 modules)
+ GET / 200 in 75ms
+ GET /onboarding 200 in 76ms
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
+  page: '/onboarding'
+}
+ ✓ Compiled in 500ms (353 modules)
+ GET / 200 in 63ms
+ ✓ Compiled /_error in 469ms (1223 modules)
+ GET / 200 in 432ms
+ GET / 200 in 11ms
+ GET /onboarding 500 in 1336ms
+ GET /onboarding 200 in 18ms
+ GET /onboarding 200 in 11ms
+ GET /onboarding 200 in 11ms
+ GET /onboarding 200 in 10ms
+ GET /onboarding 200 in 10ms
+ GET /onboarding 200 in 11ms
+ GET /onboarding 200 in 110ms
+ ✓ Compiled in 525ms (1150 modules)
+ GET /onboarding 200 in 150ms
+ GET / 200 in 151ms
+ GET /onboarding 200 in 13ms
+ ✓ Compiled in 83ms (500 modules)
+ GET /onboarding 200 in 29ms
+ GET / 200 in 29ms
+ GET /onboarding 200 in 22ms
+ ✓ Compiled in 567ms (1150 modules)
+ GET /onboarding 200 in 93ms
+ GET / 200 in 97ms
+ GET /onboarding 200 in 30ms
+ ✓ Compiled in 77ms (500 modules)
+ GET / 200 in 24ms
+ GET /onboarding 200 in 24ms
+ GET /onboarding 200 in 14ms
+ ✓ Compiled in 77ms (500 modules)
+ GET / 200 in 26ms
+ GET /onboarding 200 in 27ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 182ms (1150 modules)
+ GET /onboarding 200 in 84ms
+ GET / 200 in 85ms
+ GET /onboarding 200 in 28ms
+ ✓ Compiled in 74ms (500 modules)
+ GET /onboarding 200 in 41ms
+ GET / 200 in 42ms
+ GET /onboarding 200 in 32ms
+ ✓ Compiled in 382ms (1150 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 101ms
+ GET /onboarding 200 in 104ms
+ ⨯ ReferenceError: handleSubmit is not defined
+    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
+  255 |           {/* Form Content */}
+  256 |           <div className="px-8 py-10">
+> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
+      |                            ^
+  258 |               {errors.general && (
+  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
+  260 |                   <div className="flex items-center"> {
+  digest: '1883689987'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /onboarding 200 in 159ms
+ GET /onboarding 500 in 181ms
+ ⨯ ReferenceError: handleSubmit is not defined
+    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
+  255 |           {/* Form Content */}
+  256 |           <div className="px-8 py-10">
+> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
+      |                            ^
+  258 |               {errors.general && (
+  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
+  260 |                   <div className="flex items-center"> {
+  digest: '1883689987'
+}
+ GET /onboarding 500 in 36ms
+ ✓ Compiled in 121ms (500 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ReferenceError: handleSubmit is not defined
+    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
+  255 |           {/* Form Content */}
+  256 |           <div className="px-8 py-10">
+> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
+      |                            ^
+  258 |               {errors.general && (
+  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
+  260 |                   <div className="flex items-center"> {
+  digest: '1883689987'
+}
+ ⨯ ReferenceError: handleSubmit is not defined
+    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
+  255 |           {/* Form Content */}
+  256 |           <div className="px-8 py-10">
+> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
+      |                            ^
+  258 |               {errors.general && (
+  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
+  260 |                   <div className="flex items-center"> {
+  digest: '1883689987'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 89ms
+ GET /onboarding 500 in 91ms
+ ⨯ ReferenceError: handleSubmit is not defined
+    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
+  255 |           {/* Form Content */}
+  256 |           <div className="px-8 py-10">
+> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
+      |                            ^
+  258 |               {errors.general && (
+  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
+  260 |                   <div className="flex items-center"> {
+  digest: '1883689987'
+}
+ GET /onboarding 500 in 41ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 876ms (1150 modules)
+ GET /onboarding 200 in 465ms
+ GET /onboarding 200 in 225ms
+ GET / 200 in 52ms
+ GET /onboarding 200 in 95ms
+ ✓ Compiled in 89ms (500 modules)
+ GET / 200 in 72ms
+ GET /onboarding 200 in 74ms
+ ✓ Compiled in 109ms (500 modules)
+ GET /onboarding 200 in 46ms
+ GET / 200 in 31ms
+ GET /onboarding 200 in 32ms
+ GET /onboarding 200 in 14ms
+ ✓ Compiled in 174ms (500 modules)
+ ✓ Compiled /auth/signin in 241ms (655 modules)
+ GET /auth/signin 200 in 554ms
+ GET / 200 in 529ms
+ GET /onboarding 200 in 532ms
+ GET /onboarding 200 in 18ms
+ ✓ Compiled in 88ms (500 modules)
+ GET /onboarding 200 in 23ms
+ GET / 200 in 24ms
+ GET /onboarding 200 in 12ms
+ ✓ Compiled in 74ms (500 modules)
+ GET /onboarding 200 in 26ms
+ GET / 200 in 27ms
+ GET /onboarding 200 in 21ms
+ GET /onboarding 200 in 28ms
+ ✓ Compiled in 74ms (500 modules)
+ GET / 200 in 23ms
+ GET /onboarding 200 in 23ms
+ GET /onboarding 200 in 14ms
+ ✓ Compiled in 82ms (500 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 23ms
+ GET /onboarding 200 in 19ms
+ GET /onboarding 200 in 21ms
+ ✓ Compiled in 72ms (500 modules)
+ GET / 200 in 34ms
+ GET /onboarding 200 in 38ms
+ GET /onboarding 200 in 33ms
+ ✓ Compiled in 127ms (500 modules)
+ GET /onboarding 200 in 81ms
+ GET / 200 in 81ms
+ ⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>) {
+  page: '/onboarding'
+}
+ ✓ Compiled /_error in 628ms (1223 modules)
+ GET / 200 in 66ms
+ GET /onboarding 500 in 845ms
+ GET /onboarding 200 in 18ms
+ GET /onboarding 200 in 9ms
+ GET /onboarding 200 in 105ms
+ ✓ Compiled in 238ms (500 modules)
+ GET / 200 in 107ms
+ GET /onboarding 200 in 111ms
+ GET /onboarding 200 in 26ms
+ ✓ Compiled in 90ms (500 modules)
+ GET / 200 in 26ms
+ GET /onboarding 200 in 28ms
+ GET /onboarding 200 in 12ms
+ ✓ Compiled in 76ms (500 modules)
+ GET / 200 in 22ms
+ GET /onboarding 200 in 23ms
+ GET /onboarding 200 in 24ms
+ ✓ Compiled in 398ms (1150 modules)
+ GET / 200 in 111ms
+ GET /onboarding 200 in 113ms
+ GET /onboarding 200 in 14ms
+ ✓ Compiled in 81ms (500 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 20ms
+ ✓ Compiled in 467ms (1152 modules)
+ GET / 200 in 101ms
+ GET /onboarding 200 in 101ms
+ GET /onboarding 200 in 13ms
+ ✓ Compiled in 125ms (501 modules)
+ GET /onboarding 200 in 66ms
+ GET / 200 in 66ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 84ms (501 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 19ms
+ GET /onboarding 200 in 99ms
+ ✓ Compiled in 79ms (501 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 74ms (501 modules)
+ GET /onboarding 200 in 23ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 19ms
+ GET /onboarding 200 in 21ms
+ ✓ Compiled in 90ms (501 modules)
+ GET / 200 in 39ms
+ GET /onboarding 200 in 42ms
+ GET /onboarding 200 in 29ms
+ ✓ Compiled in 103ms (501 modules)
+ GET /onboarding 200 in 28ms
+ GET / 200 in 28ms
+ GET /onboarding 200 in 17ms
+ GET /onboarding 200 in 24ms
+ ✓ Compiled in 85ms (501 modules)
+ GET / 200 in 73ms
+ GET /onboarding 200 in 93ms
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
+  page: '/onboarding'
+}
+ ✓ Compiled in 450ms (501 modules)
+ GET / 200 in 61ms
+ ✓ Compiled /_error in 229ms (1225 modules)
+ GET /onboarding 500 in 900ms
+ GET /onboarding 200 in 66ms
+ GET /onboarding 200 in 9ms
+ GET /onboarding 200 in 104ms
+ ✓ Compiled in 163ms (502 modules)
+ GET / 200 in 62ms
+ GET /onboarding 200 in 64ms
+ GET /onboarding 200 in 15ms
+ GET /onboarding 200 in 22ms
+ ✓ Compiled in 93ms (502 modules)
+ GET / 200 in 24ms
+ GET /onboarding 200 in 26ms
+ GET /onboarding 200 in 13ms
+ ✓ Compiled in 165ms (501 modules)
+ GET /onboarding 200 in 93ms
+ GET / 200 in 92ms
+ ✓ Compiled in 139ms (501 modules)
+ GET /onboarding 200 in 51ms
+ GET / 200 in 37ms
+ GET /onboarding 200 in 39ms
+ GET /onboarding 200 in 15ms
+ ✓ Compiled in 611ms (1152 modules)
+ GET /onboarding 200 in 130ms
+ GET / 200 in 131ms
+ GET /onboarding 200 in 18ms
+ ✓ Compiled in 77ms (501 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 450ms (1152 modules)
+ GET /onboarding 200 in 127ms
+ GET / 200 in 122ms
+ GET /onboarding 200 in 27ms
+ ✓ Compiled in 129ms (501 modules)
+ GET / 200 in 63ms
+ GET /onboarding 200 in 65ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 103ms (501 modules)
+ GET /onboarding 200 in 27ms
+ GET / 200 in 28ms
+ GET /onboarding 200 in 18ms
+ GET /onboarding 200 in 110ms
+ ✓ Compiled in 79ms (501 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 136ms (501 modules)
+ GET /onboarding 200 in 200ms
+ GET / 200 in 201ms
+ ✓ Compiled in 246ms (501 modules)
+ GET /onboarding 200 in 151ms
+ GET /onboarding 200 in 60ms
+ GET / 200 in 63ms
+ GET /onboarding 200 in 51ms
+ ✓ Compiled in 649ms (1152 modules)
+ GET / 200 in 86ms
+ GET /onboarding 200 in 86ms
+ GET /onboarding 200 in 11ms
+ ✓ Compiled in 78ms (501 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 16ms
+ ✓ Compiled in 457ms (1152 modules)
+ GET /onboarding 200 in 143ms
+ GET / 200 in 142ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 127ms (501 modules)
+ GET /onboarding 200 in 74ms
+ GET / 200 in 75ms
+ GET /onboarding 200 in 26ms
+ ✓ Compiled in 474ms (1152 modules)
+ GET /onboarding 200 in 87ms
+ GET / 200 in 89ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 113ms (501 modules)
+ GET /onboarding 200 in 40ms
+ GET / 200 in 41ms
+ GET /onboarding 200 in 42ms
+ ✓ Compiled in 430ms (1152 modules)
+ GET /onboarding 200 in 118ms
+ GET / 200 in 120ms
+ GET /onboarding 200 in 39ms
+ ✓ Compiled in 130ms (501 modules)
+ GET /onboarding 200 in 73ms
+ GET / 200 in 74ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 406ms (1152 modules)
+ GET / 200 in 67ms
+ GET /onboarding 200 in 69ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 79ms (501 modules)
+ GET / 200 in 23ms
+ GET /onboarding 200 in 24ms
+ GET /onboarding 200 in 14ms
+ ✓ Compiled in 79ms (501 modules)
+ GET / 200 in 51ms
+ GET /onboarding 200 in 53ms
+ GET /onboarding 200 in 25ms
+ GET /onboarding 200 in 130ms
+ ✓ Compiled in 85ms (501 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 15ms
+ ✓ Compiled in 296ms (501 modules)
+ GET /onboarding 200 in 102ms
+ GET / 200 in 102ms
+ GET /onboarding 200 in 38ms
+ ✓ Compiled in 98ms (501 modules)
+ GET /onboarding 200 in 22ms
+ GET / 200 in 23ms
+ GET /onboarding 200 in 21ms
+ ✓ Compiled in 80ms (501 modules)
+ GET /onboarding 200 in 34ms
+ GET / 200 in 35ms
+ ✓ Compiled in 360ms (1152 modules)
+ GET /onboarding 200 in 429ms
+ GET / 200 in 83ms
+ GET /onboarding 200 in 9ms
+ ✓ Compiled in 112ms (501 modules)
+ GET /onboarding 200 in 34ms
+ GET / 200 in 35ms
+ ✓ Compiled in 96ms (501 modules)
+ GET / 200 in 73ms
+ GET /onboarding 200 in 73ms
+ ✓ Compiled in 105ms (501 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 26ms
+ ✓ Compiled in 165ms (501 modules)
+ GET /onboarding 200 in 67ms
+ GET / 200 in 68ms
+ ✓ Compiled in 93ms (501 modules)
+ GET /onboarding 200 in 29ms
+ GET / 200 in 25ms
+ ✓ Compiled in 86ms (501 modules)
+ GET / 200 in 24ms
+ GET /onboarding 200 in 24ms
+ ✓ Compiled in 107ms (501 modules)
+ GET / 200 in 99ms
+ GET /onboarding 200 in 118ms
+ ✓ Compiled in 126ms (501 modules)
+ GET / 200 in 17ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 76ms (501 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ ✓ Compiled in 110ms (501 modules)
+ GET /onboarding 200 in 40ms
+ GET / 200 in 41ms
+ ✓ Compiled in 83ms (501 modules)
+ GET / 200 in 27ms
+ GET /onboarding 200 in 32ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 627ms (1152 modules)
+ GET / 200 in 497ms
+ GET /onboarding 200 in 568ms
+ GET /onboarding 200 in 48ms
+ ✓ Compiled in 128ms (501 modules)
+ GET /onboarding 200 in 98ms
+ GET / 200 in 100ms
+ GET /onboarding 200 in 34ms
+ ✓ Compiled in 140ms (501 modules)
+ GET /onboarding 200 in 30ms
+ GET / 200 in 31ms
+ GET /onboarding 200 in 23ms
+ ✓ Compiled in 89ms (501 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 13ms
+ ✓ Compiled in 79ms (501 modules)
+ GET /onboarding 200 in 25ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 510ms (1152 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /onboarding 200 in 91ms
+ GET / 200 in 92ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /onboarding 200 in 119ms
+ GET /onboarding 200 in 194ms
+ GET / 200 in 109ms
+ GET /onboarding 200 in 110ms
+ ✓ Compiled in 84ms (501 modules)
+ GET /onboarding 200 in 23ms
+ GET / 200 in 23ms
+ GET /onboarding 200 in 11ms
+ ✓ Compiled in 91ms (501 modules)
+ GET / 200 in 76ms
+ GET /onboarding 200 in 97ms
+ ✓ Compiled in 112ms (501 modules)
+ GET /onboarding 200 in 37ms
+ GET / 200 in 24ms
+ GET /onboarding 200 in 29ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 749ms (1152 modules)
+ GET /onboarding 200 in 131ms
+ GET / 200 in 130ms
+ GET /onboarding 200 in 27ms
+ ✓ Compiled in 81ms (501 modules)
+ GET /onboarding 200 in 24ms
+ GET / 200 in 23ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 82ms (501 modules)
+ GET /onboarding 200 in 27ms
+ GET / 200 in 27ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 359ms (1152 modules)
+ GET /onboarding 200 in 585ms
+ GET / 200 in 279ms
+ GET /onboarding 200 in 288ms
+ GET /onboarding 200 in 41ms
+ ✓ Compiled in 76ms (501 modules)
+ GET /onboarding 200 in 77ms
+ GET / 200 in 78ms
+ ✓ Compiled in 108ms (501 modules)
+ GET /onboarding 200 in 81ms
+ GET /onboarding 200 in 28ms
+ GET / 200 in 32ms
+ GET /onboarding 200 in 25ms
+ ✓ Compiled in 330ms (1152 modules)
+ GET / 200 in 57ms
+ GET /onboarding 200 in 58ms
+ GET /onboarding 200 in 16ms
+ ✓ Compiled in 78ms (501 modules)
+ GET /onboarding 200 in 46ms
+ GET / 200 in 59ms
+ GET /onboarding 200 in 43ms
+ ✓ Compiled in 89ms (501 modules)
+ GET /onboarding 200 in 77ms
+ GET / 200 in 99ms
+ ✓ Compiled in 118ms (501 modules)
+ GET /onboarding 200 in 50ms
+ GET / 200 in 18ms
+ GET /onboarding 200 in 24ms
+ GET /onboarding 200 in 10ms
+ ✓ Compiled in 711ms (1152 modules)
+ GET /onboarding 200 in 91ms
+ GET / 200 in 91ms
+ GET /onboarding 200 in 34ms
+ ✓ Compiled in 80ms (501 modules)
+ GET /onboarding 200 in 27ms
+ GET / 200 in 28ms
+ GET /onboarding 200 in 19ms
+ ✓ Compiled in 78ms (501 modules)
+ GET /onboarding 200 in 38ms
+ GET / 200 in 52ms
+ GET /onboarding 200 in 79ms
+ ✓ Compiled in 245ms (1152 modules)
+ GET /onboarding 200 in 101ms
+ GET / 200 in 103ms
+ GET /onboarding 200 in 29ms
+ ✓ Compiled in 81ms (501 modules)
+ GET /onboarding 200 in 26ms
+ GET / 200 in 25ms
+ GET /onboarding 200 in 17ms
+ ✓ Compiled in 330ms (1152 modules)
+ GET / 200 in 59ms
+ GET /onboarding 200 in 60ms
+ GET /onboarding 200 in 14ms
+ ✓ Compiled in 77ms (501 modules)
+ GET /onboarding 200 in 45ms
+ GET / 200 in 47ms
+ GET /onboarding 200 in 34ms
+ ✓ Compiled in 87ms (501 modules)
+ GET /onboarding 200 in 99ms
+ GET / 200 in 99ms
+ ✓ Compiled in 125ms (501 modules)
+ GET /onboarding 200 in 62ms
+ GET /onboarding 200 in 30ms
+ GET / 200 in 30ms
+ GET /onboarding 200 in 19ms
+ ✓ Compiled in 142ms (501 modules)
+ GET / 200 in 101ms
+ GET /onboarding 200 in 103ms
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
+  page: '/onboarding'
+}
+ ✓ Compiled in 522ms (501 modules)
+ GET / 200 in 86ms
+ ✓ Compiled /_error in 308ms (1225 modules)
+ GET /onboarding 500 in 1063ms
+ GET /onboarding 200 in 71ms
+ GET /onboarding 200 in 10ms
+ GET /onboarding 200 in 107ms
+[?25h

@@ -1,0 +1,307 @@
+/* Mobile Gesture Animations and Styles */
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Gesture-specific styles */
+.gesture-swipe-active {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gesture-long-press-active {
+  animation: pulse 0.6s ease-in-out infinite;
+}
+
+.gesture-touch-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.gesture-touch-feedback::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.gesture-touch-feedback:active::after {
+  width: 200px;
+  height: 200px;
+}
+
+.gesture-pinch-zoom {
+  transition: transform 0.1s ease-out;
+  transform-origin: center center;
+}
+
+.gesture-context-menu {
+  animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gesture-fab {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gesture-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.gesture-fab:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Ripple effect utilities */
+.ripple-light {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ripple-dark {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.ripple-primary {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.ripple-success {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.ripple-warning {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.ripple-error {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* Touch-friendly sizing */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.touch-target-large {
+  min-height: 56px;
+  min-width: 56px;
+}
+
+/* Safe area support */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .safe-area-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Gesture indicators */
+.swipe-indicator {
+  position: relative;
+}
+
+.swipe-indicator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid rgba(0, 0, 0, 0.3);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transform: translateY(-50%);
+  opacity: 0.5;
+}
+
+.long-press-indicator {
+  position: relative;
+}
+
+.long-press-indicator::after {
+  content: '⏱️';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 12px;
+  opacity: 0.4;
+}
+
+/* Haptic feedback visual cues */
+.haptic-light {
+  animation: pulse 0.1s ease-out;
+}
+
+.haptic-medium {
+  animation: shake 0.2s ease-out;
+}
+
+.haptic-heavy {
+  animation: bounce-in 0.3s ease-out;
+}
+
+/* Device-specific styles */
+@media (max-width: 640px) {
+  .mobile-optimized {
+    font-size: 16px; /* Prevent zoom on input focus */
+  }
+  
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape-compact {
+    padding: 0.5rem;
+  }
+  
+  .landscape-compact .touch-target {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .gesture-swipe-active,
+  .gesture-long-press-active,
+  .gesture-touch-feedback,
+  .gesture-context-menu,
+  .gesture-fab {
+    animation: none;
+    transition: none;
+  }
+  
+  .ripple-light,
+  .ripple-dark,
+  .ripple-primary,
+  .ripple-success,
+  .ripple-warning,
+  .ripple-error {
+    animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .ripple-light {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .ripple-dark {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.gesture-focusable:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Print styles */
+@media print {
+  .gesture-fab,
+  .swipe-indicator,
+  .long-press-indicator {
+    display: none;
+  }
+}
