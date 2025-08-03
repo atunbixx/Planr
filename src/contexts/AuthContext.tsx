@@ -1,26 +1,27 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase, getCurrentUser, getCurrentCouple } from '@/lib/supabase'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { User, Session } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { Couple } from '@/types/database'
 
 // =============================================
-// AUTHENTICATION CONTEXT
+// IMPROVED AUTHENTICATION CONTEXT
 // =============================================
-// Manages user authentication and couple data
+// Fixes hydration issues, race conditions, and loading states
 
 interface AuthContextType {
   user: User | null
   couple: Couple | null
+  session: Session | null
   loading: boolean
   error: string | null
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, userData: SignUpData) => Promise<void>
   signOut: () => Promise<void>
   createCouple: (coupleData: CreateCoupleData) => Promise<void>
-  refreshUser: () => Promise<void>
-  refreshCouple: () => Promise<void>
+  refreshSession: () => Promise<void>
+  clearError: () => void
 }
 
 interface SignUpData {
@@ -44,231 +45,140 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [couple, setCouple] = useState<Couple | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [initialized, setInitialized] = useState(false)
-  
-  // Debounce auth state changes to prevent rapid updates
-  const [authChangeTimeout, setAuthChangeTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [mounted, setMounted] = useState(false)
 
-  // No development bypass - use real authentication
+  // Fetch couple data for a user
+  const fetchCoupleData = useCallback(async (userId: string) => {
+    try {
+      console.log('🔍 Fetching couple data for user:', userId)
+      const { data, error } = await supabase
+        .from('couples')
+        .select('*')
+        .or(`partner1_user_id.eq.${userId},partner2_user_id.eq.${userId}`)
+        .single()
 
-  // Initialize auth state with improved timing and better error handling
-  useEffect(() => {
-    if (initialized) return // Prevent re-initialization
-    
-    let mounted = true
-
-    // Extended timeout for reliable initialization across all networks
-    const emergencyTimeout = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn('⚠️ Auth initialization timeout after 5s, completing initialization')
-        setLoading(false)
-        setInitialized(true)
-        setUser(null)
-        setCouple(null)
-      }
-    }, 5000) // Extended to 5 seconds for reliable initialization
-
-    const initializeAuth = async (retryCount = 0) => {
-      const maxRetries = 3
-      console.log(`🔄 Initializing auth... (attempt ${retryCount + 1}/${maxRetries})`)
-      
-      try {
-        // Get session with retry logic for network issues
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
-        // Retry on transient errors
-        if (sessionError && retryCount < maxRetries - 1) {
-          console.warn(`⚠️ Session error (attempt ${retryCount + 1}), retrying:`, sessionError.message)
-          setTimeout(() => {
-            if (mounted) initializeAuth(retryCount + 1)
-          }, 1000 * (retryCount + 1)) // Exponential backoff
-          return
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('No couple profile found for user')
+          return null
         }
+        throw error
+      }
+
+      console.log('✅ Couple data fetched:', data?.id)
+      return data
+    } catch (err) {
+      console.error('Error fetching couple data:', err)
+      return null
+    }
+  }, [])
+
+  // Initialize auth state
+  useEffect(() => {
+    setMounted(true)
+    let isCancelled = false
+
+    const initializeAuth = async () => {
+      try {
+        console.log('🔄 Initializing auth...')
         
-        // Enhanced logging for authentication flow
-        console.log('🔍 Auth initialization result:', { 
-          userId: session?.user?.id,
-          email: session?.user?.email,
-          sessionError: sessionError?.message,
-          hasSession: !!session,
-          retryAttempt: retryCount + 1,
-          timestamp: new Date().toISOString()
-        })
+        // Get initial session
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession()
         
-        if (mounted) {
-          setUser(session?.user ?? null)
-          setError(sessionError ? sessionError.message : null)
-          
-          if (session?.user) {
-            console.log('✅ User authenticated successfully:', {
-              userId: session.user.id,
-              email: session.user.email,
-              lastSignIn: session.user.last_sign_in_at
-            })
+        if (!isCancelled) {
+          if (sessionError) {
+            console.error('Session error:', sessionError)
+            setError(sessionError.message)
+          } else if (initialSession) {
+            console.log('✅ Session found:', initialSession.user.email)
+            setSession(initialSession)
+            setUser(initialSession.user)
             
-            // Load couple data if user exists
-            try {
-              console.log('🔄 Loading couple data for user:', session.user.id)
-              const coupleData = await getCurrentCouple()
-              if (mounted) {
-                setCouple(coupleData)
-                console.log('✅ Couple data loaded successfully:', {
-                  coupleId: coupleData?.id,
-                  partner1: coupleData?.partner1_name,
-                  partner2: coupleData?.partner2_name,
-                  hasCouple: !!coupleData
-                })
-              }
-            } catch (err) {
-              console.error('❌ Failed to load couple data:', {
-                userId: session.user.id,
-                error: err instanceof Error ? err.message : 'Unknown error',
-                timestamp: new Date().toISOString()
-              })
-              if (mounted) setCouple(null)
+            // Fetch couple data
+            const coupleData = await fetchCoupleData(initialSession.user.id)
+            if (!isCancelled) {
+              setCouple(coupleData)
             }
           } else {
-            console.log('❌ No authenticated user found')
+            console.log('No active session')
           }
           
-          // Always complete initialization
           setLoading(false)
-          setInitialized(true)
-          console.log('🏁 Auth initialization complete:', {
-            hasUser: !!session?.user,
-            hasCouple: !!couple,
-            timestamp: new Date().toISOString()
-          })
         }
       } catch (err) {
-        console.error(`Error initializing auth (attempt ${retryCount + 1}):`, err)
-        
-        // Retry on network errors
-        if (retryCount < maxRetries - 1 && mounted) {
-          console.log(`🔄 Retrying auth initialization in ${(retryCount + 1) * 1000}ms...`)
-          setTimeout(() => {
-            if (mounted) initializeAuth(retryCount + 1)
-          }, 1000 * (retryCount + 1))
-          return
-        }
-        
-        // Final failure after all retries
-        if (mounted) {
-          setUser(null)
-          setError(err instanceof Error ? err.message : 'Failed to initialize authentication after retries')
+        console.error('Auth initialization error:', err)
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to initialize auth')
           setLoading(false)
-          setInitialized(true)
-          console.error('🚨 Auth initialization failed after all retries')
         }
       }
     }
 
-    initializeAuth(0) // Start with retry count 0
+    initializeAuth()
 
-    // Listen for auth changes with improved timing
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return
-
-        console.log('🔄 Auth state changed:', event, session?.user?.id)
+      async (event, newSession) => {
+        console.log('🔄 Auth state changed:', event)
         
-        // Clear existing timeout
-        if (authChangeTimeout) {
-          clearTimeout(authChangeTimeout)
-        }
-        
-        // Immediate update for critical events
-        if (event === 'SIGNED_OUT') {
-          console.log('🚪 User signed out, clearing state')
-          setUser(null)
-          setCouple(null)
-          setError(null)
-          return
-        }
-        
-        if (event === 'SIGNED_IN') {
-          console.log('🔑 User signed in immediately, updating state:', session?.user?.id)
-          
-          // Immediately update state to prevent dashboard redirect loop
-          if (mounted) {
-            setUser(session?.user ?? null)
-            setError(null)
-            setLoading(false) // Ensure loading is false when user is signed in
-            
-            console.log('✅ User state updated immediately:', {
-              userId: session?.user?.id,
-              email: session?.user?.email
-            })
-          }
-          
-          // Load couple data immediately for signed in users
-          if (session?.user && mounted) {
-            try {
-              const coupleData = await getCurrentCouple()
-              if (mounted) {
+        if (!isCancelled) {
+          switch (event) {
+            case 'SIGNED_IN':
+              if (newSession) {
+                setSession(newSession)
+                setUser(newSession.user)
+                setError(null)
+                
+                // Fetch couple data
+                const coupleData = await fetchCoupleData(newSession.user.id)
                 setCouple(coupleData)
-                console.log('✅ Couple data loaded after sign in:', {
-                  coupleId: coupleData?.id,
-                  hasCouple: !!coupleData
-                })
               }
-            } catch (err) {
-              console.error('❌ Could not fetch couple data after sign in:', err)
-              if (mounted) setCouple(null)
-            }
+              break
+              
+            case 'SIGNED_OUT':
+              setSession(null)
+              setUser(null)
+              setCouple(null)
+              setError(null)
+              break
+              
+            case 'TOKEN_REFRESHED':
+              if (newSession) {
+                setSession(newSession)
+                setUser(newSession.user)
+              }
+              break
+              
+            case 'USER_UPDATED':
+              if (newSession) {
+                setSession(newSession)
+                setUser(newSession.user)
+              }
+              break
           }
-          return
         }
-        
-        // Debounced update for other events (TOKEN_REFRESHED, etc.)
-        const timeout = setTimeout(async () => {
-          if (!mounted) return
-          
-          console.log('🔄 Processing auth state change (debounced):', event, !!session?.user)
-          setUser(session?.user ?? null)
-          setError(null)
-          
-          if (session?.user) {
-            // User state updated, get couple data
-            try {
-              const coupleData = await getCurrentCouple()
-              if (mounted) {
-                setCouple(coupleData)
-                console.log('✅ Couple data loaded after auth change:', !!coupleData)
-              }
-            } catch (err) {
-              console.warn('Could not fetch couple data after auth change:', err)
-              if (mounted) setCouple(null)
-            }
-          } else {
-            // User signed out
-            if (mounted) setCouple(null)
-          }
-        }, 100) // Slightly longer debounce for non-critical events
-        
-        setAuthChangeTimeout(timeout)
       }
     )
 
     return () => {
-      mounted = false
-      clearTimeout(emergencyTimeout)
-      if (authChangeTimeout) {
-        clearTimeout(authChangeTimeout)
-      }
+      isCancelled = true
       subscription.unsubscribe()
     }
-  }, [initialized])
+  }, [fetchCoupleData])
+
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
       setError(null)
-      setLoading(true)
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+      
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       })
 
@@ -276,23 +186,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signInError
       }
 
-      // User state will be updated via the auth state change listener
+      if (!data.session) {
+        throw new Error('Sign in failed - no session returned')
+      }
+
+      // Session and user will be updated via onAuthStateChange
+      console.log('✅ Sign in successful')
     } catch (err: any) {
       console.error('Sign in error:', err)
-      setError(err.message || 'Failed to sign in')
+      const errorMessage = err.message || 'Failed to sign in'
+      setError(errorMessage)
       throw err
-    } finally {
-      setLoading(false)
     }
   }
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
       setError(null)
-      setLoading(true)
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
         options: {
           data: {
@@ -306,13 +219,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signUpError
       }
 
-      // User state will be updated via the auth state change listener
+      if (!data.user) {
+        throw new Error('Sign up failed - no user returned')
+      }
+
+      console.log('✅ Sign up successful')
     } catch (err: any) {
       console.error('Sign up error:', err)
-      setError(err.message || 'Failed to sign up')
+      const errorMessage = err.message || 'Failed to sign up'
+      setError(errorMessage)
       throw err
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -325,10 +241,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error
       }
 
-      // State will be updated via the auth state change listener
+      // State will be cleared via onAuthStateChange
+      console.log('✅ Sign out successful')
     } catch (err: any) {
       console.error('Sign out error:', err)
-      setError(err.message || 'Failed to sign out')
+      const errorMessage = err.message || 'Failed to sign out'
+      setError(errorMessage)
       throw err
     }
   }
@@ -341,131 +259,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Must be authenticated to create couple profile')
       }
 
-      console.log('Creating couple with data:', {
-        partner1_user_id: user.id,
-        partner1_name: coupleData.partner1Name,
-        partner2_name: coupleData.partner2Name || null,
-        wedding_date: coupleData.weddingDate || null,
-        venue_name: coupleData.venueName || null,
-        venue_location: coupleData.venueLocation || null,
-        guest_count: coupleData.guestCountEstimate || 100,
-        total_budget: coupleData.budgetTotal || 50000, // Changed from budget_total to total_budget
-        wedding_style: coupleData.weddingStyle || 'traditional',
-      })
-
-      // Check if user is properly authenticated
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        throw new Error('No active session - please log in again')
-      }
-
-      console.log('Session valid, making database request...')
-
-      // Format wedding date properly for PostgreSQL
+      // Format wedding date
       let formattedWeddingDate = null
       if (coupleData.weddingDate) {
-        try {
-          const date = new Date(coupleData.weddingDate)
-          if (!isNaN(date.getTime())) {
-            formattedWeddingDate = date.toISOString().split('T')[0] // YYYY-MM-DD format
-          }
-        } catch (err) {
-          console.warn('Invalid wedding date format:', coupleData.weddingDate)
+        const date = new Date(coupleData.weddingDate)
+        if (!isNaN(date.getTime())) {
+          formattedWeddingDate = date.toISOString().split('T')[0]
         }
       }
 
-      const insertData = {
-        partner1_user_id: user.id,
-        partner1_name: coupleData.partner1Name,
-        partner2_name: coupleData.partner2Name || null,
-        wedding_date: formattedWeddingDate,
-        venue_name: coupleData.venueName || null,
-        venue_location: coupleData.venueLocation || null,
-        guest_count: coupleData.guestCountEstimate || 100,
-        total_budget: coupleData.budgetTotal || 50000,
-        wedding_style: coupleData.weddingStyle || 'traditional',
-      }
-
-      console.log('About to insert data:', insertData)
-
       const { data, error } = await supabase
         .from('couples')
-        .insert(insertData)
+        .insert({
+          partner1_user_id: user.id,
+          partner1_name: coupleData.partner1Name,
+          partner2_name: coupleData.partner2Name || null,
+          wedding_date: formattedWeddingDate,
+          venue_name: coupleData.venueName || null,
+          venue_location: coupleData.venueLocation || null,
+          guest_count_estimate: coupleData.guestCountEstimate || 100,
+          total_budget: coupleData.budgetTotal || 50000,
+          wedding_style: coupleData.weddingStyle || 'traditional',
+        })
         .select()
         .single()
 
       if (error) {
-        console.error('Supabase error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        })
-        
-        // Handle specific error codes
-        if (error.code === 'PGRST406') {
-          throw new Error('Request format not accepted by server. Please check your data.')
-        } else if (error.code === 'PGRST301') {
-          throw new Error('Authentication failed. Please log in again.')
-        } else if (error.code === 'PGRST116') {
-          throw new Error('No matching record found.')
-        } else {
-          throw new Error(`Database error: ${error.message} (Code: ${error.code})`)
-        }
+        throw error
       }
 
-      console.log('Couple created successfully:', data)
-      
-      // Update couple state
+      console.log('✅ Couple created successfully:', data.id)
       setCouple(data)
       
-      // Return the created couple data
       return data
     } catch (err: any) {
-      console.error('Create couple error:', {
-        message: err?.message,
-        code: err?.code,
-        details: err?.details,
-        hint: err?.hint,
-        stack: err?.stack
-      })
+      console.error('Create couple error:', err)
       const errorMessage = err?.message || 'Failed to create couple profile'
       setError(errorMessage)
       throw new Error(errorMessage)
     }
   }
 
-  const refreshUser = async () => {
+  const refreshSession = async () => {
     try {
-      const user = await getCurrentUser()
-      setUser(user)
-    } catch (err) {
-      console.error('Error refreshing user:', err)
-      setUser(null)
-    }
-  }
+      const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession()
+      
+      if (error) {
+        throw error
+      }
 
-  const refreshCouple = async () => {
-    try {
-      const couple = await getCurrentCouple()
-      setCouple(couple)
+      if (refreshedSession) {
+        setSession(refreshedSession)
+        setUser(refreshedSession.user)
+        
+        // Refresh couple data
+        const coupleData = await fetchCoupleData(refreshedSession.user.id)
+        setCouple(coupleData)
+      }
     } catch (err) {
-      console.error('Error refreshing couple:', err)
-      setCouple(null)
+      console.error('Error refreshing session:', err)
+      setError(err instanceof Error ? err.message : 'Failed to refresh session')
     }
   }
 
   const value: AuthContextType = {
     user,
     couple,
-    loading,
+    session,
+    loading: loading || !mounted, // Prevent hydration issues
     error,
     signIn,
     signUp,
     signOut,
     createCouple,
-    refreshUser,
-    refreshCouple,
+    refreshSession,
+    clearError,
+  }
+
+  // Don't render children until mounted to prevent hydration issues
+  if (!mounted) {
+    return null
   }
 
   return (
@@ -475,10 +348,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+// Re-export the Clerk-compatible useAuth hook
+export { useAuth } from '@/hooks/useAuthCompat'

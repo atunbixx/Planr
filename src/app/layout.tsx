@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { ClerkProvider } from "@/components/providers/ClerkProvider";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { PWAProvider } from "@/components/pwa/PWAProvider";
 import { InstallPrompt, UpdatePrompt, OfflineIndicator } from "@/components/pwa";
+import { ServiceWorkerProvider } from "@/components/offline/service-worker-provider";
+import { ConnectionStatus } from "@/components/offline/connection-status";
+import { NotificationToastProvider } from "@/components/notifications/NotificationToast";
 
 export const metadata: Metadata = {
   title: "Wedding Planner - Plan Your Perfect Day",
@@ -55,6 +58,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg" />
         <link rel="icon" type="image/svg+xml" sizes="32x32" href="/icons/favicon-32x32.svg" />
         <link rel="icon" type="image/svg+xml" sizes="16x16" href="/icons/favicon-16x16.svg" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Wedding Planner" />
@@ -62,19 +66,25 @@ export default function RootLayout({
         <meta name="theme-color" content="#8B5CF6" />
       </head>
       <body className="font-sans antialiased bg-paper text-ink">
-        <PWAProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <main className="min-h-screen">
-                {children}
-              </main>
-              {/* PWA Components */}
-              <InstallPrompt />
-              <UpdatePrompt />
-              <OfflineIndicator />
-            </ToastProvider>
-          </AuthProvider>
-        </PWAProvider>
+        <ClerkProvider>
+          <ServiceWorkerProvider>
+            <PWAProvider>
+              <ToastProvider>
+                <NotificationToastProvider>
+                  <main className="min-h-screen">
+                    {children}
+                  </main>
+                  {/* PWA Components */}
+                  <InstallPrompt />
+                  <UpdatePrompt />
+                  <OfflineIndicator />
+                  {/* Offline Components */}
+                  <ConnectionStatus />
+                </NotificationToastProvider>
+              </ToastProvider>
+            </PWAProvider>
+          </ServiceWorkerProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

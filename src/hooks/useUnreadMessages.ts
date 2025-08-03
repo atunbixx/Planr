@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@clerk/nextjs'
 
 export function useUnreadMessages() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [unreadByVendor, setUnreadByVendor] = useState<Record<string, number>>({})
-  const { couple } = useAuth()
+  const { user } = useUser()
+  
+  // For now, we'll use a mock couple until we implement the database integration
+  const couple = user ? { id: 'temp-couple-id' } : null
 
   useEffect(() => {
     if (!couple?.id) return

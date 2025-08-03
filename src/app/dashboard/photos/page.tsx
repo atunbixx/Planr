@@ -8,6 +8,7 @@ import { PhotoUpload } from '@/components/photos/PhotoUpload'
 import { PhotoGallery } from '@/components/photos/PhotoGallery'
 import { Camera, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/useToast'
+import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 
 export default function PhotosPage() {
   const [coupleId, setCoupleId] = useState<string | null>(null)
@@ -53,6 +54,14 @@ export default function PhotosPage() {
     setShowUpload(false)
   }
 
+  const handleRefreshPhotos = async () => {
+    // Simulate refresh delay
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Force gallery refresh
+    setRefreshGallery(prev => prev + 1)
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -85,7 +94,15 @@ export default function PhotosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PullToRefresh
+      onRefresh={handleRefreshPhotos}
+      className="min-h-screen"
+      pullText="Pull to refresh photos"
+      releaseText="Release to refresh"
+      loadingText="Refreshing gallery..."
+      successText="Photos updated!"
+    >
+      <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -124,5 +141,6 @@ export default function PhotosPage() {
       {/* Gallery */}
       <PhotoGallery key={refreshGallery} coupleId={coupleId} />
     </div>
+    </PullToRefresh>
   )
 }

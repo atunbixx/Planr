@@ -128,9 +128,11 @@ model couples {
   outbound_message_log  outbound_message_log[]
   timeline_conflicts    timeline_conflicts[]
   couple_settings       couple_settings[]
+  vendor_reviews        vendor_reviews[]
+  vendor_inquiries      vendor_inquiries[]
 }
 
-// Vendor management
+// Vendor management (Personal vendors for couples)
 model vendors {
   id                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   couple_id                      String    @db.Uuid
@@ -189,6 +191,57 @@ model vendors {
   budget_items         budget_items[]
   outbound_message_log outbound_message_log[]
   task_assignments     task_assignments[]    @relation("TaskAssignmentVendor")
+}
+
+// Marketplace vendors (Public vendor directory)
+model marketplace_vendors {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_name           String    @db.VarChar(200)
+  contact_name            String?   @db.VarChar(100)
+  description             String?   @db.Text
+  category                String    @db.VarChar
+  contact_email           String?   @db.VarChar(255)
+  contact_phone           String?   @db.VarChar(20)
+  website                 String?   @db.VarChar(255)
+  address                 String?   @db.Text
+  city                    String?   @db.VarChar(100)
+  state                   String?   @db.VarChar(100)
+  zip_code                String?   @db.VarChar(20)
+  country                 String?   @default("US") @db.VarChar(2)
+  service_radius_miles    Int?      @default(50) @db.Integer
+  verified                Boolean?  @default(false) @db.Boolean
+  featured                Boolean?  @default(false) @db.Boolean
+  price_range             String?   @db.VarChar(50)
+  specialties             String[]  @default([]) @db.VarChar
+  portfolio_images        String[]  @default([]) @db.VarChar
+  portfolio_videos        String[]  @default([]) @db.VarChar
+  total_bookings          Int?      @default(0) @db.Integer
+  total_reviews           Int?      @default(0) @db.Integer
+  average_rating          Decimal?  @default(0) @db.Decimal(3, 2)
+  response_rate           Int?      @default(100) @db.Integer
+  response_time_hours     Int?      @default(24) @db.Integer
+  years_in_business       Int?      @db.Integer
+  team_size               Int?      @db.Integer
+  insurance_verified      Boolean?  @default(false) @db.Boolean
+  license_number          String?   @db.VarChar(100)
+  license_verified        Boolean?  @default(false) @db.Boolean
+  booking_lead_time_days  Int?      @default(30) @db.Integer
+  requires_deposit        Boolean?  @default(true) @db.Boolean
+  deposit_percentage      Int?      @default(25) @db.Integer
+  cancellation_policy     String?   @db.Text
+  tags                    String[]  @default([]) @db.VarChar
+  search_keywords         String?   @db.Text
+  latitude                Float?    @db.DoublePrecision
+  longitude               Float?    @db.DoublePrecision
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  vendor_packages      vendor_packages[]
+  vendor_reviews       vendor_reviews[]
+  vendor_availability  vendor_availability[]
+  vendor_inquiries     vendor_inquiries[]
+  vendor_users         vendor_users[]
 }
 
 // Vendor relationship table
@@ -318,6 +371,117 @@ model budget_alerts {
 
   // Relations
   couples couples @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+}
+
+// Vendor packages for marketplace
+model vendor_packages {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id        String    @db.Uuid
+  name             String    @db.VarChar(100)
+  description      String?   @db.Text
+  price            Decimal   @db.Decimal(10, 2)
+  price_unit       String?   @default("flat") @db.VarChar(50)
+  included_items   String[]  @default([]) @db.Text
+  excluded_items   String[]  @default([]) @db.Text
+  min_guests       Int?      @db.Integer
+  max_guests       Int?      @db.Integer
+  duration_hours   Int?      @db.Integer
+  is_popular       Boolean?  @default(false) @db.Boolean
+  display_order    Int?      @default(0) @db.Integer
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+}
+
+// Vendor reviews for marketplace
+model vendor_reviews {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id            String    @db.Uuid
+  couple_id            String?   @db.Uuid
+  rating               Int       @db.Integer
+  title                String?   @db.VarChar(200)
+  review               String    @db.Text
+  reviewer_name        String    @db.VarChar(100)
+  event_date           DateTime? @db.Date
+  verified_booking     Boolean?  @default(false) @db.Boolean
+  vendor_response      String?   @db.Text
+  vendor_response_date DateTime? @db.Timestamptz(6)
+  photos               String[]  @default([]) @db.VarChar
+  helpful_count        Int?      @default(0) @db.Integer
+  not_helpful_count    Int?      @default(0) @db.Integer
+  is_published         Boolean?  @default(true) @db.Boolean
+  moderation_status    String?   @default("approved") @db.VarChar(50)
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  couples             couples?            @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+}
+
+// Vendor availability calendar
+model vendor_availability {
+  id                          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id                   String    @db.Uuid
+  date                        DateTime  @db.Date
+  is_available                Boolean?  @default(true) @db.Boolean
+  is_booked                   Boolean?  @default(false) @db.Boolean
+  hold_until                  DateTime? @db.Timestamptz(6)
+  price_adjustment_percentage Int?      @default(0) @db.Integer
+  notes                       String?   @db.Text
+  created_at                  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, date])
+}
+
+// Vendor inquiries
+model vendor_inquiries {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id            String    @db.Uuid
+  couple_id            String?   @db.Uuid
+  name                 String    @db.VarChar(100)
+  email                String    @db.VarChar(255)
+  phone                String?   @db.VarChar(20)
+  event_date           DateTime? @db.Date
+  event_type           String?   @db.VarChar(50)
+  guest_count          Int?      @db.Integer
+  budget_range         String?   @db.VarChar(50)
+  message              String    @db.Text
+  specific_questions   String?   @db.Text
+  source               String?   @default("marketplace") @db.VarChar(50)
+  ip_address           String?   @db.Inet
+  user_agent           String?   @db.Text
+  responded            Boolean?  @default(false) @db.Boolean
+  responded_at         DateTime? @db.Timestamptz(6)
+  response_time_hours  Int?      @db.Integer
+  converted_to_booking Boolean?  @default(false) @db.Boolean
+  booking_value        Decimal?  @db.Decimal(10, 2)
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  couples             couples?            @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+}
+
+// Vendor users for authentication
+model vendor_users {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id  String   @db.Uuid
+  user_id    String   @db.Uuid
+  role       String?  @default("owner") @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, user_id])
 }
 
 // Guest management

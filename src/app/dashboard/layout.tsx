@@ -1,18 +1,20 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { UnreadBadge } from '@/components/messages/UnreadBadge'
+import { MobileBottomNav } from '@/components/navigation/MobileBottomNav'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: 'fas fa-home' },
   { name: 'Vendors', href: '/dashboard/vendors', icon: 'fas fa-store' },
+  { name: 'Marketplace', href: '/dashboard/marketplace', icon: 'fas fa-shopping-bag' },
   { name: 'Messages', href: '/dashboard/messages', icon: 'fas fa-comments' },
   { name: 'Guests', href: '/dashboard/guests', icon: 'fas fa-users' },
   { name: 'RSVP', href: '/dashboard/rsvp', icon: 'fas fa-envelope-open-text' },
@@ -34,10 +36,18 @@ export default function DashboardLayout({
   const pathname = usePathname()
   const { unreadCount } = useUnreadMessages()
   
-  // Check for demo mode
-  const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('demo-mode') === 'true'
+  // Check for demo mode after mount to avoid hydration issues
+  const [isDemoMode, setIsDemoMode] = useState(false)
   
-  // Use demo data for demo mode, otherwise use real auth
+  useEffect(() => {
+    setIsDemoMode(localStorage.getItem('demo-mode') === 'true')
+  }, [])
+  
+  // Use Clerk for authentication
+  const { user: clerkUser, isLoaded } = useUser()
+  const { signOut: clerkSignOut } = useClerk()
+  
+  // Use demo data for demo mode, otherwise use Clerk auth
   const { user, couple, loading, signOut } = isDemoMode ? {
     user: { id: 'demo-user', email: 'demo@wedding-planner.com' },
     couple: {
@@ -56,7 +66,18 @@ export default function DashboardLayout({
       localStorage.removeItem('demo-mode')
       router.push('/')
     }
-  } : useAuth()
+  } : {
+    user: clerkUser ? { 
+      id: clerkUser.id, 
+      email: clerkUser.emailAddresses[0]?.emailAddress || '' 
+    } : null,
+    couple: null, // We'll need to fetch this from your database
+    loading: !isLoaded,
+    signOut: async () => {
+      await clerkSignOut()
+      router.push('/')
+    }
+  }
   
   // Debug logging for dashboard layout
   console.log('🏠 Dashboard Layout State:', { 
@@ -83,7 +104,7 @@ export default function DashboardLayout({
     return (couple as any)[mappedProperty] || (couple as any)[property] || fallback
   }
 
-  // More robust authentication check with delayed redirect
+  // Authentication check - immediate, no delays
   useEffect(() => {
     console.log('🔍 Dashboard auth check:', { 
       loading, 
@@ -100,26 +121,16 @@ export default function DashboardLayout({
       return
     }
     
-    // Give auth context time to initialize after page reload
-    const redirectTimeout = setTimeout(() => {
-      console.log('🔄 Checking auth status after delay:', { 
-        user: !!user, 
-        loading,
-        userId: user?.id 
-      })
-      
-      if (!user && !loading) {
-        console.log('❌ No user found after loading complete, redirecting to sign-in')
-        router.push('/auth/signin')
-      } else if (user) {
-        console.log('✅ User authenticated, staying on dashboard:', user.id)
-      }
-    }, 2000) // Increased to 2 seconds to ensure auth state is fully loaded
-    
-    return () => clearTimeout(redirectTimeout)
+    // Immediate check - no artificial delays
+    if (!user && !loading) {
+      console.log('❌ No user found after loading complete, redirecting to sign-in')
+      router.push('/auth/signin')
+    } else if (user) {
+      console.log('✅ User authenticated, staying on dashboard:', user.id)
+    }
   }, [user, loading, router, pathname])
 
-  // Redirect to onboarding if no couple profile (with delay)
+  // Redirect to onboarding if no couple profile - immediate check
   useEffect(() => {
     console.log('🔍 Dashboard couple check:', { loading, user: !!user, couple: !!couple, pathname })
     
@@ -129,18 +140,13 @@ export default function DashboardLayout({
       return
     }
     
-    // Add delay to allow couple data to load
-    const coupleTimeout = setTimeout(() => {
-      // Only redirect if we have a user but no couple data and we're done loading
-      if (!couple) {
-        console.log('❌ User exists but no couple data, redirecting to onboarding')
-        router.push('/onboarding')
-      } else {
-        console.log('✅ Couple data found, staying on dashboard')
-      }
-    }, 2000) // Increased to 2 seconds to allow couple data to load
-    
-    return () => clearTimeout(coupleTimeout)
+    // Immediate check - trust the auth context's loading state
+    if (!couple) {
+      console.log('❌ User exists but no couple data, redirecting to onboarding')
+      router.push('/onboarding')
+    } else {
+      console.log('✅ Couple data found, staying on dashboard')
+    }
   }, [user, couple, loading, router, pathname])
 
   const handleSignOut = async () => {
@@ -173,8 +179,8 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-paper border-b border-gray-200 sticky top-0 z-40">
+      {/* Header - Hide on mobile to save space */}
+      <header className="bg-paper border-b border-gray-200 sticky top-0 z-40 hidden md:block">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Couple Info */}
@@ -205,9 +211,24 @@ export default function DashboardLayout({
         </div>
       </header>
 
+      {/* Mobile Header */}
+      <header className="bg-paper border-b border-gray-200 sticky top-0 z-40 md:hidden">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Link href="/dashboard" className="flex items-center">
+              <h1 className="text-xl font-serif font-bold text-ink">Wedding Studio</h1>
+            </Link>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>{couple?.partner1_name}</span>
+              {couple?.partner2_name && <span>& {couple.partner2_name}</span>}
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="flex">
-        {/* Enhanced Sidebar with Wedding Studio Theme */}
-        <aside style={{
+        {/* Enhanced Sidebar with Wedding Studio Theme - Hidden on mobile */}
+        <aside className="hidden md:block" style={{
           width: '280px',
           backgroundColor: '#000000',
           color: '#ffffff',
@@ -433,10 +454,13 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

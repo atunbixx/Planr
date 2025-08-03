@@ -9,6 +9,7 @@ import { VendorChatHeader } from '@/components/messages/VendorChatHeader';
 import { Card } from '@/components/ui/card';
 import { MessageCircle } from 'lucide-react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 
 // Mock conversations for now
 const mockConversations = [
@@ -92,6 +93,28 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const handleRefreshMessages = async () => {
+    // Simulate refreshing messages
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // In a real app, this would fetch new messages from the server
+    // For now, we'll just update the last message timestamp
+    setConversations(prevConversations => 
+      prevConversations.map(conv => ({
+        ...conv,
+        lastMessage: {
+          ...conv.lastMessage,
+          timestamp: new Date()
+        }
+      }))
+    );
+    
+    // Refresh current messages if a vendor is selected
+    if (selectedVendorId) {
+      setMessages(getMockMessages(selectedVendorId));
+    }
+  };
 
   useEffect(() => {
     // Check if mobile
@@ -213,7 +236,15 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <PullToRefresh
+      onRefresh={handleRefreshMessages}
+      className="h-screen"
+      pullText="Pull to refresh messages"
+      releaseText="Release to refresh"
+      loadingText="Checking for new messages..."
+      successText="Messages updated!"
+    >
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="p-6 bg-white dark:bg-gray-800 border-b">
         <h1 className="text-2xl font-bold">Messages</h1>
@@ -269,5 +300,6 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+    </PullToRefresh>
   );
 }

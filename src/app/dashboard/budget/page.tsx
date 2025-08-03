@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input, Select } from '@/components/ui/input'
 import { cn } from '@/utils/cn'
+import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 import { BudgetAnalyticsNew } from '@/components/budget/BudgetAnalyticsNew'
 import { PaymentOverview } from '@/components/budget/PaymentOverview'
 import { BudgetTemplates } from '@/components/budget/BudgetTemplates'
@@ -56,7 +57,15 @@ export default function BudgetPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PullToRefresh
+      onRefresh={refreshBudget}
+      className="min-h-screen"
+      pullText="Pull to refresh budget"
+      releaseText="Release to refresh"
+      loadingText="Updating budget data..."
+      successText="Budget updated!"
+    >
+      <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -280,5 +289,6 @@ export default function BudgetPage() {
         />
       )}
     </div>
+    </PullToRefresh>
   )
 }

@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast'
 import { AvatarUpload } from '@/components/settings/AvatarUpload'
 import { ThemeSelector, ThemePreview } from '@/components/settings/ThemeSelector'
 import { NotificationToggle, NotificationGroup, ToggleAll } from '@/components/settings/NotificationToggle'
+import { SmartNotificationSettings } from '@/components/settings/SmartNotificationSettings'
+import { LocationTriggers } from '@/components/notifications/LocationTriggers'
 import {
   profileSettingsSchema,
   passwordChangeSchema,
@@ -551,91 +553,13 @@ export default function SettingsPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
-              className="grid gap-6"
+              className="space-y-6"
             >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Email Notifications</CardTitle>
-                  <CardDescription>Choose which emails you'd like to receive</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <ToggleAll
-                    enabled={Object.values(notifications).every(v => v === true)}
-                    onChange={(enabled) => {
-                      const newState = Object.keys(notifications).reduce((acc, key) => ({
-                        ...acc,
-                        [key]: enabled
-                      }), {} as NotificationPreferences)
-                      setNotifications(newState)
-                    }}
-                  />
-
-                  <NotificationGroup
-                    title="Essential Updates"
-                    description="Important notifications about your wedding planning"
-                    icon="fas fa-info-circle"
-                  >
-                    <NotificationToggle
-                      checked={notifications.emailUpdates}
-                      onChange={(checked) => setNotifications({ ...notifications, emailUpdates: checked })}
-                      label="General updates and announcements"
-                      description="Stay informed about new features and important updates"
-                    />
-                    <NotificationToggle
-                      checked={notifications.taskReminders}
-                      onChange={(checked) => setNotifications({ ...notifications, taskReminders: checked })}
-                      label="Task reminders"
-                      description="Get notified about upcoming tasks and deadlines"
-                    />
-                  </NotificationGroup>
-
-                  <NotificationGroup
-                    title="Wedding Activity"
-                    description="Notifications about your wedding planning progress"
-                    icon="fas fa-ring"
-                  >
-                    <NotificationToggle
-                      checked={notifications.vendorMessages}
-                      onChange={(checked) => setNotifications({ ...notifications, vendorMessages: checked })}
-                      label="Vendor messages"
-                      description="Receive notifications when vendors send you messages"
-                    />
-                    <NotificationToggle
-                      checked={notifications.guestRsvpAlerts}
-                      onChange={(checked) => setNotifications({ ...notifications, guestRsvpAlerts: checked })}
-                      label="Guest RSVP alerts"
-                      description="Get notified when guests respond to your invitations"
-                    />
-                    <NotificationToggle
-                      checked={notifications.budgetAlerts}
-                      onChange={(checked) => setNotifications({ ...notifications, budgetAlerts: checked })}
-                      label="Budget alerts"
-                      description="Receive alerts about budget changes and overspending"
-                    />
-                  </NotificationGroup>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Email Frequency</CardTitle>
-                  <CardDescription>How often would you like to receive summary emails?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <NotificationToggle
-                    checked={notifications.dailyDigest}
-                    onChange={(checked) => setNotifications({ ...notifications, dailyDigest: checked })}
-                    label="Daily Digest"
-                    description="Summary of daily activities sent every morning"
-                  />
-                  <NotificationToggle
-                    checked={notifications.weeklyReport}
-                    onChange={(checked) => setNotifications({ ...notifications, weeklyReport: checked })}
-                    label="Weekly Report"
-                    description="Weekly progress summary sent every Monday"
-                  />
-                </CardContent>
-              </Card>
+              {/* Smart Notification Settings */}
+              <SmartNotificationSettings />
+              
+              {/* Location-Based Notifications */}
+              <LocationTriggers />
             </motion.div>
           )}
 

@@ -111,14 +111,14 @@ function LandingPage() {
             
             <div className="flex items-center space-x-4">
               <Link 
-                href="/auth/signin"
+                href="/sign-in"
                 className="text-sm font-medium tracking-wider hover:text-red-600 transition-colors"
                 style={{ color: designSystem.colors.gray[700] }}
               >
                 SIGN IN
               </Link>
               <Link 
-                href="/auth/signin" 
+                href="/sign-up" 
                 className="px-6 py-2 text-sm font-medium tracking-wider hover:bg-gray-900 transition-colors"
                 style={{ 
                   backgroundColor: designSystem.colors.ink,
@@ -215,7 +215,7 @@ function LandingPage() {
               {/* Editorial CTA */}
               <div className="flex flex-col sm:flex-row gap-4 pt-8">
                 <Link 
-                  href="/auth/signin" 
+                  href="/sign-up" 
                   className="group inline-flex items-center justify-center px-8 py-4 text-sm font-medium tracking-wider transition-all duration-300"
                   style={{ 
                     backgroundColor: designSystem.colors.ink,
@@ -495,7 +495,7 @@ function LandingPage() {
             Experience the difference that thoughtful design and intelligent features make.
           </p>
           <Link 
-            href="/auth/signin"
+            href="/sign-up"
             className="inline-flex items-center px-12 py-5 text-sm font-medium tracking-widest uppercase transition-all duration-300 group hover:shadow-lg"
             style={{ 
               backgroundColor: designSystem.colors.ink,

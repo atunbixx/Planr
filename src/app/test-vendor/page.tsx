@@ -1,185 +1,624 @@
 'use client'
 
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { ArrowRight, Calendar, DollarSign, Users, CheckSquare } from 'lucide-react'
+import { monitoring } from '@/lib/monitoring'
 
-export default function TestVendorPage() {
-  const { user, couple } = useAuth()
-  const [testResult, setTestResult] = useState<string>('')
-  const [loading, setLoading] = useState(false)
-
-  const testVendorCreation = async () => {
-    setLoading(true)
-    setTestResult('Starting vendor creation test...\n')
-    
-    try {
-      // Test 1: Check authentication
-      setTestResult(prev => prev + `✅ User authenticated: ${user?.email || 'No user'}\n`)
-      setTestResult(prev => prev + `✅ Couple profile: ${couple?.id || 'No couple'}\n`)
-      
-      if (!user || !couple) {
-        setTestResult(prev => prev + '❌ Missing authentication or couple profile\n')
-        return
-      }
-
-      // Test 2: Check database connection
-      setTestResult(prev => prev + '🔍 Testing database connection...\n')
-      const { data: testQuery, error: testError } = await supabase
-        .from('couple_vendors')
-        .select('count')
-        .eq('couple_id', couple.id)
-        .maybeSingle()
-
-      if (testError) {
-        setTestResult(prev => prev + `❌ Database error: ${testError.message}\n`)
-        return
-      }
-      
-      setTestResult(prev => prev + '✅ Database connection successful\n')
-
-      // Test 3: Try to create a simple vendor
-      setTestResult(prev => prev + '🏪 Creating test vendor...\n')
-      
-      const vendorData = {
-        couple_id: couple.id,
-        name: 'Test Vendor ' + Date.now(),
-        category: 'venue' as const,
-        status: 'researching' as const,
-        country: 'US',
-        service_radius_miles: 50,
-        booking_lead_time_days: 30,
-        requires_deposit: true,
-        deposit_percentage: 25,
-        deposit_paid: false,
-        contract_signed: false,
-        insurance_verified: false,
-        availability_confirmed: false,
-        total_bookings: 0,
-        total_reviews: 0,
-        average_rating: 0,
-        response_rate: 100,
-        response_time_hours: 24,
-      }
-
-      const { data: newVendor, error: createError } = await supabase
-        .from('couple_vendors')
-        .insert(vendorData)
-        .select()
-        .single()
-
-      if (createError) {
-        setTestResult(prev => prev + `❌ Vendor creation error: ${createError.message}\n`)
-        setTestResult(prev => prev + `📊 Error details: ${JSON.stringify(createError, null, 2)}\n`)
-        return
-      }
-
-      setTestResult(prev => prev + `✅ Vendor created successfully! ID: ${newVendor.id}\n`)
-      setTestResult(prev => prev + `📊 Vendor data: ${JSON.stringify(newVendor, null, 2)}\n`)
-
-      // Test 4: Clean up - delete the test vendor
-      setTestResult(prev => prev + '🧹 Cleaning up test vendor...\n')
-      
-      const { error: deleteError } = await supabase
-        .from('couple_vendors')
-        .delete()
-        .eq('id', newVendor.id)
-
-      if (deleteError) {
-        setTestResult(prev => prev + `⚠️ Cleanup error: ${deleteError.message}\n`)
-      } else {
-        setTestResult(prev => prev + '✅ Test vendor cleaned up\n')
-      }
-
-      setTestResult(prev => prev + '\n🎉 All tests passed! Vendor creation should work.\n')
-
-    } catch (error: any) {
-      setTestResult(prev => prev + `❌ Unexpected error: ${error.message}\n`)
-      console.error('Test error:', error)
-    } finally {
-      setLoading(false)
-    }
+export default function Home() {
+  // Track page view
+  useEffect(() => {
+    monitoring.trackPageView('/')
+  }, [])
+  
+  // Track user interactions
+  const trackCTAClick = (location: string) => {
+    monitoring.trackUserAction('cta_click', { location, page: 'home' })
   }
+  const [currentSlide, setCurrentSlide] = useState(0)
+  
+  const heroImages = [
+    'Modern couples deserve modern tools',
+    'Plan every detail with precision',
+    'Your wedding, perfectly orchestrated'
+  ]
 
-  const testDatabaseSchema = async () => {
-    setLoading(true)
-    setTestResult('Checking database schema...\n')
-    
-    try {
-      // Check if the table exists and what columns it has
-      const { data, error } = await supabase
-        .from('couple_vendors')
-        .select('*')
-        .limit(1)
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          setTestResult(prev => prev + '❌ Table "couple_vendors" does not exist\n')
-        } else {
-          setTestResult(prev => prev + `❌ Schema error: ${error.message}\n`)
-        }
-        return
-      }
-
-      setTestResult(prev => prev + '✅ Table "couple_vendors" exists\n')
-      setTestResult(prev => prev + `📊 Sample data structure: ${JSON.stringify(data?.[0] || 'No data', null, 2)}\n`)
-
-    } catch (error: any) {
-      setTestResult(prev => prev + `❌ Schema check error: ${error.message}\n`)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [heroImages.length])
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>🔧 Vendor System Debug</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button 
-              onClick={testVendorCreation} 
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? 'Testing...' : '🧪 Test Vendor Creation'}
-            </Button>
+    <div style={{ 
+      minHeight: '100vh',
+      backgroundColor: '#FFFFFF',
+      fontFamily: '"Inter", -apple-system, sans-serif'
+    }}>
+      {/* Navigation Bar */}
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid #E5E5E5',
+        zIndex: 50,
+        padding: '1.5rem 0'
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <h1 style={{
+              fontFamily: '"Playfair Display", serif',
+              fontSize: '1.75rem',
+              fontWeight: '700',
+              color: '#000000',
+              margin: 0
+            }}>
+              Wedding Studio
+            </h1>
+            <div style={{
+              width: '30px',
+              height: '2px',
+              backgroundColor: '#FF3366',
+              marginTop: '0.25rem'
+            }} />
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            gap: '2rem',
+            alignItems: 'center'
+          }}>
+            <Link href="/auth/login" style={{
+              fontSize: '0.875rem',
+              color: '#000000',
+              textDecoration: 'none',
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Sign In
+            </Link>
+            <Link href="/auth/signup" style={{
+              padding: '0.75rem 2rem',
+              backgroundColor: '#000000',
+              color: '#FFFFFF',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              transition: 'all 0.2s ease'
+            }}>
+              Start Planning
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section style={{
+        paddingTop: '120px',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#000000',
+          opacity: 0.05,
+          zIndex: -1
+        }} />
+        
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 2rem',
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '4rem',
+          alignItems: 'center'
+        }}>
+          <div>
+            <p style={{
+              fontSize: '0.75rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: '#FF3366',
+              marginBottom: '1rem',
+              fontWeight: '600'
+            }}>
+              The New Standard in Wedding Planning
+            </p>
             
-            <Button 
-              onClick={testDatabaseSchema} 
-              disabled={loading}
-              variant="secondary"
-              className="w-full"
-            >
-              {loading ? 'Testing...' : '📊 Check Database Schema'}
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold">Authentication Status:</h3>
-            <div className="text-sm space-y-1">
-              <div>User: {user?.email || '❌ Not logged in'}</div>
-              <div>User ID: {user?.id || '❌ No ID'}</div>
-              <div>Couple ID: {couple?.id || '❌ No couple profile'}</div>
-              <div>Couple Names: {couple?.partner1_name} {couple?.partner2_name ? `& ${couple.partner2_name}` : ''}</div>
+            <h2 style={{
+              fontFamily: '"Playfair Display", serif',
+              fontSize: '4.5rem',
+              fontWeight: '700',
+              lineHeight: '1.1',
+              color: '#000000',
+              marginBottom: '2rem'
+            }}>
+              {heroImages[currentSlide]}
+            </h2>
+            
+            <p style={{
+              fontSize: '1.25rem',
+              lineHeight: '1.75',
+              color: '#404040',
+              marginBottom: '3rem',
+              maxWidth: '500px'
+            }}>
+              Sophisticated tools for the discerning couple. Plan your wedding with the elegance it deserves.
+            </p>
+            
+            <div style={{
+              display: 'flex',
+              gap: '1.5rem',
+              alignItems: 'center'
+            }}>
+              <Link href="/auth/signup" 
+                onClick={() => trackCTAClick('hero')}
+                style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '1rem 2.5rem',
+                backgroundColor: '#000000',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                fontSize: '1rem',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}>
+                Begin Your Journey
+                <ArrowRight size={18} />
+              </Link>
+              
+              <Link href="#features" style={{
+                fontSize: '1rem',
+                color: '#000000',
+                textDecoration: 'underline',
+                textUnderlineOffset: '4px',
+                fontWeight: '500'
+              }}>
+                Explore Features
+              </Link>
+            </div>
+            
+            {/* Hero Stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '2rem',
+              marginTop: '4rem',
+              paddingTop: '4rem',
+              borderTop: '1px solid #E5E5E5'
+            }}>
+              <div>
+                <p style={{
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  color: '#000000',
+                  marginBottom: '0.25rem'
+                }}>
+                  10K+
+                </p>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: '#737373',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  Weddings Planned
+                </p>
+              </div>
+              <div>
+                <p style={{
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  color: '#000000',
+                  marginBottom: '0.25rem'
+                }}>
+                  98%
+                </p>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: '#737373',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  Satisfaction Rate
+                </p>
+              </div>
+              <div>
+                <p style={{
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  color: '#000000',
+                  marginBottom: '0.25rem'
+                }}>
+                  $2M+
+                </p>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: '#737373',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  Budget Managed
+                </p>
+              </div>
             </div>
           </div>
-
-          {testResult && (
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2">Test Results:</h3>
-              <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto whitespace-pre-wrap max-h-96">
-                {testResult}
-              </pre>
+          
+          {/* Hero Visual */}
+          <div style={{
+            position: 'relative',
+            height: '600px',
+            backgroundColor: '#FAFAFA',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: '2rem',
+              backgroundColor: '#000000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{
+                textAlign: 'center',
+                color: '#FFFFFF'
+              }}>
+                <Calendar size={60} style={{ marginBottom: '1rem', opacity: 0.9 }} />
+                <p style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '300',
+                  letterSpacing: '0.05em'
+                }}>
+                  WEDDING STUDIO
+                </p>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            
+            {/* Slide Indicators */}
+            <div style={{
+              position: 'absolute',
+              bottom: '2rem',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: '0.5rem'
+            }}>
+              {heroImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  style={{
+                    width: currentSlide === index ? '24px' : '8px',
+                    height: '8px',
+                    backgroundColor: currentSlide === index ? '#000000' : '#D4D4D4',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" style={{
+        padding: '6rem 0',
+        backgroundColor: '#FAFAFA'
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 2rem'
+        }}>
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '4rem'
+          }}>
+            <p style={{
+              fontSize: '0.75rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: '#FF3366',
+              marginBottom: '1rem',
+              fontWeight: '600'
+            }}>
+              Comprehensive Planning Tools
+            </p>
+            <h3 style={{
+              fontFamily: '"Playfair Display", serif',
+              fontSize: '3rem',
+              fontWeight: '700',
+              color: '#000000',
+              marginBottom: '1rem'
+            }}>
+              Everything You Need, Nothing You Don't
+            </h3>
+            <p style={{
+              fontSize: '1.125rem',
+              color: '#737373',
+              maxWidth: '600px',
+              margin: '0 auto',
+              lineHeight: '1.75'
+            }}>
+              Curated features designed for the modern couple who values both sophistication and simplicity.
+            </p>
+          </div>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '3rem'
+          }}>
+            {[
+              {
+                icon: DollarSign,
+                title: 'Budget Intelligence',
+                description: 'Advanced analytics and real-time tracking ensure every dollar is purposefully allocated.',
+                stats: 'Average savings: 23%'
+              },
+              {
+                icon: Users,
+                title: 'Guest Management',
+                description: 'Elegant RSVP tracking, dietary preferences, and seating arrangements in one place.',
+                stats: 'Up to 500 guests'
+              },
+              {
+                icon: CheckSquare,
+                title: 'Task Orchestration',
+                description: 'Intelligent task prioritization keeps your planning on schedule and stress-free.',
+                stats: '200+ task templates'
+              },
+              {
+                icon: Calendar,
+                title: 'Timeline Design',
+                description: 'Craft the perfect wedding day schedule with minute-by-minute precision.',
+                stats: 'Unlimited revisions'
+              }
+            ].map((feature, index) => (
+              <div 
+                key={index}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E5E5E5',
+                  padding: '3rem',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#000000'
+                  e.currentTarget.style.transform = 'translateY(-4px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#E5E5E5'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '2rem'
+                }}>
+                  <div style={{
+                    padding: '1rem',
+                    backgroundColor: '#FAFAFA',
+                    display: 'inline-flex'
+                  }}>
+                    <feature.icon size={24} color="#000000" />
+                  </div>
+                  
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{
+                      fontSize: '1.5rem',
+                      fontWeight: '600',
+                      color: '#000000',
+                      marginBottom: '0.75rem'
+                    }}>
+                      {feature.title}
+                    </h4>
+                    
+                    <p style={{
+                      fontSize: '1rem',
+                      color: '#737373',
+                      lineHeight: '1.75',
+                      marginBottom: '1.5rem'
+                    }}>
+                      {feature.description}
+                    </p>
+                    
+                    <p style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      color: '#000000',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      {feature.stats}
+                    </p>
+                  </div>
+                </div>
+                
+                <div style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  fontSize: '3rem',
+                  fontWeight: '700',
+                  color: '#FAFAFA',
+                  fontFamily: '"Playfair Display", serif'
+                }}>
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Editorial Quote Section */}
+      <section style={{
+        padding: '6rem 0',
+        backgroundColor: '#000000',
+        color: '#FFFFFF'
+      }}>
+        <div style={{
+          maxWidth: '1000px',
+          margin: '0 auto',
+          padding: '0 2rem',
+          textAlign: 'center'
+        }}>
+          <blockquote style={{
+            fontSize: '2.5rem',
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: '300',
+            lineHeight: '1.4',
+            marginBottom: '2rem',
+            fontStyle: 'italic'
+          }}>
+            "The most sophisticated wedding planning platform we've encountered. 
+            A masterclass in both design and functionality."
+          </blockquote>
+          <cite style={{
+            fontSize: '0.875rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            fontStyle: 'normal',
+            color: '#A3A3A3'
+          }}>
+            — Modern Wedding Magazine
+          </cite>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section style={{
+        padding: '6rem 0',
+        backgroundColor: '#FFFFFF'
+      }}>
+        <div style={{
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: '0 2rem',
+          textAlign: 'center'
+        }}>
+          <h3 style={{
+            fontFamily: '"Playfair Display", serif',
+            fontSize: '3rem',
+            fontWeight: '700',
+            color: '#000000',
+            marginBottom: '1.5rem'
+          }}>
+            Ready to Begin?
+          </h3>
+          <p style={{
+            fontSize: '1.25rem',
+            color: '#737373',
+            marginBottom: '3rem',
+            lineHeight: '1.75'
+          }}>
+            Join thousands of couples who've discovered a better way to plan their perfect day.
+          </p>
+          <Link href="/auth/signup" 
+            onClick={() => trackCTAClick('bottom')}
+            style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.25rem 3rem',
+            backgroundColor: '#FF3366',
+            color: '#FFFFFF',
+            textDecoration: 'none',
+            fontSize: '1rem',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            transition: 'all 0.2s ease'
+          }}>
+            Start Your Free Trial
+            <ArrowRight size={20} />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{
+        padding: '3rem 0',
+        backgroundColor: '#FAFAFA',
+        borderTop: '1px solid #E5E5E5'
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#737373'
+            }}>
+              © 2024 Wedding Studio. All rights reserved.
+            </p>
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: '2rem'
+          }}>
+            <Link href="/privacy" style={{
+              fontSize: '0.875rem',
+              color: '#737373',
+              textDecoration: 'none'
+            }}>
+              Privacy
+            </Link>
+            <Link href="/terms" style={{
+              fontSize: '0.875rem',
+              color: '#737373',
+              textDecoration: 'none'
+            }}>
+              Terms
+            </Link>
+            <Link href="/contact" style={{
+              fontSize: '0.875rem',
+              color: '#737373',
+              textDecoration: 'none'
+            }}>
+              Contact
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

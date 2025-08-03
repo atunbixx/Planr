@@ -9,6 +9,7 @@ import { Input, Select } from '@/components/ui/input'
 import { cn } from '@/utils/cn'
 import { GuestCategory, RSVPStatus } from '@/types/database'
 import { MealPreferences } from '@/components/guests/MealPreferences'
+import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 
 export default function GuestsPage() {
   const { 
@@ -419,7 +420,15 @@ export default function GuestsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PullToRefresh
+      onRefresh={refreshGuests}
+      className="min-h-screen"
+      pullText="Pull to refresh guest list"
+      releaseText="Release to refresh"
+      loadingText="Updating guest list..."
+      successText="Guest list updated!"
+    >
+      <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -736,5 +745,6 @@ export default function GuestsPage() {
         <MealPreferences />
       )}
     </div>
+    </PullToRefresh>
   )
 }

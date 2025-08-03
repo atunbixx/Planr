@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input, Select } from '@/components/ui/input'
 import { cn } from '@/utils/cn'
 import { VendorCategory, VendorStatus } from '@/types/database'
+import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 
 export default function VendorsPage() {
   const { 
@@ -321,7 +322,15 @@ export default function VendorsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <PullToRefresh
+      onRefresh={refreshVendors}
+      className="min-h-screen"
+      pullText="Pull to refresh vendors"
+      releaseText="Release to refresh"
+      loadingText="Updating vendor list..."
+      successText="Vendors updated!"
+    >
+      <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -571,5 +580,6 @@ export default function VendorsPage() {
         </Card>
       )}
     </div>
+    </PullToRefresh>
   )
 }
