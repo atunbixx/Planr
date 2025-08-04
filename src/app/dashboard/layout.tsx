@@ -50,6 +50,12 @@ export default async function DashboardLayout({
                   Vendors
                 </Link>
                 <Link 
+                  href="/dashboard/photos" 
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Photos
+                </Link>
+                <Link 
                   href="/dashboard/settings" 
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >

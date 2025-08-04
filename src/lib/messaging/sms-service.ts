@@ -3,15 +3,28 @@ import { getMessagingConfig } from './config';
 import type { MessageRecipient, MessageStatus, MessageTemplate } from './types';
 
 class SMSService {
-  private client: twilio.Twilio;
+  private client: twilio.Twilio | null = null;
   private config: ReturnType<typeof getMessagingConfig>;
 
   constructor() {
     this.config = getMessagingConfig();
-    this.client = twilio(
-      this.config.twilio.accountSid,
-      this.config.twilio.authToken
-    );
+    
+    // Only initialize Twilio client if credentials are valid (not placeholders)
+    if (this.config.twilio.accountSid && 
+        this.config.twilio.authToken && 
+        this.config.twilio.accountSid.startsWith('AC') &&
+        !this.config.twilio.accountSid.includes('placeholder')) {
+      this.client = twilio(
+        this.config.twilio.accountSid,
+        this.config.twilio.authToken
+      );
+    }
+  }
+
+  private ensureClientInitialized(): void {
+    if (!this.client) {
+      throw new Error('Twilio client not initialized - check credentials');
+    }
   }
 
   private formatPhoneNumber(phone: string): string {
@@ -35,6 +48,7 @@ class SMSService {
     variables?: Record<string, string>
   ): Promise<MessageStatus> {
     try {
+      this.ensureClientInitialized();
       const recipients = Array.isArray(to) ? to : [to];
       const phoneNumbers = recipients
         .filter(r => r.phone)
@@ -56,7 +70,7 @@ class SMSService {
       // Send to each recipient (Twilio doesn't support bulk SMS in single call)
       const results = await Promise.all(
         phoneNumbers.map(phone =>
-          this.client.messages.create({
+          this.client!.messages.create({
             body: processedBody,
             from: this.config.twilio.phoneNumber,
             to: phone,
@@ -99,6 +113,7 @@ class SMSService {
     mediaUrl?: string
   ): Promise<MessageStatus> {
     try {
+      this.ensureClientInitialized();
       const recipients = Array.isArray(to) ? to : [to];
       const phoneNumbers = recipients
         .filter(r => r.phone)
@@ -120,7 +135,7 @@ class SMSService {
       // Send WhatsApp message to each recipient
       const results = await Promise.all(
         phoneNumbers.map(phone =>
-          this.client.messages.create({
+          this.client!.messages.create({
             body: processedBody,
             from: `whatsapp:${this.config.twilio.phoneNumber}`,
             to: `whatsapp:${phone}`,
@@ -200,7 +215,8 @@ class SMSService {
   // Get message status from Twilio
   async getMessageStatus(messageSid: string): Promise<string> {
     try {
-      const message = await this.client.messages(messageSid).fetch();
+      this.ensureClientInitialized();
+      const message = await this.client!.messages(messageSid).fetch();
       return message.status;
     } catch (error) {
       console.error('Error fetching message status:', error);
