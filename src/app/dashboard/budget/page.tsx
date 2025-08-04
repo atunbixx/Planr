@@ -1,294 +1,260 @@
-'use client'
-
-import { useState } from 'react'
-import { useBudget, DEFAULT_BUDGET_CATEGORIES, BudgetCategoryInsert, BudgetExpenseInsert } from '@/hooks/useBudget'
+import { currentUser } from '@clerk/nextjs/server'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input, Select } from '@/components/ui/input'
-import { cn } from '@/utils/cn'
-import { PullToRefresh } from '@/components/ui/pull-to-refresh'
-import { BudgetAnalyticsNew } from '@/components/budget/BudgetAnalyticsNew'
-import { PaymentOverview } from '@/components/budget/PaymentOverview'
-import { BudgetTemplates } from '@/components/budget/BudgetTemplates'
-import { BudgetAlerts } from '@/components/budget/BudgetAlerts'
-import { BudgetHealthIndicator } from '@/components/budget/BudgetHealthIndicator'
-import { QuickExpenseEntry } from '@/components/budget/QuickExpenseEntry'
-import { BudgetExport } from '@/components/budget/BudgetExport'
-import { BudgetDashboard } from '@/components/budget/BudgetDashboard'
-import { CategoryManager } from '@/components/budget/CategoryManager'
-import { ExpenseTracker } from '@/components/budget/ExpenseTracker'
-import { BudgetComparison } from '@/components/budget/BudgetComparison'
-import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
 
-export default function BudgetPage() {
-  const { couple } = useAuth()
-  const {
-    categories,
-    expenses,
-    templates,
-    alerts,
-    loading,
-    error,
-    budgetStats,
-    addCategory,
-    addExpense,
-    updateCategory,
-    deleteExpense,
-    initializeDefaultCategories,
-    initializeFromTemplate,
-    refreshBudget
-  } = useBudget()
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'categories' | 'expenses' | 'analytics' | 'comparison' | 'payments'>('dashboard')
-
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-serif font-bold text-ink">Budget</h1>
-        </div>
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your budget...</p>
-        </div>
-      </div>
-    )
+export default async function BudgetPage() {
+  const user = await currentUser()
+  
+  // Fetch user's budget data
+  let budgetData: any = null
+  let categories: any[] = []
+  let expenses: any[] = []
+  
+  if (user?.id) {
+    // Get user's couple data and budget info
+    const { data: userData } = await supabase
+      .from('users')
+      .select(`
+        couples (
+          id,
+          budget_total,
+          budget_categories (
+            id,
+            name,
+            icon,
+            color,
+            allocated_amount,
+            spent_amount,
+            priority,
+            industry_average_percentage
+          )
+        )
+      `)
+      .eq('clerk_user_id', user.id)
+      .single()
+    
+    if (userData?.couples?.[0]) {
+      const coupleData = userData.couples[0]
+      categories = coupleData.budget_categories || []
+      
+      // Calculate totals
+      const totalBudget = Number(coupleData.budget_total) || 0
+      const totalSpent = categories.reduce((sum, cat) => sum + (Number(cat.spent_amount) || 0), 0)
+      const totalAllocated = categories.reduce((sum, cat) => sum + (Number(cat.allocated_amount) || 0), 0)
+      const remaining = totalBudget - totalSpent
+      
+      budgetData = {
+        totalBudget,
+        totalSpent,
+        totalAllocated,
+        remaining,
+        spentPercentage: totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0
+      }
+      
+      // Get recent expenses
+      const { data: expensesData } = await supabase
+        .from('expenses')
+        .select(`
+          *,
+          budget_categories (
+            name,
+            icon,
+            color
+          ),
+          vendors (
+            name
+          )
+        `)
+        .eq('couple_id', coupleData.id)
+        .order('expense_date', { ascending: false })
+        .limit(5)
+      
+      expenses = expensesData || []
+    }
   }
 
   return (
-    <PullToRefresh
-      onRefresh={refreshBudget}
-      className="min-h-screen"
-      pullText="Pull to refresh budget"
-      releaseText="Release to refresh"
-      loadingText="Updating budget data..."
-      successText="Budget updated!"
-    >
-      <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-ink">Budget</h1>
-          <p className="text-gray-600 mt-1">Track your wedding expenses and stay on budget</p>
-        </div>
-        <div className="flex gap-2">
-          {categories.length > 0 && <BudgetExport />}
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Budget Management</h1>
+        <p className="text-gray-600 mt-2">Track your wedding expenses and stay within budget</p>
       </div>
 
-      {/* Tabs */}
-      {categories.length > 0 && (
-        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg w-fit overflow-x-auto">
-          <Button
-            variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('dashboard')}
-            className={cn(
-              "px-4 py-2 whitespace-nowrap",
-              activeTab === 'dashboard' && "bg-white shadow-sm"
-            )}
-          >
-            Dashboard
-          </Button>
-          <Button
-            variant={activeTab === 'categories' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('categories')}
-            className={cn(
-              "px-4 py-2 whitespace-nowrap",
-              activeTab === 'categories' && "bg-white shadow-sm"
-            )}
-          >
-            Categories
-          </Button>
-          <Button
-            variant={activeTab === 'expenses' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('expenses')}
-            className={cn(
-              "px-4 py-2 whitespace-nowrap",
-              activeTab === 'expenses' && "bg-white shadow-sm"
-            )}
-          >
-            Expenses
-          </Button>
-          <Button
-            variant={activeTab === 'analytics' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('analytics')}
-            className={cn(
-              "px-4 py-2 whitespace-nowrap",
-              activeTab === 'analytics' && "bg-white shadow-sm"
-            )}
-          >
-            Analytics
-          </Button>
-          <Button
-            variant={activeTab === 'comparison' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('comparison')}
-            className={cn(
-              "px-4 py-2 whitespace-nowrap",
-              activeTab === 'comparison' && "bg-white shadow-sm"
-            )}
-          >
-            Compare
-          </Button>
-          <Button
-            variant={activeTab === 'payments' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('payments')}
-            className={cn(
-              "px-4 py-2 whitespace-nowrap",
-              activeTab === 'payments' && "bg-white shadow-sm"
-            )}
-          >
-            Payments
-          </Button>
-        </div>
-      )}
+      {budgetData ? (
+        <>
+          {/* Budget Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Budget</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  ${budgetData.totalBudget.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Amount Spent</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  ${budgetData.totalSpent.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {budgetData.spentPercentage}% of budget
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Remaining</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${budgetData.remaining >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  ${budgetData.remaining.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {budgetData.remaining >= 0 ? 
+                    `${Math.round(100 - budgetData.spentPercentage)}% remaining` : 
+                    'Over budget!'
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Budget Alerts */}
-      {alerts.length > 0 && <BudgetAlerts />}
+          {/* Budget Categories */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Budget Breakdown by Category</CardTitle>
+                  <CardDescription>See how your budget is distributed across different categories</CardDescription>
+                </div>
+                <Button asChild>
+                  <Link href="/dashboard/budget/categories">Manage Categories</Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {categories.length > 0 ? (
+                <div className="space-y-4">
+                  {categories.map((category) => {
+                    const spent = Number(category.spent_amount) || 0
+                    const allocated = Number(category.allocated_amount) || 0
+                    const percentage = allocated > 0 ? Math.round((spent / allocated) * 100) : 0
+                    
+                    return (
+                      <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{category.icon}</span>
+                          <div>
+                            <h3 className="font-semibold">{category.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {category.priority === 'essential' && '🔴 Essential'}
+                              {category.priority === 'important' && '🟡 Important'}
+                              {category.priority === 'nice_to_have' && '🟢 Nice to have'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">
+                            ${spent.toLocaleString()} 
+                            {allocated > 0 && <span className="text-muted-foreground text-sm ml-1">/ ${allocated.toLocaleString()}</span>}
+                          </div>
+                          {allocated > 0 && (
+                            <div className="text-sm text-muted-foreground">
+                              {percentage}% used
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No budget categories set up yet</p>
+                  <Button asChild>
+                    <Link href="/dashboard/budget/categories">Create Categories</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <span className="text-red-500">⚠️</span>
-              <p className="text-red-700">{error}</p>
-              <Button variant="secondary" size="sm" onClick={refreshBudget} className="ml-auto">
-                Retry
-              </Button>
-            </div>
+          {/* Recent Expenses */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Recent Expenses</CardTitle>
+                  <CardDescription>Your latest wedding-related purchases</CardDescription>
+                </div>
+                <Button asChild>
+                  <Link href="/dashboard/budget/expenses">Add Expense</Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {expenses.length > 0 ? (
+                <div className="space-y-4">
+                  {expenses.map((expense) => (
+                    <div key={expense.id} className="flex items-center justify-between p-3 border-l-4 bg-gray-50" 
+                         style={{ borderLeftColor: expense.budget_categories?.color || '#6B7280' }}>
+                      <div>
+                        <p className="font-semibold">{expense.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {expense.budget_categories?.name}
+                          {expense.vendors?.name && ` • ${expense.vendors.name}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold" style={{ color: expense.budget_categories?.color || '#6B7280' }}>
+                          -${Number(expense.amount).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(expense.expense_date).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No expenses recorded yet</p>
+                  <Button asChild>
+                    <Link href="/dashboard/budget/expenses">Add First Expense</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-8">
+            <h3 className="text-lg font-semibold mb-2">Set Up Your Budget</h3>
+            <p className="text-muted-foreground mb-4">
+              Complete your onboarding to start tracking your wedding budget
+            </p>
+            <Button asChild>
+              <Link href="/onboarding">Complete Setup</Link>
+            </Button>
           </CardContent>
         </Card>
       )}
-
-      {/* Initialize Default Categories */}
-      {categories.length === 0 && !loading && (
-        <>
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <div>
-                  <h3 className="font-semibold text-blue-900">Set Up Your Budget</h3>
-                  <p className="text-blue-700">Choose a template or start with default categories</p>
-                </div>
-                <div className="flex gap-4 justify-center">
-                  <Button onClick={initializeDefaultCategories}>
-                    Use Default Categories
-                  </Button>
-                  <Button variant="secondary">
-                    Choose Template Below
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Budget Templates */}
-          {templates.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget Templates</CardTitle>
-                <CardDescription>Select a template based on your wedding style and budget</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BudgetTemplates onTemplateSelected={refreshBudget} />
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
-
-      {/* Budget Overview Stats */}
-      {categories.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-ink">
-                ${budgetStats.totalBudget.toLocaleString()}
-              </div>
-              <p className="text-xs text-gray-500">Total Budget</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-accent">
-                ${budgetStats.totalSpent.toLocaleString()}
-              </div>
-              <p className="text-xs text-gray-500">Total Spent ({budgetStats.percentageSpent}%)</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className={cn(
-                "text-2xl font-bold",
-                budgetStats.totalRemaining >= 0 ? "text-green-600" : "text-red-600"
-              )}>
-                ${Math.abs(budgetStats.totalRemaining).toLocaleString()}
-              </div>
-              <p className="text-xs text-gray-500">
-                {budgetStats.totalRemaining >= 0 ? 'Remaining' : 'Over Budget'}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-ink">{budgetStats.expenseCount}</div>
-              <p className="text-xs text-gray-500">Total Expenses</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-
-      {/* Tab Content */}
-      {activeTab === 'dashboard' ? (
-        /* Dashboard Tab */
-        <BudgetDashboard 
-          categories={categories}
-          expenses={expenses}
-          totalBudget={couple?.budget_total || 50000}
-        />
-      ) : activeTab === 'categories' ? (
-        /* Categories Tab */
-        <CategoryManager 
-          categories={categories}
-          onAddCategory={addCategory}
-          onUpdateCategory={updateCategory}
-        />
-      ) : activeTab === 'expenses' ? (
-        /* Expenses Tab */
-        <ExpenseTracker 
-          expenses={expenses}
-          categories={categories}
-          onAddExpense={addExpense}
-          onDeleteExpense={deleteExpense}
-        />
-      ) : activeTab === 'comparison' ? (
-        /* Comparison Tab */
-        <BudgetComparison 
-          categories={categories}
-        />
-      ) : activeTab === 'analytics' ? (
-        /* Analytics Tab */
-        <BudgetAnalyticsNew 
-          coupleId={couple?.id || ''} 
-          totalBudget={couple?.budget_total || 50000}
-        />
-      ) : (
-        /* Payments Tab */
-        <PaymentOverview 
-          expenses={expenses}
-          categories={categories}
-          onPaymentUpdate={refreshBudget}
-        />
-      )}
     </div>
-    </PullToRefresh>
   )
 }

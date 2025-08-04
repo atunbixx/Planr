@@ -1,183 +1,197 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { sendMessageToVendor } from '@/lib/messaging/external-messaging';
-import { getUserFromCookie } from '@/utils/auth';
+import { auth } from '@clerk/nextjs/server';
+import { supabase } from '@/lib/supabase';
+import { messagingService } from '@/lib/messaging/messaging-service';
+import type { SendMessageRequest, MessageRecipient } from '@/lib/messaging/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-    
-    // Get authenticated user
-    const user = await getUserFromCookie(cookieStore);
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const {
-      vendor_id,
-      content,
-      thread_id,
-      attachments = [],
-      send_external = true
-    } = body;
-
-    if (!vendor_id || !content) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    // Get couple information
+    // Get couple ID
     const { data: couple, error: coupleError } = await supabase
-      .from('couples')
-      .select('id, partner1_name, partner2_name')
-      .or(`partner1_user_id.eq.${user.id},partner2_user_id.eq.${user.id}`)
+      .from('wedding_couples')
+      .select('id')
+      .eq('user_id', userId)
       .single();
 
     if (coupleError || !couple) {
       return NextResponse.json({ error: 'Couple not found' }, { status: 404 });
     }
 
-    // Get or create thread
-    let threadId = thread_id;
-    if (!threadId) {
-      // Check for existing thread
-      const { data: existingThread } = await supabase
-        .from('message_threads')
-        .select('id')
-        .eq('vendor_id', vendor_id)
+    const body = await request.json();
+    const { 
+      recipientIds, 
+      recipientType, // 'guest' or 'vendor'
+      messageType, // 'email', 'sms', 'whatsapp'
+      templateId,
+      customSubject,
+      customBody,
+      variables,
+      scheduledFor
+    } = body;
+
+    // Fetch recipients based on type
+    let recipients: MessageRecipient[] = [];
+
+    if (recipientType === 'guest') {
+      const { data: guests, error: guestsError } = await supabase
+        .from('wedding_guests')
+        .select('id, name, email, phone')
         .eq('couple_id', couple.id)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .in('id', recipientIds);
+
+      if (guestsError) {
+        return NextResponse.json({ error: 'Failed to fetch guests' }, { status: 500 });
+      }
+
+      recipients = guests.map(guest => ({
+        id: guest.id,
+        name: guest.name,
+        email: guest.email,
+        phone: guest.phone,
+        preferredChannel: messageType
+      }));
+    } else if (recipientType === 'vendor') {
+      const { data: vendors, error: vendorsError } = await supabase
+        .from('couple_vendors')
+        .select('id, name, business_name, email, phone')
+        .eq('couple_id', couple.id)
+        .in('id', recipientIds);
+
+      if (vendorsError) {
+        return NextResponse.json({ error: 'Failed to fetch vendors' }, { status: 500 });
+      }
+
+      recipients = vendors.map(vendor => ({
+        id: vendor.id,
+        name: vendor.business_name || vendor.name,
+        email: vendor.email,
+        phone: vendor.phone,
+        preferredChannel: messageType
+      }));
+    }
+
+    if (recipients.length === 0) {
+      return NextResponse.json({ error: 'No valid recipients found' }, { status: 400 });
+    }
+
+    // Fetch template if provided
+    let template = null;
+    if (templateId) {
+      const { data: templateData, error: templateError } = await supabase
+        .from('message_templates')
+        .select('*')
+        .eq('id', templateId)
         .single();
 
-      if (existingThread) {
-        threadId = existingThread.id;
-      } else {
-        // Create new thread
-        const { data: newThread, error: threadError } = await supabase
-          .from('message_threads')
-          .insert({
-            vendor_id,
-            couple_id: couple.id,
-            subject: 'General Inquiry',
-            thread_type: 'general',
-            status: 'open'
-          })
-          .select()
-          .single();
-
-        if (threadError) {
-          console.error('Error creating thread:', threadError);
-          return NextResponse.json(
-            { error: 'Failed to create conversation thread' },
-            { status: 500 }
-          );
-        }
-        threadId = newThread.id;
+      if (templateError) {
+        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
       }
+      template = templateData;
     }
 
-    // Create the message in the database
-    const { data: message, error: messageError } = await supabase
-      .from('vendor_messages')
-      .insert({
-        vendor_id,
+    // If scheduled for future, save to scheduled_messages table
+    if (scheduledFor && new Date(scheduledFor) > new Date()) {
+      const scheduledMessages = recipients.map(recipient => ({
         couple_id: couple.id,
-        thread_id: threadId,
-        sender_type: 'couple',
-        sender_id: user.id,
-        sender_name: `${couple.partner1_name || ''} ${couple.partner2_name ? '& ' + couple.partner2_name : ''}`.trim(),
-        message_type: attachments.length > 0 ? 'document' : 'text',
-        content,
-        attachments,
-        metadata: {
-          sent_via: 'web_app',
-          external_messaging_enabled: send_external
-        }
-      })
-      .select()
-      .single();
-
-    if (messageError) {
-      console.error('Error creating message:', messageError);
-      return NextResponse.json(
-        { error: 'Failed to send message' },
-        { status: 500 }
-      );
-    }
-
-    // Handle attachment uploads to message_media table
-    if (attachments.length > 0 && message) {
-      const mediaRecords = attachments.map((attachment: any, index: number) => ({
-        message_id: message.id,
-        media_type: attachment.type || 'document',
-        file_name: attachment.filename || `attachment_${index + 1}`,
-        file_size: attachment.size || 0,
-        mime_type: attachment.mime_type || 'application/octet-stream',
-        storage_path: attachment.url,
-        display_order: index,
-        uploaded_by: user.id
+        recipient_id: recipient.id,
+        recipient_email: recipient.email,
+        recipient_phone: recipient.phone,
+        message_type: messageType,
+        template_id: templateId,
+        subject: customSubject || template?.subject,
+        body: customBody || template?.body || '',
+        variables: variables || {},
+        scheduled_for: scheduledFor
       }));
 
-      const { error: mediaError } = await supabase
-        .from('message_media')
-        .insert(mediaRecords);
+      const { error: scheduleError } = await supabase
+        .from('scheduled_messages')
+        .insert(scheduledMessages);
 
-      if (mediaError) {
-        console.error('Error storing media records:', mediaError);
+      if (scheduleError) {
+        console.error('Schedule error:', scheduleError);
+        return NextResponse.json({ error: 'Failed to schedule messages' }, { status: 500 });
       }
+
+      return NextResponse.json({ 
+        success: true, 
+        scheduled: true,
+        count: recipients.length,
+        scheduledFor 
+      });
     }
 
-    // Send external messages if enabled
-    if (send_external) {
+    // Send messages immediately
+    const results = [];
+    for (const recipient of recipients) {
       try {
-        const coupleName = `${couple.partner1_name || ''} ${couple.partner2_name ? '& ' + couple.partner2_name : ''}`.trim();
-        const mediaUrls = attachments.map((a: any) => a.url).filter(Boolean);
+        const messageRequest: SendMessageRequest = {
+          to: recipient,
+          type: messageType,
+          subject: customSubject || template?.subject,
+          body: customBody || template?.body || '',
+          template: template ? {
+            id: template.id,
+            name: template.name,
+            type: template.type,
+            subject: template.subject,
+            body: template.body,
+            variables: template.variables || []
+          } : undefined,
+          variables: variables?.[recipient.id] || variables || {}
+        };
 
-        const externalResult = await sendMessageToVendor({
-          vendorId: vendor_id,
-          coupleId: couple.id,
-          conversationId: threadId,
-          message: content,
-          coupleName: coupleName || 'Your client',
-          mediaUrls,
-          method: 'all'
+        const status = await messagingService.sendMessage(messageRequest);
+        
+        // Log the message
+        await messagingService.logMessage(
+          couple.id,
+          recipient,
+          messageType,
+          customSubject || template?.subject,
+          customBody || template?.body || '',
+          status,
+          templateId
+        );
+
+        results.push({
+          recipientId: recipient.id,
+          recipientName: recipient.name,
+          status: status.status,
+          messageId: status.messageId,
+          error: status.error
         });
-
-        // Update message metadata with external send results
-        await supabase
-          .from('vendor_messages')
-          .update({
-            metadata: {
-              ...message.metadata,
-              external_send_results: externalResult
-            }
-          })
-          .eq('id', message.id);
-
-      } catch (externalError) {
-        console.error('External messaging error:', externalError);
-        // Don't fail the request if external messaging fails
-        // The message is already saved in the database
+      } catch (error) {
+        console.error(`Failed to send to ${recipient.name}:`, error);
+        results.push({
+          recipientId: recipient.id,
+          recipientName: recipient.name,
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
     }
 
-    return NextResponse.json({
+    const successCount = results.filter(r => r.status === 'sent').length;
+    const failedCount = results.filter(r => r.status === 'failed').length;
+
+    return NextResponse.json({ 
       success: true,
-      message: message,
-      thread_id: threadId
+      totalRecipients: recipients.length,
+      successCount,
+      failedCount,
+      results
     });
 
   } catch (error) {
     console.error('Send message error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to send messages' },
       { status: 500 }
     );
   }

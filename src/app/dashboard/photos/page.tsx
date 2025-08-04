@@ -1,146 +1,159 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PhotoUpload } from '@/components/photos/PhotoUpload'
-import { PhotoGallery } from '@/components/photos/PhotoGallery'
-import { Camera, Upload } from 'lucide-react'
-import { useToast } from '@/hooks/useToast'
-import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 
 export default function PhotosPage() {
-  const [coupleId, setCoupleId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [showUpload, setShowUpload] = useState(false)
-  const [refreshGallery, setRefreshGallery] = useState(0)
-  const supabase = createClientComponentClient()
-  const { addToast } = useToast()
-
-  // Get current couple ID
-  useEffect(() => {
-    getCurrentCouple()
-  }, [])
-
-  const getCurrentCouple = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { data: couple, error } = await supabase
-        .from('couples')
-        .select('id')
-        .or(`partner1_user_id.eq.${user.id},partner2_user_id.eq.${user.id}`)
-        .single()
-
-      if (error) throw error
-      setCoupleId(couple.id)
-    } catch (error) {
-      console.error('Error getting couple:', error)
-      addToast({
-        title: 'Error',
-        description: 'Failed to load your profile',
-        type: 'error'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleUploadComplete = (urls: string[]) => {
-    // Refresh the gallery to show new photos
-    setRefreshGallery(prev => prev + 1)
-    setShowUpload(false)
-  }
-
-  const handleRefreshPhotos = async () => {
-    // Simulate refresh delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Force gallery refresh
-    setRefreshGallery(prev => prev + 1)
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-serif font-bold text-ink">Photos</h1>
-        </div>
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your photos...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!coupleId) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-serif font-bold text-ink">Photos</h1>
-        </div>
-        <Card>
-          <CardContent className="pt-6 text-center py-12">
-            <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-ink mb-2">No profile found</h3>
-            <p className="text-gray-500">Please complete your profile setup first.</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <PullToRefresh
-      onRefresh={handleRefreshPhotos}
-      className="min-h-screen"
-      pullText="Pull to refresh photos"
-      releaseText="Release to refresh"
-      loadingText="Refreshing gallery..."
-      successText="Photos updated!"
-    >
-      <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-ink">Photos</h1>
-          <p className="text-gray-600 mt-1">Capture and organize your wedding memories</p>
+          <h1 className="text-3xl font-bold text-gray-900">Photo Gallery</h1>
+          <p className="text-gray-600 mt-2">Organize your wedding photos and memories</p>
         </div>
-        <Button onClick={() => setShowUpload(!showUpload)}>
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Photos
-        </Button>
+        <Button>Upload Photos</Button>
       </div>
 
-      {/* Upload section */}
-      {showUpload && (
+      {/* Album Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Upload Photos</CardTitle>
-            <CardDescription>
-              Add photos to your wedding gallery. You can upload multiple photos at once.
-            </CardDescription>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Photos</CardDescription>
           </CardHeader>
           <CardContent>
-            <PhotoUpload 
-              coupleId={coupleId} 
-              onUploadComplete={handleUploadComplete}
-            />
-            <div className="mt-4 flex justify-end">
-              <Button variant="outline" onClick={() => setShowUpload(false)}>
-                Cancel
-              </Button>
-            </div>
+            <div className="text-2xl font-bold">247</div>
           </CardContent>
         </Card>
-      )}
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Albums</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Storage Used</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2.3 GB</div>
+            <p className="text-xs text-muted-foreground">of 10 GB</p>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Gallery */}
-      <PhotoGallery key={refreshGallery} coupleId={coupleId} />
+      {/* Photo Albums */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Photo Albums</CardTitle>
+          <CardDescription>Organize your photos by categories and events</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Engagement Photos */}
+            <div className="group cursor-pointer">
+              <div className="aspect-square bg-gradient-to-br from-rose-100 to-pink-100 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                <span className="text-4xl">💕</span>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Album
+                  </Button>
+                </div>
+              </div>
+              <h3 className="font-semibold">Engagement Photos</h3>
+              <p className="text-sm text-muted-foreground">32 photos</p>
+            </div>
+
+            {/* Venue Visits */}
+            <div className="group cursor-pointer">
+              <div className="aspect-square bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                <span className="text-4xl">🏛️</span>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Album
+                  </Button>
+                </div>
+              </div>
+              <h3 className="font-semibold">Venue Visits</h3>
+              <p className="text-sm text-muted-foreground">45 photos</p>
+            </div>
+
+            {/* Dress Shopping */}
+            <div className="group cursor-pointer">
+              <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                <span className="text-4xl">👗</span>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Album
+                  </Button>
+                </div>
+              </div>
+              <h3 className="font-semibold">Dress Shopping</h3>
+              <p className="text-sm text-muted-foreground">28 photos</p>
+            </div>
+
+            {/* Cake Tasting */}
+            <div className="group cursor-pointer">
+              <div className="aspect-square bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                <span className="text-4xl">🎂</span>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Album
+                  </Button>
+                </div>
+              </div>
+              <h3 className="font-semibold">Cake Tasting</h3>
+              <p className="text-sm text-muted-foreground">19 photos</p>
+            </div>
+
+            {/* Flowers & Decor */}
+            <div className="group cursor-pointer">
+              <div className="aspect-square bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                <span className="text-4xl">🌸</span>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Album
+                  </Button>
+                </div>
+              </div>
+              <h3 className="font-semibold">Flowers & Decor</h3>
+              <p className="text-sm text-muted-foreground">56 photos</p>
+            </div>
+
+            {/* Inspiration */}
+            <div className="group cursor-pointer">
+              <div className="aspect-square bg-gradient-to-br from-teal-100 to-cyan-100 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                <span className="text-4xl">✨</span>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Album
+                  </Button>
+                </div>
+              </div>
+              <h3 className="font-semibold">Inspiration</h3>
+              <p className="text-sm text-muted-foreground">67 photos</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Photos */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recently Added</CardTitle>
+          <CardDescription>Your latest wedding planning photos</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
+                <span className="text-2xl opacity-50">📷</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
-    </PullToRefresh>
   )
 }

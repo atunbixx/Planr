@@ -1,0 +1,879 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum task_category {
+  venue
+  catering
+  photography
+  flowers
+  music
+  transportation
+  attire
+  invitations
+  legal
+  personal
+  other
+}
+
+enum task_priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum task_status {
+  todo
+  in_progress
+  completed
+  cancelled
+  blocked
+}
+
+enum milestone_type {
+  planning
+  vendor
+  legal
+  personal
+  financial
+  day_of
+}
+
+enum milestone_status {
+  pending
+  in_progress
+  completed
+  delayed
+}
+
+enum dependency_type {
+  finish_to_start
+  start_to_start
+  finish_to_finish
+  start_to_finish
+}
+
+enum conflict_type {
+  time_overlap
+  location_conflict
+  vendor_conflict
+  dependency_issue
+}
+
+enum conflict_severity {
+  low
+  medium
+  high
+  critical
+}
+
+enum reminder_type {
+  email
+  sms
+  push
+  in_app
+}
+
+// Core entities
+model couples {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partner1_user_id      String?   @db.Uuid
+  partner2_user_id      String?   @db.Uuid
+  partner1_name         String    @db.VarChar
+  partner2_name         String    @db.VarChar
+  wedding_date          DateTime? @db.Date
+  venue                 String?   @db.VarChar
+  venue_name            String?   @db.VarChar  // Frontend expected field
+  venue_location        String?   @db.VarChar  // Frontend expected field  
+  country               String?   @db.VarChar
+  currency              String?   @db.VarChar
+  estimated_guests      Int?      @db.Integer
+  guest_count_estimate  Int?      @db.Integer  // Frontend expected field
+  total_budget          Decimal?  @db.Decimal(10, 2)
+  budget_total          Decimal?  @db.Decimal(10, 2)  // Frontend expected field
+  has_venue             Boolean?  @default(false) @db.Boolean
+  planning_style        String?   @db.VarChar
+  wedding_style         String?   @db.VarChar  // Frontend expected field
+  onboarding_completed  Boolean?  @default(false) @db.Boolean  // Frontend expected field
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  guests                guests[]
+  vendors               vendors[]
+  couple_vendors        couple_vendors[]
+  budget_categories     budget_categories[]
+  budget_expenses       budget_expenses[]
+  budget_items          budget_items[]
+  payment_schedules     payment_schedules[]
+  payment_reminders     payment_reminders[]
+  budget_alerts         budget_alerts[]
+  tasks                 tasks[]
+  timeline_items        timeline_items[]
+  milestones            milestones[]
+  messages              messages[]
+  vendor_messages       vendor_messages[]
+  message_threads       message_threads[]
+  activity_feed         activity_feed[]
+  outbound_message_log  outbound_message_log[]
+  timeline_conflicts    timeline_conflicts[]
+  couple_settings       couple_settings[]
+  vendor_reviews        vendor_reviews[]
+  vendor_inquiries      vendor_inquiries[]
+}
+
+// Vendor management (Personal vendors for couples)
+model vendors {
+  id                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id                      String    @db.Uuid
+  name                           String    @db.VarChar
+  business_name                  String?   @db.VarChar
+  category                       String    @db.VarChar
+  status                         String    @db.VarChar
+  email                          String?   @db.VarChar
+  phone                          String?   @db.VarChar
+  website                        String?   @db.VarChar
+  address                        String?   @db.Text
+  city                           String?   @db.VarChar
+  state                          String?   @db.VarChar
+  zip_code                       String?   @db.VarChar
+  country                        String?   @db.VarChar
+  contact_person                 String?   @db.VarChar
+  estimated_cost                 Decimal?  @db.Decimal(10, 2)
+  actual_cost                    Decimal?  @db.Decimal(10, 2)
+  deposit_amount                 Decimal?  @db.Decimal(10, 2)
+  deposit_due_date               DateTime? @db.Date
+  final_payment_due              DateTime? @db.Date
+  deposit_paid                   Boolean?  @default(false) @db.Boolean
+  contract_signed                Boolean?  @default(false) @db.Boolean
+  contract_terms                 String?   @db.Text
+  cancellation_policy            String?   @db.Text
+  insurance_verified             Boolean?  @default(false) @db.Boolean
+  availability_confirmed         Boolean?  @default(false) @db.Boolean
+  rating                         Int?      @db.Integer
+  notes                          String?   @db.Text
+  referral_source                String?   @db.VarChar
+  meeting_date                   DateTime? @db.Date
+  meeting_notes                  String?   @db.Text
+  proposal_details               String?   @db.Text
+  services_provided              String[]  @db.VarChar
+  portfolio_urls                 String[]  @db.VarChar
+  price_range                    String?   @db.VarChar
+  specialty                      String?   @db.VarChar
+  budget_allocated               Decimal?  @db.Decimal(10, 2)
+  budget_spent                   Decimal?  @db.Decimal(10, 2)
+  sms_enabled                    Boolean?  @default(true) @db.Boolean
+  whatsapp_enabled               Boolean?  @default(false) @db.Boolean
+  email_notifications_enabled    Boolean?  @default(true) @db.Boolean
+  verified_phone                 Boolean?  @default(false) @db.Boolean
+  verified_email                 Boolean?  @default(false) @db.Boolean
+  created_at                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples              couples               @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  couple_vendors       couple_vendors[]
+  budget_expenses      budget_expenses[]
+  tasks                tasks[]
+  timeline_items       timeline_items[]
+  messages             messages[]
+  vendor_messages      vendor_messages[]
+  budget_items         budget_items[]
+  outbound_message_log outbound_message_log[]
+  task_assignments     task_assignments[]    @relation("TaskAssignmentVendor")
+}
+
+// Marketplace vendors (Public vendor directory)
+model marketplace_vendors {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_name           String    @db.VarChar(200)
+  contact_name            String?   @db.VarChar(100)
+  description             String?   @db.Text
+  category                String    @db.VarChar
+  contact_email           String?   @db.VarChar(255)
+  contact_phone           String?   @db.VarChar(20)
+  website                 String?   @db.VarChar(255)
+  address                 String?   @db.Text
+  city                    String?   @db.VarChar(100)
+  state                   String?   @db.VarChar(100)
+  zip_code                String?   @db.VarChar(20)
+  country                 String?   @default("US") @db.VarChar(2)
+  service_radius_miles    Int?      @default(50) @db.Integer
+  verified                Boolean?  @default(false) @db.Boolean
+  featured                Boolean?  @default(false) @db.Boolean
+  price_range             String?   @db.VarChar(50)
+  specialties             String[]  @default([]) @db.VarChar
+  portfolio_images        String[]  @default([]) @db.VarChar
+  portfolio_videos        String[]  @default([]) @db.VarChar
+  total_bookings          Int?      @default(0) @db.Integer
+  total_reviews           Int?      @default(0) @db.Integer
+  average_rating          Decimal?  @default(0) @db.Decimal(3, 2)
+  response_rate           Int?      @default(100) @db.Integer
+  response_time_hours     Int?      @default(24) @db.Integer
+  years_in_business       Int?      @db.Integer
+  team_size               Int?      @db.Integer
+  insurance_verified      Boolean?  @default(false) @db.Boolean
+  license_number          String?   @db.VarChar(100)
+  license_verified        Boolean?  @default(false) @db.Boolean
+  booking_lead_time_days  Int?      @default(30) @db.Integer
+  requires_deposit        Boolean?  @default(true) @db.Boolean
+  deposit_percentage      Int?      @default(25) @db.Integer
+  cancellation_policy     String?   @db.Text
+  tags                    String[]  @default([]) @db.VarChar
+  search_keywords         String?   @db.Text
+  latitude                Float?    @db.DoublePrecision
+  longitude               Float?    @db.DoublePrecision
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  vendor_packages      vendor_packages[]
+  vendor_reviews       vendor_reviews[]
+  vendor_availability  vendor_availability[]
+  vendor_inquiries     vendor_inquiries[]
+  vendor_users         vendor_users[]
+}
+
+// Vendor relationship table
+model couple_vendors {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id                 String    @db.Uuid
+  vendor_id                 String    @db.Uuid
+  vendor_name               String    @db.VarChar
+  vendor_type               String    @db.VarChar
+  contact_email             String?   @db.VarChar
+  contact_phone             String?   @db.VarChar
+  preferred_contact_method  String?   @db.VarChar
+  created_at                DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples          couples            @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  vendors          vendors            @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  task_assignments task_assignments[] @relation("TaskAssignmentCoupleVendor")
+
+  @@unique([couple_id, vendor_id])
+}
+
+// Budget management
+model budget_categories {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id        String   @db.Uuid
+  name             String   @db.VarChar
+  allocated_amount Decimal  @default(0) @db.Decimal(10, 2)
+  spent_amount     Decimal  @default(0) @db.Decimal(10, 2)
+  color            String?  @db.VarChar
+  icon             String?  @db.VarChar
+  priority         String?  @db.VarChar
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples         couples           @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  budget_expenses budget_expenses[]
+}
+
+model budget_expenses {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id      String   @db.Uuid
+  category_id    String   @db.Uuid
+  vendor_id      String?  @db.Uuid
+  description    String   @db.VarChar
+  amount         Decimal  @db.Decimal(10, 2)
+  expense_date   DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  payment_method String?  @db.VarChar
+  receipt_url    String?  @db.VarChar
+  notes          String?  @db.Text
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples           couples           @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  budget_categories budget_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  vendors           vendors?          @relation(fields: [vendor_id], references: [id], onDelete: SetNull)
+}
+
+model budget_items {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id        String?  @db.Uuid
+  vendor_id        String?  @db.Uuid
+  category         String   @db.VarChar
+  allocated_amount Decimal  @db.Decimal(10, 2)
+  spent_amount     Decimal? @db.Decimal(10, 2)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples? @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+  vendors vendors? @relation(fields: [vendor_id], references: [id], onDelete: SetNull)
+}
+
+// Enhanced budget system
+model payment_schedules {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id            String    @db.Uuid
+  vendor_id            String?   @db.Uuid
+  expense_category     String    @db.VarChar
+  milestone_name       String    @db.VarChar
+  amount               Decimal   @db.Decimal(10, 2)
+  due_date             DateTime  @db.Date
+  paid                 Boolean   @default(false) @db.Boolean
+  paid_date            DateTime? @db.Date
+  payment_method       String?   @db.VarChar
+  confirmation_number  String?   @db.VarChar
+  notes                String?   @db.Text
+  reminder_sent        Boolean   @default(false) @db.Boolean
+  overdue_alert_sent   Boolean   @default(false) @db.Boolean
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+}
+
+model payment_reminders {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id         String   @db.Uuid
+  payment_schedule_id String @db.Uuid
+  reminder_date     DateTime @db.Date
+  reminder_type     String   @db.VarChar
+  sent              Boolean  @default(false) @db.Boolean
+  sent_at           DateTime? @db.Timestamptz(6)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+}
+
+model budget_alerts {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id         String   @db.Uuid
+  alert_type        String   @db.VarChar
+  category          String?  @db.VarChar
+  threshold_amount  Decimal? @db.Decimal(10, 2)
+  threshold_percentage Int?  @db.Integer
+  current_amount    Decimal? @db.Decimal(10, 2)
+  message           String   @db.Text
+  severity          String   @db.VarChar
+  acknowledged      Boolean  @default(false) @db.Boolean
+  acknowledged_at   DateTime? @db.Timestamptz(6)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+}
+
+// Vendor packages for marketplace
+model vendor_packages {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id        String    @db.Uuid
+  name             String    @db.VarChar(100)
+  description      String?   @db.Text
+  price            Decimal   @db.Decimal(10, 2)
+  price_unit       String?   @default("flat") @db.VarChar(50)
+  included_items   String[]  @default([]) @db.Text
+  excluded_items   String[]  @default([]) @db.Text
+  min_guests       Int?      @db.Integer
+  max_guests       Int?      @db.Integer
+  duration_hours   Int?      @db.Integer
+  is_popular       Boolean?  @default(false) @db.Boolean
+  display_order    Int?      @default(0) @db.Integer
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+}
+
+// Vendor reviews for marketplace
+model vendor_reviews {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id            String    @db.Uuid
+  couple_id            String?   @db.Uuid
+  rating               Int       @db.Integer
+  title                String?   @db.VarChar(200)
+  review               String    @db.Text
+  reviewer_name        String    @db.VarChar(100)
+  event_date           DateTime? @db.Date
+  verified_booking     Boolean?  @default(false) @db.Boolean
+  vendor_response      String?   @db.Text
+  vendor_response_date DateTime? @db.Timestamptz(6)
+  photos               String[]  @default([]) @db.VarChar
+  helpful_count        Int?      @default(0) @db.Integer
+  not_helpful_count    Int?      @default(0) @db.Integer
+  is_published         Boolean?  @default(true) @db.Boolean
+  moderation_status    String?   @default("approved") @db.VarChar(50)
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  couples             couples?            @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+}
+
+// Vendor availability calendar
+model vendor_availability {
+  id                          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id                   String    @db.Uuid
+  date                        DateTime  @db.Date
+  is_available                Boolean?  @default(true) @db.Boolean
+  is_booked                   Boolean?  @default(false) @db.Boolean
+  hold_until                  DateTime? @db.Timestamptz(6)
+  price_adjustment_percentage Int?      @default(0) @db.Integer
+  notes                       String?   @db.Text
+  created_at                  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, date])
+}
+
+// Vendor inquiries
+model vendor_inquiries {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id            String    @db.Uuid
+  couple_id            String?   @db.Uuid
+  name                 String    @db.VarChar(100)
+  email                String    @db.VarChar(255)
+  phone                String?   @db.VarChar(20)
+  event_date           DateTime? @db.Date
+  event_type           String?   @db.VarChar(50)
+  guest_count          Int?      @db.Integer
+  budget_range         String?   @db.VarChar(50)
+  message              String    @db.Text
+  specific_questions   String?   @db.Text
+  source               String?   @default("marketplace") @db.VarChar(50)
+  ip_address           String?   @db.Inet
+  user_agent           String?   @db.Text
+  responded            Boolean?  @default(false) @db.Boolean
+  responded_at         DateTime? @db.Timestamptz(6)
+  response_time_hours  Int?      @db.Integer
+  converted_to_booking Boolean?  @default(false) @db.Boolean
+  booking_value        Decimal?  @db.Decimal(10, 2)
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  couples             couples?            @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+}
+
+// Vendor users for authentication
+model vendor_users {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id  String   @db.Uuid
+  user_id    String   @db.Uuid
+  role       String?  @default("owner") @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  marketplace_vendors marketplace_vendors @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, user_id])
+}
+
+// Guest management
+model guests {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id            String?   @db.Uuid
+  first_name           String    @db.VarChar
+  last_name            String    @db.VarChar
+  email                String?   @db.VarChar
+  phone                String?   @db.VarChar
+  category             String?   @db.VarChar
+  side                 String?   @db.VarChar
+  rsvp_status          String?   @db.VarChar
+  plus_one_invited     Boolean?  @default(false) @db.Boolean
+  plus_one_name        String?   @db.VarChar
+  plus_one_rsvp        String?   @db.VarChar
+  dietary_restrictions String?   @db.Text
+  accommodation_needs  String?   @db.Text
+  notes                String?   @db.Text
+  address              String?   @db.Text
+  city                 String?   @db.VarChar
+  state                String?   @db.VarChar
+  zip_code             String?   @db.VarChar
+  country              String?   @db.VarChar
+  table_number         Int?      @db.Integer
+  table_name           String?   @db.VarChar
+  invitation_sent      Boolean?  @default(false) @db.Boolean
+  invitation_sent_date DateTime? @db.Date
+  rsvp_date            DateTime? @db.Date
+  thank_you_sent       Boolean?  @default(false) @db.Boolean
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples? @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+}
+
+// Task management
+model tasks {
+  id                       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id                String?        @db.Uuid
+  vendor_id                String?        @db.Uuid
+  timeline_item_id         String?        @db.Uuid
+  milestone_id             String?        @db.Uuid
+  title                    String         @db.VarChar
+  description              String?        @db.Text
+  category                 task_category? @default(other)
+  priority                 task_priority? @default(medium)
+  assigned_to              String?        @db.VarChar
+  due_date                 DateTime?      @db.Date
+  estimated_duration_hours Int?           @db.Integer
+  actual_duration_hours    Int?           @db.Integer
+  completed                Boolean?       @default(false) @db.Boolean
+  completed_date           DateTime?      @db.Date
+  completed_by_user_id     String?        @db.Uuid
+  depends_on_task_id       String?        @db.Uuid
+  recurring_pattern        String?        @db.VarChar(50)
+  recurring_end_date       DateTime?      @db.Date
+  task_template_id         String?        @db.Uuid
+  critical_path            Boolean        @default(false) @db.Boolean
+  blocked_reason           String?        @db.Text
+  attachments              Json           @default("[]") @db.JsonB
+  tags                     String[]       @default([]) @db.VarChar
+  progress_percentage      Int            @default(0) @db.Integer
+  status                   task_status    @default(todo)
+  notes                    String?        @db.Text
+  created_at               DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime       @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples              couples?             @relation(fields: [couple_id], references: [id], onDelete: SetNull)
+  vendors              vendors?             @relation(fields: [vendor_id], references: [id], onDelete: SetNull)
+  timeline_items       timeline_items?      @relation(fields: [timeline_item_id], references: [id], onDelete: SetNull)
+  milestones           milestones?          @relation(fields: [milestone_id], references: [id], onDelete: SetNull)
+  task_dependencies    task_dependencies[]  @relation("TaskDependencies")
+  dependent_tasks      task_dependencies[]  @relation("DependentTasks")
+  task_assignments     task_assignments[]
+  task_comments        task_comments[]
+  task_reminders       task_reminders[]
+}
+
+// Milestones
+model milestones {
+  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id           String           @db.Uuid
+  title               String           @db.VarChar(200)
+  description         String?          @db.Text
+  target_date         DateTime         @db.Date
+  completed_date      DateTime?        @db.Date
+  status              milestone_status @default(pending)
+  type                milestone_type
+  icon                String?          @db.VarChar(50)
+  color               String?          @db.VarChar(7)
+  task_ids            String[]         @default([]) @db.Uuid
+  timeline_item_ids   String[]         @default([]) @db.Uuid
+  progress_percentage Int              @default(0) @db.Integer
+  notes               String?          @db.Text
+  created_at          DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime         @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples        couples          @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  tasks          tasks[]
+  timeline_items timeline_items[]
+}
+
+// Task dependencies
+model task_dependencies {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id            String          @db.Uuid
+  depends_on_task_id String          @db.Uuid
+  dependency_type    dependency_type @default(finish_to_start)
+  lag_days           Int             @default(0) @db.Integer
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  task         tasks @relation("TaskDependencies", fields: [task_id], references: [id], onDelete: Cascade)
+  depends_on   tasks @relation("DependentTasks", fields: [depends_on_task_id], references: [id], onDelete: Cascade)
+
+  @@unique([task_id, depends_on_task_id])
+}
+
+// Task templates
+model task_templates {
+  id                      String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String        @db.VarChar(200)
+  description             String?       @db.Text
+  category                task_category
+  vendor_type             String?       @db.VarChar(50)
+  typical_duration_days   Int?          @db.Integer
+  months_before_wedding   Int?          @db.Integer
+  subtasks                Json          @default("[]") @db.JsonB
+  tips                    String?       @db.Text
+  is_default              Boolean       @default(false) @db.Boolean
+  created_at              DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime      @default(now()) @db.Timestamptz(6)
+}
+
+// Task assignments
+model task_assignments {
+  id                     String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id                String           @db.Uuid
+  assigned_to_user_id    String?          @db.Uuid
+  assigned_to_vendor_id  String?          @db.Uuid
+  assigned_by_user_id    String           @db.Uuid
+  assigned_at            DateTime         @default(now()) @db.Timestamptz(6)
+  accepted               Boolean          @default(false) @db.Boolean
+  accepted_at            DateTime?        @db.Timestamptz(6)
+  notes                  String?          @db.Text
+
+  // Relations
+  tasks          tasks           @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  vendors        vendors?        @relation("TaskAssignmentVendor", fields: [assigned_to_vendor_id], references: [id], onDelete: SetNull, map: "task_assignments_vendor_fkey")
+  couple_vendors couple_vendors? @relation("TaskAssignmentCoupleVendor", fields: [assigned_to_vendor_id], references: [id], onDelete: SetNull, map: "task_assignments_couple_vendor_fkey")
+
+  @@unique([task_id, assigned_to_user_id, assigned_to_vendor_id])
+}
+
+// Task comments
+model task_comments {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  comment    String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  tasks tasks @relation(fields: [task_id], references: [id], onDelete: Cascade)
+}
+
+// Task reminders
+model task_reminders {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id       String        @db.Uuid
+  user_id       String        @db.Uuid
+  reminder_date DateTime      @db.Timestamptz(6)
+  reminder_type reminder_type
+  sent          Boolean       @default(false) @db.Boolean
+  sent_at       DateTime?     @db.Timestamptz(6)
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  tasks tasks @relation(fields: [task_id], references: [id], onDelete: Cascade)
+}
+
+// Timeline management
+model timeline_items {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id           String    @db.Uuid
+  vendor_id           String?   @db.Uuid
+  milestone_id        String?   @db.Uuid
+  title               String    @db.VarChar
+  description         String?   @db.Text
+  type                String?   @db.VarChar
+  start_time          DateTime  @db.Time
+  end_time            DateTime? @db.Time
+  duration_minutes    Int?      @db.Integer
+  buffer_time_minutes Int       @default(15) @db.Integer
+  location            String?   @db.VarChar
+  critical_path       Boolean   @default(false) @db.Boolean
+  confirmed           Boolean   @default(false) @db.Boolean
+  confirmation_date   DateTime? @db.Timestamptz(6)
+  weather_dependent   Boolean   @default(false) @db.Boolean
+  indoor_alternative  String?   @db.Text
+  contact_person      String?   @db.VarChar(200)
+  contact_phone       String?   @db.VarChar(20)
+  special_requirements String[] @db.Text
+  notes               String?   @db.Text
+  depends_on_item_id  String?   @db.Uuid
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples            couples             @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  vendors            vendors?            @relation(fields: [vendor_id], references: [id], onDelete: SetNull)
+  milestones         milestones?         @relation(fields: [milestone_id], references: [id], onDelete: SetNull)
+  tasks              tasks[]
+  timeline_conflicts timeline_conflicts[] @relation("TimelineItem1")
+  conflict_items     timeline_conflicts[] @relation("TimelineItem2")
+}
+
+// Timeline conflicts
+model timeline_conflicts {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id        String            @db.Uuid
+  item1_id         String            @db.Uuid
+  item2_id         String            @db.Uuid
+  conflict_type    conflict_type
+  severity         conflict_severity
+  resolved         Boolean           @default(false) @db.Boolean
+  resolution_notes String?           @db.Text
+  detected_at      DateTime          @default(now()) @db.Timestamptz(6)
+  resolved_at      DateTime?         @db.Timestamptz(6)
+
+  // Relations
+  couples couples        @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  item1   timeline_items @relation("TimelineItem1", fields: [item1_id], references: [id], onDelete: Cascade)
+  item2   timeline_items @relation("TimelineItem2", fields: [item2_id], references: [id], onDelete: Cascade)
+
+  @@unique([item1_id, item2_id])
+}
+
+// Timeline templates
+model timeline_templates {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String   @db.VarChar(200)
+  description       String?  @db.Text
+  wedding_style     String?  @db.VarChar(50)
+  guest_count_range String?  @db.VarChar(50)
+  duration_hours    Int?     @db.Integer
+  items             Json     @default("[]") @db.JsonB
+  is_default        Boolean  @default(false) @db.Boolean
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @db.Timestamptz(6)
+}
+
+// Communication & messaging
+model messages {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id           String   @db.Uuid
+  sender_user_id      String?  @db.Uuid
+  vendor_id           String?  @db.Uuid
+  subject             String?  @db.VarChar
+  message             String   @db.Text
+  message_type        String   @default("general") @db.VarChar
+  reply_to_message_id String?  @db.Uuid
+  is_read             Boolean  @default(false) @db.Boolean
+  is_important        Boolean  @default(false) @db.Boolean
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples  @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  vendors vendors? @relation(fields: [vendor_id], references: [id], onDelete: SetNull)
+}
+
+// Enhanced messaging system
+model message_threads {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id         String    @db.Uuid
+  vendor_id         String?   @db.Uuid
+  subject           String?   @db.VarChar
+  last_message_at   DateTime  @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples             couples               @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  vendor_messages     vendor_messages[]
+  outbound_message_log outbound_message_log[]
+}
+
+model vendor_messages {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  thread_id             String    @db.Uuid
+  couple_id             String    @db.Uuid
+  vendor_id             String    @db.Uuid
+  sender_type           String    @db.VarChar
+  sender_name           String?   @db.VarChar
+  content               String    @db.Text
+  is_read               Boolean   @default(false) @db.Boolean
+  read_at               DateTime? @db.Timestamptz(6)
+  external_message_id   String?   @db.VarChar(255)
+  external_provider     String?   @db.VarChar(50)
+  metadata              Json?     @db.JsonB
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples         couples         @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  vendors         vendors         @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  message_threads message_threads @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  webhook_events  webhook_events[]
+}
+
+model message_media {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message_id   String   @db.Uuid
+  media_url    String   @db.VarChar
+  media_type   String   @db.VarChar
+  filename     String?  @db.VarChar
+  file_size    Int?     @db.Integer
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+}
+
+// External messaging
+model outbound_message_log {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vendor_id        String    @db.Uuid
+  couple_id        String    @db.Uuid
+  conversation_id  String?   @db.Uuid
+  message_content  String    @db.Text
+  sms_sent         Boolean   @default(false) @db.Boolean
+  whatsapp_sent    Boolean   @default(false) @db.Boolean
+  email_sent       Boolean   @default(false) @db.Boolean
+  errors           Json      @default("[]") @db.JsonB
+  metadata         Json      @default("{}") @db.JsonB
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples         couples          @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  vendors         vendors          @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  message_threads message_threads? @relation(fields: [conversation_id], references: [id], onDelete: SetNull)
+}
+
+model webhook_events {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  webhook_type    String    @db.VarChar(50)
+  event_type      String    @db.VarChar(100)
+  payload         Json      @db.JsonB
+  processed       Boolean   @default(false) @db.Boolean
+  processed_at    DateTime? @db.Timestamptz(6)
+  error_message   String?   @db.Text
+  retry_count     Int       @default(0) @db.Integer
+  vendor_id       String?   @db.Uuid
+  message_id      String?   @db.Uuid
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  vendor_messages vendor_messages? @relation(fields: [message_id], references: [id], onDelete: SetNull)
+}
+
+// Settings
+model couple_settings {
+  id                         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id                  String   @unique @db.Uuid
+  external_messaging_config  Json     @default("{}") @db.JsonB
+  notification_preferences   Json     @default("{}") @db.JsonB
+  privacy_settings           Json     @default("{}") @db.JsonB
+  created_at                 DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+}
+
+// Activity feed
+model activity_feed {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  couple_id   String   @db.Uuid
+  user_id     String?  @db.Uuid
+  action_type String   @db.VarChar
+  entity_type String   @db.VarChar
+  entity_id   String   @db.Uuid
+  entity_name String?  @db.VarChar
+  user_email  String   @db.VarChar
+  user_name   String   @db.VarChar
+  details     Json?    @db.JsonB
+  priority    Int      @default(1) @db.Integer
+  is_read     Boolean  @default(false) @db.Boolean
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  couples couples @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+}

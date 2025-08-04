@@ -1,585 +1,246 @@
-'use client'
-
-import { useState } from 'react'
-import { useVendors, VENDOR_CATEGORIES, VENDOR_STATUSES } from '@/hooks/useVendors'
+import { currentUser } from '@clerk/nextjs/server'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input, Select } from '@/components/ui/input'
-import { cn } from '@/utils/cn'
-import { VendorCategory, VendorStatus } from '@/types/database'
-import { PullToRefresh } from '@/components/ui/pull-to-refresh'
+import { Badge } from '@/components/ui/badge'
+import AddVendorDialog from './components/AddVendorDialog'
+import VendorList from './components/VendorList'
 
-export default function VendorsPage() {
-  const { 
-    vendors, 
-    loading, 
-    error, 
-    vendorStats, 
-    addVendor, 
-    updateVendor, 
-    deleteVendor,
-    refreshVendors 
-  } = useVendors()
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
-  const [isAddingVendor, setIsAddingVendor] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<VendorCategory | 'all'>('all')
-  const [selectedStatus, setSelectedStatus] = useState<VendorStatus | 'all'>('all')
-  const [searchQuery, setSearchQuery] = useState('')
+export default async function VendorsPage() {
+  const user = await currentUser()
+  
+  let vendors: any[] = []
+  let categories: any[] = []
+  let categoryStats: any[] = []
+  let summary = {
+    total_vendors: 0,
+    booked_vendors: 0,
+    pending_vendors: 0,
+    total_estimated_cost: 0,
+    total_actual_cost: 0,
+    contracts_signed: 0
+  }
+  
+  if (user?.id) {
+    try {
+      // Use the service role Supabase client directly for server-side rendering
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
 
-  // Filter vendors based on selection
-  const filteredVendors = vendors.filter(vendor => {
-    const matchesCategory = selectedCategory === 'all' || vendor.category === selectedCategory
-    const matchesStatus = selectedStatus === 'all' || vendor.status === selectedStatus
-    const matchesSearch = searchQuery === '' || 
-      vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vendor.business_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vendor.contact_person?.toLowerCase().includes(searchQuery.toLowerCase())
+      // Get user's couple data using admin client
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from('users')
+        .select(`
+          id,
+          couples (id)
+        `)
+        .eq('clerk_user_id', user.id)
+        .single()
+
+      if (!userError && userData?.couples?.[0]) {
+        const coupleId = userData.couples[0].id
+
+        // Get vendors for this couple using admin client
+        const { data: vendorData, error: vendorError } = await supabaseAdmin
+          .from('vendors')
+          .select(`
+            *,
+            vendor_categories (
+              id,
+              name,
+              icon,
+              color
+            )
+          `)
+          .eq('couple_id', coupleId)
+          .order('created_at', { ascending: false })
+
+        if (!vendorError) {
+          vendors = vendorData || []
+          
+          // Calculate summary from vendors data
+          summary = {
+            total_vendors: vendors.length,
+            booked_vendors: vendors.filter(v => v.status === 'booked').length,
+            pending_vendors: vendors.filter(v => ['potential', 'contacted', 'quote_requested', 'in_discussion'].includes(v.status)).length,
+            total_estimated_cost: vendors.reduce((sum, v) => sum + (v.estimated_cost || 0), 0),
+            total_actual_cost: vendors.reduce((sum, v) => sum + (v.actual_cost || 0), 0),
+            contracts_signed: vendors.filter(v => v.contract_signed).length
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching vendors:', error)
+      // Fall back to empty arrays
+    }
     
-    return matchesCategory && matchesStatus && matchesSearch
-  })
-
-  // Add vendor form component
-  const AddVendorForm = () => {
-    const [formData, setFormData] = useState({
-      name: '',
-      business_name: '',
-      category: 'venue' as VendorCategory,
-      status: 'researching' as VendorStatus,
-      email: '',
-      phone: '',
-      website: '',
-      contact_person: '',
-      address: '',
-      city: '',
-      state: '',
-      zip_code: '',
-      estimated_cost: '',
-      notes: '',
-      referral_source: ''
-    })
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-
-    const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setFormData(prev => ({ ...prev, [field]: e.target.value }))
-      // Clear error for this field
-      if (formErrors[field]) {
-        setFormErrors(prev => ({ ...prev, [field]: '' }))
-      }
-    }
-
-    const validateForm = () => {
-      const errors: Record<string, string> = {}
-      
-      if (!formData.name.trim()) {
-        errors.name = 'Vendor name is required'
-      }
-      
-      if (!formData.category) {
-        errors.category = 'Category is required'
-      }
-
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        errors.email = 'Invalid email format'
-      }
-
-      if (formData.estimated_cost && isNaN(Number(formData.estimated_cost))) {
-        errors.estimated_cost = 'Estimated cost must be a number'
-      }
-
-      setFormErrors(errors)
-      return Object.keys(errors).length === 0
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-      
-      if (!validateForm()) {
-        return
-      }
-
-      setIsSubmitting(true)
-      
-      try {
-        await addVendor({
-          name: formData.name.trim(),
-          business_name: formData.business_name.trim() || null,
-          category: formData.category,
-          status: formData.status,
-          email: formData.email.trim() || null,
-          phone: formData.phone.trim() || null,
-          website: formData.website.trim() || null,
-          contact_person: formData.contact_person.trim() || null,
-          address: formData.address.trim() || null,
-          city: formData.city.trim() || null,
-          state: formData.state.trim() || null,
-          zip_code: formData.zip_code.trim() || null,
-          estimated_cost: formData.estimated_cost ? Number(formData.estimated_cost) : null,
-          notes: formData.notes.trim() || null,
-          referral_source: formData.referral_source.trim() || null,
-        })
-        
-        // Reset form and close
-        setFormData({
-          name: '', business_name: '', category: 'venue', status: 'researching',
-          email: '', phone: '', website: '', contact_person: '', address: '',
-          city: '', state: '', zip_code: '', estimated_cost: '', notes: '', referral_source: ''
-        })
-        setIsAddingVendor(false)
-        
-      } catch (error: any) {
-        console.error('Failed to add vendor:', error)
-        setFormErrors({ general: error.message || 'Failed to add vendor' })
-      } finally {
-        setIsSubmitting(false)
-      }
-    }
-
-    return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Add New Vendor</CardTitle>
-          <CardDescription>
-            Add a vendor to your wedding planning list
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {formErrors.general && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
-                {formErrors.general}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Vendor Name"
-                value={formData.name}
-                onChange={handleChange('name')}
-                error={formErrors.name}
-                placeholder="e.g., The Grand Ballroom"
-                fullWidth
-                disabled={isSubmitting}
-              />
-
-              <Input
-                label="Business Name (Optional)"
-                value={formData.business_name}
-                onChange={handleChange('business_name')}
-                error={formErrors.business_name}
-                placeholder="e.g., Grand Events LLC"
-                fullWidth
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                label="Category"
-                value={formData.category}
-                onChange={handleChange('category')}
-                error={formErrors.category}
-                fullWidth
-                disabled={isSubmitting}
-              >
-                {VENDOR_CATEGORIES.map(cat => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.icon} {cat.label}
-                  </option>
-                ))}
-              </Select>
-
-              <Select
-                label="Status"
-                value={formData.status}
-                onChange={handleChange('status')}
-                error={formErrors.status}
-                fullWidth
-                disabled={isSubmitting}
-              >
-                {VENDOR_STATUSES.map(status => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Contact Person (Optional)"
-                value={formData.contact_person}
-                onChange={handleChange('contact_person')}
-                error={formErrors.contact_person}
-                placeholder="e.g., Jennifer Martinez"
-                fullWidth
-                disabled={isSubmitting}
-              />
-
-              <Input
-                label="Email (Optional)"
-                type="email"
-                value={formData.email}
-                onChange={handleChange('email')}
-                error={formErrors.email}
-                placeholder="e.g., info@venue.com"
-                fullWidth
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Phone (Optional)"
-                value={formData.phone}
-                onChange={handleChange('phone')}
-                error={formErrors.phone}
-                placeholder="e.g., (555) 123-4567"
-                fullWidth
-                disabled={isSubmitting}
-              />
-
-              <Input
-                label="Website (Optional)"
-                value={formData.website}
-                onChange={handleChange('website')}
-                error={formErrors.website}
-                placeholder="e.g., https://venue.com"
-                fullWidth
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Estimated Cost (Optional)"
-                type="number"
-                value={formData.estimated_cost}
-                onChange={handleChange('estimated_cost')}
-                error={formErrors.estimated_cost}
-                placeholder="e.g., 15000"
-                helperText="USD amount"
-                fullWidth
-                disabled={isSubmitting}
-              />
-
-              <Input
-                label="Referral Source (Optional)"
-                value={formData.referral_source}
-                onChange={handleChange('referral_source')}
-                error={formErrors.referral_source}
-                placeholder="e.g., Google search, friend recommendation"
-                fullWidth
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <Input
-              label="Notes (Optional)"
-              value={formData.notes}
-              onChange={handleChange('notes')}
-              error={formErrors.notes}
-              placeholder="Any additional notes about this vendor..."
-              fullWidth
-              disabled={isSubmitting}
-            />
-
-            <div className="flex gap-4 pt-4">
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Adding Vendor...' : 'Add Vendor'}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setIsAddingVendor(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    )
+    // Get vendor categories (always available)
+    const { data: categoriesData } = await supabase
+      .from('vendor_categories')
+      .select('*')
+      .order('display_order')
+    
+    categories = categoriesData || []
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-serif font-bold text-ink">Vendors</h1>
-        </div>
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your vendors...</p>
-        </div>
-      </div>
-    )
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'booked':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Booked</Badge>
+      case 'in_discussion':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">In Discussion</Badge>
+      case 'quote_requested':
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Quote Requested</Badge>
+      case 'contacted':
+        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Contacted</Badge>
+      case 'declined':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Declined</Badge>
+      case 'cancelled':
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Cancelled</Badge>
+      default:
+        return <Badge variant="outline">Potential</Badge>
+    }
   }
 
   return (
-    <PullToRefresh
-      onRefresh={refreshVendors}
-      className="min-h-screen"
-      pullText="Pull to refresh vendors"
-      releaseText="Release to refresh"
-      loadingText="Updating vendor list..."
-      successText="Vendors updated!"
-    >
-      <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-ink">Vendors</h1>
-          <p className="text-gray-600 mt-1">Manage your wedding vendors and service providers</p>
+          <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
+          <p className="text-gray-600 mt-2">Find and manage your wedding vendors</p>
         </div>
-        <Button onClick={() => setIsAddingVendor(true)} disabled={isAddingVendor}>
-          Add Vendor
-        </Button>
+        <AddVendorDialog categories={categories} />
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <span className="text-red-500">⚠️</span>
-              <p className="text-red-700">{error}</p>
-              <Button variant="secondary" size="sm" onClick={refreshVendors} className="ml-auto">
-                Retry
-              </Button>
+      {/* Vendor Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Vendors</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.total_vendors}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Booked</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{summary.booked_vendors}</div>
+            <p className="text-xs text-muted-foreground">
+              {summary.total_vendors > 0 ? Math.round((summary.booked_vendors / summary.total_vendors) * 100) : 0}% booked
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Contracts Signed</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{summary.contracts_signed}</div>
+            <p className="text-xs text-muted-foreground">
+              of {summary.booked_vendors} booked
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Estimated Cost</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
+              ${Number(summary.total_estimated_cost || 0).toLocaleString()}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-ink">{vendorStats.totalVendors}</div>
-            <p className="text-xs text-gray-500">Total Vendors</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-600">{vendorStats.bookedVendors}</div>
-            <p className="text-xs text-gray-500">Booked</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-accent">
-              ${vendorStats.totalEstimatedCost.toLocaleString()}
-            </div>
-            <p className="text-xs text-gray-500">Estimated Cost</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-yellow-600">
-              {vendorStats.averageRating > 0 ? vendorStats.averageRating.toFixed(1) : '—'}
-            </div>
-            <p className="text-xs text-gray-500">Avg Rating</p>
+            {summary.total_actual_cost > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Actual: ${Number(summary.total_actual_cost).toLocaleString()}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Add Vendor Form */}
-      {isAddingVendor && <AddVendorForm />}
-
-      {/* Filters */}
+      {/* Vendor Categories */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input
-              label="Search Vendors"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, business, or contact..."
-              fullWidth
-            />
-            
-            <Select
-              label="Filter by Category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as VendorCategory | 'all')}
-              fullWidth
-            >
-              <option value="all">All Categories</option>
-              {VENDOR_CATEGORIES.map(cat => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.icon} {cat.label}
-                </option>
+        <CardHeader>
+          <CardTitle>Vendor Categories</CardTitle>
+          <CardDescription>Browse vendors by category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {categoryStats.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categoryStats.map((category) => (
+                <Card key={category.category_name} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 text-center">
+                    <span className="text-3xl mb-2 block">{category.category_icon}</span>
+                    <h3 className="font-semibold">{category.category_name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {Number(category.vendor_count)} vendor{Number(category.vendor_count) !== 1 ? 's' : ''}
+                      {Number(category.booked_count) > 0 && (
+                        <> • {Number(category.booked_count)} booked</>
+                      )}
+                    </p>
+                    {Number(category.total_estimated_cost) > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ${Number(category.total_estimated_cost).toLocaleString()} estimated
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
               ))}
-            </Select>
-
-            <Select
-              label="Filter by Status"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as VendorStatus | 'all')}
-              fullWidth
-            >
-              <option value="all">All Statuses</option>
-              {VENDOR_STATUSES.map(status => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categories.slice(0, 8).map((category) => (
+                <Card key={category.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
+                  <CardContent className="p-4 text-center">
+                    <span className="text-3xl mb-2 block">{category.icon}</span>
+                    <h3 className="font-semibold">{category.name}</h3>
+                    <p className="text-sm text-muted-foreground">0 vendors</p>
+                  </CardContent>
+                </Card>
               ))}
-            </Select>
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Vendors List */}
-      {filteredVendors.length > 0 ? (
-        <div className="grid gap-4">
-          {filteredVendors.map((vendor) => {
-            const category = VENDOR_CATEGORIES.find(c => c.value === vendor.category)
-            const status = VENDOR_STATUSES.find(s => s.value === vendor.status)
-            
-            return (
-              <Card key={vendor.id} className="card-hover">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div 
-                        className="w-12 h-12 rounded-lg flex items-center justify-center text-xl"
-                        style={{ backgroundColor: `${category?.color}20` }}
-                      >
-                        {category?.icon}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-ink">{vendor.name}</h3>
-                        {vendor.business_name && (
-                          <p className="text-sm text-gray-600">{vendor.business_name}</p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>{category?.label}</span>
-                          <span 
-                            className="px-2 py-1 rounded text-xs font-medium"
-                            style={{ 
-                              backgroundColor: `${status?.color}20`,
-                              color: status?.color 
-                            }}
-                          >
-                            {status?.label}
-                          </span>
-                          {vendor.estimated_cost && (
-                            <span>${vendor.estimated_cost.toLocaleString()}</span>
-                          )}
-                        </div>
-                        
-                        {vendor.contact_person && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            Contact: {vendor.contact_person}
-                          </p>
-                        )}
-                        
-                        <div className="flex gap-2 mt-2">
-                          {vendor.email && (
-                            <a 
-                              href={`mailto:${vendor.email}`}
-                              className="text-xs text-accent hover:underline"
-                            >
-                              Email
-                            </a>
-                          )}
-                          {vendor.phone && (
-                            <a 
-                              href={`tel:${vendor.phone}`}
-                              className="text-xs text-accent hover:underline"
-                            >
-                              Call
-                            </a>
-                          )}
-                          {vendor.website && (
-                            <a 
-                              href={vendor.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-accent hover:underline"
-                            >
-                              Website
-                            </a>
-                          )}
-                        </div>
-                        
-                        {vendor.notes && (
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                            {vendor.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => window.location.href = `/dashboard/vendors/${vendor.id}/messages`}
-                      >
-                        <i className="fas fa-comment mr-1"></i>
-                        Message
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this vendor?')) {
-                            deleteVendor(vendor.id)
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      ) : vendors.length > 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center py-12">
-            <p className="text-gray-500">No vendors match your current filters.</p>
-            <Button 
-              variant="secondary" 
-              onClick={() => {
-                setSelectedCategory('all')
-                setSelectedStatus('all')
-                setSearchQuery('')
-              }}
-              className="mt-4"
-            >
-              Clear Filters
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="pt-6 text-center py-12">
-            <span className="text-6xl mb-4 block">🏪</span>
-            <h3 className="text-lg font-semibold text-ink mb-2">No vendors yet</h3>
-            <p className="text-gray-500 mb-4">
-              Start building your dream team by adding your first vendor.
-            </p>
-            <Button onClick={() => setIsAddingVendor(true)}>
-              Add Your First Vendor
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {/* My Vendors */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>My Vendors</CardTitle>
+              <CardDescription>Vendors you're working with</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {vendors.length > 0 ? (
+            <VendorList vendors={vendors} categories={categories} />
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🏢</div>
+              <h3 className="text-lg font-semibold mb-2">No vendors added yet</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Start building your vendor list by adding wedding service providers.
+              </p>
+              <AddVendorDialog categories={categories} />
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
-    </PullToRefresh>
   )
 }

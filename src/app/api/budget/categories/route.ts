@@ -1,117 +1,139 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { Database } from '@/types/database.generated'
+import { currentUser } from '@clerk/nextjs/server'
+import { createClient } from '@supabase/supabase-js'
 
-// GET /api/budget/categories - List all budget categories
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
-    
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) {
+    const user = await currentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: coupleData, error: coupleError } = await supabase
-      .from('couples')
-      .select('id')
-      .eq('partner1_email', session.user.email)
-      .or(`partner2_email.eq.${session.user.email}`)
+    // Get user's couple data first
+    const { data: userData } = await supabase
+      .from('users')
+      .select(`
+        id,
+        couples (
+          id,
+          budget_total
+        )
+      `)
+      .eq('clerk_user_id', user.id)
       .single()
 
-    if (coupleError || !coupleData) {
-      return NextResponse.json({ error: 'Couple not found' }, { status: 404 })
+    if (!userData?.couples?.[0]) {
+      return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
     }
 
-    // Get categories with expenses
-    const { data: categories, error: categoriesError } = await supabase
+    const coupleId = userData.couples[0].id
+    const totalBudget = userData.couples[0].budget_total || 0
+
+    // Get budget categories for this couple
+    const { data: categories, error } = await supabase
       .from('budget_categories')
-      .select(`
-        *,
-        budget_expenses(*)
-      `)
-      .eq('couple_id', coupleData.id)
-      .order('priority', { ascending: false })
+      .select('*')
+      .eq('couple_id', coupleId)
+      .order('created_at')
 
-    if (categoriesError) {
-      return NextResponse.json({ error: categoriesError.message }, { status: 500 })
+    if (error) {
+      console.error('Error fetching budget categories:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch budget categories', details: error.message },
+        { status: 500 }
+      )
     }
 
-    // Calculate spent amounts for each category
-    const categoriesWithTotals = categories?.map(category => {
-      const spentAmount = category.budget_expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0
-      const allocatedAmount = category.allocated_amount || 0
-      
-      return {
-        ...category,
-        spent_amount: spentAmount,
-        remaining_amount: allocatedAmount - spentAmount,
-        percentage_used: allocatedAmount > 0 ? (spentAmount / allocatedAmount) * 100 : 0,
-        expense_count: category.budget_expenses?.length || 0
+    // Calculate budget breakdown
+    const totalSpent = categories.reduce((sum, cat) => sum + (Number(cat.spent_amount) || 0), 0)
+    const totalAllocated = categories.reduce((sum, cat) => sum + (Number(cat.allocated_amount) || 0), 0)
+    const remaining = Number(totalBudget) - totalSpent
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        categories,
+        totals: {
+          budget: Number(totalBudget),
+          spent: totalSpent,
+          allocated: totalAllocated,
+          remaining
+        }
       }
     })
 
-    return NextResponse.json({ categories: categoriesWithTotals })
   } catch (error) {
-    console.error('Budget categories error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('API Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
-// POST /api/budget/categories - Create a new budget category
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
-    
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) {
+    const user = await currentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
+    const { name, icon, color, allocated_amount, priority } = body
 
-    // Validate required fields
-    if (!body.couple_id || !body.name || typeof body.allocated_amount !== 'number') {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    // Verify couple ownership
-    const { data: coupleData, error: coupleError } = await supabase
-      .from('couples')
-      .select('id')
-      .eq('id', body.couple_id)
-      .eq('partner1_email', session.user.email)
-      .or(`partner2_email.eq.${session.user.email}`)
+    // Get user's couple data
+    const { data: userData } = await supabase
+      .from('users')
+      .select(`
+        couples (id)
+      `)
+      .eq('clerk_user_id', user.id)
       .single()
 
-    if (coupleError || !coupleData) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (!userData?.couples?.[0]) {
+      return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
     }
 
-    // Create category
-    const { data: category, error: createError } = await supabase
+    const coupleId = userData.couples[0].id
+
+    // Create new budget category
+    const { data: category, error } = await supabase
       .from('budget_categories')
       .insert({
-        couple_id: body.couple_id,
-        name: body.name,
-        allocated_amount: body.allocated_amount,
-        percentage_of_total: body.percentage_of_total,
-        color: body.color,
-        icon: body.icon,
-        priority: body.priority || 'medium',
-        spent_amount: 0
+        couple_id: coupleId,
+        name,
+        icon: icon || '💰',
+        color: color || '#3B82F6',
+        allocated_amount: allocated_amount || 0,
+        spent_amount: 0,
+        priority: priority || 'important'
       })
       .select()
       .single()
 
-    if (createError) {
-      return NextResponse.json({ error: createError.message }, { status: 500 })
+    if (error) {
+      console.error('Error creating budget category:', error)
+      return NextResponse.json(
+        { error: 'Failed to create budget category', details: error.message },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json(category)
+    return NextResponse.json({
+      success: true,
+      data: category
+    })
+
   } catch (error) {
-    console.error('Create budget category error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('API Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

@@ -1,91 +1,27 @@
-import type { Metadata, Viewport } from "next";
-import "./globals.css";
-import { ClerkProvider } from "@/components/providers/ClerkProvider";
-import { ToastProvider } from "@/contexts/ToastContext";
-import { PWAProvider } from "@/components/pwa/PWAProvider";
-import { InstallPrompt, UpdatePrompt, OfflineIndicator } from "@/components/pwa";
-import { ServiceWorkerProvider } from "@/components/offline/service-worker-provider";
-import { ConnectionStatus } from "@/components/offline/connection-status";
-import { NotificationToastProvider } from "@/components/notifications/NotificationToast";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { ClerkProvider } from '@clerk/nextjs'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Wedding Planner - Plan Your Perfect Day",
-  description: "A comprehensive wedding planning application with vendor management, guest lists, budget tracking, and timeline planning.",
-  keywords: ["wedding", "planning", "vendors", "guests", "budget", "timeline"],
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Wedding Planner",
-  },
-  formatDetection: {
-    telephone: false,
-  },
-  openGraph: {
-    type: "website",
-    title: "Wedding Planner - Plan Your Perfect Day",
-    description: "A comprehensive wedding planning application",
-    siteName: "Wedding Planner",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Wedding Planner - Plan Your Perfect Day",
-    description: "A comprehensive wedding planning application",
-  },
-};
-
-export const viewport: Viewport = {
-  themeColor: "#8B5CF6",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
+  title: 'Wedding Planner',
+  description: 'Plan your perfect wedding',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <head>
-        <link 
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" 
-          rel="stylesheet" 
-        />
-        {/* PWA Meta Tags */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg" />
-        <link rel="icon" type="image/svg+xml" sizes="32x32" href="/icons/favicon-32x32.svg" />
-        <link rel="icon" type="image/svg+xml" sizes="16x16" href="/icons/favicon-16x16.svg" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Wedding Planner" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#8B5CF6" />
-      </head>
-      <body className="font-sans antialiased bg-paper text-ink">
-        <ClerkProvider>
-          <ServiceWorkerProvider>
-            <PWAProvider>
-              <ToastProvider>
-                <NotificationToastProvider>
-                  <main className="min-h-screen">
-                    {children}
-                  </main>
-                  {/* PWA Components */}
-                  <InstallPrompt />
-                  <UpdatePrompt />
-                  <OfflineIndicator />
-                  {/* Offline Components */}
-                  <ConnectionStatus />
-                </NotificationToastProvider>
-              </ToastProvider>
-            </PWAProvider>
-          </ServiceWorkerProvider>
-        </ClerkProvider>
-      </body>
-    </html>
-  );
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
+  )
 }

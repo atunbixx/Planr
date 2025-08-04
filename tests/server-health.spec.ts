@@ -6,15 +6,15 @@ test.describe('Wedding Planner Server Health', () => {
     await page.goto('/');
     
     // Check that the page loads without errors
-    await expect(page).toHaveTitle(/Wedding Planner/);
+    await expect(page).toHaveTitle(/Wedding/);
     
-    // Check for key elements on the landing page - based on debug output
-    await expect(page.locator('h1').first()).toContainText('Wedding Planner');
-    await expect(page.locator('h1').nth(1)).toContainText('Plan Your Perfect');
+    // Check for key elements on the landing page - match current content
+    await expect(page.locator('h1').first()).toContainText('WEDDING STUDIO');
+    await expect(page.locator('h1').nth(1)).toContainText('Modern');
     
-    // Check navigation elements - use first occurrence to avoid strict mode
-    await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Get Started' }).first()).toBeVisible();
+    // Check navigation elements - match current navigation
+    await expect(page.getByRole('link', { name: 'SIGN IN' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'START PLANNING' })).toBeVisible();
     
     console.log('✅ Homepage loaded successfully');
   });
@@ -34,13 +34,16 @@ test.describe('Wedding Planner Server Health', () => {
   });
 
   test('sign in page loads', async ({ page }) => {
-    await page.goto('/auth/signin');
+    await page.goto('/sign-in');
     
-    // Check sign in form elements
+    // Check that page loads and has expected content
     await expect(page.getByRole('heading', { name: 'Welcome Back' })).toBeVisible();
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
+    
+    // Wait for Clerk form to load (it's dynamically rendered)
+    await page.waitForTimeout(2000);
+    
+    // Check that the Clerk sign-in component is present
+    await expect(page.locator('[data-clerk-element="SignIn"]').or(page.locator('.cl-rootBox'))).toBeVisible();
     
     console.log('✅ Sign in page loaded successfully');
   });
@@ -49,8 +52,8 @@ test.describe('Wedding Planner Server Health', () => {
     // Try to access dashboard without authentication
     await page.goto('/dashboard');
     
-    // Should redirect to sign in
-    await expect(page).toHaveURL(/\/auth\/signin/);
+    // Should redirect to sign in (Clerk uses /sign-in)
+    await expect(page).toHaveURL(/\/sign-in/);
     
     console.log('✅ Authentication protection working');
   });
@@ -140,7 +143,7 @@ test.describe('Wedding Planner Server Health', () => {
     await page.goto('/');
     
     // Navigate to sign up
-    await page.getByRole('link', { name: 'Get Started' }).first().click();
+    await page.getByRole('link', { name: 'START PLANNING' }).click();
     await expect(page).toHaveURL(/\/auth\/signup/);
     
     // Check form is interactive

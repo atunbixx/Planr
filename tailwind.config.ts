@@ -1,5 +1,4 @@
 import type { Config } from 'tailwindcss'
-import { designSystem } from './src/styles/design-system'
 
 const config: Config = {
   content: [
@@ -9,73 +8,48 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      // Typography from New York Magazine design system
-      fontFamily: {
-        serif: designSystem.typography.fontFamily.serif.split(', '),
-        sans: designSystem.typography.fontFamily.sans.split(', '),
-        mono: designSystem.typography.fontFamily.mono.split(', '),
-        'playfair': ['Playfair Display', 'serif'],
-        'inter': ['Inter', 'sans-serif'],
-      },
-      fontSize: designSystem.typography.fontSize,
-      fontWeight: designSystem.typography.fontWeight,
-      lineHeight: designSystem.typography.lineHeight,
-      letterSpacing: designSystem.typography.letterSpacing,
-
-      // Colors from design system
       colors: {
-        ink: designSystem.colors.ink,
-        paper: designSystem.colors.paper,
-        accent: designSystem.colors.accent,
-        gray: designSystem.colors.gray,
-        // Wedding colors - individual entries for Tailwind class generation
-        'wedding-gold': designSystem.colors.wedding.gold,
-        'wedding-blush': designSystem.colors.wedding.blush,
-        'wedding-sage': designSystem.colors.wedding.sage,
-        'wedding-navy': designSystem.colors.wedding.navy,
-        'wedding-cream': designSystem.colors.wedding.cream,
-        wedding: designSystem.colors.wedding,
-        // Override default Tailwind colors with our semantic colors
-        green: {
-          500: designSystem.colors.success,
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
-        yellow: {
-          500: designSystem.colors.warning,
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
-        red: {
-          500: designSystem.colors.error,
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        blue: {
-          500: designSystem.colors.info,
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
       },
-
-      // Spacing system
-      spacing: designSystem.spacing,
-
-      // Border radius
-      borderRadius: designSystem.borderRadius,
-
-      // Box shadows
-      boxShadow: designSystem.boxShadow,
-
-      // Animation
-      transitionDuration: designSystem.animation.duration,
-      transitionTimingFunction: designSystem.animation.easing,
-
-      // Layout
-      maxWidth: {
-        container: designSystem.layout.container.maxWidth,
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
-
-      // Breakpoints
-      screens: designSystem.breakpoints,
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 }
-
 export default config

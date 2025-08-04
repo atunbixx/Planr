@@ -1,953 +1,557 @@
 
-> wedding-planner-v2@0.1.0 dev
-> next dev --port 3000
+> wedding-planner-v3@0.1.0 dev
+> next dev --port 4001 --port 4001
 
-   ▲ Next.js 15.4.5
-   - Local:        http://localhost:3000
-   - Network:      http://192.168.100.231:3000
-   - Environments: .env.local
+  ▲ Next.js 14.2.25
+  - Local:        http://localhost:4001
+  - Environments: .env.local, .env
 
  ✓ Starting...
- ✓ Ready in 1422ms
- ○ Compiling / ...
- ✓ Compiled / in 1276ms (875 modules)
- GET / 200 in 1597ms
- ✓ Compiled in 114ms (326 modules)
- ✓ Compiled in 89ms (326 modules)
- ✓ Compiled in 135ms (326 modules)
- GET / 200 in 109ms
- ✓ Compiled /auth/signin in 384ms (870 modules)
- GET /auth/signin 200 in 497ms
- GET /auth/signin 200 in 224ms
- GET /auth/signin 200 in 72ms
- GET /auth/signin 200 in 70ms
- ✓ Compiled /auth/signup in 406ms (889 modules)
- GET /auth/signup 200 in 487ms
- GET / 200 in 31ms
- GET /auth/signin 200 in 35ms
- ✓ Compiled in 451ms (892 modules)
- GET /auth/signin 200 in 72ms
- ✓ Compiled in 65ms (337 modules)
- GET /auth/signin 200 in 11ms
- ✓ Compiled in 103ms (337 modules)
- GET /auth/signin 200 in 58ms
- ✓ Compiled in 84ms (337 modules)
- GET /auth/signin 200 in 15ms
- ✓ Compiled in 65ms (337 modules)
- GET /auth/signin 200 in 20ms
- ✓ Compiled in 129ms (337 modules)
- GET /auth/signin 200 in 61ms
- ✓ Compiled in 87ms (337 modules)
- GET /auth/signin 200 in 22ms
- GET /auth/signin 200 in 155ms
- GET / 200 in 95ms
- GET /auth/signin 200 in 33ms
- GET /auth/signin 200 in 62ms
- ✓ Compiled in 158ms (337 modules)
- GET /auth/signin 200 in 14ms
- ✓ Compiled in 220ms (337 modules)
- GET /auth/signin 200 in 16ms
- ✓ Compiled in 73ms (337 modules)
- GET /auth/signin 200 in 14ms
- ✓ Compiled in 70ms (337 modules)
- GET /auth/signin 200 in 10ms
- ✓ Compiled in 59ms (337 modules)
- GET /auth/signin 200 in 10ms
- ✓ Compiled in 83ms (337 modules)
- GET /auth/signin 200 in 14ms
- ✓ Compiled in 132ms (337 modules)
- GET /auth/signin 200 in 14ms
- ✓ Compiled in 146ms (337 modules)
- GET /auth/signin 200 in 16ms
- ✓ Compiled in 167ms (337 modules)
- GET /auth/signin 200 in 17ms
- ✓ Compiled in 73ms (337 modules)
- GET /auth/signin 200 in 12ms
- ✓ Compiled in 159ms (337 modules)
- GET /auth/signin 200 in 16ms
- ✓ Compiled in 153ms (337 modules)
- GET /auth/signin 200 in 16ms
- ✓ Compiled in 66ms (337 modules)
- GET /auth/signin 200 in 13ms
- ✓ Compiled in 64ms (337 modules)
- GET /auth/signin 200 in 12ms
- ✓ Compiled in 79ms (337 modules)
- GET /auth/signin 200 in 13ms
- ✓ Compiled in 164ms (337 modules)
- GET /auth/signin 200 in 19ms
- ✓ Compiled in 169ms (337 modules)
- GET /auth/signin 200 in 72ms
- ✓ Compiled in 81ms (337 modules)
- GET /auth/signin 200 in 13ms
- GET /auth/signin 200 in 98ms
- ✓ Compiled in 161ms (337 modules)
- GET /auth/signin 200 in 22ms
- ✓ Compiled in 67ms (337 modules)
- GET /auth/signin 200 in 53ms
- ✓ Compiled in 76ms (337 modules)
- GET /auth/signin 200 in 10ms
- ✓ Compiled in 62ms (337 modules)
- GET /auth/signin 200 in 13ms
- ✓ Compiled in 61ms (337 modules)
- GET /auth/signin 200 in 11ms
- ✓ Compiled in 59ms (337 modules)
- GET /auth/signin 200 in 13ms
- GET /auth/signin 200 in 80ms
- ✓ Compiled /studio-demo in 327ms (901 modules)
- GET /studio-demo 200 in 567ms
- GET / 200 in 105ms
- ✓ Compiled in 205ms (347 modules)
- GET /auth/signin 200 in 47ms
- GET / 200 in 47ms
- ✓ Compiled in 81ms (347 modules)
- GET /auth/signin 200 in 24ms
- GET / 200 in 25ms
- ✓ Compiled in 158ms (347 modules)
- GET / 200 in 25ms
- GET /auth/signin 200 in 25ms
- ✓ Compiled in 165ms (347 modules)
- GET / 200 in 51ms
- GET /auth/signin 200 in 51ms
- ✓ Compiled in 68ms (347 modules)
- GET / 200 in 20ms
- GET /auth/signin 200 in 21ms
- ✓ Compiled in 68ms (347 modules)
- GET /auth/signin 200 in 24ms
- GET / 200 in 24ms
- ✓ Compiled in 67ms (347 modules)
- GET /auth/signin 200 in 20ms
- GET / 200 in 20ms
- ✓ Compiled in 65ms (347 modules)
- GET /auth/signin 200 in 19ms
- GET / 200 in 20ms
- ✓ Compiled in 87ms (347 modules)
- GET /auth/signin 200 in 34ms
- GET / 200 in 36ms
- ✓ Compiled in 130ms (347 modules)
- GET /auth/signin 200 in 88ms
- GET / 200 in 87ms
- ✓ Compiled in 98ms (347 modules)
- GET /auth/signin 200 in 11ms
- GET / 200 in 10ms
- ✓ Compiled in 148ms (347 modules)
- GET /auth/signin 200 in 25ms
- GET / 200 in 25ms
- ✓ Compiled in 79ms (347 modules)
- GET /auth/signin 200 in 20ms
- GET / 200 in 19ms
- ✓ Compiled in 73ms (347 modules)
- GET /auth/signin 200 in 20ms
- GET / 200 in 21ms
- ✓ Compiled in 60ms (347 modules)
- GET / 200 in 32ms
- GET /auth/signin 200 in 34ms
- ✓ Compiled in 87ms (347 modules)
- GET /auth/signin 200 in 25ms
- GET / 200 in 25ms
- ✓ Compiled in 89ms (347 modules)
- GET / 200 in 55ms
- GET /auth/signin 200 in 58ms
- ✓ Compiled in 98ms (347 modules)
- GET / 200 in 25ms
- GET /auth/signin 200 in 25ms
- ✓ Compiled in 71ms (347 modules)
- GET /auth/signin 200 in 19ms
- GET / 200 in 20ms
- ✓ Compiled in 128ms (347 modules)
- GET /auth/signin 200 in 19ms
- GET / 200 in 20ms
- ✓ Compiled in 69ms (347 modules)
- GET /auth/signin 200 in 21ms
- GET / 200 in 21ms
- ✓ Compiled in 66ms (347 modules)
- GET /auth/signin 200 in 19ms
- GET / 200 in 19ms
- ✓ Compiled in 58ms (347 modules)
- GET /auth/signin 200 in 22ms
- GET / 200 in 22ms
- ✓ Compiled in 67ms (347 modules)
- GET / 200 in 23ms
- GET /auth/signin 200 in 23ms
- ✓ Compiled in 78ms (347 modules)
- GET /auth/signin 200 in 29ms
- GET / 200 in 30ms
- ✓ Compiled in 74ms (347 modules)
- GET / 200 in 110ms
- ✓ Compiled in 120ms (347 modules)
- GET /auth/signin 200 in 119ms
- GET /auth/signin 200 in 25ms
- GET / 200 in 23ms
- ✓ Compiled in 126ms (347 modules)
- GET /auth/signin 200 in 22ms
- GET / 200 in 22ms
- ✓ Compiled in 74ms (347 modules)
- GET /auth/signin 200 in 26ms
- GET / 200 in 25ms
- ✓ Compiled in 67ms (347 modules)
- GET /auth/signin 200 in 25ms
- GET / 200 in 30ms
- ✓ Compiled in 89ms (347 modules)
- GET /auth/signin 200 in 21ms
- GET / 200 in 22ms
- ✓ Compiled in 107ms (347 modules)
- GET /auth/signin 200 in 79ms
- GET / 200 in 78ms
- ✓ Compiled in 103ms (347 modules)
- GET /auth/signin 200 in 21ms
- GET / 200 in 22ms
- ✓ Compiled in 111ms (347 modules)
- GET / 200 in 21ms
- GET /auth/signin 200 in 23ms
- ✓ Compiled in 72ms (347 modules)
- GET / 200 in 21ms
- GET /auth/signin 200 in 21ms
- ✓ Compiled in 92ms (347 modules)
- GET /auth/signin 200 in 23ms
- GET / 200 in 23ms
- ✓ Compiled in 75ms (347 modules)
- GET / 200 in 33ms
- GET /auth/signin 200 in 35ms
+ ✓ Ready in 1725ms
+ ✓ Compiled /src/middleware in 445ms (227 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3.3s (881 modules)
+ HEAD /dashboard/vendors 404 in 3517ms
+ ✓ Compiled in 252ms (325 modules)
+ ✓ Compiled /sign-in/[[...sign-in]] in 254ms (859 modules)
+ GET /sign-in?redirect_url=http%3A%2F%2Flocalhost%3A4001%2Fdashboard%2Fvendors 200 in 631ms
+ GET /sign-in/SignIn_clerk_catchall_check_1754328706540 200 in 39ms
+ ○ Compiling /dashboard/vendors ...
+ ✓ Compiled /dashboard/vendors in 1319ms (1436 modules)
+ GET /dashboard/vendors?_rsc=1a7td 200 in 1514ms
+ ✓ Compiled in 519ms (1450 modules)
+ GET /dashboard/vendors?_rsc=1pkxn 200 in 10628ms
+ ⨯ Error
+    at async VendorsPage (./src/app/dashboard/vendors/page.tsx:22:18)
+digest: "3730187011"
+ ⨯ Error
+    at async DashboardLayout (./src/app/dashboard/layout.tsx:17:18)
+digest: "1437048718"
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 862ms (1663 modules)
+ GET /dashboard/vendors 200 in 1472ms
+ GET /dashboard/vendors?_rsc=1pkxn 200 in 1471ms
+ ✓ Compiled in 187ms (541 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1039ms
+ ✓ Compiled in 181ms (541 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1022ms
+ ✓ Compiled /_not-found in 351ms (1439 modules)
+ POST /api/migrate/vendors 404 in 439ms
+ GET /dashboard/vendors 404 in 14ms
+ ✓ Compiled in 995ms (1666 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1611ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 2783ms
+ GET /api/test-db 404 in 52ms
+ GET /api/test-db 404 in 21ms
+ ✓ Compiled in 62ms (227 modules)
+ ✓ Compiled /api/test-db in 398ms (914 modules)
+Testing database connection...
+ GET /api/test-db 200 in 1589ms
+ ✓ Compiled in 1005ms (1663 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1577ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1321ms
+ ✓ Compiled in 46ms (227 modules)
+ ✓ Compiled /api/check-schema in 119ms (913 modules)
+Checking actual database schema...
+Error checking vendor columns: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.information_schema.columns" does not exist'
+}
+Error checking category columns: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.information_schema.columns" does not exist'
+}
+Testing vendor insert with data: {
+  couple_id: '00000000-0000-0000-0000-000000000000',
+  name: 'Test Vendor',
+  contact_name: 'Test Contact',
+  phone: '555-0123',
+  email: 'test@example.com'
+}
+ GET /api/check-schema 200 in 1061ms
+ ✓ Compiled in 177ms (541 modules)
+ ✓ Compiled in 237ms (1667 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1041ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 943ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1054ms
+ ✓ Compiled in 37ms (227 modules)
+ ✓ Compiled /api/describe-table in 228ms (913 modules)
+Describing vendors table structure...
+Vendors query result: { data: [], error: null }
+Categories query result: { data: [], error: null }
+Testing minimal vendor insert...
+Minimal insert result: {
+  data: null,
+  error: {
+    code: '42501',
+    details: null,
+    hint: null,
+    message: 'new row violates row-level security policy for table "vendors"'
+  }
+}
+ GET /api/describe-table 200 in 1602ms
+ ✓ Compiled in 733ms (1667 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1070ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1190ms
+ ✓ Compiled in 52ms (227 modules)
+ ✓ Compiled /api/debug-vendor-auth in 238ms (913 modules)
+Testing vendor authentication flow...
+ GET /api/debug-vendor-auth 401 in 286ms
+ ✓ Compiled in 688ms (1681 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1219ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1152ms
+ ✓ Compiled in 70ms (227 modules)
    Reload env: .env.local
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ✓ Compiled in 491ms (888 modules)
- GET /auth/signin 200 in 251ms
- GET / 200 in 482ms
- GET /auth/signin 200 in 496ms
- ✓ Compiled in 324ms (347 modules)
- GET / 200 in 32ms
- GET /auth/signin 200 in 31ms
- ✓ Compiled in 99ms (347 modules)
- GET /auth/signin 200 in 34ms
- GET / 200 in 35ms
- ✓ Compiled in 84ms (347 modules)
- GET /auth/signin 200 in 37ms
- GET / 200 in 36ms
- ✓ Compiled in 92ms (347 modules)
- GET /auth/signin 200 in 30ms
- GET / 200 in 30ms
- ✓ Compiled in 72ms (347 modules)
- GET / 200 in 24ms
- GET /auth/signin 200 in 24ms
- ✓ Compiled in 148ms (347 modules)
- GET /auth/signin 200 in 27ms
- GET / 200 in 28ms
- ✓ Compiled in 74ms (347 modules)
- GET /auth/signin 200 in 19ms
- GET / 200 in 19ms
- ✓ Compiled in 75ms (347 modules)
- GET /auth/signin 200 in 22ms
- GET / 200 in 21ms
- ✓ Compiled in 63ms (347 modules)
- GET /auth/signin 200 in 18ms
- GET / 200 in 19ms
- ✓ Compiled in 60ms (347 modules)
- GET /auth/signin 200 in 24ms
- GET / 200 in 25ms
- ✓ Compiled in 90ms (347 modules)
- GET /auth/signin 200 in 82ms
- GET / 200 in 83ms
- ✓ Compiled in 92ms (347 modules)
- GET /auth/signin 200 in 28ms
- GET / 200 in 32ms
- ✓ Compiled in 114ms (347 modules)
- GET /auth/signin 200 in 25ms
- GET / 200 in 25ms
- ✓ Compiled in 67ms (347 modules)
- GET / 200 in 18ms
- GET /auth/signin 200 in 18ms
- ✓ Compiled in 67ms (347 modules)
- GET / 200 in 21ms
- GET /auth/signin 200 in 22ms
- ✓ Compiled in 85ms (347 modules)
- GET / 200 in 40ms
- GET /auth/signin 200 in 42ms
- ✓ Compiled in 71ms (347 modules)
- GET /auth/signin 200 in 14ms
- GET / 200 in 14ms
- ✓ Compiled in 58ms (347 modules)
- GET /auth/signin 200 in 20ms
- GET / 200 in 20ms
- ✓ Compiled in 121ms (347 modules)
- GET /auth/signin 200 in 27ms
- GET / 200 in 27ms
- ✓ Compiled in 74ms (347 modules)
- GET /auth/signin 200 in 33ms
- GET / 200 in 34ms
- ✓ Compiled in 105ms (347 modules)
- GET /auth/signin 200 in 25ms
- GET / 200 in 24ms
- GET /auth/signin 200 in 32ms
- ✓ Compiled in 71ms (347 modules)
- GET /auth/signin 200 in 19ms
- GET / 200 in 19ms
- ✓ Compiled in 71ms (347 modules)
- GET / 200 in 37ms
- GET /auth/signin 200 in 38ms
- ✓ Compiled in 75ms (347 modules)
- GET / 200 in 20ms
- GET /auth/signin 200 in 20ms
- ✓ Compiled in 65ms (347 modules)
- GET /auth/signin 200 in 20ms
- GET / 200 in 21ms
- ✓ Compiled in 64ms (347 modules)
- GET /auth/signin 200 in 23ms
- GET / 200 in 24ms
- ✓ Compiled in 65ms (347 modules)
- GET /auth/signin 200 in 22ms
- GET / 200 in 22ms
- ✓ Compiled in 82ms (347 modules)
- GET / 200 in 81ms
- GET /auth/signin 200 in 83ms
- ✓ Compiled in 91ms (347 modules)
- GET /auth/signin 200 in 26ms
- GET / 200 in 40ms
- ✓ Compiled in 164ms (347 modules)
- GET / 200 in 77ms
- GET /auth/signin 200 in 91ms
- ✓ Compiled in 113ms (347 modules)
- GET /auth/signin 200 in 29ms
- GET / 200 in 30ms
- ✓ Compiled in 161ms (347 modules)
- GET /auth/signin 200 in 96ms
- GET / 200 in 97ms
- ✓ Compiled in 104ms (347 modules)
- GET /auth/signin 200 in 15ms
- GET / 200 in 17ms
- ✓ Compiled in 159ms (347 modules)
- GET / 200 in 45ms
- GET /auth/signin 200 in 44ms
-   Reload env: .env.local
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ✓ Compiled in 283ms (888 modules)
- GET / 200 in 234ms
- GET /auth/signin 200 in 235ms
- GET / 200 in 403ms
- GET /auth/signin 200 in 420ms
- ✓ Compiled in 70ms (347 modules)
- GET /auth/signin 200 in 25ms
- GET / 200 in 26ms
- ✓ Compiled in 97ms (347 modules)
- GET / 200 in 85ms
- GET /auth/signin 200 in 85ms
- ✓ Compiled in 93ms (347 modules)
- GET /auth/signin 200 in 14ms
- GET / 200 in 14ms
- ✓ Compiled in 82ms (347 modules)
- GET / 200 in 25ms
- GET /auth/signin 200 in 26ms
-   Reload env: .env.local
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ✓ Compiled in 278ms (888 modules)
- GET /auth/signin 200 in 225ms
- GET / 200 in 460ms
- GET /auth/signin 200 in 458ms
- ✓ Compiled in 69ms (347 modules)
- GET / 200 in 33ms
- GET /auth/signin 200 in 33ms
- ✓ Compiled in 120ms (347 modules)
- GET /auth/signin 200 in 75ms
- GET / 200 in 75ms
- ✓ Compiled in 86ms (347 modules)
- GET /auth/signin 200 in 14ms
- GET / 200 in 15ms
- GET /auth/signin 200 in 59ms
- GET / 200 in 74ms
- GET / 200 in 69ms
- GET /auth/signin 200 in 31ms
- ✓ Compiled /dashboard in 338ms (906 modules)
- GET /dashboard 200 in 408ms
- ✓ Compiled /onboarding in 182ms (914 modules)
- GET /onboarding 200 in 237ms
- GET /onboarding 200 in 11ms
- ✓ Compiled in 478ms (914 modules)
- GET / 200 in 53ms
- GET /onboarding 200 in 55ms
- ✓ Compiled in 67ms (353 modules)
- GET / 200 in 21ms
- GET /onboarding 200 in 22ms
- ✓ Compiled in 114ms (353 modules)
- GET /onboarding 200 in 206ms
- GET / 200 in 206ms
- ✓ Compiled in 218ms (353 modules)
- GET /onboarding 200 in 13ms
- GET / 200 in 18ms
- ✓ Compiled in 66ms (353 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 24ms
- ✓ Compiled in 109ms (353 modules)
- GET /onboarding 200 in 129ms
- GET / 200 in 130ms
- ✓ Compiled in 141ms (353 modules)
- GET /onboarding 200 in 38ms
- GET / 200 in 35ms
- ✓ Compiled in 106ms (353 modules)
- GET / 200 in 37ms
- GET /onboarding 200 in 38ms
- ✓ Compiled in 73ms (353 modules)
- GET / 200 in 23ms
- GET /onboarding 200 in 24ms
- ✓ Compiled /auth/signin in 158ms (566 modules)
- GET /auth/signin 200 in 323ms
- GET /onboarding 200 in 187ms
- GET / 200 in 30ms
- ✓ Compiled in 72ms (353 modules)
- GET / 200 in 24ms
- GET /onboarding 200 in 26ms
- ✓ Compiled in 139ms (353 modules)
- GET /onboarding 200 in 43ms
- GET / 200 in 43ms
- ✓ Compiled in 104ms (353 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- ✓ Compiled in 87ms (353 modules)
- GET /onboarding 200 in 66ms
- GET / 200 in 67ms
- ✓ Compiled in 120ms (353 modules)
- GET / 200 in 31ms
- GET /onboarding 200 in 44ms
- GET /auth/signin 200 in 96ms
- ✓ Compiled /dashboard in 206ms (540 modules)
- GET /dashboard 200 in 340ms
- GET /onboarding 200 in 124ms
- ✓ Compiled / in 125ms (575 modules)
- GET / 200 in 423ms
- GET /dashboard 200 in 305ms
- GET /onboarding 200 in 15ms
- GET /onboarding 200 in 10ms
- ✓ Compiled in 643ms (908 modules)
- GET /onboarding 200 in 97ms
- GET / 200 in 97ms
- GET /onboarding 200 in 21ms
- ✓ Compiled in 73ms (353 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- GET /onboarding 200 in 19ms
- ✓ Compiled in 109ms (353 modules)
- GET / 200 in 75ms
- GET /onboarding 200 in 76ms
- ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
- ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
-  page: '/onboarding'
+ ✓ Compiled in 431ms (1663 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1224ms
+ ✓ Compiled /api/run-vendor-migration in 98ms (913 modules)
+Running vendor database migration...
+Found 5 existing categories, skipping category creation
+Testing vendor table structure...
+ POST /api/run-vendor-migration 200 in 1020ms
+ ✓ Compiled in 152ms (541 modules)
+ ✓ Compiled in 509ms (1667 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1383ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1400ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1086ms
+ ✓ Compiled in 37ms (227 modules)
+ ✓ Compiled /api/run-full-schema in 106ms (913 modules)
+Running full vendor schema setup...
+Current vendors table columns: {
+  currentColumns: null,
+  columnsError: {
+    code: 'PGRST202',
+    details: 'Searched for the function public.sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+    hint: null,
+    message: 'Could not find the function public.sql(query) in the schema cache'
+  }
 }
- ✓ Compiled in 500ms (353 modules)
- GET / 200 in 63ms
- ✓ Compiled /_error in 469ms (1223 modules)
- GET / 200 in 432ms
- GET / 200 in 11ms
- GET /onboarding 500 in 1336ms
- GET /onboarding 200 in 18ms
- GET /onboarding 200 in 11ms
- GET /onboarding 200 in 11ms
- GET /onboarding 200 in 10ms
- GET /onboarding 200 in 10ms
- GET /onboarding 200 in 11ms
- GET /onboarding 200 in 110ms
- ✓ Compiled in 525ms (1150 modules)
- GET /onboarding 200 in 150ms
- GET / 200 in 151ms
- GET /onboarding 200 in 13ms
- ✓ Compiled in 83ms (500 modules)
- GET /onboarding 200 in 29ms
- GET / 200 in 29ms
- GET /onboarding 200 in 22ms
- ✓ Compiled in 567ms (1150 modules)
- GET /onboarding 200 in 93ms
- GET / 200 in 97ms
- GET /onboarding 200 in 30ms
- ✓ Compiled in 77ms (500 modules)
- GET / 200 in 24ms
- GET /onboarding 200 in 24ms
- GET /onboarding 200 in 14ms
- ✓ Compiled in 77ms (500 modules)
- GET / 200 in 26ms
- GET /onboarding 200 in 27ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 182ms (1150 modules)
- GET /onboarding 200 in 84ms
- GET / 200 in 85ms
- GET /onboarding 200 in 28ms
- ✓ Compiled in 74ms (500 modules)
- GET /onboarding 200 in 41ms
- GET / 200 in 42ms
- GET /onboarding 200 in 32ms
- ✓ Compiled in 382ms (1150 modules)
+Executing schema SQL...
+Schema creation error: {
+  code: 'PGRST202',
+  details: 'Searched for the function public.sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.sql(query) in the schema cache'
+}
+Full schema error: {
+  code: 'PGRST202',
+  details: 'Searched for the function public.sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.sql(query) in the schema cache'
+}
+ POST /api/run-full-schema 500 in 992ms
+ ✓ Compiled in 1003ms (1663 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1678ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1945ms
+ ✓ Compiled in 65ms (227 modules)
+ ✓ Compiled /api/debug-user-couple in 200ms (913 modules)
+Debugging user-couple relationship...
+ GET /api/debug-user-couple 401 in 285ms
+ ✓ Compiled in 942ms (1663 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 2080ms
+ GET /dashboard/vendors?_rsc=qzlug 200 in 2805ms
+ ✓ Compiled in 670ms (1450 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1993ms
+ ✓ Compiled /api/vendors-service in 224ms (913 modules)
+Creating vendor with admin privileges: {
+  name: 'Adebukola Adesanmi',
+  contact_name: 'Adebukola Adesanmi',
+  phone: null,
+  email: 'hello@atunbi.net',
+  website: null,
+  address: '14 lateef ali crescent soluyi',
+  category_id: null,
+  status: 'potential',
+  priority: 'medium',
+  estimated_cost: null,
+  notes: null
+}
+User: user_30m8uHgAu6OYhPCC4R0Jy7A3k0J
+User lookup result: {
+  userData: { id: '23914932-3ac9-4533-8518-c626915a9c56', couples: [ [Object] ] },
+  userError: null
+}
+Found couple ID: 9b84087b-41ae-49c2-adbf-56d0be01e0dd
+Inserting vendor data: {
+  couple_id: '9b84087b-41ae-49c2-adbf-56d0be01e0dd',
+  name: 'Adebukola Adesanmi',
+  category_id: null,
+  contact_name: 'Adebukola Adesanmi',
+  phone: null,
+  email: 'hello@atunbi.net',
+  address: '14 lateef ali crescent soluyi',
+  website: null,
+  status: 'potential',
+  priority: 'medium',
+  rating: null,
+  estimated_cost: null,
+  actual_cost: null,
+  notes: null,
+  meeting_date: null,
+  contract_signed: false
+}
+Vendor created successfully: {
+  id: 'e381c2fd-5610-4392-b5ec-6cef17b42f86',
+  couple_id: '9b84087b-41ae-49c2-adbf-56d0be01e0dd',
+  name: 'Adebukola Adesanmi',
+  contact_name: 'Adebukola Adesanmi',
+  phone: null,
+  email: 'hello@atunbi.net',
+  website: null,
+  address: '14 lateef ali crescent soluyi',
+  category_id: null,
+  status: 'potential',
+  priority: 'medium',
+  rating: null,
+  estimated_cost: null,
+  actual_cost: null,
+  notes: null,
+  meeting_date: null,
+  contract_signed: false,
+  created_at: '2025-08-04T18:06:24.615774+00:00',
+  updated_at: '2025-08-04T18:06:24.615774+00:00',
+  vendor_categories: null
+}
+ POST /api/vendors-service 200 in 2430ms
+ GET /dashboard/vendors 200 in 1431ms
+ ⨯ ./src/app/dashboard/vendors/page.tsx
+Error: 
+  [31mx[0m Return statement is not allowed here
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:92:1]
+ [2m 92[0m |         }
+ [2m 93[0m |       }
+ [2m 94[0m |     
+ [2m 95[0m | [31;1m,[0m[31;1m-[0m[31;1m>[0m   return (
+ [2m 96[0m | [31;1m|[0m       <div className="space-y-8">
+ [2m 97[0m | [31;1m|[0m         <div className="flex items-center justify-between">
+ [2m 98[0m | [31;1m|[0m           <div>
+ [2m 99[0m | [31;1m|[0m             <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
+ [2m100[0m | [31;1m|[0m             <p className="text-gray-600 mt-2">Find and manage your wedding vendors</p>
+ [2m101[0m | [31;1m|[0m           </div>
+ [2m102[0m | [31;1m|[0m           <AddVendorDialog categories={categories} />
+ [2m103[0m | [31;1m|[0m         </div>
+ [2m104[0m | [31;1m|[0m   
+ [2m105[0m | [31;1m|[0m         {/* Vendor Summary Stats */}
+ [2m106[0m | [31;1m|[0m         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+ [2m107[0m | [31;1m|[0m           <Card>
+ [2m108[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m109[0m | [31;1m|[0m               <CardDescription>Total Vendors</CardDescription>
+ [2m110[0m | [31;1m|[0m             </CardHeader>
+ [2m111[0m | [31;1m|[0m             <CardContent>
+ [2m112[0m | [31;1m|[0m               <div className="text-2xl font-bold">{summary.total_vendors}</div>
+ [2m113[0m | [31;1m|[0m             </CardContent>
+ [2m114[0m | [31;1m|[0m           </Card>
+ [2m115[0m | [31;1m|[0m           
+ [2m116[0m | [31;1m|[0m           <Card>
+ [2m117[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m118[0m | [31;1m|[0m               <CardDescription>Booked</CardDescription>
+ [2m119[0m | [31;1m|[0m             </CardHeader>
+ [2m120[0m | [31;1m|[0m             <CardContent>
+ [2m121[0m | [31;1m|[0m               <div className="text-2xl font-bold text-green-600">{summary.booked_vendors}</div>
+ [2m122[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
+ [2m123[0m | [31;1m|[0m                 {summary.total_vendors > 0 ? Math.round((summary.booked_vendors / summary.total_vendors) * 100) : 0}% booked
+ [2m124[0m | [31;1m|[0m               </p>
+ [2m125[0m | [31;1m|[0m             </CardContent>
+ [2m126[0m | [31;1m|[0m           </Card>
+ [2m127[0m | [31;1m|[0m           
+ [2m128[0m | [31;1m|[0m           <Card>
+ [2m129[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m130[0m | [31;1m|[0m               <CardDescription>Contracts Signed</CardDescription>
+ [2m131[0m | [31;1m|[0m             </CardHeader>
+ [2m132[0m | [31;1m|[0m             <CardContent>
+ [2m133[0m | [31;1m|[0m               <div className="text-2xl font-bold text-blue-600">{summary.contracts_signed}</div>
+ [2m134[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
+ [2m135[0m | [31;1m|[0m                 of {summary.booked_vendors} booked
+ [2m136[0m | [31;1m|[0m               </p>
+ [2m137[0m | [31;1m|[0m             </CardContent>
+ [2m138[0m | [31;1m|[0m           </Card>
+ [2m139[0m | [31;1m|[0m           
+ [2m140[0m | [31;1m|[0m           <Card>
+ [2m141[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m142[0m | [31;1m|[0m               <CardDescription>Estimated Cost</CardDescription>
+ [2m143[0m | [31;1m|[0m             </CardHeader>
+ [2m144[0m | [31;1m|[0m             <CardContent>
+ [2m145[0m | [31;1m|[0m               <div className="text-2xl font-bold text-purple-600">
+ [2m146[0m | [31;1m|[0m                 ${Number(summary.total_estimated_cost || 0).toLocaleString()}
+ [2m147[0m | [31;1m|[0m               </div>
+ [2m148[0m | [31;1m|[0m               {summary.total_actual_cost > 0 && (
+ [2m149[0m | [31;1m|[0m                 <p className="text-xs text-muted-foreground">
+ [2m150[0m | [31;1m|[0m                   Actual: ${Number(summary.total_actual_cost).toLocaleString()}
+ [2m151[0m | [31;1m|[0m                 </p>
+ [2m152[0m | [31;1m|[0m               )}
+ [2m153[0m | [31;1m|[0m             </CardContent>
+ [2m154[0m | [31;1m|[0m           </Card>
+ [2m155[0m | [31;1m|[0m         </div>
+ [2m156[0m | [31;1m|[0m   
+ [2m157[0m | [31;1m|[0m         {/* Vendor Categories */}
+ [2m158[0m | [31;1m|[0m         <Card>
+ [2m159[0m | [31;1m|[0m           <CardHeader>
+ [2m160[0m | [31;1m|[0m             <CardTitle>Vendor Categories</CardTitle>
+ [2m161[0m | [31;1m|[0m             <CardDescription>Browse vendors by category</CardDescription>
+ [2m162[0m | [31;1m|[0m           </CardHeader>
+ [2m163[0m | [31;1m|[0m           <CardContent>
+ [2m164[0m | [31;1m|[0m             {categoryStats.length > 0 ? (
+ [2m165[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ [2m166[0m | [31;1m|[0m                 {categoryStats.map((category) => (
+ [2m167[0m | [31;1m|[0m                   <Card key={category.category_name} className="cursor-pointer hover:shadow-md transition-shadow">
+ [2m168[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
+ [2m169[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.category_icon}</span>
+ [2m170[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.category_name}</h3>
+ [2m171[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">
+ [2m172[0m | [31;1m|[0m                         {Number(category.vendor_count)} vendor{Number(category.vendor_count) !== 1 ? 's' : ''}
+ [2m173[0m | [31;1m|[0m                         {Number(category.booked_count) > 0 && (
+ [2m174[0m | [31;1m|[0m                           <> • {Number(category.booked_count)} booked</>
+ [2m175[0m | [31;1m|[0m                         )}
+ [2m176[0m | [31;1m|[0m                       </p>
+ [2m177[0m | [31;1m|[0m                       {Number(category.total_estimated_cost) > 0 && (
+ [2m178[0m | [31;1m|[0m                         <p className="text-xs text-muted-foreground mt-1">
+ [2m179[0m | [31;1m|[0m                           ${Number(category.total_estimated_cost).toLocaleString()} estimated
+ [2m180[0m | [31;1m|[0m                         </p>
+ [2m181[0m | [31;1m|[0m                       )}
+ [2m182[0m | [31;1m|[0m                     </CardContent>
+ [2m183[0m | [31;1m|[0m                   </Card>
+ [2m184[0m | [31;1m|[0m                 ))}
+ [2m185[0m | [31;1m|[0m               </div>
+ [2m186[0m | [31;1m|[0m             ) : (
+ [2m187[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ [2m188[0m | [31;1m|[0m                 {categories.slice(0, 8).map((category) => (
+ [2m189[0m | [31;1m|[0m                   <Card key={category.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
+ [2m190[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
+ [2m191[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.icon}</span>
+ [2m192[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.name}</h3>
+ [2m193[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">0 vendors</p>
+ [2m194[0m | [31;1m|[0m                     </CardContent>
+ [2m195[0m | [31;1m|[0m                   </Card>
+ [2m196[0m | [31;1m|[0m                 ))}
+ [2m197[0m | [31;1m|[0m               </div>
+ [2m198[0m | [31;1m|[0m             )}
+ [2m199[0m | [31;1m|[0m           </CardContent>
+ [2m200[0m | [31;1m|[0m         </Card>
+ [2m201[0m | [31;1m|[0m   
+ [2m202[0m | [31;1m|[0m         {/* My Vendors */}
+ [2m203[0m | [31;1m|[0m         <Card>
+ [2m204[0m | [31;1m|[0m           <CardHeader>
+ [2m205[0m | [31;1m|[0m             <div className="flex justify-between items-center">
+ [2m206[0m | [31;1m|[0m               <div>
+ [2m207[0m | [31;1m|[0m                 <CardTitle>My Vendors</CardTitle>
+ [2m208[0m | [31;1m|[0m                 <CardDescription>Vendors you're working with</CardDescription>
+ [2m209[0m | [31;1m|[0m               </div>
+ [2m210[0m | [31;1m|[0m             </div>
+ [2m211[0m | [31;1m|[0m           </CardHeader>
+ [2m212[0m | [31;1m|[0m           <CardContent>
+ [2m213[0m | [31;1m|[0m             {vendors.length > 0 ? (
+ [2m214[0m | [31;1m|[0m               <VendorList vendors={vendors} categories={categories} />
+ [2m215[0m | [31;1m|[0m             ) : (
+ [2m216[0m | [31;1m|[0m               <div className="text-center py-12">
+ [2m217[0m | [31;1m|[0m                 <div className="text-6xl mb-4">🏢</div>
+ [2m218[0m | [31;1m|[0m                 <h3 className="text-lg font-semibold mb-2">No vendors added yet</h3>
+ [2m219[0m | [31;1m|[0m                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+ [2m220[0m | [31;1m|[0m                   Start building your vendor list by adding wedding service providers.
+ [2m221[0m | [31;1m|[0m                 </p>
+ [2m222[0m | [31;1m|[0m                 <AddVendorDialog categories={categories} />
+ [2m223[0m | [31;1m|[0m               </div>
+ [2m224[0m | [31;1m|[0m             )}
+ [2m225[0m | [31;1m|[0m           </CardContent>
+ [2m226[0m | [31;1m|[0m         </Card>
+ [2m227[0m | [31;1m|[0m       </div>
+ [2m228[0m | [31;1m`[0m[31;1m-[0m[31;1m>[0m   )
+ [2m229[0m |     }
+     `----
+
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:226:1]
+ [2m226[0m |       </Card>
+ [2m227[0m |     </div>
+ [2m228[0m |   )
+ [2m229[0m | }
+     : [31;1m^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/dashboard/vendors/page.tsx
+ ○ Compiling /_error ...
+ ⨯ ./src/app/dashboard/vendors/page.tsx
+Error: 
+  [31mx[0m Return statement is not allowed here
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:92:1]
+ [2m 92[0m |         }
+ [2m 93[0m |       }
+ [2m 94[0m |     
+ [2m 95[0m | [31;1m,[0m[31;1m-[0m[31;1m>[0m   return (
+ [2m 96[0m | [31;1m|[0m       <div className="space-y-8">
+ [2m 97[0m | [31;1m|[0m         <div className="flex items-center justify-between">
+ [2m 98[0m | [31;1m|[0m           <div>
+ [2m 99[0m | [31;1m|[0m             <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
+ [2m100[0m | [31;1m|[0m             <p className="text-gray-600 mt-2">Find and manage your wedding vendors</p>
+ [2m101[0m | [31;1m|[0m           </div>
+ [2m102[0m | [31;1m|[0m           <AddVendorDialog categories={categories} />
+ [2m103[0m | [31;1m|[0m         </div>
+ [2m104[0m | [31;1m|[0m   
+ [2m105[0m | [31;1m|[0m         {/* Vendor Summary Stats */}
+ [2m106[0m | [31;1m|[0m         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+ [2m107[0m | [31;1m|[0m           <Card>
+ [2m108[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m109[0m | [31;1m|[0m               <CardDescription>Total Vendors</CardDescription>
+ [2m110[0m | [31;1m|[0m             </CardHeader>
+ [2m111[0m | [31;1m|[0m             <CardContent>
+ [2m112[0m | [31;1m|[0m               <div className="text-2xl font-bold">{summary.total_vendors}</div>
+ [2m113[0m | [31;1m|[0m             </CardContent>
+ [2m114[0m | [31;1m|[0m           </Card>
+ [2m115[0m | [31;1m|[0m           
+ [2m116[0m | [31;1m|[0m           <Card>
+ [2m117[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m118[0m | [31;1m|[0m               <CardDescription>Booked</CardDescription>
+ [2m119[0m | [31;1m|[0m             </CardHeader>
+ [2m120[0m | [31;1m|[0m             <CardContent>
+ [2m121[0m | [31;1m|[0m               <div className="text-2xl font-bold text-green-600">{summary.booked_vendors}</div>
+ [2m122[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
+ [2m123[0m | [31;1m|[0m                 {summary.total_vendors > 0 ? Math.round((summary.booked_vendors / summary.total_vendors) * 100) : 0}% booked
+ [2m124[0m | [31;1m|[0m               </p>
+ [2m125[0m | [31;1m|[0m             </CardContent>
+ [2m126[0m | [31;1m|[0m           </Card>
+ [2m127[0m | [31;1m|[0m           
+ [2m128[0m | [31;1m|[0m           <Card>
+ [2m129[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m130[0m | [31;1m|[0m               <CardDescription>Contracts Signed</CardDescription>
+ [2m131[0m | [31;1m|[0m             </CardHeader>
+ [2m132[0m | [31;1m|[0m             <CardContent>
+ [2m133[0m | [31;1m|[0m               <div className="text-2xl font-bold text-blue-600">{summary.contracts_signed}</div>
+ [2m134[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
+ [2m135[0m | [31;1m|[0m                 of {summary.booked_vendors} booked
+ [2m136[0m | [31;1m|[0m               </p>
+ [2m137[0m | [31;1m|[0m             </CardContent>
+ [2m138[0m | [31;1m|[0m           </Card>
+ [2m139[0m | [31;1m|[0m           
+ [2m140[0m | [31;1m|[0m           <Card>
+ [2m141[0m | [31;1m|[0m             <CardHeader className="pb-2">
+ [2m142[0m | [31;1m|[0m               <CardDescription>Estimated Cost</CardDescription>
+ [2m143[0m | [31;1m|[0m             </CardHeader>
+ [2m144[0m | [31;1m|[0m             <CardContent>
+ [2m145[0m | [31;1m|[0m               <div className="text-2xl font-bold text-purple-600">
+ [2m146[0m | [31;1m|[0m                 ${Number(summary.total_estimated_cost || 0).toLocaleString()}
+ [2m147[0m | [31;1m|[0m               </div>
+ [2m148[0m | [31;1m|[0m               {summary.total_actual_cost > 0 && (
+ [2m149[0m | [31;1m|[0m                 <p className="text-xs text-muted-foreground">
+ [2m150[0m | [31;1m|[0m                   Actual: ${Number(summary.total_actual_cost).toLocaleString()}
+ [2m151[0m | [31;1m|[0m                 </p>
+ [2m152[0m | [31;1m|[0m               )}
+ [2m153[0m | [31;1m|[0m             </CardContent>
+ [2m154[0m | [31;1m|[0m           </Card>
+ [2m155[0m | [31;1m|[0m         </div>
+ [2m156[0m | [31;1m|[0m   
+ [2m157[0m | [31;1m|[0m         {/* Vendor Categories */}
+ [2m158[0m | [31;1m|[0m         <Card>
+ [2m159[0m | [31;1m|[0m           <CardHeader>
+ [2m160[0m | [31;1m|[0m             <CardTitle>Vendor Categories</CardTitle>
+ [2m161[0m | [31;1m|[0m             <CardDescription>Browse vendors by category</CardDescription>
+ [2m162[0m | [31;1m|[0m           </CardHeader>
+ [2m163[0m | [31;1m|[0m           <CardContent>
+ [2m164[0m | [31;1m|[0m             {categoryStats.length > 0 ? (
+ [2m165[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ [2m166[0m | [31;1m|[0m                 {categoryStats.map((category) => (
+ [2m167[0m | [31;1m|[0m                   <Card key={category.category_name} className="cursor-pointer hover:shadow-md transition-shadow">
+ [2m168[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
+ [2m169[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.category_icon}</span>
+ [2m170[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.category_name}</h3>
+ [2m171[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">
+ [2m172[0m | [31;1m|[0m                         {Number(category.vendor_count)} vendor{Number(category.vendor_count) !== 1 ? 's' : ''}
+ [2m173[0m | [31;1m|[0m                         {Number(category.booked_count) > 0 && (
+ [2m174[0m | [31;1m|[0m                           <> • {Number(category.booked_count)} booked</>
+ [2m175[0m | [31;1m|[0m                         )}
+ [2m176[0m | [31;1m|[0m                       </p>
+ [2m177[0m | [31;1m|[0m                       {Number(category.total_estimated_cost) > 0 && (
+ [2m178[0m | [31;1m|[0m                         <p className="text-xs text-muted-foreground mt-1">
+ [2m179[0m | [31;1m|[0m                           ${Number(category.total_estimated_cost).toLocaleString()} estimated
+ [2m180[0m | [31;1m|[0m                         </p>
+ [2m181[0m | [31;1m|[0m                       )}
+ [2m182[0m | [31;1m|[0m                     </CardContent>
+ [2m183[0m | [31;1m|[0m                   </Card>
+ [2m184[0m | [31;1m|[0m                 ))}
+ [2m185[0m | [31;1m|[0m               </div>
+ [2m186[0m | [31;1m|[0m             ) : (
+ [2m187[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ [2m188[0m | [31;1m|[0m                 {categories.slice(0, 8).map((category) => (
+ [2m189[0m | [31;1m|[0m                   <Card key={category.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
+ [2m190[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
+ [2m191[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.icon}</span>
+ [2m192[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.name}</h3>
+ [2m193[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">0 vendors</p>
+ [2m194[0m | [31;1m|[0m                     </CardContent>
+ [2m195[0m | [31;1m|[0m                   </Card>
+ [2m196[0m | [31;1m|[0m                 ))}
+ [2m197[0m | [31;1m|[0m               </div>
+ [2m198[0m | [31;1m|[0m             )}
+ [2m199[0m | [31;1m|[0m           </CardContent>
+ [2m200[0m | [31;1m|[0m         </Card>
+ [2m201[0m | [31;1m|[0m   
+ [2m202[0m | [31;1m|[0m         {/* My Vendors */}
+ [2m203[0m | [31;1m|[0m         <Card>
+ [2m204[0m | [31;1m|[0m           <CardHeader>
+ [2m205[0m | [31;1m|[0m             <div className="flex justify-between items-center">
+ [2m206[0m | [31;1m|[0m               <div>
+ [2m207[0m | [31;1m|[0m                 <CardTitle>My Vendors</CardTitle>
+ [2m208[0m | [31;1m|[0m                 <CardDescription>Vendors you're working with</CardDescription>
+ [2m209[0m | [31;1m|[0m               </div>
+ [2m210[0m | [31;1m|[0m             </div>
+ [2m211[0m | [31;1m|[0m           </CardHeader>
+ [2m212[0m | [31;1m|[0m           <CardContent>
+ [2m213[0m | [31;1m|[0m             {vendors.length > 0 ? (
+ [2m214[0m | [31;1m|[0m               <VendorList vendors={vendors} categories={categories} />
+ [2m215[0m | [31;1m|[0m             ) : (
+ [2m216[0m | [31;1m|[0m               <div className="text-center py-12">
+ [2m217[0m | [31;1m|[0m                 <div className="text-6xl mb-4">🏢</div>
+ [2m218[0m | [31;1m|[0m                 <h3 className="text-lg font-semibold mb-2">No vendors added yet</h3>
+ [2m219[0m | [31;1m|[0m                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+ [2m220[0m | [31;1m|[0m                   Start building your vendor list by adding wedding service providers.
+ [2m221[0m | [31;1m|[0m                 </p>
+ [2m222[0m | [31;1m|[0m                 <AddVendorDialog categories={categories} />
+ [2m223[0m | [31;1m|[0m               </div>
+ [2m224[0m | [31;1m|[0m             )}
+ [2m225[0m | [31;1m|[0m           </CardContent>
+ [2m226[0m | [31;1m|[0m         </Card>
+ [2m227[0m | [31;1m|[0m       </div>
+ [2m228[0m | [31;1m`[0m[31;1m-[0m[31;1m>[0m   )
+ [2m229[0m |     }
+     `----
+
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:226:1]
+ [2m226[0m |       </Card>
+ [2m227[0m |     </div>
+ [2m228[0m |   )
+ [2m229[0m | }
+     : [31;1m^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/dashboard/vendors/page.tsx
+ GET /dashboard/vendors 500 in 13ms
+ ✓ Compiled /_not-found in 978ms (1664 modules)
  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET / 200 in 101ms
- GET /onboarding 200 in 104ms
- ⨯ ReferenceError: handleSubmit is not defined
-    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
-  255 |           {/* Form Content */}
-  256 |           <div className="px-8 py-10">
-> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
-      |                            ^
-  258 |               {errors.general && (
-  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
-  260 |                   <div className="flex items-center"> {
-  digest: '1883689987'
+ GET /_next/static/webpack/4ae3e5588ce6c9ab.webpack.hot-update.json 404 in 1132ms
+Error fetching vendors: TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async VendorsPage (webpack-internal:///(rsc)/./src/app/dashboard/vendors/page.tsx:37:37) {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1122:18)
+      at afterConnectMultiple (node:net:1689:7)
+      at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
 }
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET /onboarding 200 in 159ms
- GET /onboarding 500 in 181ms
- ⨯ ReferenceError: handleSubmit is not defined
-    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
-  255 |           {/* Form Content */}
-  256 |           <div className="px-8 py-10">
-> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
-      |                            ^
-  258 |               {errors.general && (
-  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
-  260 |                   <div className="flex items-center"> {
-  digest: '1883689987'
-}
- GET /onboarding 500 in 36ms
- ✓ Compiled in 121ms (500 modules)
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ⨯ ReferenceError: handleSubmit is not defined
-    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
-  255 |           {/* Form Content */}
-  256 |           <div className="px-8 py-10">
-> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
-      |                            ^
-  258 |               {errors.general && (
-  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
-  260 |                   <div className="flex items-center"> {
-  digest: '1883689987'
-}
- ⨯ ReferenceError: handleSubmit is not defined
-    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
-  255 |           {/* Form Content */}
-  256 |           <div className="px-8 py-10">
-> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
-      |                            ^
-  258 |               {errors.general && (
-  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
-  260 |                   <div className="flex items-center"> {
-  digest: '1883689987'
-}
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET / 200 in 89ms
- GET /onboarding 500 in 91ms
- ⨯ ReferenceError: handleSubmit is not defined
-    at OnboardingPage (src/app/onboarding/page.tsx:257:28)
-  255 |           {/* Form Content */}
-  256 |           <div className="px-8 py-10">
-> 257 |             <form onSubmit={handleSubmit} className="space-y-10">
-      |                            ^
-  258 |               {errors.general && (
-  259 |                 <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-md shadow-sm">
-  260 |                   <div className="flex items-center"> {
-  digest: '1883689987'
-}
- GET /onboarding 500 in 41ms
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ✓ Compiled in 876ms (1150 modules)
- GET /onboarding 200 in 465ms
- GET /onboarding 200 in 225ms
- GET / 200 in 52ms
- GET /onboarding 200 in 95ms
- ✓ Compiled in 89ms (500 modules)
- GET / 200 in 72ms
- GET /onboarding 200 in 74ms
- ✓ Compiled in 109ms (500 modules)
- GET /onboarding 200 in 46ms
- GET / 200 in 31ms
- GET /onboarding 200 in 32ms
- GET /onboarding 200 in 14ms
- ✓ Compiled in 174ms (500 modules)
- ✓ Compiled /auth/signin in 241ms (655 modules)
- GET /auth/signin 200 in 554ms
- GET / 200 in 529ms
- GET /onboarding 200 in 532ms
- GET /onboarding 200 in 18ms
- ✓ Compiled in 88ms (500 modules)
- GET /onboarding 200 in 23ms
- GET / 200 in 24ms
- GET /onboarding 200 in 12ms
- ✓ Compiled in 74ms (500 modules)
- GET /onboarding 200 in 26ms
- GET / 200 in 27ms
- GET /onboarding 200 in 21ms
- GET /onboarding 200 in 28ms
- ✓ Compiled in 74ms (500 modules)
- GET / 200 in 23ms
- GET /onboarding 200 in 23ms
- GET /onboarding 200 in 14ms
- ✓ Compiled in 82ms (500 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 23ms
- GET /onboarding 200 in 19ms
- GET /onboarding 200 in 21ms
- ✓ Compiled in 72ms (500 modules)
- GET / 200 in 34ms
- GET /onboarding 200 in 38ms
- GET /onboarding 200 in 33ms
- ✓ Compiled in 127ms (500 modules)
- GET /onboarding 200 in 81ms
- GET / 200 in 81ms
- ⨯ SyntaxError: Unexpected end of JSON input
-    at JSON.parse (<anonymous>) {
-  page: '/onboarding'
-}
- ✓ Compiled /_error in 628ms (1223 modules)
- GET / 200 in 66ms
- GET /onboarding 500 in 845ms
- GET /onboarding 200 in 18ms
- GET /onboarding 200 in 9ms
- GET /onboarding 200 in 105ms
- ✓ Compiled in 238ms (500 modules)
- GET / 200 in 107ms
- GET /onboarding 200 in 111ms
- GET /onboarding 200 in 26ms
- ✓ Compiled in 90ms (500 modules)
- GET / 200 in 26ms
- GET /onboarding 200 in 28ms
- GET /onboarding 200 in 12ms
- ✓ Compiled in 76ms (500 modules)
- GET / 200 in 22ms
- GET /onboarding 200 in 23ms
- GET /onboarding 200 in 24ms
- ✓ Compiled in 398ms (1150 modules)
- GET / 200 in 111ms
- GET /onboarding 200 in 113ms
- GET /onboarding 200 in 14ms
- ✓ Compiled in 81ms (500 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 25ms
- GET /onboarding 200 in 20ms
- ✓ Compiled in 467ms (1152 modules)
- GET / 200 in 101ms
- GET /onboarding 200 in 101ms
- GET /onboarding 200 in 13ms
- ✓ Compiled in 125ms (501 modules)
- GET /onboarding 200 in 66ms
- GET / 200 in 66ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 84ms (501 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 25ms
- GET /onboarding 200 in 19ms
- GET /onboarding 200 in 99ms
- ✓ Compiled in 79ms (501 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 74ms (501 modules)
- GET /onboarding 200 in 23ms
- GET / 200 in 25ms
- GET /onboarding 200 in 19ms
- GET /onboarding 200 in 21ms
- ✓ Compiled in 90ms (501 modules)
- GET / 200 in 39ms
- GET /onboarding 200 in 42ms
- GET /onboarding 200 in 29ms
- ✓ Compiled in 103ms (501 modules)
- GET /onboarding 200 in 28ms
- GET / 200 in 28ms
- GET /onboarding 200 in 17ms
- GET /onboarding 200 in 24ms
- ✓ Compiled in 85ms (501 modules)
- GET / 200 in 73ms
- GET /onboarding 200 in 93ms
- ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
- ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
-  page: '/onboarding'
-}
- ✓ Compiled in 450ms (501 modules)
- GET / 200 in 61ms
- ✓ Compiled /_error in 229ms (1225 modules)
- GET /onboarding 500 in 900ms
- GET /onboarding 200 in 66ms
- GET /onboarding 200 in 9ms
- GET /onboarding 200 in 104ms
- ✓ Compiled in 163ms (502 modules)
- GET / 200 in 62ms
- GET /onboarding 200 in 64ms
- GET /onboarding 200 in 15ms
- GET /onboarding 200 in 22ms
- ✓ Compiled in 93ms (502 modules)
- GET / 200 in 24ms
- GET /onboarding 200 in 26ms
- GET /onboarding 200 in 13ms
- ✓ Compiled in 165ms (501 modules)
- GET /onboarding 200 in 93ms
- GET / 200 in 92ms
- ✓ Compiled in 139ms (501 modules)
- GET /onboarding 200 in 51ms
- GET / 200 in 37ms
- GET /onboarding 200 in 39ms
- GET /onboarding 200 in 15ms
- ✓ Compiled in 611ms (1152 modules)
- GET /onboarding 200 in 130ms
- GET / 200 in 131ms
- GET /onboarding 200 in 18ms
- ✓ Compiled in 77ms (501 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 25ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 450ms (1152 modules)
- GET /onboarding 200 in 127ms
- GET / 200 in 122ms
- GET /onboarding 200 in 27ms
- ✓ Compiled in 129ms (501 modules)
- GET / 200 in 63ms
- GET /onboarding 200 in 65ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 103ms (501 modules)
- GET /onboarding 200 in 27ms
- GET / 200 in 28ms
- GET /onboarding 200 in 18ms
- GET /onboarding 200 in 110ms
- ✓ Compiled in 79ms (501 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 25ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 136ms (501 modules)
- GET /onboarding 200 in 200ms
- GET / 200 in 201ms
- ✓ Compiled in 246ms (501 modules)
- GET /onboarding 200 in 151ms
- GET /onboarding 200 in 60ms
- GET / 200 in 63ms
- GET /onboarding 200 in 51ms
- ✓ Compiled in 649ms (1152 modules)
- GET / 200 in 86ms
- GET /onboarding 200 in 86ms
- GET /onboarding 200 in 11ms
- ✓ Compiled in 78ms (501 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- GET /onboarding 200 in 16ms
- ✓ Compiled in 457ms (1152 modules)
- GET /onboarding 200 in 143ms
- GET / 200 in 142ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 127ms (501 modules)
- GET /onboarding 200 in 74ms
- GET / 200 in 75ms
- GET /onboarding 200 in 26ms
- ✓ Compiled in 474ms (1152 modules)
- GET /onboarding 200 in 87ms
- GET / 200 in 89ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 113ms (501 modules)
- GET /onboarding 200 in 40ms
- GET / 200 in 41ms
- GET /onboarding 200 in 42ms
- ✓ Compiled in 430ms (1152 modules)
- GET /onboarding 200 in 118ms
- GET / 200 in 120ms
- GET /onboarding 200 in 39ms
- ✓ Compiled in 130ms (501 modules)
- GET /onboarding 200 in 73ms
- GET / 200 in 74ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 406ms (1152 modules)
- GET / 200 in 67ms
- GET /onboarding 200 in 69ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 79ms (501 modules)
- GET / 200 in 23ms
- GET /onboarding 200 in 24ms
- GET /onboarding 200 in 14ms
- ✓ Compiled in 79ms (501 modules)
- GET / 200 in 51ms
- GET /onboarding 200 in 53ms
- GET /onboarding 200 in 25ms
- GET /onboarding 200 in 130ms
- ✓ Compiled in 85ms (501 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 25ms
- GET /onboarding 200 in 15ms
- ✓ Compiled in 296ms (501 modules)
- GET /onboarding 200 in 102ms
- GET / 200 in 102ms
- GET /onboarding 200 in 38ms
- ✓ Compiled in 98ms (501 modules)
- GET /onboarding 200 in 22ms
- GET / 200 in 23ms
- GET /onboarding 200 in 21ms
- ✓ Compiled in 80ms (501 modules)
- GET /onboarding 200 in 34ms
- GET / 200 in 35ms
- ✓ Compiled in 360ms (1152 modules)
- GET /onboarding 200 in 429ms
- GET / 200 in 83ms
- GET /onboarding 200 in 9ms
- ✓ Compiled in 112ms (501 modules)
- GET /onboarding 200 in 34ms
- GET / 200 in 35ms
- ✓ Compiled in 96ms (501 modules)
- GET / 200 in 73ms
- GET /onboarding 200 in 73ms
- ✓ Compiled in 105ms (501 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 26ms
- ✓ Compiled in 165ms (501 modules)
- GET /onboarding 200 in 67ms
- GET / 200 in 68ms
- ✓ Compiled in 93ms (501 modules)
- GET /onboarding 200 in 29ms
- GET / 200 in 25ms
- ✓ Compiled in 86ms (501 modules)
- GET / 200 in 24ms
- GET /onboarding 200 in 24ms
- ✓ Compiled in 107ms (501 modules)
- GET / 200 in 99ms
- GET /onboarding 200 in 118ms
- ✓ Compiled in 126ms (501 modules)
- GET / 200 in 17ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 76ms (501 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- ✓ Compiled in 110ms (501 modules)
- GET /onboarding 200 in 40ms
- GET / 200 in 41ms
- ✓ Compiled in 83ms (501 modules)
- GET / 200 in 27ms
- GET /onboarding 200 in 32ms
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ✓ Compiled in 627ms (1152 modules)
- GET / 200 in 497ms
- GET /onboarding 200 in 568ms
- GET /onboarding 200 in 48ms
- ✓ Compiled in 128ms (501 modules)
- GET /onboarding 200 in 98ms
- GET / 200 in 100ms
- GET /onboarding 200 in 34ms
- ✓ Compiled in 140ms (501 modules)
- GET /onboarding 200 in 30ms
- GET / 200 in 31ms
- GET /onboarding 200 in 23ms
- ✓ Compiled in 89ms (501 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- GET /onboarding 200 in 13ms
- ✓ Compiled in 79ms (501 modules)
- GET /onboarding 200 in 25ms
- GET / 200 in 25ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 510ms (1152 modules)
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- GET /onboarding 200 in 91ms
- GET / 200 in 92ms
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- GET /onboarding 200 in 119ms
- GET /onboarding 200 in 194ms
- GET / 200 in 109ms
- GET /onboarding 200 in 110ms
- ✓ Compiled in 84ms (501 modules)
- GET /onboarding 200 in 23ms
- GET / 200 in 23ms
- GET /onboarding 200 in 11ms
- ✓ Compiled in 91ms (501 modules)
- GET / 200 in 76ms
- GET /onboarding 200 in 97ms
- ✓ Compiled in 112ms (501 modules)
- GET /onboarding 200 in 37ms
- GET / 200 in 24ms
- GET /onboarding 200 in 29ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 749ms (1152 modules)
- GET /onboarding 200 in 131ms
- GET / 200 in 130ms
- GET /onboarding 200 in 27ms
- ✓ Compiled in 81ms (501 modules)
- GET /onboarding 200 in 24ms
- GET / 200 in 23ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 82ms (501 modules)
- GET /onboarding 200 in 27ms
- GET / 200 in 27ms
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- ✓ Compiled in 359ms (1152 modules)
- GET /onboarding 200 in 585ms
- GET / 200 in 279ms
- GET /onboarding 200 in 288ms
- GET /onboarding 200 in 41ms
- ✓ Compiled in 76ms (501 modules)
- GET /onboarding 200 in 77ms
- GET / 200 in 78ms
- ✓ Compiled in 108ms (501 modules)
- GET /onboarding 200 in 81ms
- GET /onboarding 200 in 28ms
- GET / 200 in 32ms
- GET /onboarding 200 in 25ms
- ✓ Compiled in 330ms (1152 modules)
- GET / 200 in 57ms
- GET /onboarding 200 in 58ms
- GET /onboarding 200 in 16ms
- ✓ Compiled in 78ms (501 modules)
- GET /onboarding 200 in 46ms
- GET / 200 in 59ms
- GET /onboarding 200 in 43ms
- ✓ Compiled in 89ms (501 modules)
- GET /onboarding 200 in 77ms
- GET / 200 in 99ms
- ✓ Compiled in 118ms (501 modules)
- GET /onboarding 200 in 50ms
- GET / 200 in 18ms
- GET /onboarding 200 in 24ms
- GET /onboarding 200 in 10ms
- ✓ Compiled in 711ms (1152 modules)
- GET /onboarding 200 in 91ms
- GET / 200 in 91ms
- GET /onboarding 200 in 34ms
- ✓ Compiled in 80ms (501 modules)
- GET /onboarding 200 in 27ms
- GET / 200 in 28ms
- GET /onboarding 200 in 19ms
- ✓ Compiled in 78ms (501 modules)
- GET /onboarding 200 in 38ms
- GET / 200 in 52ms
- GET /onboarding 200 in 79ms
- ✓ Compiled in 245ms (1152 modules)
- GET /onboarding 200 in 101ms
- GET / 200 in 103ms
- GET /onboarding 200 in 29ms
- ✓ Compiled in 81ms (501 modules)
- GET /onboarding 200 in 26ms
- GET / 200 in 25ms
- GET /onboarding 200 in 17ms
- ✓ Compiled in 330ms (1152 modules)
- GET / 200 in 59ms
- GET /onboarding 200 in 60ms
- GET /onboarding 200 in 14ms
- ✓ Compiled in 77ms (501 modules)
- GET /onboarding 200 in 45ms
- GET / 200 in 47ms
- GET /onboarding 200 in 34ms
- ✓ Compiled in 87ms (501 modules)
- GET /onboarding 200 in 99ms
- GET / 200 in 99ms
- ✓ Compiled in 125ms (501 modules)
- GET /onboarding 200 in 62ms
- GET /onboarding 200 in 30ms
- GET / 200 in 30ms
- GET /onboarding 200 in 19ms
- ✓ Compiled in 142ms (501 modules)
- GET / 200 in 101ms
- GET /onboarding 200 in 103ms
- ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
- ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
-  page: '/onboarding'
-}
- ✓ Compiled in 522ms (501 modules)
- GET / 200 in 86ms
- ✓ Compiled /_error in 308ms (1225 modules)
- GET /onboarding 500 in 1063ms
- GET /onboarding 200 in 71ms
- GET /onboarding 200 in 10ms
- GET /onboarding 200 in 107ms
-[?25h
+ GET /dashboard/vendors 200 in 1795ms
+ ✓ Compiled in 396ms (1678 modules)
+ GET /dashboard/vendors?_rsc=qzlug 200 in 1738ms
+ GET /dashboard/vendors 404 in 152ms
