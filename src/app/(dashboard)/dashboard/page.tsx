@@ -2,215 +2,471 @@
 
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import HeaderClient from '@/components/HeaderClient'
 
-// This page is a Client Component - authentication will be handled by Clerk
-const HeaderClient = dynamic(() => import('@/components/HeaderClient'), { ssr: false })
+interface DashboardStats {
+  daysUntilWedding: number | null
+  weddingDate: string | null
+  venue: string | null
+  totalBudget: number
+  totalSpent: number
+  budgetRemaining: number
+  budgetUsedPercentage: number
+  guestStats: {
+    total: number
+    confirmed: number
+    pending: number
+    declined: number
+    needsRsvp: number
+  }
+  vendorStats: {
+    total: number
+    booked: number
+    pending: number
+    contacted: number
+    potential: number
+  }
+  taskStats: {
+    total: number
+    completed: number
+    thisWeek: number
+    overdue: number
+  }
+  photoStats: {
+    total: number
+    withAlbums: number
+    recent: number
+  }
+  upcomingPayments: Array<{
+    id: string
+    vendor: string
+    amount: number
+    dueDate: string
+    daysUntil: number
+  }>
+  recentActivity: Array<{
+    type: 'vendor' | 'guest' | 'budget' | 'photo' | 'task'
+    action: string
+    description: string
+    timestamp: string
+  }>
+}
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser()
-  const [online, setOnline] = useState<boolean | null>(null)
-  const [health, setHealth] = useState<'pending' | 'ok' | 'fail'>('pending')
-  const [details, setDetails] = useState<string>('')
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setOnline(typeof navigator !== 'undefined' ? navigator.onLine : null)
-    const onUp = () => setOnline(true)
-    const onDown = () => setOnline(false)
-    window.addEventListener('online', onUp)
-    window.addEventListener('offline', onDown)
+    if (!isLoaded) return
 
-    // Initialize user and couple in database
-    fetch('/api/user/initialize', {
-      method: 'POST',
-    }).catch(console.error)
-
-    fetch('/api/health')
-      .then(async (r) => {
-        if (r.ok) {
-          setHealth('ok')
-          const j = await r.json().catch(() => null)
-          setDetails(`health ok @ ${j?.timestamp ?? 'n/a'}`)
-        } else {
-          setHealth('fail')
-          setDetails(`health status ${r.status}`)
+    // Initialize user and fetch dashboard data
+    const initializeAndFetch = async () => {
+      try {
+        // Initialize user first
+        await fetch('/api/user/initialize', { method: 'POST' })
+        
+        // Then fetch dashboard stats
+        const response = await fetch('/api/dashboard/stats')
+        if (!response.ok) {
+          throw new Error(`Failed to fetch dashboard stats: ${response.status}`)
         }
-      })
-      .catch((e) => {
-        setHealth('fail')
-        setDetails(`health error: ${String(e)}`)
-      })
-
-    return () => {
-      window.removeEventListener('online', onUp)
-      window.removeEventListener('offline', onDown)
+        
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data)
+        } else {
+          setError(data.error || 'Failed to load dashboard data')
+        }
+      } catch (err) {
+        console.error('Dashboard error:', err)
+        setError(err instanceof Error ? err.message : 'Unknown error occurred')
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [])
 
-  if (!isLoaded) {
+    initializeAndFetch()
+  }, [isLoaded])
+
+  if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading your dashboard...</div>
+        <div className="text-lg">Loading your wedding dashboard...</div>
       </div>
     )
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Dashboard Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined) return '$0'
+    return `$${amount.toLocaleString()}`
+  }
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Not set'
+    return new Date(dateString).toLocaleDateString()
+  }
+
   return (
-    <>
-      <HeaderClient firstName={user?.firstName || 'User'} />
-      <div className="space-y-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Welcome Section */}
-          <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-6 mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, {user?.firstName || 'User'}! 👋
-            </h1>
-            <p className="text-gray-600">
-              Ready to continue planning your perfect wedding?
-            </p>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Link href="/dashboard/budget">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Budget</CardTitle>
-                    <span className="text-2xl">💰</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-gray-600">Track expenses and stay on budget</p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/dashboard/guests">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Guests</CardTitle>
-                    <span className="text-2xl">👥</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-gray-600">Manage your guest list and RSVPs</p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/dashboard/vendors">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Vendors</CardTitle>
-                    <span className="text-2xl">🏪</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-gray-600">Find and manage your vendors</p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/dashboard/photos">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Photos</CardTitle>
-                    <span className="text-2xl">📸</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-gray-600">Organize your wedding photos</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-
-          {/* User Info Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Your current account details and authentication status</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <strong>Email:</strong> {user?.emailAddresses[0]?.emailAddress || 'Not available'}
-              </div>
-              <div>
-                <strong>Name:</strong> {user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Not set'}
-              </div>
-              <div>
-                <strong>Provider:</strong> Clerk OAuth
-              </div>
-              <div>
-                <strong>Authentication:</strong> Clerk v6 with Next.js 15
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* System Status */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">🎉 System Status</h3>
-                
-                {/* Debug Panel */}
-                <div className="p-4 rounded-md border bg-gray-50">
-                  <h4 className="font-semibold mb-2">Connectivity Status</h4>
-                  <div className="text-sm space-y-1">
-                    <div>Network: <span className="font-mono text-green-600">{String(online)}</span></div>
-                    <div>API Health: <span className={`font-mono ${health === 'ok' ? 'text-green-600' : 'text-red-600'}`}>{health}</span></div>
-                    <div>Details: <span className="font-mono text-xs break-all">{details}</span></div>
-                  </div>
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setHealth('pending')
-                        setDetails('retrying...')
-                        fetch('/api/health')
-                          .then(async (r) => {
-                            if (r.ok) {
-                              setHealth('ok')
-                              const j = await r.json().catch(() => null)
-                              setDetails(`health ok @ ${j?.timestamp ?? 'n/a'}`)
-                            } else {
-                              setHealth('fail')
-                              setDetails(`health status ${r.status}`)
-                            }
-                          })
-                          .catch((e) => {
-                            setHealth('fail')
-                            setDetails(`health error: ${String(e)}`)
-                          })
-                      }}
-                    >
-                      Refresh Status
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-green-900 mb-2">✅ All Systems Active</h4>
-                  <ul className="text-sm text-green-700 space-y-1">
-                    <li>• Clerk v6.28.1 authentication working</li>
-                    <li>• Next.js 15.4.5 compatibility confirmed</li>
-                    <li>• Database connection established</li>
-                    <li>• All API endpoints operational</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-4">
+            <HeaderClient firstName={user?.firstName || 'User'} />
           </div>
         </div>
       </div>
-    </>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section with Wedding Countdown */}
+        {stats?.weddingDate && (
+          <div className="bg-gradient-to-r from-rose-100 via-pink-50 to-purple-100 rounded-xl p-8 mb-8 border border-rose-200">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                {stats.daysUntilWedding && stats.daysUntilWedding > 0 ? `${stats.daysUntilWedding} Days to Go!` : 'Your Wedding Day!'}
+              </h1>
+              <p className="text-xl text-gray-700 mb-1">
+                {formatDate(stats.weddingDate)}
+              </p>
+              {stats.venue && (
+                <p className="text-lg text-gray-600">
+                  {stats.venue}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Budget Card */}
+          {stats && (
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Budget Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl font-bold text-green-600">
+                      {formatCurrency(stats.totalSpent)}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      of {formatCurrency(stats.totalBudget)}
+                    </span>
+                  </div>
+                  <Progress value={stats.budgetUsedPercentage || 0} className="h-2" />
+                  <div className="text-sm text-gray-600">
+                    {formatCurrency(stats.budgetRemaining)} remaining ({100 - (stats.budgetUsedPercentage || 0)}%)
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Guests Card */}
+          {stats && (
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Guest RSVPs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl font-bold text-blue-600">
+                      {stats.guestStats?.confirmed || 0}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      of {stats.guestStats?.total || 0} confirmed
+                    </span>
+                  </div>
+                  <div className="flex space-x-4 text-sm">
+                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                      {stats.guestStats?.pending || 0} pending
+                    </span>
+                    <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                      {stats.guestStats?.declined || 0} declined
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Vendors Card */}
+          {stats && (
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Vendor Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl font-bold text-purple-600">
+                      {stats.vendorStats?.booked || 0}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      of {stats.vendorStats?.total || 0} booked
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="h-2 bg-gray-200 rounded-full flex-1">
+                      <div 
+                        className="h-2 bg-purple-500 rounded-full" 
+                        style={{ width: `${(stats.vendorStats?.total || 0) > 0 ? ((stats.vendorStats?.booked || 0) / (stats.vendorStats?.total || 1)) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      {stats.vendorStats?.pending || 0} pending
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Overall Progress Card */}
+          {stats && (
+            <Card className="border-l-4 border-l-rose-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Overall Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl font-bold text-rose-600">
+                      {(stats.taskStats?.total || 0) > 0 ? Math.round(((stats.taskStats?.completed || 0) / (stats.taskStats?.total || 1)) * 100) : 0}%
+                    </span>
+                    <span className="text-sm text-gray-500">complete</span>
+                  </div>
+                  <Progress value={(stats.taskStats?.total || 0) > 0 ? Math.round(((stats.taskStats?.completed || 0) / (stats.taskStats?.total || 1)) * 100) : 0} className="h-2" />
+                  <div className="text-sm text-gray-600">
+                    {stats.taskStats?.completed || 0} of {stats.taskStats?.total || 0} tasks done
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Tasks and Payments */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* This Week's Tasks */}
+            {stats && stats.taskStats?.thisWeek && stats.taskStats.thisWeek > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    This Week's Tasks
+                    <Link href="/dashboard/tasks">
+                      <Button variant="outline" size="sm">View All</Button>
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-2">You have {stats.taskStats?.thisWeek || 0} tasks due this week</p>
+                    <p className="text-sm text-gray-500">Complete task management system coming soon!</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Upcoming Payments */}
+            {stats?.upcomingPayments && stats.upcomingPayments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Upcoming Payments
+                    <Link href="/dashboard/budget">
+                      <Button variant="outline" size="sm">View Budget</Button>
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {stats.upcomingPayments.slice(0, 5).map((payment) => (
+                      <div 
+                        key={payment.id} 
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          payment.daysUntil <= 7 ? 'bg-red-50 border-red-200' :
+                          payment.daysUntil <= 30 ? 'bg-yellow-50 border-yellow-200' :
+                          'bg-blue-50 border-blue-200'
+                        }`}
+                      >
+                        <div>
+                          <div className="font-medium">{payment.vendor}</div>
+                          <div className="text-sm text-gray-500">
+                            Due in {payment.daysUntil} days
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">{formatCurrency(payment.amount)}</div>
+                          <div className="text-sm text-gray-500">
+                            {formatDate(payment.dueDate)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Quick Actions and Activity */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Link href="/dashboard/guests" className="block">
+                  <Button className="w-full justify-start" variant="outline">
+                    📧 Send RSVP Reminders
+                  </Button>
+                </Link>
+                <Link href="/dashboard/vendors" className="block">
+                  <Button className="w-full justify-start" variant="outline">
+                    📞 Contact Vendors
+                  </Button>
+                </Link>
+                <Link href="/dashboard/photos" className="block">
+                  <Button className="w-full justify-start" variant="outline">
+                    📸 Upload Photos
+                  </Button>
+                </Link>
+                <Link href="/dashboard/budget" className="block">
+                  <Button className="w-full justify-start" variant="outline">
+                    💰 Add Expense
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Wedding Details */}
+            {stats && (stats.weddingDate || stats.venue) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Wedding Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {stats.venue && (
+                    <div>
+                      <div className="text-sm text-gray-600">Venue</div>
+                      <div className="font-medium">{stats.venue}</div>
+                    </div>
+                  )}
+                  {stats.weddingDate && (
+                    <div>
+                      <div className="text-sm text-gray-600">Date</div>
+                      <div className="font-medium">{formatDate(stats.weddingDate)}</div>
+                    </div>
+                  )}
+                  <Link href="/dashboard/settings">
+                    <Button variant="link" className="p-0 h-auto">
+                      Edit Details →
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Recent Activity */}
+            {stats?.recentActivity && stats.recentActivity.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {stats.recentActivity.slice(0, 5).map((activity, index) => (
+                      <div key={`${activity.type}-${index}`} className="flex items-start space-x-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 ${
+                          activity.type === 'budget' ? 'bg-green-500' :
+                          activity.type === 'guest' ? 'bg-blue-500' :
+                          activity.type === 'vendor' ? 'bg-purple-500' :
+                          activity.type === 'photo' ? 'bg-pink-500' :
+                          'bg-gray-500'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium">{activity.description}</div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(activity.timestamp).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation Cards at Bottom */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+          <Link href="/dashboard/budget" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardContent className="p-6 text-center">
+                <div className="text-3xl mb-2">💰</div>
+                <div className="font-semibold">Budget</div>
+                <div className="text-sm text-gray-600">Track expenses</div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link href="/dashboard/guests" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardContent className="p-6 text-center">
+                <div className="text-3xl mb-2">👥</div>
+                <div className="font-semibold">Guests</div>
+                <div className="text-sm text-gray-600">Manage RSVPs</div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link href="/dashboard/vendors" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardContent className="p-6 text-center">
+                <div className="text-3xl mb-2">🏪</div>
+                <div className="font-semibold">Vendors</div>
+                <div className="text-sm text-gray-600">Book services</div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link href="/dashboard/photos" className="block">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardContent className="p-6 text-center">
+                <div className="text-3xl mb-2">📸</div>
+                <div className="font-semibold">Photos</div>
+                <div className="text-sm text-gray-600">Wedding gallery</div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </div>
+    </div>
   )
 }
