@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -12,14 +12,15 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  firstName String?
-  lastName  String?
-  imageUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  clerkId     String   @unique
+  email       String   @unique
+  firstName   String?
+  lastName    String?
+  imageUrl    String?
+  preferences Json?    // Store user preferences as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relationships
   couples           Couple[]
@@ -60,25 +61,30 @@ model Couple {
 }
 
 model Guest {
-  id               String            @id @default(cuid())
-  coupleId         String
-  name             String
-  email            String?
-  phone            String?
-  relationship     String?
-  side             String?           // bride, groom, mutual
-  plusOne          Boolean           @default(false)
-  rsvpStatus       String            @default("pending") // pending, confirmed, declined
-  invitationCode   String?           @unique
-  dietaryNotes     String?
-  specialRequests  String?
-  notes            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                   String            @id @default(cuid())
+  coupleId             String
+  name                 String
+  email                String?
+  phone                String?
+  address              String?
+  relationship         String?
+  side                 String?           // bride, groom, mutual
+  plusOneAllowed       Boolean           @default(false)
+  plusOneName          String?
+  rsvpStatus           String            @default("pending") // pending, confirmed, declined
+  attendingCount       Int               @default(0)
+  invitationCode       String?           @unique
+  invitationSentAt     DateTime?
+  rsvpDeadline         DateTime?
+  dietaryRestrictions  String?
+  specialRequests      String?
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   // Relationships
-  couple           Couple            @relation(fields: [coupleId], references: [id], onDelete: Cascade)
-  messageRecipients MessageRecipient[]
+  couple               Couple            @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  messageRecipients    MessageRecipient[]
 
   @@map("guests")
 }

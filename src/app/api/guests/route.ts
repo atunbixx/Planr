@@ -75,51 +75,54 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { 
-      name, 
+      first_name,
+      last_name,
       email, 
       phone, 
+      address,
       relationship, 
       side, 
-      plusOne, 
-      dietaryNotes, 
-      specialRequests, 
+      plus_one_allowed,
+      plus_one_name,
+      dietary_restrictions,
       notes,
-      generateInvitationCode 
+      rsvp_deadline
     } = body
 
-    // Generate unique invitation code if requested
+    // Combine first and last name
+    const name = `${first_name} ${last_name}`.trim()
+
+    // Generate unique invitation code
     let invitationCode = null
-    if (generateInvitationCode) {
-      let code
-      let isUnique = false
-      let attempts = 0
-      
-      while (!isUnique && attempts < 10) {
-        code = randomBytes(8).toString('hex').toUpperCase()
-        const existing = await prisma.guest.findUnique({
-          where: { invitationCode: code }
-        })
-        if (!existing) {
-          isUnique = true
-          invitationCode = code
-        }
-        attempts++
+    let code
+    let isUnique = false
+    let attempts = 0
+    
+    while (!isUnique && attempts < 10) {
+      code = randomBytes(8).toString('hex').toUpperCase()
+      const existing = await prisma.guest.findUnique({
+        where: { invitationCode: code }
+      })
+      if (!existing) {
+        isUnique = true
+        invitationCode = code
       }
+      attempts++
     }
 
     const guest = await prisma.guest.create({
       data: {
         coupleId: couple.id,
         name,
-        email,
-        phone,
-        relationship,
-        side: side || 'mutual',
-        plusOne: plusOne || false,
+        email: email || null,
+        phone: phone || null,
+        relationship: relationship || null,
+        side: side || 'both',
+        plusOne: plus_one_allowed || false,
         invitationCode,
-        dietaryNotes,
-        specialRequests,
-        notes
+        dietaryNotes: dietary_restrictions || null,
+        specialRequests: plus_one_name || null,
+        notes: notes || null
       }
     })
 

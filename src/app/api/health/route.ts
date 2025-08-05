@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server"
 
 export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    timestamp: Date.now(),
-  });
+  return NextResponse.json({ 
+    status: "healthy", 
+    timestamp: new Date().toISOString(),
+    port: process.env.PORT || "4001"
+  })
 }

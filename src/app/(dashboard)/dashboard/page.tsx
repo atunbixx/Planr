@@ -23,6 +23,11 @@ export default function DashboardPage() {
     window.addEventListener('online', onUp)
     window.addEventListener('offline', onDown)
 
+    // Initialize user and couple in database
+    fetch('/api/user/initialize', {
+      method: 'POST',
+    }).catch(console.error)
+
     fetch('/api/health')
       .then(async (r) => {
         if (r.ok) {

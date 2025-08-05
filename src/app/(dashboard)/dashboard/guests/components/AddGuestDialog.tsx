@@ -11,7 +11,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-export default function AddGuestDialog() {
+interface AddGuestDialogProps {
+  onGuestAdded?: () => void
+}
+
+export default function AddGuestDialog({ onGuestAdded }: AddGuestDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -70,6 +74,10 @@ export default function AddGuestDialog() {
           notes: '',
           rsvp_deadline: ''
         })
+        // Call the callback to refresh the parent component
+        if (onGuestAdded) {
+          onGuestAdded()
+        }
         router.refresh()
       } else {
         const error = await response.json()

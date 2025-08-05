@@ -1,12 +1,218 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import NotificationSettings from '@/components/pwa/NotificationSettings'
 
+interface CoupleSettings {
+  partnerName: string
+  weddingDate: string
+  venue: string
+  location: string
+  expectedGuests: number
+  totalBudget: number
+  weddingStyle: string
+}
+
+interface UserPreferences {
+  currency: string
+  alertThreshold: number
+  emailNotifications: boolean
+  taskReminders: boolean
+  budgetAlerts: boolean
+  vendorUpdates: boolean
+  timezone: string
+  language: string
+}
+
 export default function SettingsPage() {
+  const { user, isLoaded } = useUser()
+  const [coupleSettings, setCoupleSettings] = useState<CoupleSettings>({
+    partnerName: '',
+    weddingDate: '',
+    venue: '',
+    location: '',
+    expectedGuests: 0,
+    totalBudget: 0,
+    weddingStyle: ''
+  })
+  
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    currency: 'USD',
+    alertThreshold: 85,
+    emailNotifications: true,
+    taskReminders: true,
+    budgetAlerts: true,
+    vendorUpdates: false,
+    timezone: 'America/New_York',
+    language: 'en'
+  })
+
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      loadSettings()
+    }
+  }, [isLoaded, user])
+
+  const loadSettings = async () => {
+    try {
+      // Initialize user first
+      await fetch('/api/user/initialize', {
+        method: 'POST',
+      })
+
+      // Load existing wedding settings
+      const weddingResponse = await fetch('/api/settings/wedding')
+      if (weddingResponse.ok) {
+        const weddingData = await weddingResponse.json()
+        if (weddingData.couple) {
+          setCoupleSettings({
+            partnerName: weddingData.couple.partnerName || '',
+            weddingDate: weddingData.couple.weddingDate ? new Date(weddingData.couple.weddingDate).toISOString().split('T')[0] : '',
+            venue: weddingData.couple.venue || '',
+            location: weddingData.couple.location || '',
+            expectedGuests: weddingData.couple.expectedGuests || 0,
+            totalBudget: weddingData.couple.totalBudget || 0,
+            weddingStyle: weddingData.couple.weddingStyle || ''
+          })
+        }
+      }
+
+      // Load existing user preferences
+      const preferencesResponse = await fetch('/api/settings/preferences')
+      if (preferencesResponse.ok) {
+        const preferencesData = await preferencesResponse.json()
+        if (preferencesData.preferences) {
+          setUserPreferences(preferencesData.preferences)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error)
+    }
+  }
+
+  const saveWeddingDetails = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/settings/wedding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(coupleSettings),
+      })
+
+      if (response.ok) {
+        alert('Wedding details saved successfully!')
+      } else {
+        alert('Failed to save wedding details. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error saving wedding details:', error)
+      alert('Failed to save wedding details. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveUserPreferences = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/settings/preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userPreferences),
+      })
+
+      if (response.ok) {
+        alert('Preferences saved successfully!')
+      } else {
+        alert('Failed to save preferences. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error saving preferences:', error)
+      alert('Failed to save preferences. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const exportData = async () => {
+    try {
+      const response = await fetch('/api/export')
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'wedding-data-export.json'
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert('Failed to export data. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error exporting data:', error)
+      alert('Failed to export data. Please try again.')
+    }
+  }
+
+  const deleteAccount = async () => {
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return
+    }
+
+    if (!confirm('This will permanently delete all your wedding planning data. Are you absolutely sure?')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/account', {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        alert('Account deleted successfully. You will be redirected to the homepage.')
+        window.location.href = '/'
+      } else {
+        alert('Failed to delete account. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      alert('Failed to delete account. Please try again.')
+    }
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading settings...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Please sign in to access settings</div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-600 mt-2">Manage your account and wedding preferences</p>
@@ -21,32 +227,81 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="bride-name">Bride&apos;s Name</Label>
-              <Input id="bride-name" placeholder="Enter bride's name" />
+              <Label htmlFor="partner-name">Partner&apos;s Name</Label>
+              <Input 
+                id="partner-name" 
+                placeholder="Enter partner's name"
+                value={coupleSettings.partnerName}
+                onChange={(e) => setCoupleSettings({...coupleSettings, partnerName: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="groom-name">Groom&apos;s Name</Label>
-              <Input id="groom-name" placeholder="Enter groom's name" />
+              <Label htmlFor="wedding-style">Wedding Style</Label>
+              <Select 
+                value={coupleSettings.weddingStyle}
+                onValueChange={(value) => setCoupleSettings({...coupleSettings, weddingStyle: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select wedding style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="traditional">Traditional</SelectItem>
+                  <SelectItem value="modern">Modern</SelectItem>
+                  <SelectItem value="rustic">Rustic</SelectItem>
+                  <SelectItem value="vintage">Vintage</SelectItem>
+                  <SelectItem value="destination">Destination</SelectItem>
+                  <SelectItem value="casual">Casual</SelectItem>
+                  <SelectItem value="formal">Formal</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="wedding-date">Wedding Date</Label>
-              <Input id="wedding-date" type="date" />
+              <Input 
+                id="wedding-date" 
+                type="date"
+                value={coupleSettings.weddingDate}
+                onChange={(e) => setCoupleSettings({...coupleSettings, weddingDate: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="guest-count">Expected Guest Count</Label>
-              <Input id="guest-count" type="number" placeholder="Enter guest count" />
+              <Input 
+                id="guest-count" 
+                type="number" 
+                placeholder="Enter guest count"
+                value={coupleSettings.expectedGuests || ''}
+                onChange={(e) => setCoupleSettings({...coupleSettings, expectedGuests: parseInt(e.target.value) || 0})}
+              />
             </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="venue">Venue</Label>
-            <Input id="venue" placeholder="Enter venue name and location" />
+            <Input 
+              id="venue" 
+              placeholder="Enter venue name"
+              value={coupleSettings.venue}
+              onChange={(e) => setCoupleSettings({...coupleSettings, venue: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input 
+              id="location" 
+              placeholder="Enter city, state/country"
+              value={coupleSettings.location}
+              onChange={(e) => setCoupleSettings({...coupleSettings, location: e.target.value})}
+            />
           </div>
           
-          <Button>Save Wedding Details</Button>
+          <Button onClick={saveWeddingDetails} disabled={loading}>
+            {loading ? 'Saving...' : 'Save Wedding Details'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -59,31 +314,51 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="total-budget">Total Wedding Budget</Label>
-            <Input id="total-budget" type="number" placeholder="Enter total budget" />
+            <Input 
+              id="total-budget" 
+              type="number" 
+              placeholder="Enter total budget"
+              value={coupleSettings.totalBudget || ''}
+              onChange={(e) => setCoupleSettings({...coupleSettings, totalBudget: parseInt(e.target.value) || 0})}
+            />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="currency">Currency</Label>
-              <select id="currency" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="CAD">CAD ($)</option>
-              </select>
+              <Select 
+                value={userPreferences.currency}
+                onValueChange={(value) => setUserPreferences({...userPreferences, currency: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD ($)</SelectItem>
+                  <SelectItem value="EUR">EUR (€)</SelectItem>
+                  <SelectItem value="GBP">GBP (£)</SelectItem>
+                  <SelectItem value="CAD">CAD ($)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="alert-threshold">Budget Alert Threshold</Label>
-              <select id="alert-threshold" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                <option value="80">80% of budget</option>
-                <option value="85">85% of budget</option>
-                <option value="90">90% of budget</option>
-                <option value="95">95% of budget</option>
-              </select>
+              <Select 
+                value={userPreferences.alertThreshold.toString()}
+                onValueChange={(value) => setUserPreferences({...userPreferences, alertThreshold: parseInt(value)})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="80">80% of budget</SelectItem>
+                  <SelectItem value="85">85% of budget</SelectItem>
+                  <SelectItem value="90">90% of budget</SelectItem>
+                  <SelectItem value="95">95% of budget</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
-          <Button>Save Budget Settings</Button>
         </CardContent>
       </Card>
 
@@ -102,7 +377,11 @@ export default function SettingsPage() {
               <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
               <p className="text-sm text-muted-foreground">Receive updates via email</p>
             </div>
-            <input type="checkbox" id="email-notifications" className="h-4 w-4" defaultChecked />
+            <Switch
+              id="email-notifications"
+              checked={userPreferences.emailNotifications}
+              onCheckedChange={(checked) => setUserPreferences({...userPreferences, emailNotifications: checked})}
+            />
           </div>
           
           <div className="flex items-center justify-between">
@@ -110,7 +389,11 @@ export default function SettingsPage() {
               <Label htmlFor="email-task-reminders" className="text-base">Task Reminders</Label>
               <p className="text-sm text-muted-foreground">Get reminded about upcoming deadlines</p>
             </div>
-            <input type="checkbox" id="email-task-reminders" className="h-4 w-4" defaultChecked />
+            <Switch
+              id="email-task-reminders"
+              checked={userPreferences.taskReminders}
+              onCheckedChange={(checked) => setUserPreferences({...userPreferences, taskReminders: checked})}
+            />
           </div>
           
           <div className="flex items-center justify-between">
@@ -118,7 +401,11 @@ export default function SettingsPage() {
               <Label htmlFor="email-budget-alerts" className="text-base">Budget Alerts</Label>
               <p className="text-sm text-muted-foreground">Notifications when approaching budget limits</p>
             </div>
-            <input type="checkbox" id="email-budget-alerts" className="h-4 w-4" defaultChecked />
+            <Switch
+              id="email-budget-alerts"
+              checked={userPreferences.budgetAlerts}
+              onCheckedChange={(checked) => setUserPreferences({...userPreferences, budgetAlerts: checked})}
+            />
           </div>
           
           <div className="flex items-center justify-between">
@@ -126,10 +413,16 @@ export default function SettingsPage() {
               <Label htmlFor="email-vendor-updates" className="text-base">Vendor Updates</Label>
               <p className="text-sm text-muted-foreground">Updates from your wedding vendors</p>
             </div>
-            <input type="checkbox" id="email-vendor-updates" className="h-4 w-4" />
+            <Switch
+              id="email-vendor-updates"
+              checked={userPreferences.vendorUpdates}
+              onCheckedChange={(checked) => setUserPreferences({...userPreferences, vendorUpdates: checked})}
+            />
           </div>
           
-          <Button>Save Email Preferences</Button>
+          <Button onClick={saveUserPreferences} disabled={loading}>
+            {loading ? 'Saving...' : 'Save Email Preferences'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -142,33 +435,71 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="display-name">Display Name</Label>
-            <Input id="display-name" placeholder="Enter your display name" />
+            <Input 
+              id="display-name" 
+              placeholder="Enter your display name"
+              value={user?.fullName || ''}
+              disabled
+            />
+            <p className="text-sm text-muted-foreground">
+              Display name is managed through your Clerk account
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input 
+              id="email" 
+              value={user?.emailAddresses[0]?.emailAddress || ''}
+              disabled
+            />
+            <p className="text-sm text-muted-foreground">
+              Email address is managed through your Clerk account
+            </p>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="timezone">Timezone</Label>
-            <select id="timezone" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="America/New_York">Eastern Time (UTC-5)</option>
-              <option value="America/Chicago">Central Time (UTC-6)</option>
-              <option value="America/Denver">Mountain Time (UTC-7)</option>
-              <option value="America/Los_Angeles">Pacific Time (UTC-8)</option>
-              <option value="Europe/London">London (UTC+0)</option>
-              <option value="Europe/Paris">Paris (UTC+1)</option>
-            </select>
+            <Select 
+              value={userPreferences.timezone}
+              onValueChange={(value) => setUserPreferences({...userPreferences, timezone: value})}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="America/New_York">Eastern Time (UTC-5)</SelectItem>
+                <SelectItem value="America/Chicago">Central Time (UTC-6)</SelectItem>
+                <SelectItem value="America/Denver">Mountain Time (UTC-7)</SelectItem>
+                <SelectItem value="America/Los_Angeles">Pacific Time (UTC-8)</SelectItem>
+                <SelectItem value="Europe/London">London (UTC+0)</SelectItem>
+                <SelectItem value="Europe/Paris">Paris (UTC+1)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="language">Language</Label>
-            <select id="language" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-            </select>
+            <Select 
+              value={userPreferences.language}
+              onValueChange={(value) => setUserPreferences({...userPreferences, language: value})}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="es">Spanish</SelectItem>
+                <SelectItem value="fr">French</SelectItem>
+                <SelectItem value="de">German</SelectItem>
+                <SelectItem value="it">Italian</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
-          <Button>Save Account Settings</Button>
+          <Button onClick={saveUserPreferences} disabled={loading}>
+            {loading ? 'Saving...' : 'Save Account Settings'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -184,15 +515,19 @@ export default function SettingsPage() {
               <h3 className="font-semibold">Export Data</h3>
               <p className="text-sm text-muted-foreground">Download a copy of all your wedding planning data</p>
             </div>
-            <Button variant="outline">Export</Button>
+            <Button variant="outline" onClick={exportData}>
+              Export
+            </Button>
           </div>
           
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border rounded-lg border-red-200">
             <div>
-              <h3 className="font-semibold">Delete Account</h3>
-              <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
+              <h3 className="font-semibold text-red-900">Delete Account</h3>
+              <p className="text-sm text-red-600">Permanently delete your account and all data</p>
             </div>
-            <Button variant="destructive">Delete</Button>
+            <Button variant="destructive" onClick={deleteAccount}>
+              Delete
+            </Button>
           </div>
         </CardContent>
       </Card>

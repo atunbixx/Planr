@@ -1,201 +1,209 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import AddGuestDialog from './components/AddGuestDialog'
 import GuestList from './components/GuestList'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+interface Guest {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  relationship?: string
+  side: string
+  plusOne: boolean
+  rsvpStatus: string
+  invitationCode?: string
+  dietaryNotes?: string
+  specialRequests?: string
+  notes?: string
+}
 
-export default async function GuestsPage() {
-  const { userId } = await auth()
-  
-  if (!userId) {
-    redirect('/sign-in')
-  }
-  
-  // For now, we'll get user email from Clerk in a client component
-  // or we can get it here using clerkClient if needed
-  const userEmail = null // TODO: Get from Clerk user data
-  
-  let guests: any[] = []
-  let stats = {
-    total_invited: 0,
-    total_confirmed: 0,
-    total_declined: 0,
-    total_pending: 0,
-    total_attending: 0,
-    response_rate: 0
-  }
-  
-  if (userEmail) {
-    // Get user's couple data and guests
-    const { data: userData } = await supabase
-      .from('users')
-      .select(`
-        couples (
-          id,
-          guests (
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            relationship,
-            side,
-            plus_one_allowed,
-            plus_one_name,
-            dietary_restrictions,
-            notes,
-            created_at,
-            invitations (
-              id,
-              status,
-              attending_count,
-              plus_one_attending,
-              plus_one_name,
-              responded_at,
-              rsvp_deadline,
-              invitation_code
-            )
-          )
-        )
-      `)
-      .eq('email', userEmail)
-      .single()
-    
-    if (userData?.couples?.[0]) {
-      const coupleData = userData.couples[0]
-      guests = coupleData.guests || []
-      
-      // Get guest statistics
-      const { data: statsData } = await supabase.rpc('get_guest_stats', {
-        p_couple_id: coupleData.id
+interface GuestStats {
+  total: number
+  confirmed: number
+  declined: number
+  pending: number
+  withPlusOne: number
+}
+
+export default function GuestsPage() {
+  const { user, isLoaded } = useUser()
+  const [guests, setGuests] = useState<Guest[]>([])
+  const [stats, setStats] = useState<GuestStats>({
+    total: 0,
+    confirmed: 0,
+    declined: 0,
+    pending: 0,
+    withPlusOne: 0
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchGuests = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Initialize user first
+      await fetch('/api/user/initialize', {
+        method: 'POST',
       })
+
+      // Then fetch guests
+      const response = await fetch('/api/guests')
       
-      if (statsData?.[0]) {
-        stats = statsData[0]
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to view guests')
+        }
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch guests')
       }
+
+      const data = await response.json()
+      setGuests(data.guests || [])
+      setStats(data.stats || {
+        total: 0,
+        confirmed: 0,
+        declined: 0,
+        pending: 0,
+        withPlusOne: 0
+      })
+    } catch (error) {
+      console.error('Error fetching guests:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load guests')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Confirmed</Badge>
-      case 'declined':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-100">Declined</Badge>
-      case 'pending':
-      case 'no_response':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
+  useEffect(() => {
+    if (isLoaded && user) {
+      fetchGuests()
     }
+  }, [isLoaded, user])
+
+  if (!isLoaded) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-  }
-
-  const getInitialsColor = (name: string) => {
-    const colors = [
-      'bg-blue-100 text-blue-600',
-      'bg-purple-100 text-purple-600',
-      'bg-green-100 text-green-600',
-      'bg-yellow-100 text-yellow-600',
-      'bg-red-100 text-red-600',
-      'bg-indigo-100 text-indigo-600',
-      'bg-pink-100 text-pink-600',
-      'bg-teal-100 text-teal-600'
-    ]
-    const index = name.length % colors.length
-    return colors[index]
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Please sign in to view guests</div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Guest Management</h1>
-          <p className="text-gray-600 mt-2">Manage your guest list and track RSVPs</p>
+          <h1 className="text-3xl font-bold">Guest List</h1>
+          <p className="text-gray-600 mt-2">
+            Manage your wedding guest list and RSVPs
+          </p>
         </div>
-        <AddGuestDialog />
+        <AddGuestDialog onGuestAdded={fetchGuests} />
       </div>
 
-      {/* Guest Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-700">{error}</p>
+          <Button 
+            variant="outline" 
+            onClick={fetchGuests} 
+            className="mt-2"
+          >
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Invited</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Guests</CardTitle>
+            <Badge variant="secondary">{stats.total}</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total_invited}</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Confirmed</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
+            <Badge variant="default" className="bg-green-500">{stats.confirmed}</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.total_confirmed}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total_attending} attending • {Math.round((stats.total_confirmed / Math.max(stats.total_invited, 1)) * 100)}% confirmed
-            </p>
+            <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Declined</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Declined</CardTitle>
+            <Badge variant="destructive">{stats.declined}</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.total_declined}</div>
-            <p className="text-xs text-muted-foreground">
-              {Math.round((stats.total_declined / Math.max(stats.total_invited, 1)) * 100)}% declined
-            </p>
+            <div className="text-2xl font-bold text-red-600">{stats.declined}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Pending</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <Badge variant="outline">{stats.pending}</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.total_pending}</div>
-            <p className="text-xs text-muted-foreground">
-              {Math.round(stats.response_rate)}% response rate
-            </p>
+            <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Plus Ones</CardTitle>
+            <Badge variant="secondary">{stats.withPlusOne}</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.withPlusOne}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Guest List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Guest List</CardTitle>
-          <CardDescription>View and manage your wedding guests</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {guests.length > 0 ? (
-            <GuestList guests={guests} />
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">👥</div>
-              <h3 className="text-lg font-semibold mb-2">No guests added yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Start building your guest list by adding family and friends to your wedding.
-              </p>
-              <AddGuestDialog />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {loading ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Loading guests...</div>
+          </CardContent>
+        </Card>
+      ) : guests.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>No Guests Yet</CardTitle>
+            <CardDescription>
+              Start building your guest list by adding your first guest.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AddGuestDialog onGuestAdded={fetchGuests} />
+          </CardContent>
+        </Card>
+      ) : (
+        <GuestList guests={guests} />
+      )}
     </div>
   )
 }
