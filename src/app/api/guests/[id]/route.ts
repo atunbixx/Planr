@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
+import { auth } from '@clerk/nextjs/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,15 +9,16 @@ const supabase = createClient(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const guestId = params.id
+    const resolvedParams = await params
+    const guestId = resolvedParams.id
     const body = await request.json()
 
     // Get user's couple data first to verify ownership
@@ -26,7 +27,7 @@ export async function PATCH(
       .select(`
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (!userData?.couples?.[0]) {
@@ -88,15 +89,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const guestId = params.id
+    const resolvedParams = await params
+    const guestId = resolvedParams.id
 
     // Get user's couple data first to verify ownership
     const { data: userData } = await supabase
@@ -104,7 +106,7 @@ export async function DELETE(
       .select(`
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (!userData?.couples?.[0]) {

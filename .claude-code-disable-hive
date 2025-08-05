@@ -1,0 +1,20 @@
+#!/bin/bash
+# PERMANENT HIVE-MIND DISABLE SCRIPT
+# This file prevents any Claude Flow/Hive-Mind system from starting
+
+export CLAUDE_FLOW_DISABLE_NOTIFICATIONS=true
+export DISABLE_CLAUDE_FLOW=true  
+export DISABLE_HIVE_MIND=true
+export CLAUDE_FLOW_ENABLED=false
+export HIVE_MIND_ENABLED=false
+export NO_CLAUDE_FLOW=true
+export NO_HIVE_MIND=true
+
+# Kill any existing processes
+pkill -9 -f "claude-flow" 2>/dev/null || true
+pkill -9 -f "hive-mind" 2>/dev/null || true
+
+# Remove directories
+rm -rf .claude-flow/ .hive-mind/ .swarm/ memory/ coordination/ 2>/dev/null || true
+
+echo "Hive-Mind system permanently disabled"

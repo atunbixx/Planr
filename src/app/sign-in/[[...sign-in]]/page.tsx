@@ -1,24 +1,27 @@
+'use client'
+
 import { SignIn } from '@clerk/nextjs'
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Welcome back
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your wedding planning account
-          </p>
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <p className="text-gray-600">Sign in to continue to your wedding planner</p>
         </div>
         <SignIn 
-          path="/sign-in"
-          routing="path"
+          routing="hash"
           signUpUrl="/sign-up"
-          afterSignInUrl="/dashboard"
+          redirectUrl="/dashboard"
+          appearance={{
+            elements: {
+              rootBox: "mx-auto",
+              card: "bg-white rounded-lg shadow-xl border border-gray-200"
+            }
+          }}
         />
       </div>
-    </div>
-  )
+    </main>
+  );
 }

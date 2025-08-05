@@ -1,557 +1,486 @@
 
 > wedding-planner-v3@0.1.0 dev
-> next dev --port 4001 --port 4001
+> next dev --port 4010 --port 4000
 
-  ▲ Next.js 14.2.25
-  - Local:        http://localhost:4001
-  - Environments: .env.local, .env
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:4000
+   - Network:      http://192.168.100.231:4000
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverComponentsExternalPackages
 
  ✓ Starting...
- ✓ Ready in 1725ms
- ✓ Compiled /src/middleware in 445ms (227 modules)
- ○ Compiling /_not-found ...
- ✓ Compiled /_not-found in 3.3s (881 modules)
- HEAD /dashboard/vendors 404 in 3517ms
- ✓ Compiled in 252ms (325 modules)
- ✓ Compiled /sign-in/[[...sign-in]] in 254ms (859 modules)
- GET /sign-in?redirect_url=http%3A%2F%2Flocalhost%3A4001%2Fdashboard%2Fvendors 200 in 631ms
- GET /sign-in/SignIn_clerk_catchall_check_1754328706540 200 in 39ms
- ○ Compiling /dashboard/vendors ...
- ✓ Compiled /dashboard/vendors in 1319ms (1436 modules)
- GET /dashboard/vendors?_rsc=1a7td 200 in 1514ms
- ✓ Compiled in 519ms (1450 modules)
- GET /dashboard/vendors?_rsc=1pkxn 200 in 10628ms
- ⨯ Error
-    at async VendorsPage (./src/app/dashboard/vendors/page.tsx:22:18)
-digest: "3730187011"
- ⨯ Error
-    at async DashboardLayout (./src/app/dashboard/layout.tsx:17:18)
-digest: "1437048718"
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ✓ Ready in 1775ms
+ ✓ Compiled /middleware in 338ms (153 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1562ms (549 modules)
+ GET / 200 in 1870ms
+ GET / 200 in 31ms
+ ✓ Compiled /sign-up/[[...sign-up]] in 211ms (551 modules)
  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ✓ Compiled in 862ms (1663 modules)
- GET /dashboard/vendors 200 in 1472ms
- GET /dashboard/vendors?_rsc=1pkxn 200 in 1471ms
- ✓ Compiled in 187ms (541 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1039ms
- ✓ Compiled in 181ms (541 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1022ms
- ✓ Compiled /_not-found in 351ms (1439 modules)
- POST /api/migrate/vendors 404 in 439ms
- GET /dashboard/vendors 404 in 14ms
- ✓ Compiled in 995ms (1666 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1611ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 2783ms
- GET /api/test-db 404 in 52ms
- GET /api/test-db 404 in 21ms
- ✓ Compiled in 62ms (227 modules)
- ✓ Compiled /api/test-db in 398ms (914 modules)
-Testing database connection...
- GET /api/test-db 200 in 1589ms
- ✓ Compiled in 1005ms (1663 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1577ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1321ms
- ✓ Compiled in 46ms (227 modules)
- ✓ Compiled /api/check-schema in 119ms (913 modules)
-Checking actual database schema...
-Error checking vendor columns: {
-  code: '42P01',
-  details: null,
-  hint: null,
-  message: 'relation "public.information_schema.columns" does not exist'
+ GET / 200 in 69ms
+ GET /sign-up 200 in 914ms
+ ✓ Compiled in 244ms (704 modules)
+ GET / 200 in 274ms
+ GET /sign-up 200 in 273ms
+ GET / 200 in 105ms
+ GET /sign-up 200 in 114ms
+ ✓ Compiled in 238ms (704 modules)
+ GET /sign-up 200 in 246ms
+ GET / 200 in 90ms
+ GET /sign-up 200 in 107ms
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:4000
+   - Network:      http://192.168.100.231:4000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 1740ms
+ ✓ Compiled /middleware in 142ms (153 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 553ms (549 modules)
+ GET / 200 in 785ms
+ GET / 200 in 32ms
+ GET / 200 in 41ms
+ GET / 200 in 40ms
+ GET / 200 in 40ms
+ ✓ Compiled in 106ms (205 modules)
+ ✓ Compiled in 54ms (205 modules)
+ GET / 200 in 54ms
+ ✓ Compiled in 1364ms (570 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 251ms (222 modules)
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
 }
-Error checking category columns: {
-  code: '42P01',
-  details: null,
-  hint: null,
-  message: 'relation "public.information_schema.columns" does not exist'
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 500 in 295ms
+ ✓ Compiled /_not-found in 496ms (561 modules)
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
 }
-Testing vendor insert with data: {
-  couple_id: '00000000-0000-0000-0000-000000000000',
-  name: 'Test Vendor',
-  contact_name: 'Test Contact',
-  phone: '555-0123',
-  email: 'test@example.com'
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
 }
- GET /api/check-schema 200 in 1061ms
- ✓ Compiled in 177ms (541 modules)
- ✓ Compiled in 237ms (1667 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1041ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 943ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1054ms
- ✓ Compiled in 37ms (227 modules)
- ✓ Compiled /api/describe-table in 228ms (913 modules)
-Describing vendors table structure...
-Vendors query result: { data: [], error: null }
-Categories query result: { data: [], error: null }
-Testing minimal vendor insert...
-Minimal insert result: {
-  data: null,
-  error: {
-    code: '42501',
-    details: null,
-    hint: null,
-    message: 'new row violates row-level security policy for table "vendors"'
-  }
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
 }
- GET /api/describe-table 200 in 1602ms
- ✓ Compiled in 733ms (1667 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1070ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1190ms
- ✓ Compiled in 52ms (227 modules)
- ✓ Compiled /api/debug-vendor-auth in 238ms (913 modules)
-Testing vendor authentication flow...
- GET /api/debug-vendor-auth 401 in 286ms
- ✓ Compiled in 688ms (1681 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1219ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1152ms
- ✓ Compiled in 70ms (227 modules)
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /_next/static/webpack/7fcef6ecef8e5cb9.webpack.hot-update.json 500 in 877ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=options.factory&arguments=&lineNumber=703&column=31 500 in 494ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=fn&arguments=&lineNumber=359&column=21 500 in 493ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=__webpack_require__&arguments=&lineNumber=37&column=33 500 in 493ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=Array.eval&arguments=&lineNumber=2115&column=14 500 in 463ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModelString&arguments=&lineNumber=1699&column=15 500 in 463ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModel&arguments=&lineNumber=2107&column=15 500 in 35ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=initializeModelChunk&arguments=&lineNumber=1338&column=17 500 in 17ms
+ ✓ Compiled in 98ms (212 modules)
+ ✓ Compiled in 408ms (574 modules)
+ GET / 200 in 277ms
+ ✓ Compiled in 115ms (212 modules)
+ ✓ Compiled in 597ms (570 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET / 500 in 112ms
+ ✓ Compiled /_not-found in 96ms (561 modules)
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=fn&arguments=&lineNumber=359&column=21 500 in 279ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=Array.eval&arguments=&lineNumber=2115&column=14 500 in 280ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=options.factory&arguments=&lineNumber=703&column=31 500 in 286ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModelString&arguments=&lineNumber=1699&column=15 500 in 283ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=__webpack_require__&arguments=&lineNumber=37&column=33 500 in 285ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModel&arguments=&lineNumber=2107&column=15 500 in 285ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=initializeModelChunk&arguments=&lineNumber=1338&column=17 500 in 97ms
+ GET / 500 in 107ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModelString&arguments=&lineNumber=1699&column=15 500 in 170ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModel&arguments=&lineNumber=2107&column=15 500 in 170ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=Array.eval&arguments=&lineNumber=2115&column=14 500 in 171ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=__webpack_require__&arguments=&lineNumber=37&column=33 500 in 171ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=options.factory&arguments=&lineNumber=703&column=31 500 in 176ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=fn&arguments=&lineNumber=359&column=21 500 in 177ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=initializeModelChunk&arguments=&lineNumber=1338&column=17 500 in 63ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET / 500 in 54ms
+ ✓ Compiled in 623ms (569 modules)
+ GET / 200 in 245ms
+ ✓ Compiled in 366ms (570 modules)
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 500 in 104ms
+ ✓ Compiled /_not-found in 130ms (561 modules)
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=fn&arguments=&lineNumber=359&column=21 500 in 301ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModelString&arguments=&lineNumber=1699&column=15 500 in 302ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=__webpack_require__&arguments=&lineNumber=37&column=33 500 in 302ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=options.factory&arguments=&lineNumber=703&column=31 500 in 306ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=Array.eval&arguments=&lineNumber=2115&column=14 500 in 302ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModel&arguments=&lineNumber=2107&column=15 500 in 302ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=initializeModelChunk&arguments=&lineNumber=1338&column=17 500 in 46ms
+ GET / 500 in 48ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=options.factory&arguments=&lineNumber=703&column=31 500 in 89ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=fn&arguments=&lineNumber=359&column=21 500 in 90ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModel&arguments=&lineNumber=2107&column=15 500 in 90ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=Array.eval&arguments=&lineNumber=2115&column=14 500 in 90ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=file%3A%2F%2F%2FUsers%2Fatunbi%2Fwedding-planner-v2%2F.next%2Fstatic%2Fchunks%2Fwebpack.js&methodName=__webpack_require__&arguments=&lineNumber=37&column=33 500 in 92ms
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=parseModelString&arguments=&lineNumber=1699&column=15 500 in 91ms
+Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+1. You might have mismatching versions of React and the renderer (such as React DOM)
+2. You might be breaking the Rules of Hooks
+3. You might have more than one copy of React in the same app
+See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+ ⨯ [TypeError: Cannot read properties of null (reading 'useContext')] {
+  digest: '1810032573'
+}
+ GET /__nextjs_original-stack-frame?isServer=false&isEdgeServer=false&isAppDirectory=true&errorMessage=TypeError%3A+Cannot+read+properties+of+undefined+%28reading+%27call%27%29&file=webpack-internal%3A%2F%2F%2F%28app-pages-browser%29%2F.%2Fnode_modules%2Fnext%2Fdist%2Fcompiled%2Freact-server-dom-webpack%2Fcjs%2Freact-server-dom-webpack-client.browser.development.js&methodName=initializeModelChunk&arguments=&lineNumber=1338&column=17 500 in 20ms
+ ✓ Compiled in 519ms (569 modules)
+ GET / 200 in 156ms
+ ✓ Compiled in 102ms (208 modules)
+ ✓ Compiled in 71ms (208 modules)
    Reload env: .env.local
- ✓ Compiled in 431ms (1663 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1224ms
- ✓ Compiled /api/run-vendor-migration in 98ms (913 modules)
-Running vendor database migration...
-Found 5 existing categories, skipping category creation
-Testing vendor table structure...
- POST /api/run-vendor-migration 200 in 1020ms
- ✓ Compiled in 152ms (541 modules)
- ✓ Compiled in 509ms (1667 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1383ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1400ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1086ms
- ✓ Compiled in 37ms (227 modules)
- ✓ Compiled /api/run-full-schema in 106ms (913 modules)
-Running full vendor schema setup...
-Current vendors table columns: {
-  currentColumns: null,
-  columnsError: {
-    code: 'PGRST202',
-    details: 'Searched for the function public.sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
-    hint: null,
-    message: 'Could not find the function public.sql(query) in the schema cache'
-  }
-}
-Executing schema SQL...
-Schema creation error: {
-  code: 'PGRST202',
-  details: 'Searched for the function public.sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
-  hint: null,
-  message: 'Could not find the function public.sql(query) in the schema cache'
-}
-Full schema error: {
-  code: 'PGRST202',
-  details: 'Searched for the function public.sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
-  hint: null,
-  message: 'Could not find the function public.sql(query) in the schema cache'
-}
- POST /api/run-full-schema 500 in 992ms
- ✓ Compiled in 1003ms (1663 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1678ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 1945ms
- ✓ Compiled in 65ms (227 modules)
- ✓ Compiled /api/debug-user-couple in 200ms (913 modules)
-Debugging user-couple relationship...
- GET /api/debug-user-couple 401 in 285ms
- ✓ Compiled in 942ms (1663 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 2080ms
- GET /dashboard/vendors?_rsc=qzlug 200 in 2805ms
- ✓ Compiled in 670ms (1450 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1993ms
- ✓ Compiled /api/vendors-service in 224ms (913 modules)
-Creating vendor with admin privileges: {
-  name: 'Adebukola Adesanmi',
-  contact_name: 'Adebukola Adesanmi',
-  phone: null,
-  email: 'hello@atunbi.net',
-  website: null,
-  address: '14 lateef ali crescent soluyi',
-  category_id: null,
-  status: 'potential',
-  priority: 'medium',
-  estimated_cost: null,
-  notes: null
-}
-User: user_30m8uHgAu6OYhPCC4R0Jy7A3k0J
-User lookup result: {
-  userData: { id: '23914932-3ac9-4533-8518-c626915a9c56', couples: [ [Object] ] },
-  userError: null
-}
-Found couple ID: 9b84087b-41ae-49c2-adbf-56d0be01e0dd
-Inserting vendor data: {
-  couple_id: '9b84087b-41ae-49c2-adbf-56d0be01e0dd',
-  name: 'Adebukola Adesanmi',
-  category_id: null,
-  contact_name: 'Adebukola Adesanmi',
-  phone: null,
-  email: 'hello@atunbi.net',
-  address: '14 lateef ali crescent soluyi',
-  website: null,
-  status: 'potential',
-  priority: 'medium',
-  rating: null,
-  estimated_cost: null,
-  actual_cost: null,
-  notes: null,
-  meeting_date: null,
-  contract_signed: false
-}
-Vendor created successfully: {
-  id: 'e381c2fd-5610-4392-b5ec-6cef17b42f86',
-  couple_id: '9b84087b-41ae-49c2-adbf-56d0be01e0dd',
-  name: 'Adebukola Adesanmi',
-  contact_name: 'Adebukola Adesanmi',
-  phone: null,
-  email: 'hello@atunbi.net',
-  website: null,
-  address: '14 lateef ali crescent soluyi',
-  category_id: null,
-  status: 'potential',
-  priority: 'medium',
-  rating: null,
-  estimated_cost: null,
-  actual_cost: null,
-  notes: null,
-  meeting_date: null,
-  contract_signed: false,
-  created_at: '2025-08-04T18:06:24.615774+00:00',
-  updated_at: '2025-08-04T18:06:24.615774+00:00',
-  vendor_categories: null
-}
- POST /api/vendors-service 200 in 2430ms
- GET /dashboard/vendors 200 in 1431ms
- ⨯ ./src/app/dashboard/vendors/page.tsx
-Error: 
-  [31mx[0m Return statement is not allowed here
-     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:92:1]
- [2m 92[0m |         }
- [2m 93[0m |       }
- [2m 94[0m |     
- [2m 95[0m | [31;1m,[0m[31;1m-[0m[31;1m>[0m   return (
- [2m 96[0m | [31;1m|[0m       <div className="space-y-8">
- [2m 97[0m | [31;1m|[0m         <div className="flex items-center justify-between">
- [2m 98[0m | [31;1m|[0m           <div>
- [2m 99[0m | [31;1m|[0m             <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
- [2m100[0m | [31;1m|[0m             <p className="text-gray-600 mt-2">Find and manage your wedding vendors</p>
- [2m101[0m | [31;1m|[0m           </div>
- [2m102[0m | [31;1m|[0m           <AddVendorDialog categories={categories} />
- [2m103[0m | [31;1m|[0m         </div>
- [2m104[0m | [31;1m|[0m   
- [2m105[0m | [31;1m|[0m         {/* Vendor Summary Stats */}
- [2m106[0m | [31;1m|[0m         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
- [2m107[0m | [31;1m|[0m           <Card>
- [2m108[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m109[0m | [31;1m|[0m               <CardDescription>Total Vendors</CardDescription>
- [2m110[0m | [31;1m|[0m             </CardHeader>
- [2m111[0m | [31;1m|[0m             <CardContent>
- [2m112[0m | [31;1m|[0m               <div className="text-2xl font-bold">{summary.total_vendors}</div>
- [2m113[0m | [31;1m|[0m             </CardContent>
- [2m114[0m | [31;1m|[0m           </Card>
- [2m115[0m | [31;1m|[0m           
- [2m116[0m | [31;1m|[0m           <Card>
- [2m117[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m118[0m | [31;1m|[0m               <CardDescription>Booked</CardDescription>
- [2m119[0m | [31;1m|[0m             </CardHeader>
- [2m120[0m | [31;1m|[0m             <CardContent>
- [2m121[0m | [31;1m|[0m               <div className="text-2xl font-bold text-green-600">{summary.booked_vendors}</div>
- [2m122[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
- [2m123[0m | [31;1m|[0m                 {summary.total_vendors > 0 ? Math.round((summary.booked_vendors / summary.total_vendors) * 100) : 0}% booked
- [2m124[0m | [31;1m|[0m               </p>
- [2m125[0m | [31;1m|[0m             </CardContent>
- [2m126[0m | [31;1m|[0m           </Card>
- [2m127[0m | [31;1m|[0m           
- [2m128[0m | [31;1m|[0m           <Card>
- [2m129[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m130[0m | [31;1m|[0m               <CardDescription>Contracts Signed</CardDescription>
- [2m131[0m | [31;1m|[0m             </CardHeader>
- [2m132[0m | [31;1m|[0m             <CardContent>
- [2m133[0m | [31;1m|[0m               <div className="text-2xl font-bold text-blue-600">{summary.contracts_signed}</div>
- [2m134[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
- [2m135[0m | [31;1m|[0m                 of {summary.booked_vendors} booked
- [2m136[0m | [31;1m|[0m               </p>
- [2m137[0m | [31;1m|[0m             </CardContent>
- [2m138[0m | [31;1m|[0m           </Card>
- [2m139[0m | [31;1m|[0m           
- [2m140[0m | [31;1m|[0m           <Card>
- [2m141[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m142[0m | [31;1m|[0m               <CardDescription>Estimated Cost</CardDescription>
- [2m143[0m | [31;1m|[0m             </CardHeader>
- [2m144[0m | [31;1m|[0m             <CardContent>
- [2m145[0m | [31;1m|[0m               <div className="text-2xl font-bold text-purple-600">
- [2m146[0m | [31;1m|[0m                 ${Number(summary.total_estimated_cost || 0).toLocaleString()}
- [2m147[0m | [31;1m|[0m               </div>
- [2m148[0m | [31;1m|[0m               {summary.total_actual_cost > 0 && (
- [2m149[0m | [31;1m|[0m                 <p className="text-xs text-muted-foreground">
- [2m150[0m | [31;1m|[0m                   Actual: ${Number(summary.total_actual_cost).toLocaleString()}
- [2m151[0m | [31;1m|[0m                 </p>
- [2m152[0m | [31;1m|[0m               )}
- [2m153[0m | [31;1m|[0m             </CardContent>
- [2m154[0m | [31;1m|[0m           </Card>
- [2m155[0m | [31;1m|[0m         </div>
- [2m156[0m | [31;1m|[0m   
- [2m157[0m | [31;1m|[0m         {/* Vendor Categories */}
- [2m158[0m | [31;1m|[0m         <Card>
- [2m159[0m | [31;1m|[0m           <CardHeader>
- [2m160[0m | [31;1m|[0m             <CardTitle>Vendor Categories</CardTitle>
- [2m161[0m | [31;1m|[0m             <CardDescription>Browse vendors by category</CardDescription>
- [2m162[0m | [31;1m|[0m           </CardHeader>
- [2m163[0m | [31;1m|[0m           <CardContent>
- [2m164[0m | [31;1m|[0m             {categoryStats.length > 0 ? (
- [2m165[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
- [2m166[0m | [31;1m|[0m                 {categoryStats.map((category) => (
- [2m167[0m | [31;1m|[0m                   <Card key={category.category_name} className="cursor-pointer hover:shadow-md transition-shadow">
- [2m168[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
- [2m169[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.category_icon}</span>
- [2m170[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.category_name}</h3>
- [2m171[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">
- [2m172[0m | [31;1m|[0m                         {Number(category.vendor_count)} vendor{Number(category.vendor_count) !== 1 ? 's' : ''}
- [2m173[0m | [31;1m|[0m                         {Number(category.booked_count) > 0 && (
- [2m174[0m | [31;1m|[0m                           <> • {Number(category.booked_count)} booked</>
- [2m175[0m | [31;1m|[0m                         )}
- [2m176[0m | [31;1m|[0m                       </p>
- [2m177[0m | [31;1m|[0m                       {Number(category.total_estimated_cost) > 0 && (
- [2m178[0m | [31;1m|[0m                         <p className="text-xs text-muted-foreground mt-1">
- [2m179[0m | [31;1m|[0m                           ${Number(category.total_estimated_cost).toLocaleString()} estimated
- [2m180[0m | [31;1m|[0m                         </p>
- [2m181[0m | [31;1m|[0m                       )}
- [2m182[0m | [31;1m|[0m                     </CardContent>
- [2m183[0m | [31;1m|[0m                   </Card>
- [2m184[0m | [31;1m|[0m                 ))}
- [2m185[0m | [31;1m|[0m               </div>
- [2m186[0m | [31;1m|[0m             ) : (
- [2m187[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
- [2m188[0m | [31;1m|[0m                 {categories.slice(0, 8).map((category) => (
- [2m189[0m | [31;1m|[0m                   <Card key={category.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
- [2m190[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
- [2m191[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.icon}</span>
- [2m192[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.name}</h3>
- [2m193[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">0 vendors</p>
- [2m194[0m | [31;1m|[0m                     </CardContent>
- [2m195[0m | [31;1m|[0m                   </Card>
- [2m196[0m | [31;1m|[0m                 ))}
- [2m197[0m | [31;1m|[0m               </div>
- [2m198[0m | [31;1m|[0m             )}
- [2m199[0m | [31;1m|[0m           </CardContent>
- [2m200[0m | [31;1m|[0m         </Card>
- [2m201[0m | [31;1m|[0m   
- [2m202[0m | [31;1m|[0m         {/* My Vendors */}
- [2m203[0m | [31;1m|[0m         <Card>
- [2m204[0m | [31;1m|[0m           <CardHeader>
- [2m205[0m | [31;1m|[0m             <div className="flex justify-between items-center">
- [2m206[0m | [31;1m|[0m               <div>
- [2m207[0m | [31;1m|[0m                 <CardTitle>My Vendors</CardTitle>
- [2m208[0m | [31;1m|[0m                 <CardDescription>Vendors you're working with</CardDescription>
- [2m209[0m | [31;1m|[0m               </div>
- [2m210[0m | [31;1m|[0m             </div>
- [2m211[0m | [31;1m|[0m           </CardHeader>
- [2m212[0m | [31;1m|[0m           <CardContent>
- [2m213[0m | [31;1m|[0m             {vendors.length > 0 ? (
- [2m214[0m | [31;1m|[0m               <VendorList vendors={vendors} categories={categories} />
- [2m215[0m | [31;1m|[0m             ) : (
- [2m216[0m | [31;1m|[0m               <div className="text-center py-12">
- [2m217[0m | [31;1m|[0m                 <div className="text-6xl mb-4">🏢</div>
- [2m218[0m | [31;1m|[0m                 <h3 className="text-lg font-semibold mb-2">No vendors added yet</h3>
- [2m219[0m | [31;1m|[0m                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
- [2m220[0m | [31;1m|[0m                   Start building your vendor list by adding wedding service providers.
- [2m221[0m | [31;1m|[0m                 </p>
- [2m222[0m | [31;1m|[0m                 <AddVendorDialog categories={categories} />
- [2m223[0m | [31;1m|[0m               </div>
- [2m224[0m | [31;1m|[0m             )}
- [2m225[0m | [31;1m|[0m           </CardContent>
- [2m226[0m | [31;1m|[0m         </Card>
- [2m227[0m | [31;1m|[0m       </div>
- [2m228[0m | [31;1m`[0m[31;1m-[0m[31;1m>[0m   )
- [2m229[0m |     }
-     `----
-
-  [31mx[0m Expression expected
-     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:226:1]
- [2m226[0m |       </Card>
- [2m227[0m |     </div>
- [2m228[0m |   )
- [2m229[0m | }
-     : [31;1m^[0m
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/app/dashboard/vendors/page.tsx
- ○ Compiling /_error ...
- ⨯ ./src/app/dashboard/vendors/page.tsx
-Error: 
-  [31mx[0m Return statement is not allowed here
-     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:92:1]
- [2m 92[0m |         }
- [2m 93[0m |       }
- [2m 94[0m |     
- [2m 95[0m | [31;1m,[0m[31;1m-[0m[31;1m>[0m   return (
- [2m 96[0m | [31;1m|[0m       <div className="space-y-8">
- [2m 97[0m | [31;1m|[0m         <div className="flex items-center justify-between">
- [2m 98[0m | [31;1m|[0m           <div>
- [2m 99[0m | [31;1m|[0m             <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
- [2m100[0m | [31;1m|[0m             <p className="text-gray-600 mt-2">Find and manage your wedding vendors</p>
- [2m101[0m | [31;1m|[0m           </div>
- [2m102[0m | [31;1m|[0m           <AddVendorDialog categories={categories} />
- [2m103[0m | [31;1m|[0m         </div>
- [2m104[0m | [31;1m|[0m   
- [2m105[0m | [31;1m|[0m         {/* Vendor Summary Stats */}
- [2m106[0m | [31;1m|[0m         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
- [2m107[0m | [31;1m|[0m           <Card>
- [2m108[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m109[0m | [31;1m|[0m               <CardDescription>Total Vendors</CardDescription>
- [2m110[0m | [31;1m|[0m             </CardHeader>
- [2m111[0m | [31;1m|[0m             <CardContent>
- [2m112[0m | [31;1m|[0m               <div className="text-2xl font-bold">{summary.total_vendors}</div>
- [2m113[0m | [31;1m|[0m             </CardContent>
- [2m114[0m | [31;1m|[0m           </Card>
- [2m115[0m | [31;1m|[0m           
- [2m116[0m | [31;1m|[0m           <Card>
- [2m117[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m118[0m | [31;1m|[0m               <CardDescription>Booked</CardDescription>
- [2m119[0m | [31;1m|[0m             </CardHeader>
- [2m120[0m | [31;1m|[0m             <CardContent>
- [2m121[0m | [31;1m|[0m               <div className="text-2xl font-bold text-green-600">{summary.booked_vendors}</div>
- [2m122[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
- [2m123[0m | [31;1m|[0m                 {summary.total_vendors > 0 ? Math.round((summary.booked_vendors / summary.total_vendors) * 100) : 0}% booked
- [2m124[0m | [31;1m|[0m               </p>
- [2m125[0m | [31;1m|[0m             </CardContent>
- [2m126[0m | [31;1m|[0m           </Card>
- [2m127[0m | [31;1m|[0m           
- [2m128[0m | [31;1m|[0m           <Card>
- [2m129[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m130[0m | [31;1m|[0m               <CardDescription>Contracts Signed</CardDescription>
- [2m131[0m | [31;1m|[0m             </CardHeader>
- [2m132[0m | [31;1m|[0m             <CardContent>
- [2m133[0m | [31;1m|[0m               <div className="text-2xl font-bold text-blue-600">{summary.contracts_signed}</div>
- [2m134[0m | [31;1m|[0m               <p className="text-xs text-muted-foreground">
- [2m135[0m | [31;1m|[0m                 of {summary.booked_vendors} booked
- [2m136[0m | [31;1m|[0m               </p>
- [2m137[0m | [31;1m|[0m             </CardContent>
- [2m138[0m | [31;1m|[0m           </Card>
- [2m139[0m | [31;1m|[0m           
- [2m140[0m | [31;1m|[0m           <Card>
- [2m141[0m | [31;1m|[0m             <CardHeader className="pb-2">
- [2m142[0m | [31;1m|[0m               <CardDescription>Estimated Cost</CardDescription>
- [2m143[0m | [31;1m|[0m             </CardHeader>
- [2m144[0m | [31;1m|[0m             <CardContent>
- [2m145[0m | [31;1m|[0m               <div className="text-2xl font-bold text-purple-600">
- [2m146[0m | [31;1m|[0m                 ${Number(summary.total_estimated_cost || 0).toLocaleString()}
- [2m147[0m | [31;1m|[0m               </div>
- [2m148[0m | [31;1m|[0m               {summary.total_actual_cost > 0 && (
- [2m149[0m | [31;1m|[0m                 <p className="text-xs text-muted-foreground">
- [2m150[0m | [31;1m|[0m                   Actual: ${Number(summary.total_actual_cost).toLocaleString()}
- [2m151[0m | [31;1m|[0m                 </p>
- [2m152[0m | [31;1m|[0m               )}
- [2m153[0m | [31;1m|[0m             </CardContent>
- [2m154[0m | [31;1m|[0m           </Card>
- [2m155[0m | [31;1m|[0m         </div>
- [2m156[0m | [31;1m|[0m   
- [2m157[0m | [31;1m|[0m         {/* Vendor Categories */}
- [2m158[0m | [31;1m|[0m         <Card>
- [2m159[0m | [31;1m|[0m           <CardHeader>
- [2m160[0m | [31;1m|[0m             <CardTitle>Vendor Categories</CardTitle>
- [2m161[0m | [31;1m|[0m             <CardDescription>Browse vendors by category</CardDescription>
- [2m162[0m | [31;1m|[0m           </CardHeader>
- [2m163[0m | [31;1m|[0m           <CardContent>
- [2m164[0m | [31;1m|[0m             {categoryStats.length > 0 ? (
- [2m165[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
- [2m166[0m | [31;1m|[0m                 {categoryStats.map((category) => (
- [2m167[0m | [31;1m|[0m                   <Card key={category.category_name} className="cursor-pointer hover:shadow-md transition-shadow">
- [2m168[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
- [2m169[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.category_icon}</span>
- [2m170[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.category_name}</h3>
- [2m171[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">
- [2m172[0m | [31;1m|[0m                         {Number(category.vendor_count)} vendor{Number(category.vendor_count) !== 1 ? 's' : ''}
- [2m173[0m | [31;1m|[0m                         {Number(category.booked_count) > 0 && (
- [2m174[0m | [31;1m|[0m                           <> • {Number(category.booked_count)} booked</>
- [2m175[0m | [31;1m|[0m                         )}
- [2m176[0m | [31;1m|[0m                       </p>
- [2m177[0m | [31;1m|[0m                       {Number(category.total_estimated_cost) > 0 && (
- [2m178[0m | [31;1m|[0m                         <p className="text-xs text-muted-foreground mt-1">
- [2m179[0m | [31;1m|[0m                           ${Number(category.total_estimated_cost).toLocaleString()} estimated
- [2m180[0m | [31;1m|[0m                         </p>
- [2m181[0m | [31;1m|[0m                       )}
- [2m182[0m | [31;1m|[0m                     </CardContent>
- [2m183[0m | [31;1m|[0m                   </Card>
- [2m184[0m | [31;1m|[0m                 ))}
- [2m185[0m | [31;1m|[0m               </div>
- [2m186[0m | [31;1m|[0m             ) : (
- [2m187[0m | [31;1m|[0m               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
- [2m188[0m | [31;1m|[0m                 {categories.slice(0, 8).map((category) => (
- [2m189[0m | [31;1m|[0m                   <Card key={category.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
- [2m190[0m | [31;1m|[0m                     <CardContent className="p-4 text-center">
- [2m191[0m | [31;1m|[0m                       <span className="text-3xl mb-2 block">{category.icon}</span>
- [2m192[0m | [31;1m|[0m                       <h3 className="font-semibold">{category.name}</h3>
- [2m193[0m | [31;1m|[0m                       <p className="text-sm text-muted-foreground">0 vendors</p>
- [2m194[0m | [31;1m|[0m                     </CardContent>
- [2m195[0m | [31;1m|[0m                   </Card>
- [2m196[0m | [31;1m|[0m                 ))}
- [2m197[0m | [31;1m|[0m               </div>
- [2m198[0m | [31;1m|[0m             )}
- [2m199[0m | [31;1m|[0m           </CardContent>
- [2m200[0m | [31;1m|[0m         </Card>
- [2m201[0m | [31;1m|[0m   
- [2m202[0m | [31;1m|[0m         {/* My Vendors */}
- [2m203[0m | [31;1m|[0m         <Card>
- [2m204[0m | [31;1m|[0m           <CardHeader>
- [2m205[0m | [31;1m|[0m             <div className="flex justify-between items-center">
- [2m206[0m | [31;1m|[0m               <div>
- [2m207[0m | [31;1m|[0m                 <CardTitle>My Vendors</CardTitle>
- [2m208[0m | [31;1m|[0m                 <CardDescription>Vendors you're working with</CardDescription>
- [2m209[0m | [31;1m|[0m               </div>
- [2m210[0m | [31;1m|[0m             </div>
- [2m211[0m | [31;1m|[0m           </CardHeader>
- [2m212[0m | [31;1m|[0m           <CardContent>
- [2m213[0m | [31;1m|[0m             {vendors.length > 0 ? (
- [2m214[0m | [31;1m|[0m               <VendorList vendors={vendors} categories={categories} />
- [2m215[0m | [31;1m|[0m             ) : (
- [2m216[0m | [31;1m|[0m               <div className="text-center py-12">
- [2m217[0m | [31;1m|[0m                 <div className="text-6xl mb-4">🏢</div>
- [2m218[0m | [31;1m|[0m                 <h3 className="text-lg font-semibold mb-2">No vendors added yet</h3>
- [2m219[0m | [31;1m|[0m                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
- [2m220[0m | [31;1m|[0m                   Start building your vendor list by adding wedding service providers.
- [2m221[0m | [31;1m|[0m                 </p>
- [2m222[0m | [31;1m|[0m                 <AddVendorDialog categories={categories} />
- [2m223[0m | [31;1m|[0m               </div>
- [2m224[0m | [31;1m|[0m             )}
- [2m225[0m | [31;1m|[0m           </CardContent>
- [2m226[0m | [31;1m|[0m         </Card>
- [2m227[0m | [31;1m|[0m       </div>
- [2m228[0m | [31;1m`[0m[31;1m-[0m[31;1m>[0m   )
- [2m229[0m |     }
-     `----
-
-  [31mx[0m Expression expected
-     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/dashboard/vendors/page.tsx[0m:226:1]
- [2m226[0m |       </Card>
- [2m227[0m |     </div>
- [2m228[0m |   )
- [2m229[0m | }
-     : [31;1m^[0m
-     `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/app/dashboard/vendors/page.tsx
- GET /dashboard/vendors 500 in 13ms
- ✓ Compiled /_not-found in 978ms (1664 modules)
+ ✓ Compiled in 178ms (708 modules)
+ GET / 200 in 121ms
+   Reload env: .env.local
+ ✓ Compiled in 85ms (708 modules)
+ GET / 200 in 88ms
+ ✓ Compiled in 188ms (222 modules)
  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET /_next/static/webpack/4ae3e5588ce6c9ab.webpack.hot-update.json 404 in 1132ms
-Error fetching vendors: TypeError: fetch failed
-    at node:internal/deps/undici/undici:13510:13
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async VendorsPage (webpack-internal:///(rsc)/./src/app/dashboard/vendors/page.tsx:37:37) {
-  [cause]: AggregateError [ECONNREFUSED]: 
-      at internalConnectMultiple (node:net:1122:18)
-      at afterConnectMultiple (node:net:1689:7)
-      at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
-    code: 'ECONNREFUSED',
-    [errors]: [ [Error], [Error] ]
-  }
-}
- GET /dashboard/vendors 200 in 1795ms
- ✓ Compiled in 396ms (1678 modules)
- GET /dashboard/vendors?_rsc=qzlug 200 in 1738ms
- GET /dashboard/vendors 404 in 152ms
+ ✓ Compiled in 123ms (708 modules)
+ GET / 200 in 165ms
+ ✓ Compiled in 38ms (208 modules)
+ ✓ Compiled in 161ms (222 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 27ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 1225ms (640 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 1214ms
+ ✓ Compiled in 205ms (265 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 175ms (793 modules)
+ GET / 200 in 239ms
+ ✓ Compiled in 355ms (255 modules)
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:4000
+   - Network:      http://192.168.100.231:4000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ⚠ Found lockfile missing swc dependencies, patching...
+ ✓ Ready in 3.2s
+ ⚠ Lockfile was successfully patched, please run "npm install" to ensure @next/swc dependencies are downloaded

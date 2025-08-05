@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
+import { auth } from '@clerk/nextjs/server'
 
 // Use service role key for bypassing RLS
 const supabaseAdmin = createClient(
@@ -10,14 +10,14 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
     console.log('Creating vendor with admin privileges:', body)
-    console.log('User:', user.id)
+    console.log('User:', userId)
 
     // Get user's couple data using admin client
     const { data: userData, error: userError } = await supabaseAdmin
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     console.log('User lookup result:', { userData, userError })
@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -123,7 +123,7 @@ export async function GET() {
       .select(`
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (!userData?.couples?.[0]) {

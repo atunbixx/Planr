@@ -58,7 +58,7 @@ export async function GET() {
     const { data: coupleData, error: coupleError } = await supabase
       .from('couples')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
 
     console.log('Couple lookup result:', { coupleData, coupleError })
 

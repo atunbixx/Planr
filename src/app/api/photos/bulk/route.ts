@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 import cloudinary from '@/lib/cloudinary'
+import { auth } from '@clerk/nextjs/server'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,8 +11,8 @@ const supabaseAdmin = createClient(
 // POST bulk operations on photos
 export async function POST(request: NextRequest) {
   try {
-    const user = await currentUser()
-    if (!user?.id) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (userError || !userData?.couples?.[0]) {

@@ -1,441 +1,308 @@
-// Enhanced Service Worker for Wedding Planner
-const CACHE_VERSION = 'v2';
-const CACHE_PREFIX = 'wedding-planner';
+const CACHE_NAME = 'wedding-planner-v1.0.0'
+const OFFLINE_URL = '/offline.html'
 
-// Cache names
-const CACHE_NAMES = {
-  STATIC: `${CACHE_PREFIX}-static-${CACHE_VERSION}`,
-  RUNTIME: `${CACHE_PREFIX}-runtime-${CACHE_VERSION}`,
-  IMAGES: `${CACHE_PREFIX}-images-${CACHE_VERSION}`,
-  API: `${CACHE_PREFIX}-api-${CACHE_VERSION}`,
-};
-
-// Files to cache immediately
-const STATIC_ASSETS = [
+const STATIC_CACHE_URLS = [
   '/',
+  '/dashboard',
+  '/onboarding',
   '/offline.html',
   '/manifest.json',
-  '/favicon.ico',
-];
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  '/icons/badge-72x72.png'
+]
 
-// API endpoints to cache
-const API_CACHE_ROUTES = [
-  '/api/user/profile',
-  '/api/vendors',
-  '/api/budget',
-  '/api/photos',
-  '/api/messages',
-];
+const API_CACHE_URLS = [
+  '/api/couples',
+  '/api/notifications/send',
+  '/api/checklist',
+  '/api/budget/categories',
+  '/api/guests'
+]
 
-// Install event - cache static assets
+// Install event - cache static resources
 self.addEventListener('install', (event) => {
-  console.log('[Enhanced SW] Installing...');
+  console.log('[SW] Install event')
   
   event.waitUntil(
-    caches.open(CACHE_NAMES.STATIC).then((cache) => {
-      console.log('[Enhanced SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS).catch(err => {
-        console.error('[Enhanced SW] Failed to cache:', err);
-        return Promise.resolve();
-      });
-    })
-  );
-  
-  self.skipWaiting();
-});
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('[SW] Caching static resources')
+        return cache.addAll(STATIC_CACHE_URLS)
+      })
+      .then(() => {
+        console.log('[SW] Static resources cached')
+        return self.skipWaiting()
+      })
+      .catch((error) => {
+        console.error('[SW] Failed to cache static resources:', error)
+      })
+  )
+})
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[Enhanced SW] Activating...');
+  console.log('[SW] Activate event')
   
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => {
-            return cacheName.startsWith(CACHE_PREFIX) && 
-                   !Object.values(CACHE_NAMES).includes(cacheName);
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('[SW] Deleting old cache:', cacheName)
+              return caches.delete(cacheName)
+            }
           })
-          .map((cacheName) => {
-            console.log('[Enhanced SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          })
-      );
-    })
-  );
-  
-  self.clients.claim();
-});
+        )
+      })
+      .then(() => {
+        console.log('[SW] Old caches cleaned up')
+        return self.clients.claim()
+      })
+  )
+})
 
-// Fetch event handler
+// Fetch event - implement caching strategies
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const { request } = event
+  const url = new URL(request.url)
   
-  // Skip non-GET requests for caching
+  // Skip non-GET requests
   if (request.method !== 'GET') {
-    // Handle POST/PUT/DELETE with offline queue
-    if (url.pathname.startsWith('/api/')) {
-      event.respondWith(handleMutationRequest(request));
-    }
-    return;
+    return
   }
   
-  // Skip cross-origin requests
+  // Skip external requests
   if (url.origin !== location.origin) {
-    return;
+    return
   }
   
-  // Handle different types of requests
-  if (request.mode === 'navigate') {
-    // HTML pages - Network first with offline fallback
-    event.respondWith(handleNavigationRequest(request));
-  } else if (url.pathname.startsWith('/api/')) {
-    // API requests - Network first with cache fallback
-    event.respondWith(handleApiRequest(request));
-  } else if (request.destination === 'image') {
-    // Images - Cache first
-    event.respondWith(handleImageRequest(request));
-  } else {
-    // Other static assets - Cache first
-    event.respondWith(handleStaticRequest(request));
+  // Handle API requests
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(handleApiRequest(request))
+    return
   }
-});
+  
+  // Handle static assets and pages
+  event.respondWith(handleStaticRequest(request))
+})
 
-// Handle navigation requests (HTML pages)
-async function handleNavigationRequest(request) {
+// Handle API requests with network-first strategy
+async function handleApiRequest(request) {
+  const url = new URL(request.url)
+  const cacheKey = `${url.pathname}${url.search}`
+  
   try {
     // Try network first
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(request)
     
-    // Cache successful responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAMES.RUNTIME);
-      cache.put(request, networkResponse.clone());
+    // Cache successful responses for API endpoints we care about
+    if (networkResponse.ok && API_CACHE_URLS.some(pattern => url.pathname.startsWith(pattern))) {
+      const cache = await caches.open(CACHE_NAME)
+      await cache.put(cacheKey, networkResponse.clone())
     }
     
-    return networkResponse;
+    return networkResponse
   } catch (error) {
-    // Try cache
-    const cachedResponse = await caches.match(request);
+    console.log('[SW] Network failed for API request, trying cache:', url.pathname)
+    
+    // Fallback to cache
+    const cachedResponse = await caches.match(cacheKey)
     if (cachedResponse) {
-      return cachedResponse;
+      return cachedResponse
     }
     
-    // Return offline page
-    const offlineResponse = await caches.match('/offline.html');
-    return offlineResponse || new Response('Offline', {
-      status: 503,
-      statusText: 'Service Unavailable',
-    });
-  }
-}
-
-// Handle API requests
-async function handleApiRequest(request) {
-  try {
-    // Try network first with timeout
-    const networkResponse = await fetchWithTimeout(request, 5000);
-    
-    // Cache successful responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAMES.API);
-      cache.put(request, networkResponse.clone());
-    }
-    
-    return networkResponse;
-  } catch (error) {
-    // Try cache for GET requests
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      // Add header to indicate cached response
-      const headers = new Headers(cachedResponse.headers);
-      headers.set('X-From-Cache', 'true');
-      headers.set('X-Cache-Time', new Date().toISOString());
-      
-      return new Response(cachedResponse.body, {
-        status: cachedResponse.status,
-        statusText: cachedResponse.statusText,
-        headers: headers,
-      });
-    }
-    
-    // Return offline error
-    return new Response(JSON.stringify({
-      error: 'offline',
-      message: 'No internet connection. Cached data unavailable.',
-    }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
-
-// Handle mutation requests (POST, PUT, DELETE)
-async function handleMutationRequest(request) {
-  try {
-    // Try to send the request
-    const response = await fetch(request);
-    return response;
-  } catch (error) {
-    // Queue the request for later
-    await queueRequest(request);
-    
-    // Return queued response
-    return new Response(JSON.stringify({
-      queued: true,
-      message: 'Your changes will be synced when you\'re back online',
-      id: generateQueueId(),
-    }), {
-      status: 202,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
-
-// Handle image requests
-async function handleImageRequest(request) {
-  // Try cache first for images
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
-  try {
-    const networkResponse = await fetch(request);
-    
-    // Cache successful image responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAMES.IMAGES);
-      cache.put(request, networkResponse.clone());
-    }
-    
-    return networkResponse;
-  } catch (error) {
-    // Return placeholder image if available
-    return new Response('', {
-      status: 404,
-      statusText: 'Not Found',
-    });
-  }
-}
-
-// Handle static assets
-async function handleStaticRequest(request) {
-  // Try cache first for static assets
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
-  try {
-    const networkResponse = await fetch(request);
-    
-    // Cache successful responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAMES.STATIC);
-      cache.put(request, networkResponse.clone());
-    }
-    
-    return networkResponse;
-  } catch (error) {
-    return new Response('Resource not available offline', {
-      status: 503,
-      statusText: 'Service Unavailable',
-    });
-  }
-}
-
-// Helper function for fetch with timeout
-function fetchWithTimeout(request, timeout = 5000) {
-  return Promise.race([
-    fetch(request),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout')), timeout)
-    ),
-  ]);
-}
-
-// Queue failed requests for background sync
-async function queueRequest(request) {
-  const db = await openSyncDB();
-  const tx = db.transaction('sync_queue', 'readwrite');
-  const store = tx.objectStore('sync_queue');
-  
-  const queueData = {
-    id: generateQueueId(),
-    url: request.url,
-    method: request.method,
-    headers: Object.fromEntries(request.headers.entries()),
-    body: await request.text(),
-    timestamp: Date.now(),
-    retryCount: 0,
-  };
-  
-  await store.add(queueData);
-}
-
-// Open IndexedDB for sync queue
-function openSyncDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('wedding-planner-sync', 1);
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains('sync_queue')) {
-        db.createObjectStore('sync_queue', { keyPath: 'id' });
-      }
-    };
-  });
-}
-
-// Generate unique queue ID
-function generateQueueId() {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-// Background sync event
-self.addEventListener('sync', async (event) => {
-  console.log('[Enhanced SW] Background sync:', event.tag);
-  
-  if (event.tag === 'sync-queue') {
-    event.waitUntil(processSyncQueue());
-  }
-});
-
-// Process queued requests
-async function processSyncQueue() {
-  const db = await openSyncDB();
-  const tx = db.transaction('sync_queue', 'readwrite');
-  const store = tx.objectStore('sync_queue');
-  const requests = await store.getAll();
-  
-  for (const queuedRequest of requests) {
-    try {
-      const response = await fetch(queuedRequest.url, {
-        method: queuedRequest.method,
-        headers: queuedRequest.headers,
-        body: queuedRequest.body,
-      });
-      
-      if (response.ok) {
-        // Remove from queue if successful
-        await store.delete(queuedRequest.id);
-        
-        // Notify clients of successful sync
-        self.clients.matchAll().then(clients => {
-          clients.forEach(client => {
-            client.postMessage({
-              type: 'sync-success',
-              id: queuedRequest.id,
-              url: queuedRequest.url,
-            });
-          });
-        });
-      } else if (response.status >= 400 && response.status < 500) {
-        // Client error - remove from queue
-        await store.delete(queuedRequest.id);
-      } else {
-        // Server error - increment retry count
-        queuedRequest.retryCount++;
-        if (queuedRequest.retryCount > 3) {
-          await store.delete(queuedRequest.id);
-        } else {
-          await store.put(queuedRequest);
+    // Return offline response for failed API requests
+    return new Response(
+      JSON.stringify({
+        error: 'You are offline. This data may be outdated.',
+        offline: true,
+        timestamp: new Date().toISOString()
+      }),
+      {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         }
       }
-    } catch (error) {
-      console.error('[Enhanced SW] Sync failed:', error);
-      // Keep in queue for later retry
-    }
+    )
   }
 }
 
-// Periodic sync for data updates
-self.addEventListener('periodicsync', (event) => {
-  console.log('[Enhanced SW] Periodic sync:', event.tag);
-  
-  if (event.tag === 'update-data') {
-    event.waitUntil(updateCachedData());
-  }
-});
-
-// Update cached data periodically
-async function updateCachedData() {
-  const cache = await caches.open(CACHE_NAMES.API);
-  
-  // Update critical API endpoints
-  for (const route of API_CACHE_ROUTES) {
-    try {
-      const response = await fetch(route);
-      if (response.ok) {
-        await cache.put(route, response);
-      }
-    } catch (error) {
-      console.error(`[Enhanced SW] Failed to update ${route}:`, error);
+// Handle static requests with cache-first strategy
+async function handleStaticRequest(request) {
+  try {
+    // Try cache first
+    const cachedResponse = await caches.match(request)
+    if (cachedResponse) {
+      return cachedResponse
     }
+    
+    // Fallback to network
+    const networkResponse = await fetch(request)
+    
+    // Cache the response if successful
+    if (networkResponse.ok && request.url.startsWith(self.location.origin)) {
+      const cache = await caches.open(CACHE_NAME)
+      await cache.put(request, networkResponse.clone())
+    }
+    
+    return networkResponse
+  } catch (error) {
+    console.log('[SW] Both cache and network failed for:', request.url)
+    
+    // Return offline page for navigation requests
+    if (request.mode === 'navigate') {
+      const offlineResponse = await caches.match(OFFLINE_URL)
+      if (offlineResponse) {
+        return offlineResponse
+      }
+    }
+    
+    // Return minimal offline response
+    return new Response('You are offline', {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    })
+  }
+}
+
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  console.log('[SW] Background sync event:', event.tag)
+  
+  if (event.tag === 'sync-offline-actions') {
+    event.waitUntil(syncOfflineActions())
+  }
+})
+
+// Sync offline actions when back online
+async function syncOfflineActions() {
+  console.log('[SW] Syncing offline actions')
+  
+  try {
+    // Get offline actions from IndexedDB or cache
+    const offlineActions = await getOfflineActions()
+    
+    for (const action of offlineActions) {
+      try {
+        await fetch(action.url, {
+          method: action.method,
+          headers: action.headers,
+          body: action.body
+        })
+        
+        // Remove successful action from offline queue
+        await removeOfflineAction(action.id)
+        console.log('[SW] Synced offline action:', action.id)
+      } catch (error) {
+        console.error('[SW] Failed to sync offline action:', action.id, error)
+      }
+    }
+  } catch (error) {
+    console.error('[SW] Error syncing offline actions:', error)
   }
 }
 
 // Push notification handling
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
+  console.log('[SW] Push event received')
   
-  const options = {
-    body: data.body || 'You have a new notification',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
-    vibrate: [200, 100, 200],
-    data: data,
-    actions: [
-      { action: 'view', title: 'View' },
-      { action: 'close', title: 'Close' },
-    ],
-  };
+  if (!event.data) {
+    console.log('[SW] Push event has no data')
+    return
+  }
   
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Wedding Planner', options)
-  );
-});
+  try {
+    const data = event.data.json()
+    console.log('[SW] Push data:', data)
+    
+    const options = {
+      body: data.body || data.message,
+      icon: data.icon || '/icons/icon-192x192.png',
+      badge: data.badge || '/icons/badge-72x72.png',
+      tag: data.tag || 'wedding-notification',
+      data: {
+        url: data.url || '/dashboard',
+        timestamp: data.timestamp || Date.now()
+      },
+      requireInteraction: data.requireInteraction || false,
+      actions: data.actions || [
+        { action: 'view', title: 'View' },
+        { action: 'close', title: 'Close' }
+      ]
+    }
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Wedding Planner', options)
+    )
+  } catch (error) {
+    console.error('[SW] Error handling push notification:', error)
+  }
+})
 
 // Notification click handling
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+  console.log('[SW] Notification click:', event.notification.tag, event.action)
   
-  if (event.action === 'view' || !event.action) {
-    const urlToOpen = event.notification.data?.url || '/dashboard';
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((windowClients) => {
-        for (const client of windowClients) {
+  event.notification.close()
+  
+  if (event.action === 'close') {
+    return
+  }
+  
+  const urlToOpen = event.notification.data?.url || '/dashboard'
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window/tab open with the target URL
+        for (const client of clientList) {
           if (client.url === urlToOpen && 'focus' in client) {
-            return client.focus();
+            return client.focus()
           }
         }
+        
+        // If no existing window/tab, open a new one
         if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
+          return clients.openWindow(urlToOpen)
         }
       })
-    );
-  }
-});
+  )
+})
 
-// Message handling for skip waiting
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
+// Helper functions for offline actions (would need IndexedDB implementation)
+async function getOfflineActions() {
+  // TODO: Implement IndexedDB storage for offline actions
+  return []
+}
 
-// Pre-cache dynamic content based on user activity
+async function removeOfflineAction(id) {
+  // TODO: Implement IndexedDB removal
+  console.log('[SW] Would remove offline action:', id)
+}
+
+// Message handling for communication with main thread
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    event.waitUntil(
-      caches.open(CACHE_NAMES.RUNTIME).then(cache => {
-        return cache.addAll(event.data.urls);
-      })
-    );
+  console.log('[SW] Message received:', event.data)
+  
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
   }
-});
+  
+  if (event.data?.type === 'GET_CACHE_STATUS') {
+    event.ports[0].postMessage({
+      type: 'CACHE_STATUS',
+      cached: true,
+      version: CACHE_NAME
+    })
+  }
+})
+
+console.log('[SW] Service Worker loaded')

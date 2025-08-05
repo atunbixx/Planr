@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 import cloudinary, { CLOUDINARY_FOLDER } from '@/lib/cloudinary'
+import { auth } from '@clerk/nextjs/server'
 
 // Use service role key for bypassing RLS
 const supabaseAdmin = createClient(
@@ -11,8 +11,8 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (userError || !userData?.couples?.[0]) {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
               context: {
                 couple_id: coupleId,
                 event_type: eventType || 'general',
-                uploaded_by: user.id
+                uploaded_by: userId
               }
             },
             (error, result) => {
@@ -169,8 +169,8 @@ export async function POST(request: NextRequest) {
 // Get photos endpoint
 export async function GET(request: NextRequest) {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       .select(`
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (!userData?.couples?.[0]) {

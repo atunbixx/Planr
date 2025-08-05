@@ -1,29 +1,21 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
-import './globals.css'
-import { Toaster } from '@/components/ui/toaster'
-
-const inter = Inter({ subsets: ['latin'] })
+import React from 'react';
+import type { Metadata } from 'next';
+import { ClerkProvider } from '@clerk/nextjs';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Wedding Planner',
-  description: 'Plan your perfect wedding',
-}
+  description: 'Plan your event with ease',
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
+        <body>
           {children}
-          <Toaster />
         </body>
       </html>
     </ClerkProvider>
-  )
+  );
 }

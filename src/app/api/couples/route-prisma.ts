@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
 
 // Create Prisma client with correct Supabase URL
 const prisma = new PrismaClient({
@@ -38,47 +39,56 @@ export async function POST(request: NextRequest) {
 
     // First, ensure user exists in users table
     const user = await prisma.user.upsert({
-      where: { clerk_user_id },
+      where: { clerkId: clerk_user_id },
       update: {
         email: email || undefined,
-        first_name: partner1_name.split(' ')[0],
-        last_name: partner1_name.split(' ').slice(1).join(' ') || undefined,
+        firstName: partner1_name.split(' ')[0],
+        lastName: partner1_name.split(' ').slice(1).join(' ') || undefined,
       },
       create: {
-        clerk_user_id,
+        clerkId: clerk_user_id,
         email: email || `${clerk_user_id}@placeholder.com`,
-        first_name: partner1_name.split(' ')[0],
-        last_name: partner1_name.split(' ').slice(1).join(' ') || undefined,
+        firstName: partner1_name.split(' ')[0],
+        lastName: partner1_name.split(' ').slice(1).join(' ') || undefined,
       }
     })
 
-    // Create or update couple record
-    const couple = await prisma.couple.upsert({
-      where: { user_id: user.id },
-      update: {
-        partner1_name,
-        partner2_name,
-        wedding_style,
-        wedding_date: wedding_date ? new Date(wedding_date) : undefined,
-        venue_name,
-        venue_location,
-        guest_count_estimate,
-        budget_total: budget_total ? parseFloat(budget_total) : undefined,
-        onboarding_completed,
-      },
-      create: {
-        user_id: user.id,
-        partner1_name,
-        partner2_name,
-        wedding_style,
-        wedding_date: wedding_date ? new Date(wedding_date) : undefined,
-        venue_name,
-        venue_location,
-        guest_count_estimate,
-        budget_total: budget_total ? parseFloat(budget_total) : undefined,
-        onboarding_completed,
-      }
+    // Create or update couple record - first find existing couple for this user
+    let couple = await prisma.couple.findFirst({
+      where: { userId: user.id }
     })
+
+    if (couple) {
+      // Update existing couple
+      couple = await prisma.couple.update({
+        where: { id: couple.id },
+        data: {
+          partnerName: partner1_name,
+          weddingStyle: wedding_style,
+          weddingDate: wedding_date ? new Date(wedding_date) : undefined,
+          venue: venue_name,
+          location: venue_location,
+          expectedGuests: guest_count_estimate,
+          totalBudget: budget_total ? parseFloat(budget_total) : undefined,
+          onboardingCompleted: onboarding_completed,
+        }
+      })
+    } else {
+      // Create new couple
+      couple = await prisma.couple.create({
+        data: {
+          userId: user.id,
+          partnerName: partner1_name,
+          weddingStyle: wedding_style,
+          weddingDate: wedding_date ? new Date(wedding_date) : undefined,
+          venue: venue_name,
+          location: venue_location,
+          expectedGuests: guest_count_estimate,
+          totalBudget: budget_total ? parseFloat(budget_total) : undefined,
+          onboardingCompleted: onboarding_completed,
+        }
+      })
+    }
 
     return NextResponse.json({
       success: true,
@@ -109,8 +119,8 @@ export async function GET(request: NextRequest) {
 
     // Get user and their couple data
     const user = await prisma.user.findUnique({
-      where: { clerk_user_id },
-      include: { couple: true }
+      where: { clerkId: clerk_user_id },
+      include: { couples: true }
     })
 
     if (!user) {

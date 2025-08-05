@@ -40,12 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Flow generated files
+# Claude Flow / Hive-Mind System - PERMANENTLY DISABLED
 .claude/settings.local.json
 .mcp.json
 claude-flow.config.json
 .swarm/
 .hive-mind/
+.claude-flow/
 memory/claude-flow-data.json
 memory/sessions/*
 !memory/sessions/README.md
@@ -64,3 +65,7 @@ claude-flow
 claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
+claude-flow-*
+hive-mind-*
+.claude-flow*
+.hive-mind*

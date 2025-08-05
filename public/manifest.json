@@ -1,15 +1,16 @@
 {
   "name": "Wedding Planner - Plan Your Perfect Day",
   "short_name": "Wedding Planner",
-  "description": "A comprehensive wedding planning app to help you organize your special day. Manage guests, vendors, budget, and more.",
-  "start_url": "/",
+  "description": "A comprehensive wedding planning app to help you organize your special day. Manage guests, vendors, budget, photos, and more.",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#8B5CF6",
+  "theme_color": "#6366f1",
   "scope": "/",
   "id": "wedding-planner-v2",
-  "categories": ["lifestyle", "productivity", "events"],
+  "categories": ["lifestyle", "productivity", "events", "wedding"],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "icons": [
     {
       "src": "/icons/icon-72x72.svg",
@@ -94,6 +95,27 @@
   ],
   "shortcuts": [
     {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to your wedding dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/dashboard-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Photo Gallery",
+      "short_name": "Photos",
+      "description": "View and manage wedding photos",
+      "url": "/dashboard/photos",
+      "icons": [{ "src": "/icons/photos-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Vendors",
+      "short_name": "Vendors",
+      "description": "Manage wedding vendors",
+      "url": "/dashboard/vendors",
+      "icons": [{ "src": "/icons/vendors-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
       "name": "Guest List",
       "short_name": "Guests",
       "description": "Manage your wedding guests",
@@ -106,15 +128,17 @@
       "description": "Track wedding expenses",
       "url": "/dashboard/budget",
       "icons": [{ "src": "/icons/budget-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
-    },
-    {
-      "name": "RSVP",
-      "short_name": "RSVP",
-      "description": "View RSVP responses",
-      "url": "/dashboard/rsvp",
-      "icons": [{ "src": "/icons/rsvp-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     }
   ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+wedding",
+      "url": "/dashboard?action=%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "prefer_related_applications": false,
   "lang": "en-US",
   "dir": "ltr"

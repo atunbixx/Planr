@@ -1,139 +1,132 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
+import { prisma } from '@/lib/prisma'
+import { auth } from '@clerk/nextjs/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Default budget categories based on wedding industry standards
+const DEFAULT_CATEGORIES = [
+  { name: 'Venue', allocatedAmount: 0.40, priority: 'high', color: '#8B5CF6', icon: '🏛️' },
+  { name: 'Catering', allocatedAmount: 0.25, priority: 'high', color: '#06B6D4', icon: '🍽️' },
+  { name: 'Photography', allocatedAmount: 0.10, priority: 'high', color: '#10B981', icon: '📸' },
+  { name: 'Music/DJ', allocatedAmount: 0.08, priority: 'medium', color: '#F59E0B', icon: '🎵' },
+  { name: 'Flowers', allocatedAmount: 0.05, priority: 'medium', color: '#EF4444', icon: '💐' },
+  { name: 'Attire', allocatedAmount: 0.05, priority: 'medium', color: '#8B5CF6', icon: '👗' },
+  { name: 'Transportation', allocatedAmount: 0.03, priority: 'low', color: '#6B7280', icon: '🚗' },
+  { name: 'Other', allocatedAmount: 0.04, priority: 'low', color: '#9CA3AF', icon: '📝' }
+]
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's couple data first
-    const { data: userData } = await supabase
-      .from('users')
-      .select(`
-        id,
-        couples (
-          id,
-          budget_total
-        )
-      `)
-      .eq('clerk_user_id', user.id)
-      .single()
-
-    if (!userData?.couples?.[0]) {
-      return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
-    }
-
-    const coupleId = userData.couples[0].id
-    const totalBudget = userData.couples[0].budget_total || 0
-
-    // Get budget categories for this couple
-    const { data: categories, error } = await supabase
-      .from('budget_categories')
-      .select('*')
-      .eq('couple_id', coupleId)
-      .order('created_at')
-
-    if (error) {
-      console.error('Error fetching budget categories:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch budget categories', details: error.message },
-        { status: 500 }
-      )
-    }
-
-    // Calculate budget breakdown
-    const totalSpent = categories.reduce((sum, cat) => sum + (Number(cat.spent_amount) || 0), 0)
-    const totalAllocated = categories.reduce((sum, cat) => sum + (Number(cat.allocated_amount) || 0), 0)
-    const remaining = Number(totalBudget) - totalSpent
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        categories,
-        totals: {
-          budget: Number(totalBudget),
-          spent: totalSpent,
-          allocated: totalAllocated,
-          remaining
-        }
-      }
+    // Get user and couple
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkId: userId }
     })
 
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const couple = await prisma.couple.findFirst({
+      where: { userId: dbUser.id }
+    })
+
+    if (!couple) {
+      return NextResponse.json({ error: 'Couple not found' }, { status: 404 })
+    }
+
+    // Get existing categories
+    const categories = await prisma.budgetCategory.findMany({
+      where: { coupleId: couple.id },
+      include: {
+        expenses: {
+          select: {
+            amount: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    })
+
+    // Calculate spent amounts
+    const categoriesWithSpent = categories.map(category => ({
+      ...category,
+      spentAmount: category.expenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
+    }))
+
+    return NextResponse.json(categoriesWithSpent)
   } catch (error) {
-    console.error('API Error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Error fetching budget categories:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await currentUser()
-    if (!user) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { name, icon, color, allocated_amount, priority } = body
-
-    // Get user's couple data
-    const { data: userData } = await supabase
-      .from('users')
-      .select(`
-        couples (id)
-      `)
-      .eq('clerk_user_id', user.id)
-      .single()
-
-    if (!userData?.couples?.[0]) {
-      return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
-    }
-
-    const coupleId = userData.couples[0].id
-
-    // Create new budget category
-    const { data: category, error } = await supabase
-      .from('budget_categories')
-      .insert({
-        couple_id: coupleId,
-        name,
-        icon: icon || '💰',
-        color: color || '#3B82F6',
-        allocated_amount: allocated_amount || 0,
-        spent_amount: 0,
-        priority: priority || 'important'
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating budget category:', error)
-      return NextResponse.json(
-        { error: 'Failed to create budget category', details: error.message },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: category
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkId: userId }
     })
 
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const couple = await prisma.couple.findFirst({
+      where: { userId: dbUser.id }
+    })
+
+    if (!couple) {
+      return NextResponse.json({ error: 'Couple not found' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { name, allocatedAmount, priority, color, icon, initializeDefaults } = body
+
+    // If initializing defaults, create all default categories
+    if (initializeDefaults && couple.totalBudget) {
+      const totalBudget = Number(couple.totalBudget)
+      
+      const defaultCategories = await Promise.all(
+        DEFAULT_CATEGORIES.map(category => 
+          prisma.budgetCategory.create({
+            data: {
+              coupleId: couple.id,
+              name: category.name,
+              allocatedAmount: totalBudget * category.allocatedAmount,
+              priority: category.priority,
+              color: category.color,
+              icon: category.icon
+            }
+          })
+        )
+      )
+
+      return NextResponse.json(defaultCategories)
+    }
+
+    // Create single category
+    const category = await prisma.budgetCategory.create({
+      data: {
+        coupleId: couple.id,
+        name,
+        allocatedAmount: Number(allocatedAmount),
+        priority: priority || 'medium',
+        color,
+        icon
+      }
+    })
+
+    return NextResponse.json(category)
   } catch (error) {
-    console.error('API Error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Error creating budget category:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabase } from '@/lib/supabase';
 import { messagingService } from '@/lib/messaging/messaging-service';
 import type { SendMessageRequest, MessageRecipient } from '@/lib/messaging/types';
+import { auth } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {
   try {

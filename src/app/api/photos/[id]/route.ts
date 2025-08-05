@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 import cloudinary from '@/lib/cloudinary'
+import { auth } from '@clerk/nextjs/server'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,13 +11,15 @@ const supabaseAdmin = createClient(
 // GET single photo
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser()
-    if (!user?.id) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const resolvedParams = await params
 
     // Get user's couple data using admin client
     const { data: userData, error: userError } = await supabaseAdmin
@@ -26,7 +28,7 @@ export async function GET(
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (userError || !userData?.couples?.[0]) {
@@ -46,7 +48,7 @@ export async function GET(
           description
         )
       `)
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .eq('couple_id', coupleId)
       .single()
 
@@ -64,13 +66,15 @@ export async function GET(
 // PUT update photo metadata
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser()
-    if (!user?.id) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const resolvedParams = await params
 
     // Get user's couple data using admin client
     const { data: userData, error: userError } = await supabaseAdmin
@@ -79,7 +83,7 @@ export async function PUT(
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (userError || !userData?.couples?.[0]) {
@@ -94,7 +98,7 @@ export async function PUT(
     const { data: existingPhoto, error: checkError } = await supabaseAdmin
       .from('photos')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .eq('couple_id', coupleId)
       .single()
 
@@ -114,7 +118,7 @@ export async function PUT(
         tags,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .eq('couple_id', coupleId)
       .select(`
         *,
@@ -144,13 +148,15 @@ export async function PUT(
 // DELETE photo
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser()
-    if (!user?.id) {
+    const { userId } = await auth()
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const resolvedParams = await params
 
     // Get user's couple data using admin client
     const { data: userData, error: userError } = await supabaseAdmin
@@ -159,7 +165,7 @@ export async function DELETE(
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('clerk_user_id', userId)
       .single()
 
     if (userError || !userData?.couples?.[0]) {
@@ -172,7 +178,7 @@ export async function DELETE(
     const { data: photo, error: photoError } = await supabaseAdmin
       .from('photos')
       .select('cloudinary_public_id, cloudinary_secure_url')
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .eq('couple_id', coupleId)
       .single()
 
@@ -194,23 +200,23 @@ export async function DELETE(
     await supabaseAdmin
       .from('photo_comments')
       .delete()
-      .eq('photo_id', params.id)
+      .eq('photo_id', resolvedParams.id)
 
     await supabaseAdmin
       .from('photo_reactions')
       .delete()
-      .eq('photo_id', params.id)
+      .eq('photo_id', resolvedParams.id)
 
     await supabaseAdmin
       .from('photo_shares')
       .delete()
-      .eq('photo_id', params.id)
+      .eq('photo_id', resolvedParams.id)
 
     // Delete the photo from database
     const { error: deleteError } = await supabaseAdmin
       .from('photos')
       .delete()
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .eq('couple_id', coupleId)
 
     if (deleteError) {
