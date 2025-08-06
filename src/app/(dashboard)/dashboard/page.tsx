@@ -183,7 +183,7 @@ export default function DashboardPage() {
           )}
 
           {/* Guests Card */}
-          {stats && (
+          {stats && stats.guestStats && (
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">Guest RSVPs</CardTitle>
@@ -192,18 +192,18 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-blue-600">
-                      {stats.guestStats?.confirmed || 0}
+                      {stats.guestStats.confirmed || 0}
                     </span>
                     <span className="text-sm text-gray-500">
-                      of {stats.guestStats?.total || 0} confirmed
+                      of {stats.guestStats.total || 0} confirmed
                     </span>
                   </div>
                   <div className="flex space-x-4 text-sm">
                     <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                      {stats.guestStats?.pending || 0} pending
+                      {stats.guestStats.pending || 0} pending
                     </span>
                     <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                      {stats.guestStats?.declined || 0} declined
+                      {stats.guestStats.declined || 0} declined
                     </span>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
           )}
 
           {/* Vendors Card */}
-          {stats && (
+          {stats && stats.vendorStats && (
             <Card className="border-l-4 border-l-purple-500">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">Vendor Status</CardTitle>
@@ -221,21 +221,21 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-purple-600">
-                      {stats.vendorStats?.booked || 0}
+                      {stats.vendorStats.booked || 0}
                     </span>
                     <span className="text-sm text-gray-500">
-                      of {stats.vendorStats?.total || 0} booked
+                      of {stats.vendorStats.total || 0} booked
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="h-2 bg-gray-200 rounded-full flex-1">
                       <div 
                         className="h-2 bg-purple-500 rounded-full" 
-                        style={{ width: `${(stats.vendorStats?.total || 0) > 0 ? ((stats.vendorStats?.booked || 0) / (stats.vendorStats?.total || 1)) * 100 : 0}%` }}
+                        style={{ width: `${(stats.vendorStats.total || 0) > 0 ? ((stats.vendorStats.booked || 0) / (stats.vendorStats.total || 1)) * 100 : 0}%` }}
                       />
                     </div>
                     <span className="text-sm text-gray-600">
-                      {stats.vendorStats?.pending || 0} pending
+                      {stats.vendorStats.pending || 0} pending
                     </span>
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
           )}
 
           {/* Overall Progress Card */}
-          {stats && (
+          {stats && stats.taskStats && (
             <Card className="border-l-4 border-l-rose-500">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">Overall Progress</CardTitle>
@@ -253,13 +253,13 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-rose-600">
-                      {(stats.taskStats?.total || 0) > 0 ? Math.round(((stats.taskStats?.completed || 0) / (stats.taskStats?.total || 1)) * 100) : 0}%
+                      {(stats.taskStats.total || 0) > 0 ? Math.round(((stats.taskStats.completed || 0) / (stats.taskStats.total || 1)) * 100) : 0}%
                     </span>
                     <span className="text-sm text-gray-500">complete</span>
                   </div>
-                  <Progress value={(stats.taskStats?.total || 0) > 0 ? Math.round(((stats.taskStats?.completed || 0) / (stats.taskStats?.total || 1)) * 100) : 0} className="h-2" />
+                  <Progress value={(stats.taskStats.total || 0) > 0 ? Math.round(((stats.taskStats.completed || 0) / (stats.taskStats.total || 1)) * 100) : 0} className="h-2" />
                   <div className="text-sm text-gray-600">
-                    {stats.taskStats?.completed || 0} of {stats.taskStats?.total || 0} tasks done
+                    {stats.taskStats.completed || 0} of {stats.taskStats.total || 0} tasks done
                   </div>
                 </div>
               </CardContent>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
           {/* Left Column - Tasks and Payments */}
           <div className="lg:col-span-2 space-y-6">
             {/* This Week's Tasks */}
-            {stats && stats.taskStats?.thisWeek && stats.taskStats.thisWeek > 0 && (
+            {stats && stats.taskStats && stats.taskStats.thisWeek && stats.taskStats.thisWeek > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">
-                    <p className="text-gray-600 mb-2">You have {stats.taskStats?.thisWeek || 0} tasks due this week</p>
+                    <p className="text-gray-600 mb-2">You have {stats.taskStats.thisWeek || 0} tasks due this week</p>
                     <p className="text-sm text-gray-500">Complete task management system coming soon!</p>
                   </div>
                 </CardContent>

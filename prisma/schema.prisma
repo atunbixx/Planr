@@ -12,15 +12,15 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  clerkId     String   @unique
-  email       String   @unique
-  firstName   String?
-  lastName    String?
-  imageUrl    String?
-  preferences Json?    // Store user preferences as JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid()) @db.Uuid
+  clerk_user_id String   @unique
+  email         String   @unique
+  first_name    String?
+  last_name     String?
+  phone         String?
+  preferences   Json?    // Store user preferences as JSON
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
 
   // Relationships
   couples           Couple[]
@@ -32,8 +32,8 @@ model User {
 }
 
 model Couple {
-  id                    String   @id @default(cuid())
-  userId                String
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @db.Uuid
   partnerName           String?
   weddingDate           DateTime?
   venue                 String?
@@ -42,8 +42,8 @@ model Couple {
   totalBudget           Decimal? @db.Decimal(10, 2)
   weddingStyle          String?
   onboardingCompleted   Boolean  @default(false)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  created_at            DateTime @default(now()) @map("created_at")
+  updated_at            DateTime @updatedAt @map("updated_at")
 
   // Relationships
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -61,8 +61,8 @@ model Couple {
 }
 
 model Guest {
-  id                   String            @id @default(cuid())
-  coupleId             String
+  id                   String            @id @default(uuid()) @db.Uuid
+  coupleId             String            @db.Uuid
   name                 String
   email                String?
   phone                String?
@@ -79,8 +79,8 @@ model Guest {
   dietaryRestrictions  String?
   specialRequests      String?
   notes                String?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  created_at           DateTime          @default(now()) @map("created_at")
+  updated_at           DateTime          @updatedAt @map("updated_at")
 
   // Relationships
   couple               Couple            @relation(fields: [coupleId], references: [id], onDelete: Cascade)

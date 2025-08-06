@@ -1,253 +1,930 @@
 
-> wedding-planner-v2@0.1.0 dev
-> next dev --port 4002
+> wedding-planner-v3@0.1.0 dev
+> next dev --port 4010
 
    ▲ Next.js 15.4.5
-   - Local:        http://localhost:4002
-   - Network:      http://192.168.100.231:4002
-   - Environments: .env.local
+   - Local:        http://localhost:4010
+   - Network:      http://192.168.100.231:4010
+   - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 1465ms
+ ✓ Ready in 1750ms
  ○ Compiling /middleware ...
- ✓ Compiled /middleware in 551ms (227 modules)
+ ✓ Compiled /middleware in 544ms (262 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (160kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
  ○ Compiling / ...
-<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (108kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
- ✓ Compiled / in 3.1s (930 modules)
- HEAD / 200 in 3447ms
- ✓ Compiled in 169ms (350 modules)
- ✓ Compiled in 124ms (350 modules)
- ✓ Compiled in 106ms (350 modules)
- ✓ Compiled /auth/signin in 353ms (937 modules)
-Unsupported style property &:last-child. Did you mean &:lastChild?
- GET /auth/signin 200 in 606ms
- GET / 200 in 98ms
- ✓ Compiled /favicon.ico in 441ms (959 modules)
- GET /favicon.ico 200 in 780ms
- GET /_next/static/css/app/globals.css 404 in 776ms
- GET /auth/signin 200 in 65ms
- ✓ Compiled /dashboard in 319ms (976 modules)
- GET /dashboard 200 in 386ms
- GET /auth/signin 200 in 23ms
- GET /auth/signin 200 in 10ms
- ✓ Compiled in 143ms (369 modules)
- ✓ Compiled in 131ms (369 modules)
- ✓ Compiled in 152ms (369 modules)
- ✓ Compiled in 135ms (369 modules)
- ✓ Compiled in 106ms (369 modules)
- ✓ Compiled in 98ms (365 modules)
- ✓ Compiled in 162ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 291ms (365 modules)
- ✓ Compiled in 121ms (365 modules)
- ✓ Compiled in 103ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 176ms (365 modules)
- ✓ Compiled in 110ms (365 modules)
- ✓ Compiled in 117ms (365 modules)
- ✓ Compiled in 207ms (365 modules)
- ✓ Compiled in 110ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 211ms (365 modules)
- ✓ Compiled in 127ms (365 modules)
- ✓ Compiled in 111ms (365 modules)
- ✓ Compiled in 137ms (365 modules)
- ✓ Compiled in 103ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 183ms (365 modules)
- ✓ Compiled in 236ms (365 modules)
- ✓ Compiled in 123ms (365 modules)
- ✓ Compiled in 213ms (1139 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 317ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 163ms (1139 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 96ms (365 modules)
- ✓ Compiled in 173ms (365 modules)
- ✓ Compiled in 116ms (365 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 182ms (365 modules)
- ✓ Compiled in 294ms (1139 modules)
- ✓ Compiled in 99ms (365 modules)
- ✓ Compiled in 99ms (365 modules)
- ✓ Compiled in 182ms (365 modules)
- ✓ Compiled in 119ms (365 modules)
- ✓ Compiled in 141ms (365 modules)
- ✓ Compiled in 103ms (365 modules)
- ✓ Compiled in 133ms (365 modules)
- ✓ Compiled in 265ms (365 modules)
- ✓ Compiled in 128ms (365 modules)
- ✓ Compiled in 110ms (365 modules)
- ✓ Compiled in 180ms (365 modules)
- ✓ Compiled in 180ms (365 modules)
- ✓ Compiled in 120ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 114ms (365 modules)
- ✓ Compiled in 175ms (365 modules)
- ✓ Compiled in 109ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 115ms (365 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 266ms (1139 modules)
- ✓ Compiled in 99ms (365 modules)
- ✓ Compiled in 93ms (365 modules)
- ✓ Compiled in 137ms (365 modules)
- ✓ Compiled in 114ms (365 modules)
- ✓ Compiled in 239ms (1139 modules)
- ✓ Compiled in 142ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 112ms (365 modules)
- ✓ Compiled in 101ms (365 modules)
- ✓ Compiled in 231ms (1153 modules)
- ✓ Compiled in 99ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 144ms (365 modules)
- ✓ Compiled in 108ms (365 modules)
- ✓ Compiled in 111ms (365 modules)
- ✓ Compiled in 134ms (365 modules)
- ✓ Compiled in 103ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 114ms (1139 modules)
- ✓ Compiled in 107ms (365 modules)
- ✓ Compiled in 96ms (365 modules)
- ✓ Compiled in 132ms (365 modules)
- ✓ Compiled in 107ms (365 modules)
- ✓ Compiled in 139ms (365 modules)
- ✓ Compiled in 107ms (365 modules)
- ✓ Compiled in 141ms (365 modules)
- ✓ Compiled in 111ms (365 modules)
- ✓ Compiled in 113ms (365 modules)
- ✓ Compiled in 101ms (365 modules)
- ✓ Compiled in 335ms (926 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 312ms (926 modules)
- ✓ Compiled in 128ms (365 modules)
- ✓ Compiled in 107ms (365 modules)
- ✓ Compiled in 334ms (926 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 120ms (365 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 95ms (365 modules)
- ✓ Compiled in 229ms (365 modules)
- ✓ Compiled in 205ms (365 modules)
- ✓ Compiled in 235ms (365 modules)
- ✓ Compiled in 129ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 227ms (365 modules)
- ✓ Compiled in 178ms (365 modules)
- ✓ Compiled in 121ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 221ms (365 modules)
- ✓ Compiled in 127ms (365 modules)
- ✓ Compiled in 112ms (365 modules)
- ✓ Compiled in 109ms (365 modules)
- ✓ Compiled in 219ms (365 modules)
- ✓ Compiled in 131ms (365 modules)
- ✓ Compiled in 111ms (365 modules)
- ✓ Compiled in 101ms (365 modules)
- ✓ Compiled in 98ms (365 modules)
- ✓ Compiled in 178ms (365 modules)
- ✓ Compiled in 126ms (365 modules)
- ✓ Compiled in 111ms (365 modules)
- ✓ Compiled in 93ms (365 modules)
- ✓ Compiled in 177ms (365 modules)
- ✓ Compiled in 117ms (365 modules)
- ✓ Compiled in 109ms (365 modules)
- ✓ Compiled in 110ms (365 modules)
- ✓ Compiled in 106ms (365 modules)
- ✓ Compiled in 333ms (1139 modules)
- ✓ Compiled in 114ms (365 modules)
- ✓ Compiled in 101ms (365 modules)
- ✓ Compiled in 150ms (365 modules)
- ✓ Compiled in 119ms (365 modules)
- ✓ Compiled in 109ms (1139 modules)
- ✓ Compiled in 144ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 187ms (365 modules)
- ✓ Compiled in 116ms (365 modules)
- ✓ Compiled in 101ms (365 modules)
- ✓ Compiled in 104ms (365 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 236ms (365 modules)
- ✓ Compiled in 131ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 177ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 111ms (365 modules)
- ✓ Compiled in 105ms (365 modules)
- ✓ Compiled in 214ms (365 modules)
- ✓ Compiled in 109ms (365 modules)
- ✓ Compiled in 353ms (365 modules)
- ✓ Compiled in 125ms (365 modules)
- ✓ Compiled in 138ms (365 modules)
- ✓ Compiled in 102ms (365 modules)
- ✓ Compiled in 119ms (365 modules)
- ✓ Compiled in 141ms (1139 modules)
- ✓ Compiled in 117ms (365 modules)
- ✓ Compiled in 183ms (365 modules)
- ✓ Compiled in 199ms (1153 modules)
- ✓ Compiled in 118ms (365 modules)
- ✓ Compiled in 242ms (365 modules)
- ✓ Compiled in 121ms (365 modules)
- ✓ Compiled in 268ms (365 modules)
- ✓ Compiled in 126ms (1139 modules)
- ✓ Compiled in 128ms (365 modules)
- ✓ Compiled in 203ms (365 modules)
- ✓ Compiled in 128ms (1139 modules)
- ✓ Compiled in 124ms (365 modules)
- ✓ Compiled in 333ms (365 modules)
- ✓ Compiled in 131ms (365 modules)
- ✓ Compiled in 240ms (365 modules)
- ✓ Compiled in 149ms (365 modules)
- ✓ Compiled in 234ms (365 modules)
- ✓ Compiled in 244ms (365 modules)
- ✓ Compiled in 116ms (365 modules)
- ✓ Compiled in 145ms (365 modules)
- ✓ Compiled in 131ms (365 modules)
- ✓ Compiled in 113ms (365 modules)
- ✓ Compiled in 308ms (365 modules)
- ✓ Compiled in 126ms (365 modules)
- ✓ Compiled in 191ms (365 modules)
- ✓ Compiled in 208ms (365 modules)
- ✓ Compiled in 228ms (365 modules)
- ✓ Compiled in 132ms (365 modules)
- ✓ Compiled in 272ms (365 modules)
- ✓ Compiled in 210ms (365 modules)
- ✓ Compiled in 246ms (365 modules)
- ✓ Compiled in 177ms (365 modules)
- ✓ Compiled in 130ms (365 modules)
- ✓ Compiled in 238ms (365 modules)
- ✓ Compiled in 172ms (365 modules)
- ✓ Compiled in 133ms (365 modules)
- ✓ Compiled in 107ms (365 modules)
- ⨯ ./src/app/auth/signin/page.tsx:8:1
-Module not found: Can't resolve './signin.module.css'
-   6 | import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-   7 | import { nyMagazineTheme } from '@/styles/theme'
->  8 | import styles from './signin.module.css'
-     | ^
-   9 |
-  10 | export default function SignInPage() {
-  11 |   const [email, setEmail] = useState('')
+ ✓ Compiled / in 3s (1148 modules)
+ GET / 200 in 3711ms
+ ✓ Compiled in 733ms (381 modules)
+ ✓ Compiled /api/health in 308ms (1142 modules)
+ GET /api/health 200 in 408ms
+ ⨯ ./src/app/(dashboard)/dashboard/page.tsx
+Error:   [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/(dashboard)/dashboard/page.tsx[0m:210:1]
+ [2m207[0m |           </div>
+ [2m208[0m |         </div>
+ [2m209[0m |       </div>
+ [2m210[0m |     </div>
+     : [35;1m     ^^^^^[0m
+ [2m211[0m |   )
+ [2m212[0m | }
+     `----
 
-https://nextjs.org/docs/messages/module-not-found
- ✓ Compiled in 556ms (1107 modules)
- ✓ Compiled in 302ms (1107 modules)
- ✓ Compiled in 358ms (449 modules)
- ✓ Compiled in 1388ms (1098 modules)
- ✓ Compiled in 292ms (449 modules)
- ✓ Compiled in 503ms (1098 modules)
- ✓ Compiled in 880ms (1098 modules)
- ✓ Compiled in 738ms (1098 modules)
- ✓ Compiled in 740ms (1325 modules)
- ✓ Compiled in 465ms (449 modules)
- ✓ Compiled in 338ms (449 modules)
- ✓ Compiled in 1192ms (1325 modules)
- ✓ Compiled in 324ms (449 modules)
- ✓ Compiled in 315ms (449 modules)
-[?25h
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/(dashboard)/dashboard/page.tsx
+ ⨯ ./src/app/(dashboard)/dashboard/page.tsx
+Error:   [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/(dashboard)/dashboard/page.tsx[0m:210:1]
+ [2m207[0m |           </div>
+ [2m208[0m |         </div>
+ [2m209[0m |       </div>
+ [2m210[0m |     </div>
+     : [35;1m     ^^^^^[0m
+ [2m211[0m |   )
+ [2m212[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/(dashboard)/dashboard/page.tsx
+ ○ Compiling /_not-found ...
+ ⨯ ./src/app/(dashboard)/dashboard/page.tsx
+Error:   [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/(dashboard)/dashboard/page.tsx[0m:210:1]
+ [2m207[0m |           </div>
+ [2m208[0m |         </div>
+ [2m209[0m |       </div>
+ [2m210[0m |     </div>
+     : [35;1m     ^^^^^[0m
+ [2m211[0m |   )
+ [2m212[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/(dashboard)/dashboard/page.tsx
+ ⨯ ./src/app/(dashboard)/dashboard/page.tsx
+Error:   [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/(dashboard)/dashboard/page.tsx[0m:210:1]
+ [2m207[0m |           </div>
+ [2m208[0m |         </div>
+ [2m209[0m |       </div>
+ [2m210[0m |     </div>
+     : [35;1m     ^^^^^[0m
+ [2m211[0m |   )
+ [2m212[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/(dashboard)/dashboard/page.tsx
+ GET /dashboard 500 in 2751ms
+ GET /dashboard 500 in 9ms
+ GET /dashboard 500 in 10ms
+ GET /dashboard 500 in 7ms
+ ⨯ ./src/app/(dashboard)/dashboard/page.tsx
+Error:   [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4m/Users/atunbi/wedding-planner-v2/src/app/(dashboard)/dashboard/page.tsx[0m:210:1]
+ [2m207[0m |           </div>
+ [2m208[0m |         </div>
+ [2m209[0m |       </div>
+ [2m210[0m |     </div>
+     : [35;1m     ^^^^^[0m
+ [2m211[0m |   )
+ [2m212[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/(dashboard)/dashboard/page.tsx
+ GET /_next/static/webpack/01fb65cfcaae3e14.webpack.hot-update.json 500 in 699ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /api/dashboard/stats 500 in 716ms
+ GET /dashboard 500 in 11ms
+ ✓ Compiled /api/dashboard/stats in 425ms (533 modules)
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+ GET /dashboard 500 in 17ms
+ ⨯ src/app/(dashboard)/dashboard/(client)/page.tsx
+Can't resolve private-next-app-dir/(dashboard)/dashboard/page
+ GET /_next/static/webpack/01fb65cfcaae3e14.webpack.hot-update.json 500 in 624ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /dashboard 500 in 15ms
+ ✓ Compiled in 1009ms (1479 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /_next/static/webpack/01fb65cfcaae3e14.webpack.hot-update.json 404 in 1316ms
+ ✓ Compiled /dashboard in 229ms (959 modules)
+ GET /dashboard 200 in 438ms
+ GET /dashboard 200 in 34ms
+ ✓ Compiled /api/user/initialize in 1138ms (1516 modules)
+ ✓ Compiled in 351ms (1525 modules)
+ GET /dashboard 200 in 1032ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 4861ms
+ ✓ Compiled /api/dashboard/stats in 206ms (1007 modules)
+API Error: Error [PrismaClientValidationError]: 
+Invalid `prisma.user.findUnique()` invocation:
+
+{
+  where: {
+    clerkId: "user_30ltuJfkwYqJOvGwpYgy96Rsr98",
+    ~~~~~~~
+?   id?: String,
+?   clerk_user_id?: String,
+?   email?: String,
+?   AND?: UserWhereInput | UserWhereInput[],
+?   OR?: UserWhereInput[],
+?   NOT?: UserWhereInput | UserWhereInput[],
+?   first_name?: StringNullableFilter | String | Null,
+?   last_name?: StringNullableFilter | String | Null,
+?   phone?: StringNullableFilter | String | Null,
+?   preferences?: JsonNullableFilter,
+?   created_at?: DateTimeFilter | DateTime,
+?   updated_at?: DateTimeFilter | DateTime,
+?   couples?: CoupleListRelationFilter,
+?   sentMessages?: MessageListRelationFilter,
+?   receivedMessages?: MessageRecipientListRelationFilter,
+?   pushSubscriptions?: PushSubscriptionListRelationFilter
+  }
+}
+
+Unknown argument `clerkId`. Available options are marked with ?.
+    at async getAuthContext (src/lib/api/auth.ts:20:15)
+    at async eval (src/lib/api/auth.ts:57:26)
+  18 |
+  19 |   // Get user from database
+> 20 |   const user = await prisma.user.findUnique({
+     |               ^
+  21 |     where: { clerkId: clerkUserId }
+  22 |   })
+  23 | {
+  clientVersion: '6.13.0'
+}
+ GET /api/dashboard/stats 500 in 417ms
+ GET /dashboard 200 in 191ms
+ GET /dashboard 200 in 58ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1690ms
+API Error: Error [PrismaClientValidationError]: 
+Invalid `prisma.user.findUnique()` invocation:
+
+{
+  where: {
+    clerkId: "user_30ltuJfkwYqJOvGwpYgy96Rsr98",
+    ~~~~~~~
+?   id?: String,
+?   clerk_user_id?: String,
+?   email?: String,
+?   AND?: UserWhereInput | UserWhereInput[],
+?   OR?: UserWhereInput[],
+?   NOT?: UserWhereInput | UserWhereInput[],
+?   first_name?: StringNullableFilter | String | Null,
+?   last_name?: StringNullableFilter | String | Null,
+?   phone?: StringNullableFilter | String | Null,
+?   preferences?: JsonNullableFilter,
+?   created_at?: DateTimeFilter | DateTime,
+?   updated_at?: DateTimeFilter | DateTime,
+?   couples?: CoupleListRelationFilter,
+?   sentMessages?: MessageListRelationFilter,
+?   receivedMessages?: MessageRecipientListRelationFilter,
+?   pushSubscriptions?: PushSubscriptionListRelationFilter
+  }
+}
+
+Unknown argument `clerkId`. Available options are marked with ?.
+    at async getAuthContext (src/lib/api/auth.ts:20:15)
+    at async eval (src/lib/api/auth.ts:57:26)
+  18 |
+  19 |   // Get user from database
+> 20 |   const user = await prisma.user.findUnique({
+     |               ^
+  21 |     where: { clerkId: clerkUserId }
+  22 |   })
+  23 | {
+  clientVersion: '6.13.0'
+}
+ GET /api/dashboard/stats 500 in 108ms
+ ✓ Compiled in 177ms (1007 modules)
+ GET /dashboard 200 in 53ms
+API Error: ApiException: Unauthorized
+    at getAuthContext (src/lib/api/auth.ts:16:10)
+    at async eval (src/lib/api/auth.ts:57:26)
+  14 |   
+  15 |   if (!clerkUserId) {
+> 16 |     throw new UnauthorizedException()
+     |          ^
+  17 |   }
+  18 |
+  19 |   // Get user from database {
+  statusCode: 401,
+  code: 'UNAUTHORIZED',
+  details: undefined
+}
+ GET /api/dashboard/stats 401 in 87ms
+ GET /dashboard 200 in 153ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1905ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."couples"."id", "public"."couples"."userId", "public"."couples"."partnerName", "public"."couples"."weddingDate", "public"."couples"."venue", "public"."couples"."location", "public"."couples"."expectedGuests", "public"."couples"."totalBudget", "public"."couples"."weddingStyle", "public"."couples"."onboardingCompleted", "public"."couples"."created_at", "public"."couples"."updated_at" FROM "public"."couples" WHERE "public"."couples"."userId" = $1 LIMIT $2 OFFSET $3
+prisma:query ROLLBACK
+API Error: Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.couple.findFirst()` invocation:
+
+
+The column `couples.userId` does not exist in the current database.
+    at async getAuthContext (src/lib/api/auth.ts:29:17)
+    at async eval (src/lib/api/auth.ts:57:26)
+  27 |
+  28 |   // Get couple associated with user
+> 29 |   const couple = await prisma.couple.findFirst({
+     |                 ^
+  30 |     where: { userId: user.id }
+  31 |   })
+  32 | {
+  code: 'P2022',
+  meta: [Object],
+  clientVersion: '6.13.0'
+}
+ GET /api/dashboard/stats 500 in 1383ms
+ GET /dashboard 200 in 49ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1514ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."couples"."id", "public"."couples"."userId", "public"."couples"."partnerName", "public"."couples"."weddingDate", "public"."couples"."venue", "public"."couples"."location", "public"."couples"."expectedGuests", "public"."couples"."totalBudget", "public"."couples"."weddingStyle", "public"."couples"."onboardingCompleted", "public"."couples"."created_at", "public"."couples"."updated_at" FROM "public"."couples" WHERE "public"."couples"."userId" = $1 LIMIT $2 OFFSET $3
+prisma:query ROLLBACK
+API Error: Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.couple.findFirst()` invocation:
+
+
+The column `couples.userId` does not exist in the current database.
+    at async getAuthContext (src/lib/api/auth.ts:29:17)
+    at async eval (src/lib/api/auth.ts:57:26)
+  27 |
+  28 |   // Get couple associated with user
+> 29 |   const couple = await prisma.couple.findFirst({
+     |                 ^
+  30 |     where: { userId: user.id }
+  31 |   })
+  32 | {
+  code: 'P2022',
+  meta: [Object],
+  clientVersion: '6.13.0'
+}
+ GET /api/dashboard/stats 500 in 1359ms
+ GET /dashboard 200 in 58ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1435ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."couples"."id", "public"."couples"."userId", "public"."couples"."partnerName", "public"."couples"."weddingDate", "public"."couples"."venue", "public"."couples"."location", "public"."couples"."expectedGuests", "public"."couples"."totalBudget", "public"."couples"."weddingStyle", "public"."couples"."onboardingCompleted", "public"."couples"."created_at", "public"."couples"."updated_at" FROM "public"."couples" WHERE "public"."couples"."userId" = $1 LIMIT $2 OFFSET $3
+prisma:query ROLLBACK
+API Error: Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.couple.findFirst()` invocation:
+
+
+The column `couples.userId` does not exist in the current database.
+    at async getAuthContext (src/lib/api/auth.ts:29:17)
+    at async eval (src/lib/api/auth.ts:57:26)
+  27 |
+  28 |   // Get couple associated with user
+> 29 |   const couple = await prisma.couple.findFirst({
+     |                 ^
+  30 |     where: { userId: user.id }
+  31 |   })
+  32 | {
+  code: 'P2022',
+  meta: [Object],
+  clientVersion: '6.13.0'
+}
+ GET /api/dashboard/stats 500 in 1368ms
+API Error: ApiException: Unauthorized
+    at getAuthContext (src/lib/api/auth.ts:16:10)
+    at async eval (src/lib/api/auth.ts:57:26)
+  14 |   
+  15 |   if (!clerkUserId) {
+> 16 |     throw new UnauthorizedException()
+     |          ^
+  17 |   }
+  18 |
+  19 |   // Get user from database {
+  statusCode: 401,
+  code: 'UNAUTHORIZED',
+  details: undefined
+}
+ GET /api/dashboard/stats 401 in 91ms
+ ✓ Compiled in 336ms (1005 modules)
+ GET /dashboard 200 in 141ms
+ ✓ Compiled in 670ms (1550 modules)
+ GET /dashboard 200 in 112ms
+ ✓ Compiled in 480ms (1516 modules)
+ GET /dashboard 200 in 207ms
+ ✓ Compiled in 1026ms (1516 modules)
+ GET /dashboard 200 in 105ms
+ ✓ Compiled in 389ms (1516 modules)
+ GET /dashboard 200 in 60ms
+ ✓ Compiled in 936ms (1516 modules)
+ GET /dashboard 200 in 58ms
+ ✓ Compiled in 528ms (1516 modules)
+ GET /dashboard 200 in 148ms
+ ✓ Compiled in 757ms (1516 modules)
+ GET /dashboard 200 in 81ms
+ ✓ Compiled in 783ms (1516 modules)
+ GET /dashboard 200 in 133ms
+ ✓ Compiled in 557ms (1516 modules)
+ GET /dashboard 200 in 150ms
+ GET /dashboard 200 in 138ms
+ ✓ Compiled /api/health in 336ms (976 modules)
+ GET /api/health 200 in 453ms
+ GET /dashboard 200 in 236ms
+ ○ Compiling /api/user/initialize ...
+ ✓ Compiled /api/user/initialize in 747ms (996 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 3107ms
+prisma:query COMMIT
+ ✓ Compiled /api/dashboard/stats in 268ms (1007 modules)
+ GET /dashboard 200 in 47ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."couples"."id", "public"."couples"."userId", "public"."couples"."partnerName", "public"."couples"."weddingDate", "public"."couples"."venue", "public"."couples"."location", "public"."couples"."expectedGuests", "public"."couples"."totalBudget", "public"."couples"."weddingStyle", "public"."couples"."onboardingCompleted", "public"."couples"."created_at", "public"."couples"."updated_at" FROM "public"."couples" WHERE "public"."couples"."userId" = $1 LIMIT $2 OFFSET $3
+prisma:query ROLLBACK
+API Error: Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.couple.findFirst()` invocation:
+
+
+The column `couples.userId` does not exist in the current database.
+    at async getAuthContext (src/lib/api/auth.ts:29:17)
+    at async eval (src/lib/api/auth.ts:53:26)
+  27 |
+  28 |   // Get couple associated with user (optional - user might not have created profile yet)
+> 29 |   const couple = await prisma.couple.findFirst({
+     |                 ^
+  30 |     where: { userId: user.id }
+  31 |   })
+  32 | {
+  code: 'P2022',
+  meta: [Object],
+  clientVersion: '6.13.0'
+}
+ GET /api/dashboard/stats 500 in 1717ms
+ ✓ Compiled in 371ms (971 modules)
+ ✓ Compiled /api/dashboard/stats in 218ms (1005 modules)
+API Error: ApiException: Unauthorized
+    at getAuthContext (src/lib/api/auth.ts:16:10)
+    at async eval (src/lib/api/auth.ts:53:26)
+  14 |   
+  15 |   if (!clerkUserId) {
+> 16 |     throw new UnauthorizedException()
+     |          ^
+  17 |   }
+  18 |
+  19 |   // Get user from database {
+  statusCode: 401,
+  code: 'UNAUTHORIZED',
+  details: undefined
+}
+ GET /api/dashboard/stats 401 in 441ms
+ GET /dashboard 200 in 53ms
+ GET /dashboard 200 in 178ms
+ GET /dashboard 200 in 70ms
+ ✓ Compiled /api/user/initialize in 322ms (994 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 3964ms
+prisma:query COMMIT
+ ✓ Compiled /api/dashboard/stats in 151ms (1007 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 899ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 1099ms (1552 modules)
+ GET /dashboard 200 in 804ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1471ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 713ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 648ms (1552 modules)
+ GET /dashboard 200 in 493ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1256ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 845ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 421ms (1552 modules)
+ GET /dashboard 200 in 390ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1718ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 725ms
+ GET /dashboard 200 in 46ms
+API Error: ApiException: Unauthorized
+    at getAuthContext (src/lib/api/auth.ts:16:10)
+    at async eval (src/lib/api/auth.ts:53:26)
+  14 |   
+  15 |   if (!clerkUserId) {
+> 16 |     throw new UnauthorizedException()
+     |          ^
+  17 |   }
+  18 |
+  19 |   // Get user from database {
+  statusCode: 401,
+  code: 'UNAUTHORIZED',
+  details: undefined
+}
+ GET /api/dashboard/stats 401 in 72ms
+ GET /dashboard 200 in 54ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 2026ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 705ms
+ GET /dashboard 200 in 58ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1409ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 708ms
+ ✓ Compiled /api/health in 383ms (976 modules)
+ GET /api/health 200 in 429ms
+ ✓ Compiled in 895ms (1521 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /dashboard 200 in 285ms
+ ✓ Compiled /api/user/initialize in 164ms (996 modules)
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 2085ms
+prisma:query COMMIT
+ ✓ Compiled /api/dashboard/stats in 184ms (1009 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 938ms
+ ✓ Compiled in 736ms (1554 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /dashboard 200 in 211ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1462ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 711ms
+API Error: ApiException: Unauthorized
+    at getAuthContext (src/lib/api/auth.ts:16:10)
+    at async eval (src/lib/api/auth.ts:53:26)
+  14 |   
+  15 |   if (!clerkUserId) {
+> 16 |     throw new UnauthorizedException()
+     |          ^
+  17 |   }
+  18 |
+  19 |   // Get user from database {
+  statusCode: 401,
+  code: 'UNAUTHORIZED',
+  details: undefined
+}
+ GET /api/dashboard/stats 401 in 87ms
+ GET /dashboard 200 in 73ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 2482ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 700ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 959ms (1552 modules)
+ GET /dashboard 200 in 628ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1786ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 704ms
+ ○ Compiling /dashboard/guests ...
+ ✓ Compiled /dashboard/guests in 1440ms (1754 modules)
+ GET /dashboard/guests 200 in 1552ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1654ms
+ ✓ Compiled /api/guests in 272ms (1757 modules)
+prisma:query BEGIN
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 2721ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."couples"."id", "public"."couples"."userId", "public"."couples"."partnerName", "public"."couples"."weddingDate", "public"."couples"."venue", "public"."couples"."location", "public"."couples"."expectedGuests", "public"."couples"."totalBudget", "public"."couples"."weddingStyle", "public"."couples"."onboardingCompleted", "public"."couples"."created_at", "public"."couples"."updated_at" FROM "public"."couples" WHERE "public"."couples"."userId" = $1 LIMIT $2 OFFSET $3
+prisma:query ROLLBACK
+Error fetching guests: Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.couple.findFirst()` invocation:
+
+
+The column `couples.userId` does not exist in the current database.
+    at async GET (src/app/api/guests/route.ts:21:19)
+  19 |     }
+  20 |
+> 21 |     const couple = await prisma.couple.findFirst({
+     |                   ^
+  22 |       where: { userId: dbUser.id }
+  23 |     })
+  24 | {
+  code: 'P2022',
+  meta: [Object],
+  clientVersion: '6.13.0'
+}
+ GET /api/guests 500 in 1870ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."couples"."id", "public"."couples"."userId", "public"."couples"."partnerName", "public"."couples"."weddingDate", "public"."couples"."venue", "public"."couples"."location", "public"."couples"."expectedGuests", "public"."couples"."totalBudget", "public"."couples"."weddingStyle", "public"."couples"."onboardingCompleted", "public"."couples"."created_at", "public"."couples"."updated_at" FROM "public"."couples" WHERE "public"."couples"."userId" = $1 LIMIT $2 OFFSET $3
+prisma:query ROLLBACK
+Error fetching guests: Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.couple.findFirst()` invocation:
+
+
+The column `couples.userId` does not exist in the current database.
+    at async GET (src/app/api/guests/route.ts:21:19)
+  19 |     }
+  20 |
+> 21 |     const couple = await prisma.couple.findFirst({
+     |                   ^
+  22 |       where: { userId: dbUser.id }
+  23 |     })
+  24 | {
+  code: 'P2022',
+  meta: [Object],
+  clientVersion: '6.13.0'
+}
+ GET /api/guests 500 in 1355ms
+ ✓ Compiled in 960ms (1732 modules)
+ GET /dashboard/guests 200 in 204ms
+ ✓ Compiled in 365ms (655 modules)
+ GET /dashboard/guests 200 in 26ms
+ ✓ Compiled in 215ms (655 modules)
+ GET /dashboard/guests 200 in 26ms
+ ✓ Compiled in 306ms (655 modules)
+ GET /dashboard/guests 200 in 27ms
+ ✓ Compiled in 291ms (655 modules)
+ GET /dashboard/guests 200 in 41ms
+ GET /dashboard/guests 200 in 232ms
+ ✓ Compiled /api/user/initialize in 424ms (1100 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 3420ms
+prisma:query COMMIT
+ ✓ Compiled /api/guests in 291ms (1103 modules)
+ GET /dashboard/guests 200 in 78ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/guests 200 in 1096ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/guests 400 in 856ms
+ ✓ Compiled in 843ms (1732 modules)
+ GET /dashboard/guests 200 in 231ms
+ ✓ Compiled in 836ms (1732 modules)
+ GET /dashboard/guests 200 in 91ms
+ ✓ Compiled /api/guests in 309ms (1100 modules)
+ GET /dashboard/guests 200 in 55ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/guests 400 in 1313ms
+ GET /dashboard 200 in 49ms
+ ✓ Compiled /api/user/initialize in 163ms (1102 modules)
+prisma:query SELECT 1
+ GET / 200 in 223ms
+ POST /api/user/initialize 200 in 1665ms
+ POST /api/user/initialize 200 in 1683ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ ✓ Compiled in 727ms (1755 modules)
+ GET / 200 in 160ms
+ ✓ Compiled in 580ms (1755 modules)
+ GET / 200 in 63ms
+ ✓ Compiled in 254ms (655 modules)
+ GET / 200 in 18ms
+ ✓ Compiled in 1638ms (1980 modules)
+ ○ Compiling /api/dashboard/stats ...
+ ✓ Compiled /api/dashboard/stats in 685ms (1111 modules)
+API Error: ApiException: Unauthorized
+    at getAuthContext (src/lib/api/auth.ts:16:10)
+    at async eval (src/lib/api/auth.ts:53:26)
+  14 |   
+  15 |   if (!clerkUserId) {
+> 16 |     throw new UnauthorizedException()
+     |          ^
+  17 |   }
+  18 |
+  19 |   // Get user from database {
+  statusCode: 401,
+  code: 'UNAUTHORIZED',
+  details: undefined
+}
+ GET /api/dashboard/stats 401 in 868ms
+ ✓ Compiled in 897ms (1766 modules)
+ ✓ Compiled in 604ms (1766 modules)
+ ✓ Compiled in 615ms (1766 modules)
+ ✓ Compiled in 730ms (1732 modules)
+ GET /dashboard 200 in 187ms
+ GET /dashboard 200 in 25ms
+ GET /dashboard 200 in 20ms
+ GET /dashboard 200 in 49ms
+ ✓ Compiled /api/user/initialize in 469ms (1100 modules)
+ GET /dashboard 200 in 593ms
+ GET /dashboard 200 in 12ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 2903ms
+ POST /api/user/initialize 200 in 3004ms
+prisma:query COMMIT
+ ✓ Compiled /api/dashboard/stats in 201ms (1113 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 964ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 737ms
+ POST /dashboard 200 in 81ms
+ GET / 200 in 37ms
+ GET / 200 in 13ms
+ ○ Compiling /sign-up/[[...sign-up]] ...
+ ✓ Compiled /sign-up/[[...sign-up]] in 528ms (1761 modules)
+ GET /sign-up 200 in 1223ms
+ ○ Compiling /sign-in/[[...sign-in]] ...
+ ✓ Compiled /sign-in/[[...sign-in]] in 538ms (1732 modules)
+ GET /sign-in 200 in 1237ms
+ POST /sign-in 200 in 97ms
+ GET /dashboard 200 in 27ms
+ ✓ Compiled /api/user/initialize in 247ms (1110 modules)
+ GET /dashboard 200 in 845ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 4019ms
+prisma:query COMMIT
+ ✓ Compiled /api/dashboard/stats in 297ms (1123 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 1081ms
+ ✓ Compiled in 508ms (659 modules)
+ GET /dashboard 200 in 62ms
+ ✓ Compiled in 1565ms (1994 modules)
+ GET /dashboard 200 in 1515ms
+ GET /dashboard 200 in 40ms
+ ✓ Compiled in 138ms (262 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (160kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled in 377ms (659 modules)
+ GET /dashboard 200 in 22ms
+ GET /dashboard 200 in 187ms
+ ✓ Compiled /api/user/initialize in 484ms (1110 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 3885ms
+ ✓ Compiled /api/dashboard/stats in 210ms (1123 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 971ms
+ POST /dashboard 200 in 125ms
+ GET / 200 in 37ms
+ GET / 200 in 20ms
+ GET /sign-in 200 in 42ms
+ POST /sign-in 200 in 27ms
+ GET /dashboard 200 in 15ms
+ GET /dashboard 200 in 26ms
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1716ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 718ms
+ ○ Compiling /dashboard/budget ...
+ ✓ Compiled /dashboard/budget in 1352ms (1874 modules)
+ GET /dashboard/budget 200 in 1185ms
+ GET /dashboard/budget 200 in 1541ms
+ GET /dashboard/budget 200 in 3216ms
+   Reload env: .env
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 5.1s (2125 modules)
+ GET /dashboard/budget 200 in 1147ms
+ GET /dashboard/budget 200 in 4286ms
+   Reload env: .env.local
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 3.8s (2125 modules)
+ GET /dashboard/budget 200 in 527ms
+ GET /dashboard/budget 200 in 2972ms
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (160kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ GET /dashboard 200 in 46ms
+ ✓ Compiled /api/user/initialize in 489ms (1210 modules)
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 3603ms
+ POST /api/user/initialize 200 in 3642ms
+prisma:query COMMIT
+ ✓ Compiled /api/dashboard/stats in 358ms (1223 modules)
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 1137ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 714ms
+ GET /sign-in 200 in 67ms
+ GET /dashboard 200 in 23ms
+prisma:query BEGIN
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ POST /api/user/initialize 200 in 1034ms
+ POST /api/user/initialize 200 in 1107ms
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 769ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 718ms
+ POST /dashboard 200 in 68ms
+ ✓ Compiled / in 439ms (1228 modules)
+ GET / 200 in 547ms
+ GET / 200 in 13ms
+ GET /sign-in 200 in 37ms
+ POST /sign-in 200 in 65ms
+ GET /dashboard 200 in 22ms
+ GET /dashboard 200 in 26ms
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ POST /api/user/initialize 200 in 1289ms
+prisma:query COMMIT
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."users"."id", "public"."users"."clerk_user_id", "public"."users"."email", "public"."users"."first_name", "public"."users"."last_name", "public"."users"."phone", "public"."users"."preferences", "public"."users"."created_at", "public"."users"."updated_at" FROM "public"."users" WHERE ("public"."users"."clerk_user_id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+ GET /api/dashboard/stats 200 in 929ms
+ ✓ Compiled in 249ms (262 modules)
+ ✓ Compiled in 162ms (268 modules)
+ ✓ Compiled in 104ms (262 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (160kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)

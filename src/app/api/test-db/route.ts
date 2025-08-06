@@ -1,67 +1,44 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    console.log('Testing database connection...')
+    // Test basic database connection
+    const result = await prisma.$queryRaw`SELECT version()`
     
-    // Test basic connection
-    const { data: connection, error: connectionError } = await supabase
-      .from('users')
-      .select('id')
-      .limit(1)
-
-    if (connectionError) {
-      console.log('Connection error:', connectionError)
-      return NextResponse.json({
-        success: false,
-        error: 'Database connection failed',
-        details: connectionError.message
-      }, { status: 500 })
-    }
-
-    // Check if vendor_categories table exists
-    const { data: categoriesData, error: categoriesError } = await supabase
-      .from('vendor_categories')
-      .select('id, name')
-      .limit(5)
-
-    // Check if vendors table exists
-    const { data: vendorsData, error: vendorsError } = await supabase
-      .from('vendors')
-      .select('id, name')
-      .limit(5)
-
+    // Check what tables exist
+    const tables = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      ORDER BY table_name
+    `
+    
+    // Check existing users table structure
+    const userColumns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' AND table_schema = 'public'
+      ORDER BY ordinal_position
+    `
+    
+    // Sample existing user data
+    const sampleUser = await prisma.$queryRaw`SELECT * FROM users LIMIT 1`
+    
     return NextResponse.json({
-      success: true,
-      connection: 'OK',
-      tables: {
-        vendor_categories: {
-          exists: !categoriesError,
-          error: categoriesError?.message,
-          sample_data: categoriesData || [],
-          count: categoriesData?.length || 0
-        },
-        vendors: {
-          exists: !vendorsError,
-          error: vendorsError?.message,
-          sample_data: vendorsData || [], 
-          count: vendorsData?.length || 0
-        }
-      },
+      status: 'connected',
+      database: result,
+      tables: tables,
+      userColumns,
+      sampleUser,
       timestamp: new Date().toISOString()
     })
-
   } catch (error) {
     console.error('Database test error:', error)
     return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString()
     }, { status: 500 })
   }
 }

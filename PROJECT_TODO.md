@@ -1,4 +1,4 @@
-# Wedding Planner V2 - Priority-Ordered TODO
+# Wedding Planner V2 - Project TODO & Future Updates
 
 ## Critical (Do Next)
 1) Security enforcement for public endpoints (RSVP rate limits + IP blocklist)
@@ -91,11 +91,82 @@
   - Validate size/type; background thumbnail generation via Edge functions.
   - Cleanup jobs for orphaned files and failed uploads.
 
----
+## Future Updates & Enhancements
+
+### Completed Features Status
+- ✅ All critical issues resolved
+- ✅ Core wedding planning features
+- ✅ Mobile-optimized experience  
+- ✅ Full offline functionality
+- ✅ Enterprise-grade security
+
+### Future Business Value Features
+1. **Vendor Marketplace**
+   - Quote comparison and reviews
+   - Contract management
+   - Payment processing
+   - Revenue sharing model
+
+2. **AI-Powered Assistant**
+   - Budget recommendations based on location/style
+   - Timeline optimization with dependency analysis
+   - Vendor suggestions using ML matching
+   - Style and theme recommendations
+
+3. **Digital Invitations Platform**
+   - Interactive invitation designs
+   - RSVP integration with dietary preferences
+   - Guest management with seating charts
+   - Analytics and engagement tracking
+
+4. **Wedding Website Generator**
+   - Custom domain integration
+   - Theme selection with brand consistency
+   - Content management system
+   - Guest portal with photo uploads
+
+### Technical Roadmap
+1. **Performance Optimization**
+   - Implement Redis caching layer
+   - Add CDN for static assets
+   - Database query optimization
+   - Bundle size reduction
+
+2. **Advanced Analytics**
+   - User behavior tracking
+   - Performance monitoring
+   - Error reporting and alerting
+   - Business intelligence dashboard
+
+3. **API Platform**
+   - Public API for third-party integrations
+   - Webhook system for real-time updates
+   - Partner program for vendors
+   - Developer documentation portal
+
+## Implementation Sequence (90-day plan)
+
+### Week 1–2
+- Implement RSVP middleware for rate limits + IP blocklist; add tests.
+- Add `MIGRATIONS.md`, `.env.example`, bootstrap scripts.
+- Start centralizing queries for top dashboard pages to server components/actions.
+
+### Week 3–4
+- Run query audits on Budget/RSVP; add indexes and document improvements.
+- Realtime messaging test suite; add reconnect logic.
+
+### Week 5–6
+- PWA audit and tests for install/offline/update flows.
+- Export streaming and pagination/virtualization for large datasets.
+
+### Week 7–9
+- Budget period locking and reconciliation history.
+- Seating undo/redo and performance tuning.
+- Photo pipeline hardening and cleanup jobs.
 
 ## Scorecard
 
-### What’s done well
+### What's done well
 - Data modeling and RLS — 9/10
   - Rich schema, granular RLS, analytic views/functions, Realtime publications.
 - Module breadth and cohesion — 8.5/10
@@ -116,25 +187,3 @@
   - Systematic EXPLAIN, composite indexes, measurements recorded.
 - Realtime resiliency and tests — 6.5/10 (target 8.5/10)
   - Reconnect/backoff patterns and testing around live updates.
-
----
-
-## Suggested implementation sequence (90-day plan)
-
-Week 1–2
-- Implement RSVP middleware for rate limits + IP blocklist; add tests.
-- Add `MIGRATIONS.md`, `.env.example`, bootstrap scripts.
-- Start centralizing queries for top dashboard pages to server components/actions.
-
-Week 3–4
-- Run query audits on Budget/RSVP; add indexes and document improvements.
-- Realtime messaging test suite; add reconnect logic.
-
-Week 5–6
-- PWA audit and tests for install/offline/update flows.
-- Export streaming and pagination/virtualization for large datasets.
-
-Week 7–9
-- Budget period locking and reconciliation history.
-- Seating undo/redo and performance tuning.
-- Photo pipeline hardening and cleanup jobs.

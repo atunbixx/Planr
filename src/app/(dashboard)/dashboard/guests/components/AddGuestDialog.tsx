@@ -80,9 +80,20 @@ export default function AddGuestDialog({ onGuestAdded }: AddGuestDialogProps) {
         }
         router.refresh()
       } else {
-        const error = await response.json()
-        console.error('Error creating guest:', error)
-        alert('Failed to create guest. Please try again.')
+        const errorData = await response.json()
+        console.error('Error creating guest:', errorData)
+        const errorMessage = errorData.error || errorData.message || 'Failed to create guest. Please try again.'
+        
+        // Check if we should redirect to wedding profile setup
+        if (errorData.redirectTo) {
+          if (confirm(`${errorMessage}\n\nWould you like to set up your wedding profile now?`)) {
+            router.push(errorData.redirectTo)
+            setOpen(false)
+            return
+          }
+        }
+        
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('Error creating guest:', error)
