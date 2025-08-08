@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { auth } from '@clerk/nextjs/server'
+import { getCurrentUser } from '@/lib/auth/server'
 
 // Use service role key for bypassing RLS
 const supabaseAdmin = createClient(
@@ -10,14 +10,14 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
     console.log('Creating vendor with admin privileges:', body)
-    console.log('User:', userId)
+    console.log('User:', user.id)
 
     // Get user's couple data using admin client
     const { data: userData, error: userError } = await supabaseAdmin
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         id,
         couples (id)
       `)
-      .eq('clerk_user_id', userId)
+      .eq('supabaseUserId', user.id)
       .single()
 
     console.log('User lookup result:', { userData, userError })
@@ -50,10 +50,10 @@ export async function POST(request: NextRequest) {
 
     // Create new vendor using admin client (bypasses RLS)
     const vendorData = {
-      couple_id: coupleId,
+      coupleId: coupleId,
       name: body.name,
-      category_id: body.category_id || null,
-      contact_name: body.contact_name || null,
+      categoryId: body.categoryId || null,
+      contactName: body.contactName || null,
       phone: body.phone || null,
       email: body.email || null,
       address: body.address || null,
@@ -61,11 +61,11 @@ export async function POST(request: NextRequest) {
       status: body.status || 'potential',
       priority: body.priority || 'medium',
       rating: body.rating || null,
-      estimated_cost: body.estimated_cost ? Number(body.estimated_cost) : null,
-      actual_cost: body.actual_cost ? Number(body.actual_cost) : null,
+      estimatedCost: body.estimatedCost ? Number(body.estimatedCost) : null,
+      actualCost: body.actualCost ? Number(body.actualCost) : null,
       notes: body.notes || null,
-      meeting_date: body.meeting_date || null,
-      contract_signed: body.contract_signed || false
+      meetingDate: body.meetingDate || null,
+      contractSigned: body.contractSigned || false
     }
 
     console.log('Inserting vendor data:', vendorData)
@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -123,7 +123,7 @@ export async function GET() {
       .select(`
         couples (id)
       `)
-      .eq('clerk_user_id', userId)
+      .eq('supabaseUserId', user.id)
       .single()
 
     if (!userData?.couples?.[0]) {
@@ -144,8 +144,8 @@ export async function GET() {
           color
         )
       `)
-      .eq('couple_id', coupleId)
-      .order('created_at', { ascending: false })
+      .eq('coupleId', coupleId)
+      .order('createdAt', { ascending: false })
 
     if (error) {
       return NextResponse.json({
@@ -164,9 +164,9 @@ export async function GET() {
           total_vendors: vendors?.length || 0,
           booked_vendors: vendors?.filter(v => v.status === 'booked').length || 0,
           pending_vendors: vendors?.filter(v => ['potential', 'contacted', 'quote_requested', 'in_discussion'].includes(v.status)).length || 0,
-          total_estimated_cost: vendors?.reduce((sum, v) => sum + (v.estimated_cost || 0), 0) || 0,
-          total_actual_cost: vendors?.reduce((sum, v) => sum + (v.actual_cost || 0), 0) || 0,
-          contracts_signed: vendors?.filter(v => v.contract_signed).length || 0
+          total_estimated_cost: vendors?.reduce((sum, v) => sum + (v.estimatedCost || 0), 0) || 0,
+          total_actual_cost: vendors?.reduce((sum, v) => sum + (v.actualCost || 0), 0) || 0,
+          contracts_signed: vendors?.filter(v => v.contractSigned).length || 0
         }
       }
     })

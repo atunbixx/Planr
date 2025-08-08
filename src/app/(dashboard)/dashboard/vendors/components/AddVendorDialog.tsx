@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, X } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { useSupabaseAuth } from '@/lib/auth/client';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -25,39 +25,40 @@ interface Category {
 
 interface AddVendorDialogProps {
   categories: Category[];
+  children?: React.ReactNode;
 }
 
 interface VendorFormData {
   name: string;
-  contact_name: string;
+  contactName: string;
   phone: string;
   email: string;
   website: string;
   address: string;
-  category_id: string;
+  categoryId: string;
   status: string;
   priority: string;
-  estimated_cost: string;
+  estimatedCost: string;
   notes: string;
 }
 
-export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
+export default function AddVendorDialog({ categories, children }: AddVendorDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser();
+  const { user, isSignedIn } = useSupabaseAuth();
 
   const [formData, setFormData] = useState<VendorFormData>({
     name: '',
-    contact_name: '',
+    contactName: '',
     phone: '',
     email: '',
     website: '',
     address: '',
-    category_id: '',
+    categoryId: '',
     status: 'potential',
     priority: 'medium',
-    estimated_cost: '',
+    estimatedCost: '',
     notes: ''
   });
 
@@ -71,15 +72,15 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
   const resetForm = () => {
     setFormData({
       name: '',
-      contact_name: '',
+      contactName: '',
       phone: '',
       email: '',
       website: '',
       address: '',
-      category_id: '',
+      categoryId: '',
       status: 'potential',
       priority: 'medium',
-      estimated_cost: '',
+      estimatedCost: '',
       notes: ''
     });
     setError(null);
@@ -87,7 +88,7 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id) {
+    if (!isSignedIn || !user) {
       setError('You must be logged in to add vendors');
       return;
     }
@@ -96,37 +97,32 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
     setError(null);
     
     try {
-      // Use the API endpoint instead of direct Supabase calls
-      const response = await fetch('/api/vendors-service', {
+      // Use the API endpoint
+      const response = await fetch('/api/vendors', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name.trim(),
-          contact_name: formData.contact_name.trim() || null,
+          businessName: formData.name.trim(),
+          contactName: formData.contactName.trim() || null,
           phone: formData.phone.trim() || null,
           email: formData.email.trim() || null,
           website: formData.website.trim() || null,
-          address: formData.address.trim() || null,
-          category_id: formData.category_id || null,
+          category: formData.categoryId || 'Other',
           status: formData.status,
-          priority: formData.priority,
-          estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null,
-          notes: formData.notes.trim() || null
+          estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
+          notes: formData.notes.trim() || null,
+          contractSigned: false
         })
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        if (result.redirect) {
-          // User needs to complete onboarding
-          window.location.href = result.redirect;
-          return;
-        }
-        throw new Error(result.error || result.details || 'Failed to create vendor');
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to create vendor');
       }
+      
+      const result = await response.json();
 
       // Success - close dialog and reset form
       setIsOpen(false);
@@ -150,10 +146,14 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
 
   if (!isOpen) {
     return (
-      <Button onClick={() => setIsOpen(true)}>
-        <Plus className="h-4 w-4 mr-2" />
-        Add Vendor
-      </Button>
+      <div onClick={() => setIsOpen(true)}>
+        {children || (
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Vendor
+          </Button>
+        )}
+      </div>
     );
   }
 
@@ -198,11 +198,11 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="contact_name">Contact Name</Label>
+                <Label htmlFor="contactName">Contact Name</Label>
                 <Input 
-                  id="contact_name" 
-                  value={formData.contact_name}
-                  onChange={(e) => handleInputChange('contact_name', e.target.value)}
+                  id="contactName" 
+                  value={formData.contactName}
+                  onChange={(e) => handleInputChange('contactName', e.target.value)}
                   placeholder="e.g., Sarah Johnson"
                 />
               </div>
@@ -256,16 +256,23 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
+                <Select value={formData.categoryId} onValueChange={(value) => handleInputChange('categoryId', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.icon} {category.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="Venue">🏛️ Venue</SelectItem>
+                    <SelectItem value="Catering">🍽️ Catering</SelectItem>
+                    <SelectItem value="Photography">📸 Photography</SelectItem>
+                    <SelectItem value="Videography">🎥 Videography</SelectItem>
+                    <SelectItem value="Music/DJ">🎵 Music/DJ</SelectItem>
+                    <SelectItem value="Flowers">💐 Flowers</SelectItem>
+                    <SelectItem value="Transportation">🚗 Transportation</SelectItem>
+                    <SelectItem value="Wedding Cake">🎂 Wedding Cake</SelectItem>
+                    <SelectItem value="Hair & Makeup">💄 Hair & Makeup</SelectItem>
+                    <SelectItem value="Officiant">👨‍💼 Officiant</SelectItem>
+                    <SelectItem value="Decorations">🎀 Decorations</SelectItem>
+                    <SelectItem value="Other">📝 Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -306,14 +313,14 @@ export default function AddVendorDialog({ categories }: AddVendorDialogProps) {
 
             {/* Estimated Cost */}
             <div>
-              <Label htmlFor="estimated_cost">Estimated Cost</Label>
+              <Label htmlFor="estimatedCost">Estimated Cost</Label>
               <Input 
-                id="estimated_cost" 
+                id="estimatedCost" 
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.estimated_cost}
-                onChange={(e) => handleInputChange('estimated_cost', e.target.value)}
+                value={formData.estimatedCost}
+                onChange={(e) => handleInputChange('estimatedCost', e.target.value)}
                 placeholder="e.g., 2500.00"
               />
             </div>

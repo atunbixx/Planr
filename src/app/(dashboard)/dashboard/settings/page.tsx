@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useSupabaseAuth } from '@/lib/auth/client'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,9 +10,11 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import NotificationSettings from '@/components/pwa/NotificationSettings'
+import Link from 'next/link'
+import { Users, ArrowRight } from 'lucide-react'
 
 interface CoupleSettings {
-  partnerName: string
+  partner1Name: string
   weddingDate: string
   venue: string
   location: string
@@ -32,9 +35,10 @@ interface UserPreferences {
 }
 
 export default function SettingsPage() {
-  const { user, isLoaded } = useUser()
+  const { user, isSignedIn, isLoading } = useSupabaseAuth()
+  const t = useTranslations()
   const [coupleSettings, setCoupleSettings] = useState<CoupleSettings>({
-    partnerName: '',
+    partner1Name: '',
     weddingDate: '',
     venue: '',
     location: '',
@@ -57,10 +61,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (isLoaded && user) {
+    if (!isLoading && isSignedIn && user) {
       loadSettings()
     }
-  }, [isLoaded, user])
+  }, [isLoading, isSignedIn, user])
 
   const loadSettings = async () => {
     try {
@@ -75,7 +79,7 @@ export default function SettingsPage() {
         const weddingData = await weddingResponse.json()
         if (weddingData.couple) {
           setCoupleSettings({
-            partnerName: weddingData.couple.partnerName || '',
+            partner1Name: weddingData.couple.partner1Name || '',
             weddingDate: weddingData.couple.weddingDate ? new Date(weddingData.couple.weddingDate).toISOString().split('T')[0] : '',
             venue: weddingData.couple.venue || '',
             location: weddingData.couple.location || '',
@@ -111,13 +115,13 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
-        alert('Wedding details saved successfully!')
+        alert(t('success.saved'))
       } else {
-        alert('Failed to save wedding details. Please try again.')
+        alert(t('errors.generic'))
       }
     } catch (error) {
       console.error('Error saving wedding details:', error)
-      alert('Failed to save wedding details. Please try again.')
+      alert(t('errors.generic'))
     } finally {
       setLoading(false)
     }
@@ -195,10 +199,10 @@ export default function SettingsPage() {
     }
   }
 
-  if (!isLoaded) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading settings...</div>
+        <div className="text-center">{t('common.loading')}</div>
       </div>
     )
   }
@@ -206,7 +210,7 @@ export default function SettingsPage() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Please sign in to access settings</div>
+        <div className="text-center">{t('auth.signIn')}</div>
       </div>
     )
   }
@@ -214,25 +218,25 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your account and wedding preferences</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('settings.title')}</h1>
+        <p className="text-gray-600 mt-2">{t('settings.description')}</p>
       </div>
 
       {/* Wedding Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Wedding Details</CardTitle>
-          <CardDescription>Basic information about your wedding</CardDescription>
+          <CardTitle>{t('settings.sections.weddingDetails')}</CardTitle>
+          <CardDescription>{t('settings.wedding.basicInfo')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="partner-name">Partner&apos;s Name</Label>
+              <Label htmlFor="partner-name">{t('settings.wedding.partner1Name')}</Label>
               <Input 
                 id="partner-name" 
-                placeholder="Enter partner's name"
-                value={coupleSettings.partnerName}
-                onChange={(e) => setCoupleSettings({...coupleSettings, partnerName: e.target.value})}
+                placeholder={t('settings.wedding.partner1Name')}
+                value={coupleSettings.partner1Name}
+                onChange={(e) => setCoupleSettings({...coupleSettings, partner1Name: e.target.value})}
               />
             </div>
             <div className="space-y-2">
@@ -300,8 +304,32 @@ export default function SettingsPage() {
           </div>
           
           <Button onClick={saveWeddingDetails} disabled={loading}>
-            {loading ? 'Saving...' : 'Save Wedding Details'}
+            {loading ? t('common.loading') : t('common.save')}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Sharing & Collaboration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.sections.sharingCollaboration')}</CardTitle>
+          <CardDescription>{t('settings.sharing.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/dashboard/settings/sharing">
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Manage Collaborators</h3>
+                  <p className="text-sm text-muted-foreground">Invite planners, family members, or vendors</p>
+                </div>
+              </div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </Link>
         </CardContent>
       </Card>
 
@@ -438,11 +466,11 @@ export default function SettingsPage() {
             <Input 
               id="display-name" 
               placeholder="Enter your display name"
-              value={user?.fullName || ''}
+              value={user?.email || ''}
               disabled
             />
             <p className="text-sm text-muted-foreground">
-              Display name is managed through your Clerk account
+              Display name is managed through your account
             </p>
           </div>
           
@@ -450,11 +478,11 @@ export default function SettingsPage() {
             <Label htmlFor="email">Email Address</Label>
             <Input 
               id="email" 
-              value={user?.emailAddresses[0]?.emailAddress || ''}
+              value={user?.email || ''}
               disabled
             />
             <p className="text-sm text-muted-foreground">
-              Email address is managed through your Clerk account
+              Email address is managed through your account
             </p>
           </div>
           
@@ -489,10 +517,15 @@ export default function SettingsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">English</SelectItem>
-                <SelectItem value="es">Spanish</SelectItem>
-                <SelectItem value="fr">French</SelectItem>
-                <SelectItem value="de">German</SelectItem>
-                <SelectItem value="it">Italian</SelectItem>
+                <SelectItem value="es">Español (Spanish)</SelectItem>
+                <SelectItem value="fr">Français (French)</SelectItem>
+                <SelectItem value="de">Deutsch (German)</SelectItem>
+                <SelectItem value="it">Italiano (Italian)</SelectItem>
+                <SelectItem value="pt">Português (Portuguese)</SelectItem>
+                <SelectItem value="ja">日本語 (Japanese)</SelectItem>
+                <SelectItem value="zh">中文 (Chinese)</SelectItem>
+                <SelectItem value="ar">العربية (Arabic)</SelectItem>
+                <SelectItem value="hi">हिन्दी (Hindi)</SelectItem>
               </SelectContent>
             </Select>
           </div>
