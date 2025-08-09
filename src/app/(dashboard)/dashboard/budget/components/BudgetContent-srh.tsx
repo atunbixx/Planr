@@ -54,7 +54,7 @@ export default function BudgetContent({ budgetData, categories, expenses, locale
     return (
       <div className="px-8 py-12">
         <div className="text-center py-16">
-          <h3 className="text-2xl font-light tracking-wide text-gray-900 uppercase mb-4">Setup Budget</h3>
+          <h3 data-testid="budget-setup-title" className="text-2xl font-light tracking-wide text-gray-900 uppercase mb-4">Setup Budget</h3>
           <p className="text-lg font-light text-gray-600 mb-8">
             Complete your wedding planning setup to start tracking expenses
           </p>
@@ -79,7 +79,7 @@ export default function BudgetContent({ budgetData, categories, expenses, locale
     <div className="px-8 py-12">
       {/* Header */}
       <div className="mb-12">
-        <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Budget</h1>
+        <h1 data-testid="budget-main-title" className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Budget</h1>
         <p className="text-lg font-light text-gray-600">Track expenses and manage your wedding budget</p>
       </div>
 
@@ -88,7 +88,7 @@ export default function BudgetContent({ budgetData, categories, expenses, locale
         <div className="bg-white p-8 rounded-sm shadow-sm">
           <div className="text-center">
             <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-2">Total Budget</p>
-            <p className="text-3xl font-light text-gray-900">
+            <p data-testid="total-budget" className="text-3xl font-light text-gray-900">
               {formatCurrency(budgetData.totalBudget, 'USD', locale)}
             </p>
           </div>
@@ -97,7 +97,7 @@ export default function BudgetContent({ budgetData, categories, expenses, locale
         <div className="bg-white p-8 rounded-sm shadow-sm">
           <div className="text-center">
             <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-2">Spent</p>
-            <p className="text-3xl font-light text-gray-900">
+            <p data-testid="spent-amount" className="text-3xl font-light text-gray-900">
               {formatCurrency(budgetData.totalSpent, 'USD', locale)}
             </p>
             <p className="text-xs font-light text-gray-500 mt-2">

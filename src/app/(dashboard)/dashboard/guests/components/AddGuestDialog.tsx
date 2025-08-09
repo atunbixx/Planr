@@ -13,6 +13,7 @@ interface AddGuestDialogProps {
 
 export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuestDialogProps) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -42,6 +43,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
     try {
       const response = await fetch('/api/guests', {
@@ -63,30 +65,40 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
       })
 
       if (!response.ok) {
-        throw new Error('Failed to add guest')
+        const errorData = await response.json().catch(() => ({ error: 'Failed to add guest' }))
+        throw new Error(errorData.error || 'Failed to add guest')
       }
 
-      onGuestAdded?.()
-      onClose()
-      
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        address: '',
-        relationship: '',
-        side: 'both',
-        plusOneAllowed: false,
-        plusOneName: '',
-        dietaryRestrictions: '',
-        notes: '',
-        rsvpDeadline: ''
-      })
+      // Wait for the response to be fully processed
+      const data = await response.json()
+      console.log('Guest created successfully:', data)
+
+      // Only proceed if successful
+      if (data.success) {
+        onGuestAdded?.()
+        onClose()
+        
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          address: '',
+          relationship: '',
+          side: 'both',
+          plusOneAllowed: false,
+          plusOneName: '',
+          dietaryRestrictions: '',
+          notes: '',
+          rsvpDeadline: ''
+        })
+      } else {
+        throw new Error(data.error || 'Failed to create guest')
+      }
     } catch (error) {
       console.error('Error adding guest:', error)
-      alert('Failed to add guest. Please try again.')
+      setError(error instanceof Error ? error.message : 'Failed to add guest. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -94,14 +106,15 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white rounded-sm shadow-xl p-0 overflow-hidden">
-        <div className="p-8 border-b border-gray-100">
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-white rounded-sm shadow-xl p-0 overflow-hidden flex flex-col">
+        <div className="p-8 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-light tracking-wide text-gray-900 uppercase">Add Guest</h2>
+              <h2 data-testid="add-guest-dialog" className="text-2xl font-light tracking-wide text-gray-900 uppercase">Add Guest</h2>
               <p className="text-sm font-light text-gray-600 mt-1">Enter guest information below</p>
             </div>
             <button
+              data-testid="close-button"
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-sm transition-colors"
             >
@@ -110,14 +123,21 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} id="guest-form" className="flex-1 flex flex-col">
+          <div className="flex-1 overflow-y-auto p-8">
+            {error && (
+              <div data-testid="error-message" className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-sm text-sm">
+                {error}
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Name Fields */}
             <div>
               <label className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-2 block">
                 First Name *
               </label>
               <input
+                data-testid="first-name-input"
                 type="text"
                 required
                 value={formData.firstName}
@@ -131,6 +151,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
                 Last Name *
               </label>
               <input
+                data-testid="last-name-input"
                 type="text"
                 required
                 value={formData.lastName}
@@ -145,6 +166,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
                 Email
               </label>
               <input
+                data-testid="email-input"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -157,6 +179,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
                 Phone
               </label>
               <input
+                data-testid="phone-input"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -170,6 +193,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
                 Relationship
               </label>
               <select
+                data-testid="relationship-select"
                 value={formData.relationship}
                 onChange={(e) => setFormData({ ...formData, relationship: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-200 rounded-sm text-sm font-light focus:outline-none focus:border-gray-400"
@@ -186,6 +210,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
                 Side *
               </label>
               <select
+                data-testid="side-select"
                 required
                 value={formData.side}
                 onChange={(e) => setFormData({ ...formData, side: e.target.value })}
@@ -265,26 +290,31 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
                 placeholder="Any additional notes about this guest"
               />
             </div>
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 mt-8 pt-8 border-t border-gray-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-              className="border-gray-300 text-gray-600 hover:bg-gray-50 rounded-sm px-6 py-2 text-sm font-light tracking-wider uppercase"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-6 py-2 text-sm font-light tracking-wider uppercase"
-            >
-              {loading ? 'Adding...' : 'Add Guest'}
-            </Button>
+          {/* Actions - Fixed Footer inside form */}
+          <div className="p-8 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+            <div className="flex justify-end gap-3">
+              <Button
+                data-testid="cancel-button"
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="border-gray-300 text-gray-600 hover:bg-gray-50 rounded-sm px-6 py-2 text-sm font-light tracking-wider uppercase"
+              >
+                Cancel
+              </Button>
+              <Button
+                data-testid="submit-guest"
+                type="submit"
+                disabled={loading}
+                className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-6 py-2 text-sm font-light tracking-wider uppercase"
+              >
+                {loading ? 'Adding...' : 'Add Guest'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

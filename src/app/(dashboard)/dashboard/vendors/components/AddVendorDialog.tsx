@@ -26,6 +26,7 @@ interface Category {
 interface AddVendorDialogProps {
   categories: Category[];
   children?: React.ReactNode;
+  onVendorAdded?: () => void;
 }
 
 interface VendorFormData {
@@ -42,7 +43,7 @@ interface VendorFormData {
   notes: string;
 }
 
-export default function AddVendorDialog({ categories, children }: AddVendorDialogProps) {
+export default function AddVendorDialog({ categories, children, onVendorAdded }: AddVendorDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,12 +105,12 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          businessName: formData.name.trim(),
+          name: formData.name.trim(),
           contactName: formData.contactName.trim() || null,
           phone: formData.phone.trim() || null,
           email: formData.email.trim() || null,
           website: formData.website.trim() || null,
-          category: formData.categoryId || 'Other',
+          categoryId: formData.categoryId || null,
           status: formData.status,
           estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
           notes: formData.notes.trim() || null,
@@ -123,13 +124,19 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
       }
       
       const result = await response.json();
+      console.log('Vendor created successfully:', result);
 
-      // Success - close dialog and reset form
-      setIsOpen(false);
-      resetForm();
-      
-      // Refresh the page to show the new vendor
-      window.location.reload();
+      // Only proceed if successful
+      if (result.success) {
+        // Success - close dialog and reset form
+        setIsOpen(false);
+        resetForm();
+        
+        // Call callback to refresh vendor list
+        onVendorAdded?.();
+      } else {
+        throw new Error(result.error || 'Failed to create vendor');
+      }
 
     } catch (error: any) {
       console.error('Error creating vendor:', error);
@@ -163,10 +170,11 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Add New Vendor</CardTitle>
+              <CardTitle data-testid="add-vendor-dialog">Add New Vendor</CardTitle>
               <CardDescription>Add a wedding service provider to your list</CardDescription>
             </div>
             <Button
+              data-testid="close-button"
               variant="ghost"
               size="sm"
               onClick={handleClose}
@@ -178,7 +186,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div data-testid="error-message" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                 {error}
               </div>
             )}
@@ -187,6 +195,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
             <div>
               <Label htmlFor="name">Business Name *</Label>
               <Input 
+                data-testid="business-name-input"
                 id="name" 
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
@@ -200,6 +209,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
               <div>
                 <Label htmlFor="contactName">Contact Name</Label>
                 <Input 
+                  data-testid="contact-name-input"
                   id="contactName" 
                   value={formData.contactName}
                   onChange={(e) => handleInputChange('contactName', e.target.value)}
@@ -209,6 +219,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
               <div>
                 <Label htmlFor="phone">Phone</Label>
                 <Input 
+                  data-testid="phone-input"
                   id="phone" 
                   type="tel"
                   value={formData.phone}
@@ -222,6 +233,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input 
+                  data-testid="email-input"
                   id="email" 
                   type="email"
                   value={formData.email}
@@ -257,7 +269,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Select value={formData.categoryId} onValueChange={(value) => handleInputChange('categoryId', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="category-select">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -340,6 +352,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
             {/* Form Actions */}
             <div className="flex justify-end space-x-2 pt-4">
               <Button
+                data-testid="cancel-button"
                 type="button"
                 variant="outline"
                 onClick={handleClose}
@@ -347,7 +360,7 @@ export default function AddVendorDialog({ categories, children }: AddVendorDialo
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading || !formData.name.trim()}>
+              <Button data-testid="submit-vendor" type="submit" disabled={isLoading || !formData.name.trim()}>
                 {isLoading ? 'Adding...' : 'Add Vendor'}
               </Button>
             </div>

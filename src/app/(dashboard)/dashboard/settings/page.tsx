@@ -81,8 +81,8 @@ export default function SettingsPage() {
           setCoupleSettings({
             partner1Name: weddingData.couple.partner1Name || '',
             weddingDate: weddingData.couple.weddingDate ? new Date(weddingData.couple.weddingDate).toISOString().split('T')[0] : '',
-            venue: weddingData.couple.venue || '',
-            location: weddingData.couple.location || '',
+            venue: weddingData.couple.venueName || '',
+            location: weddingData.couple.venueLocation || '',
             expectedGuests: weddingData.couple.expectedGuests || 0,
             totalBudget: weddingData.couple.totalBudget || 0,
             weddingStyle: weddingData.couple.weddingStyle || ''
@@ -218,7 +218,7 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">{t('settings.title')}</h1>
+        <h1 data-testid="settings-page-title" className="text-3xl font-bold text-gray-900">{t('settings.title')}</h1>
         <p className="text-gray-600 mt-2">{t('settings.description')}</p>
       </div>
 
@@ -365,6 +365,7 @@ export default function SettingsPage() {
                   <SelectItem value="USD">USD ($)</SelectItem>
                   <SelectItem value="EUR">EUR (€)</SelectItem>
                   <SelectItem value="GBP">GBP (£)</SelectItem>
+                  <SelectItem value="NGN">NGN (₦)</SelectItem>
                   <SelectItem value="CAD">CAD ($)</SelectItem>
                 </SelectContent>
               </Select>

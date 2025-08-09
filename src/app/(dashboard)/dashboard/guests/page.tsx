@@ -134,14 +134,14 @@ export default function GuestsPage() {
     <div className="px-8 py-12">
       {/* Header */}
       <div className="mb-12">
-        <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
+        <h1 data-testid="guests-page-title" className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
         <p className="text-lg font-light text-gray-600">Manage your wedding guest list and RSVPs</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-gray-900">{stats.total}</p>
+          <p data-testid="total-guests" className="text-3xl font-light text-gray-900">{stats.total}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Total Guests</p>
         </div>
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
@@ -180,6 +180,7 @@ export default function GuestsPage() {
             
             {/* Filters */}
             <select
+              data-testid="filter-status-select"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2 border border-gray-200 rounded-sm text-sm font-light focus:outline-none focus:border-gray-400"
@@ -191,6 +192,7 @@ export default function GuestsPage() {
             </select>
             
             <select
+              data-testid="filter-side-select"
               value={filterSide}
               onChange={(e) => setFilterSide(e.target.value)}
               className="px-4 py-2 border border-gray-200 rounded-sm text-sm font-light focus:outline-none focus:border-gray-400"
@@ -218,8 +220,9 @@ export default function GuestsPage() {
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
-            <PermissionGate requiredPermissions={['guests.create']}>
+            <PermissionGate permissions="manage_guests" fallback={null}>
               <Button
+                data-testid="add-guest-button"
                 onClick={() => setIsAddingGuest(true)}
                 className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light"
               >
@@ -247,7 +250,7 @@ export default function GuestsPage() {
           <tbody>
             {filteredGuests.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-gray-500 font-light">
+                <td colSpan={6} className="text-center py-12 text-gray-500 font-light" data-testid="empty-guests">
                   {searchTerm || filterStatus !== 'all' || filterSide !== 'all' 
                     ? 'No guests match your search criteria' 
                     : 'No guests added yet'}
@@ -255,7 +258,7 @@ export default function GuestsPage() {
               </tr>
             ) : (
               filteredGuests.map((guest) => (
-                <tr key={guest.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                <tr key={guest.id} data-testid="guest-item" className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="p-6">
                     <div>
                       <p className="font-light text-gray-900">{guest.name}</p>
