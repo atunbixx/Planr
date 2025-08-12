@@ -19,16 +19,16 @@ export default function Step4PlanningBudget({ formData, updateFormData, onPrevio
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="guest_count_estimate" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="guestCountEstimate" className="block text-sm font-medium text-gray-700 mb-2">
           Estimated Guest Count
         </label>
         <input
-          id="guest_count_estimate"
+          id="guestCountEstimate"
           type="number"
           placeholder="100"
           min="1"
-          value={formData.guest_count_estimate || ''}
-          onChange={(e) => updateFormData({ guest_count_estimate: parseInt(e.target.value) || undefined })}
+          value={formData.guestCountEstimate || ''}
+          onChange={(e) => updateFormData({ guestCountEstimate: parseInt(e.target.value) || undefined })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-colors"
         />
         <p className="mt-1 text-sm text-gray-500">
@@ -37,17 +37,17 @@ export default function Step4PlanningBudget({ formData, updateFormData, onPrevio
       </div>
 
       <div>
-        <label htmlFor="budget_total" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="totalBudget" className="block text-sm font-medium text-gray-700 mb-2">
           Total Budget ($)
         </label>
         <input
-          id="budget_total"
+          id="totalBudget"
           type="number"
           placeholder="50,000"
           min="0"
           step="100"
-          value={formData.budget_total || ''}
-          onChange={(e) => updateFormData({ budget_total: parseFloat(e.target.value) || undefined })}
+          value={formData.totalBudget || ''}
+          onChange={(e) => updateFormData({ totalBudget: parseFloat(e.target.value) || undefined })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-colors"
         />
         <p className="mt-1 text-sm text-gray-500">

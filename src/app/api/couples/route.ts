@@ -1,149 +1,186 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { prisma } from '../../../lib/prisma'
+import { getUser } from '@/lib/auth/server'
 
 export async function POST(request: NextRequest) {
+  console.log('=== POST /api/couples - Request received ===')
+  console.log('Headers:', Object.fromEntries(request.headers.entries()))
+  
   try {
+    console.log('Step 1: Getting authenticated user from Supabase...')
+    
+    // Get the authenticated user from Supabase
+    const supabaseUser = await getUser()
+    console.log('Supabase user ID:', supabaseUser?.id)
+    
+    if (!supabaseUser) {
+      console.error('No authenticated user found')
+      return NextResponse.json(
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     console.log('Received onboarding data:', JSON.stringify(body, null, 2))
     
     const {
-      clerk_user_id,
-      email,
-      partner1_name,
-      partner2_name,
-      wedding_style,
-      wedding_date,
-      venue_name,
-      venue_location,
-      guest_count_estimate,
-      budget_total,
-      onboarding_completed = true
+      partner1Name,
+      partner2Name,
+      weddingStyle,
+      weddingDate,
+      venueName,
+      venueLocation,
+      guestCountEstimate,
+      totalBudget,
+      email
     } = body
+    
+    // Log data types for debugging
+    console.log('Data types:', {
+      partner1Name: typeof partner1Name,
+      partner2Name: typeof partner2Name,
+      weddingStyle: typeof weddingStyle,
+      weddingDate: typeof weddingDate,
+      venueName: typeof venueName,
+      venueLocation: typeof venueLocation,
+      guestCountEstimate: typeof guestCountEstimate,
+      totalBudget: typeof totalBudget,
+      email: typeof email
+    })
 
     // Validate required fields
-    if (!clerk_user_id || !partner1_name) {
+    if (!partner1Name) {
       return NextResponse.json(
-        { error: 'Missing required fields: clerk_user_id and partner1_name' },
+        { error: 'Missing required field: partner1Name' },
         { status: 400 }
       )
     }
 
     // First, ensure user exists in users table
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_user_id', clerk_user_id)
-      .single()
-
-    let userId: string
-
-    if (existingUser) {
-      userId = existingUser.id
-      // Update existing user
-      await supabase
-        .from('users')
-        .update({
-          email: email || undefined,
-          first_name: partner1_name.split(' ')[0],
-          last_name: partner1_name.split(' ').slice(1).join(' ') || undefined,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-    } else {
-      // Create new user
-      const { data: newUser, error: createError } = await supabase
-        .from('users')
-        .insert({
-          clerk_user_id,
-          email: email || `${clerk_user_id}@placeholder.com`,
-          first_name: partner1_name.split(' ')[0],
-          last_name: partner1_name.split(' ').slice(1).join(' ') || undefined,
-        })
-        .select('id')
-        .single()
-
-      if (createError || !newUser) {
-        console.error('Error creating user:', createError)
-        return NextResponse.json(
-          { error: 'Failed to create user', details: createError?.message },
-          { status: 500 }
-        )
-      }
-      userId = newUser.id
+    let user
+    try {
+      user = await prisma.user.findUnique({
+        where: { supabase_user_id: supabaseUser.id }
+      })
+      console.log('Found existing user:', user?.id)
+    } catch (dbError) {
+      console.error('Database error finding user:', dbError)
+      throw new Error('Failed to check user existence')
     }
 
-    console.log('User processed successfully:', userId)
+    if (!user) {
+      // Create new user
+      try {
+        user = await prisma.user.create({
+          data: {
+            supabase_user_id: supabaseUser.id,
+            email: email || supabaseUser.email || `${supabaseUser.id}@placeholder.com`,
+            firstName: partner1Name.split(' ')[0],
+            lastName: partner1Name.split(' ').slice(1).join(' ') || null,
+          }
+        })
+        console.log('Created new user:', user.id)
+      } catch (createError) {
+        console.error('Error creating user:', createError)
+        throw new Error('Failed to create user record')
+      }
+    } else {
+      // Update existing user
+      try {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            email: email || user.email,
+            firstName: partner1Name.split(' ')[0],
+            lastName: partner1Name.split(' ').slice(1).join(' ') || user.lastName,
+          }
+        })
+        console.log('Updated existing user:', user.id)
+      } catch (updateError) {
+        console.error('Error updating user:', updateError)
+        throw new Error('Failed to update user record')
+      }
+    }
 
     // Check if couple record exists
-    const { data: existingCouple } = await supabase
-      .from('couples')
-      .select('id')
-      .eq('user_id', userId)
-      .single()
+    let couple = await prisma.couple.findFirst({
+      where: { userId: user.id }
+    })
 
-    const coupleData = {
-      user_id: userId,
-      partner1_name,
-      partner2_name: partner2_name || null,
-      wedding_style: wedding_style || null,
-      wedding_date: wedding_date || null,
-      venue_name: venue_name || null,
-      venue_location: venue_location || null,
-      guest_count_estimate: guest_count_estimate || null,
-      budget_total: budget_total || null,
-      onboarding_completed,
-      updated_at: new Date().toISOString()
+    const coupleData: any = {
+      userId: user.id,
+      partner1Name: partner1Name,
+      partner2Name: partner2Name || '',
+      weddingDate: weddingDate ? new Date(weddingDate) : null,
+      venueName: venueName || '',
+      venueLocation: venueLocation || '',
+      guestCountEstimate: parseInt(guestCountEstimate) || 100,
+      weddingStyle: weddingStyle || 'traditional',
+      onboardingCompleted: true
+    }
+    
+    // Only include totalBudget if it's provided
+    if (totalBudget !== undefined && totalBudget !== null && totalBudget !== '') {
+      coupleData.totalBudget = parseFloat(totalBudget)
     }
 
-    let coupleResult
-    if (existingCouple) {
+    if (couple) {
       // Update existing couple
-      const { data, error } = await supabase
-        .from('couples')
-        .update(coupleData)
-        .eq('id', existingCouple.id)
-        .select()
-
-      if (error) {
-        console.error('Error updating couple:', error)
-        return NextResponse.json(
-          { error: 'Failed to update couple profile', details: error.message },
-          { status: 500 }
-        )
-      }
-      coupleResult = data
+      couple = await prisma.couple.update({
+        where: { id: couple.id },
+        data: coupleData
+      })
+      console.log('Updated existing couple profile')
     } else {
       // Create new couple
-      const { data, error } = await supabase
-        .from('couples')
-        .insert(coupleData)
-        .select()
-
-      if (error) {
-        console.error('Error creating couple:', error)
-        return NextResponse.json(
-          { error: 'Failed to create couple profile', details: error.message },
-          { status: 500 }
-        )
-      }
-      coupleResult = data
+      couple = await prisma.couple.create({
+        data: coupleData
+      })
+      console.log('Created new couple profile')
     }
 
-    console.log('Couple profile created/updated successfully')
-
-    return NextResponse.json({
+    // Set cookie to indicate onboarding is complete
+    const response = NextResponse.json({
       success: true,
       message: 'Couple profile created successfully',
-      data: coupleResult
+      data: couple
     })
+
+    // Set cookie for 30 days
+    console.log('Setting onboardingCompleted cookie...')
+    response.cookies.set('onboardingCompleted', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/' // Ensure cookie is available site-wide
+    })
+    
+    console.log('Cookie should be set. Response headers:', response.headers)
+
+    return response
 
   } catch (error) {
     console.error('API Error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    
+    // More specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('unique constraint')) {
+        return NextResponse.json(
+          { error: 'A couple profile already exists for this user' },
+          { status: 409 }
+        )
+      }
+      if (error.message.includes('foreign key constraint')) {
+        return NextResponse.json(
+          { error: 'Invalid user reference' },
+          { status: 400 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -153,41 +190,38 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const clerk_user_id = searchParams.get('clerk_user_id')
-
-    if (!clerk_user_id) {
+    const supabaseUser = await getUser()
+    
+    if (!supabaseUser) {
       return NextResponse.json(
-        { error: 'clerk_user_id is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
     // Get user and their couple data
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select(`
-        id,
-        clerk_user_id,
-        email,
-        first_name,
-        last_name,
-        couples (*)
-      `)
-      .eq('clerk_user_id', clerk_user_id)
-      .single()
+    const user = await prisma.user.findUnique({
+      where: { supabase_user_id: supabaseUser.id }
+    })
 
-    if (userError) {
-      console.error('Error fetching user data:', userError)
+    if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       )
     }
 
+    // Get couple data separately
+    const couple = await prisma.couple.findFirst({
+      where: { userId: user.id }
+    })
+
     return NextResponse.json({
       success: true,
-      data: userData
+      data: {
+        user,
+        couple
+      }
     })
   } catch (error) {
     console.error('API Error:', error)

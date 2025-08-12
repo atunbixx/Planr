@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { api } from '@/lib/api/client'
 
 interface Category {
   id: string
@@ -33,11 +34,11 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    category_id: '',
-    vendor_id: '',
+    categoryId: '',
+    vendorId: '',
     expense_date: new Date().toISOString().split('T')[0],
-    payment_method: 'other',
-    receipt_url: '',
+    paymentMethod: 'other',
+    receiptUrl: '',
     notes: ''
   })
   const router = useRouter()
@@ -47,34 +48,33 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
     setLoading(true)
 
     try {
-      const response = await fetch('/api/budget/expenses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          amount: Number(formData.amount),
-          vendor_id: formData.vendor_id || null
-        }),
+      const response = await api.budget.expenses.create({
+        description: formData.description,
+        amount: Number(formData.amount),
+        categoryId: formData.categoryId,
+        vendorId: formData.vendorId === 'none' ? undefined : formData.vendorId || undefined,
+        dueDate: formData.expense_date,
+        paymentStatus: 'pending',
+        paymentMethod: formData.paymentMethod,
+        notes: formData.notes || undefined
       })
-
-      if (response.ok) {
+      
+      if (response.success && response.data) {
+        console.log('Expense created successfully:', response.data)
         setOpen(false)
         setFormData({
           description: '',
           amount: '',
-          category_id: '',
-          vendor_id: '',
+          categoryId: '',
+          vendorId: '',
           expense_date: new Date().toISOString().split('T')[0],
-          payment_method: 'other',
-          receipt_url: '',
+          paymentMethod: 'other',
+          receiptUrl: '',
           notes: ''
         })
         router.refresh()
       } else {
-        const error = await response.json()
-        console.error('Error creating expense:', error)
+        console.error('Error creating expense:', response)
         alert('Failed to create expense. Please try again.')
       }
     } catch (error) {
@@ -139,10 +139,10 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
           </div>
 
           <div>
-            <Label htmlFor="category_id">Category</Label>
+            <Label htmlFor="categoryId">Category</Label>
             <Select
-              value={formData.category_id}
-              onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+              value={formData.categoryId}
+              onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
@@ -161,16 +161,16 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
           </div>
 
           <div>
-            <Label htmlFor="vendor_id">Vendor (Optional)</Label>
+            <Label htmlFor="vendorId">Vendor (Optional)</Label>
             <Select
-              value={formData.vendor_id}
-              onValueChange={(value) => setFormData({ ...formData, vendor_id: value })}
+              value={formData.vendorId}
+              onValueChange={(value) => setFormData({ ...formData, vendorId: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a vendor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No vendor</SelectItem>
+                <SelectItem value="none">No vendor</SelectItem>
                 {vendors.map((vendor) => (
                   <SelectItem key={vendor.id} value={vendor.id}>
                     {vendor.name}
@@ -181,10 +181,10 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
           </div>
 
           <div>
-            <Label htmlFor="payment_method">Payment Method</Label>
+            <Label htmlFor="paymentMethod">Payment Method</Label>
             <Select
-              value={formData.payment_method}
-              onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
+              value={formData.paymentMethod}
+              onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -201,12 +201,12 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
           </div>
 
           <div>
-            <Label htmlFor="receipt_url">Receipt URL (Optional)</Label>
+            <Label htmlFor="receiptUrl">Receipt URL (Optional)</Label>
             <Input
-              id="receipt_url"
+              id="receiptUrl"
               type="url"
-              value={formData.receipt_url}
-              onChange={(e) => setFormData({ ...formData, receipt_url: e.target.value })}
+              value={formData.receiptUrl}
+              onChange={(e) => setFormData({ ...formData, receiptUrl: e.target.value })}
               placeholder="https://..."
             />
           </div>

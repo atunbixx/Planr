@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 🔒 Schema Protection Check
+echo "🔍 Running schema protection check..."
+
+# Check if schema.prisma was modified
+if git diff --cached --name-only | grep -q "prisma/schema.prisma"; then
+  echo "📝 Prisma schema changes detected - running validation..."
+  
+  # Run schema validation
+  if ! npm run schema:validate; then
+    echo ""
+    echo "❌ Schema validation failed!"
+    echo "🔧 Please fix the schema issues above before committing."
+    echo "💡 Tip: Check for missing @map directives or snake_case field names."
+    exit 1
+  fi
+  
+  # Create automatic backup of the working schema
+  npm run schema:backup
+  echo "📋 Schema backup created automatically."
+fi
+
+echo "✅ Schema protection check passed!"

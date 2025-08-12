@@ -10,20 +10,20 @@ import ProgressBar from './ProgressBar'
 
 export interface OnboardingData {
   // Step 1 - About You
-  partner1_name: string
-  partner2_name?: string
+  partner1Name: string
+  partner2Name?: string
   
   // Step 2 - Wedding Details
-  wedding_style?: string
-  wedding_date?: string
+  weddingStyle?: string
+  weddingDate?: string
   
   // Step 3 - Venue & Location
-  venue_name?: string
-  venue_location?: string
+  venueName?: string
+  venueLocation?: string
   
   // Step 4 - Planning & Budget
-  guest_count_estimate?: number
-  budget_total?: number
+  guestCountEstimate?: number
+  totalBudget?: number
 }
 
 interface OnboardingFlowProps {
@@ -39,20 +39,20 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   
   const [formData, setFormData] = useState<OnboardingData>({
-    partner1_name: '',
-    partner2_name: '',
-    wedding_style: '',
-    wedding_date: '',
-    venue_name: '',
-    venue_location: '',
-    guest_count_estimate: undefined,
-    budget_total: undefined,
+    partner1Name: '',
+    partner2Name: '',
+    weddingStyle: '',
+    weddingDate: '',
+    venueName: '',
+    venueLocation: '',
+    guestCountEstimate: undefined,
+    totalBudget: undefined,
   })
 
   // Auto-save functionality with debouncing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (formData.partner1_name) { // Only save if there's meaningful data
+      if (formData.partner1Name) { // Only save if there's meaningful data
         localStorage.setItem('onboarding-data', JSON.stringify(formData))
         setSaveStatus('saved')
         setTimeout(() => setSaveStatus(null), 2000)
@@ -67,7 +67,24 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
     const savedData = localStorage.getItem('onboarding-data')
     if (savedData) {
       try {
-        setFormData(JSON.parse(savedData))
+        const parsed = JSON.parse(savedData)
+        
+        // Clean up any old snake_case field names from cached data
+        const cleanedData: OnboardingData = {
+          partner1Name: parsed.partner1Name || parsed.partner1Name || '',
+          partner2Name: parsed.partner2Name || parsed.partner2Name || '',
+          weddingStyle: parsed.weddingStyle || parsed.weddingStyle || '',
+          weddingDate: parsed.weddingDate || parsed.weddingDate || '',
+          venueName: parsed.venueName || parsed.venueName || '',
+          venueLocation: parsed.venueLocation || parsed.venueLocation || '',
+          guestCountEstimate: parsed.guestCountEstimate || parsed.guestCountEstimate || undefined,
+          totalBudget: parsed.totalBudget || parsed.budget_total || undefined,
+        }
+        
+        setFormData(cleanedData)
+        
+        // Re-save the cleaned data to localStorage
+        localStorage.setItem('onboarding-data', JSON.stringify(cleanedData))
       } catch (error) {
         console.error('Error loading saved onboarding data:', error)
       }
@@ -106,22 +123,33 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          clerk_user_id: userId,
           email: userEmail,
           ...formData,
-          onboarding_completed: true,
         }),
       })
 
+      let responseData
+      try {
+        responseData = await response.json()
+      } catch (jsonError) {
+        console.error('Failed to parse response as JSON:', jsonError)
+        responseData = { error: 'Invalid response format' }
+      }
+      
       if (response.ok) {
+        console.log('Onboarding completed successfully:', responseData)
         // Clear saved data
         localStorage.removeItem('onboarding-data')
-        // Redirect to dashboard
+        // Navigate to dashboard using Next.js router
         router.push('/dashboard')
       } else {
-        const errorData = await response.json()
-        console.error('API Error:', errorData)
-        throw new Error(errorData.error || 'Failed to save onboarding data')
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData,
+          url: response.url
+        })
+        throw new Error(responseData?.error || responseData?.details || `Failed to save onboarding data (Status: ${response.status})`)
       }
     } catch (error) {
       console.error('Error completing onboarding:', error)
@@ -150,7 +178,7 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
           Step {currentStep} of 4: {steps[currentStep - 1].title}
         </h2>
         <div className="text-sm text-gray-500">
-          {Math.round((currentStep / 4) * 100)}% Complete
+          {Math.round(((currentStep / 4) * 100) * 100) / 100}% Complete
         </div>
       </div>
 

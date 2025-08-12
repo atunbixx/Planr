@@ -1,0 +1,230 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { prisma } from '@/lib/prisma'
+import { toApiFormat, toDbFormat, ModelName } from '@/lib/db/transformations'
+
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  errors?: ValidationError[]
+  timestamp: string
+}
+
+export interface ValidationError {
+  field: string
+  message: string
+}
+
+export interface AuthContext {
+  userId: string
+  email?: string
+  coupleId?: string
+}
+
+export abstract class BaseApiHandler {
+  protected model?: ModelName
+  protected authContext?: AuthContext
+  
+  /**
+   * Main request handler with automatic field transformation
+   */
+  protected async handleRequest<T>(
+    request: NextRequest,
+    handler: () => Promise<T>
+  ): Promise<NextResponse<ApiResponse<T>>> {
+    const start = Date.now()
+    
+    try {
+      // Authenticate request
+      this.authContext = await this.requireAuth(request)
+      
+      // Execute handler
+      const result = await handler()
+      
+      // Transform response if model is specified
+      const transformed = this.model && result
+        ? toApiFormat(result, this.model)
+        : result
+      
+      return this.successResponse(transformed)
+    } catch (error) {
+      return this.handleError(error)
+    } finally {
+      // Log performance metrics
+      const duration = Date.now() - start
+      console.log(`[API] ${request.method} ${request.url} - ${duration}ms`)
+    }
+  }
+  
+  /**
+   * Transform request input from API format to database format
+   */
+  protected transformInput<T extends Record<string, any>>(data: T): T {
+    if (!this.model || !data) return data
+    return toDbFormat(data, this.model) as T
+  }
+  
+  /**
+   * Validate request data against a Zod schema
+   */
+  protected async validateRequest<T>(
+    request: NextRequest,
+    schema: z.Schema<T>
+  ): Promise<T> {
+    try {
+      const body = await request.json()
+      return schema.parse(body)
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ValidationException(
+          'Validation failed',
+          error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        )
+      }
+      throw error
+    }
+  }
+  
+  /**
+   * Require authentication and return user context
+   */
+  protected async requireAuth(request: NextRequest): Promise<AuthContext> {
+    // Create Supabase client with proper cookie handling
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            // Route handlers can't set cookies during request
+            // This is handled by middleware
+          },
+          remove(name: string, options: CookieOptions) {
+            // Route handlers can't remove cookies during request
+            // This is handled by middleware
+          },
+        },
+      }
+    )
+    
+    const { data: { user }, error } = await supabase.auth.getUser()
+    
+    if (error || !user) {
+      throw new UnauthorizedException('Authentication required')
+    }
+    
+    // Get user's couple information
+    const couple = await prisma.couple.findFirst({
+      where: {
+        OR: [
+          { partner1_user_id: user.id },
+          { partner2_user_id: user.id },
+          { userId: user.id }
+        ]
+      }
+    })
+    
+    return {
+      userId: user.id,
+      email: user.email,
+      coupleId: couple?.id
+    }
+  }
+  
+  /**
+   * Get couple ID from auth context (with validation)
+   */
+  protected requireCoupleId(): string {
+    if (!this.authContext?.coupleId) {
+      throw new BadRequestException('Onboarding must be completed to access this resource')
+    }
+    return this.authContext.coupleId
+  }
+  
+  /**
+   * Success response helper
+   */
+  protected successResponse<T>(data: T): NextResponse<ApiResponse<T>> {
+    return NextResponse.json({
+      success: true,
+      data,
+      timestamp: new Date().toISOString()
+    })
+  }
+  
+  /**
+   * Error handler with proper status codes
+   */
+  protected handleError(error: unknown): NextResponse<ApiResponse<never>> {
+    console.error('[API Error]', error)
+    
+    if (error instanceof ApiException) {
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+        errors: error.errors,
+        timestamp: new Date().toISOString()
+      }, { status: error.statusCode })
+    }
+    
+    // Default error response
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({
+      success: false,
+      error: message,
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
+  }
+}
+
+// Custom exception classes
+export class ApiException extends Error {
+  constructor(
+    public statusCode: number,
+    message: string,
+    public errors?: ValidationError[]
+  ) {
+    super(message)
+  }
+}
+
+export class BadRequestException extends ApiException {
+  constructor(message: string, errors?: ValidationError[]) {
+    super(400, message, errors)
+  }
+}
+
+export class UnauthorizedException extends ApiException {
+  constructor(message: string) {
+    super(401, message)
+  }
+}
+
+export class ForbiddenException extends ApiException {
+  constructor(message: string) {
+    super(403, message)
+  }
+}
+
+export class NotFoundException extends ApiException {
+  constructor(message: string) {
+    super(404, message)
+  }
+}
+
+export class ValidationException extends ApiException {
+  constructor(message: string, errors: ValidationError[]) {
+    super(400, message, errors)
+  }
+}
+
+// Alias export for backward compatibility
+export { BaseApiHandler as BaseAPIHandler }

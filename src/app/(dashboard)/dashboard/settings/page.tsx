@@ -2,19 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { useSupabaseAuth } from '@/lib/auth/client'
-import { useTranslations } from 'next-intl'
+// import { useTranslations } from 'next-intl' // Removed to fix build errors
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import NotificationSettings from '@/components/pwa/NotificationSettings'
+import { LocaleSelector } from '@/components/settings/LocaleSelector'
+import { TranslationTest } from '@/components/TranslationTest'
+// import NotificationSettings from '@/components/pwa/NotificationSettings' // Removed - API endpoints no longer available
 import Link from 'next/link'
 import { Users, ArrowRight } from 'lucide-react'
+import { api } from '@/lib/api/client'
 
 interface CoupleSettings {
   partner1Name: string
+  partner2Name: string
   weddingDate: string
   venue: string
   location: string
@@ -36,9 +40,10 @@ interface UserPreferences {
 
 export default function SettingsPage() {
   const { user, isSignedIn, isLoading } = useSupabaseAuth()
-  const t = useTranslations()
+  // const t = useTranslations('common') // Removed to fix build errors
   const [coupleSettings, setCoupleSettings] = useState<CoupleSettings>({
     partner1Name: '',
+    partner2Name: '',
     weddingDate: '',
     venue: '',
     location: '',
@@ -74,29 +79,34 @@ export default function SettingsPage() {
       })
 
       // Load existing wedding settings
-      const weddingResponse = await fetch('/api/settings/wedding')
-      if (weddingResponse.ok) {
-        const weddingData = await weddingResponse.json()
-        if (weddingData.couple) {
-          setCoupleSettings({
-            partner1Name: weddingData.couple.partner1Name || '',
-            weddingDate: weddingData.couple.weddingDate ? new Date(weddingData.couple.weddingDate).toISOString().split('T')[0] : '',
-            venue: weddingData.couple.venueName || '',
-            location: weddingData.couple.venueLocation || '',
-            expectedGuests: weddingData.couple.expectedGuests || 0,
-            totalBudget: weddingData.couple.totalBudget || 0,
-            weddingStyle: weddingData.couple.weddingStyle || ''
-          })
-        }
+      const weddingResponse = await api.settings.wedding.get()
+      if (weddingResponse.success && weddingResponse.data) {
+        const wedding = weddingResponse.data
+        setCoupleSettings({
+          partner1Name: wedding.partnerOneName || '',
+          partner2Name: wedding.partnerTwoName || '',
+          weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : '',
+          venue: wedding.venue?.name || '',
+          location: wedding.venue ? `${wedding.venue.city}, ${wedding.venue.state}` : '',
+          expectedGuests: wedding.guestCount || 0,
+          totalBudget: wedding.budget || 0,
+          weddingStyle: wedding.theme || ''
+        })
       }
 
       // Load existing user preferences
-      const preferencesResponse = await fetch('/api/settings/preferences')
-      if (preferencesResponse.ok) {
-        const preferencesData = await preferencesResponse.json()
-        if (preferencesData.preferences) {
-          setUserPreferences(preferencesData.preferences)
-        }
+      const preferencesResponse = await api.settings.preferences.get()
+      if (preferencesResponse.success && preferencesResponse.data) {
+        setUserPreferences({
+          currency: preferencesResponse.data.currency,
+          alertThreshold: 85, // Not in API response, using default
+          emailNotifications: preferencesResponse.data.emailNotifications,
+          taskReminders: true, // Not in API response, using default
+          budgetAlerts: true, // Not in API response, using default
+          vendorUpdates: false, // Not in API response, using default
+          timezone: preferencesResponse.data.timezone,
+          language: preferencesResponse.data.language
+        })
       }
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -106,22 +116,30 @@ export default function SettingsPage() {
   const saveWeddingDetails = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/settings/wedding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await api.settings.wedding.update({
+        partnerOneName: coupleSettings.partner1Name,
+        partnerTwoName: coupleSettings.partner2Name,
+        weddingDate: coupleSettings.weddingDate,
+        venue: {
+          name: coupleSettings.venue,
+          address: '',
+          city: coupleSettings.location.split(',')[0]?.trim() || '',
+          state: coupleSettings.location.split(',')[1]?.trim() || '',
+          country: 'USA',
         },
-        body: JSON.stringify(coupleSettings),
+        guestCount: coupleSettings.expectedGuests,
+        budget: coupleSettings.totalBudget,
+        theme: coupleSettings.weddingStyle
       })
 
-      if (response.ok) {
-        alert(t('success.saved'))
+      if (response.success) {
+        alert('Settings saved successfully!')
       } else {
-        alert(t('errors.generic'))
+        alert('Failed to save settings. Please try again.')
       }
     } catch (error) {
       console.error('Error saving wedding details:', error)
-      alert(t('errors.generic'))
+      alert('Failed to save wedding details. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -130,15 +148,19 @@ export default function SettingsPage() {
   const saveUserPreferences = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/settings/preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userPreferences),
+      const response = await api.settings.preferences.update({
+        language: userPreferences.language,
+        timezone: userPreferences.timezone,
+        currency: userPreferences.currency,
+        dateFormat: 'MM/DD/YYYY',
+        timeFormat: '12h',
+        firstDayOfWeek: 0,
+        emailNotifications: userPreferences.emailNotifications,
+        smsNotifications: false,
+        pushNotifications: false
       })
 
-      if (response.ok) {
+      if (response.success) {
         alert('Preferences saved successfully!')
       } else {
         alert('Failed to save preferences. Please try again.')
@@ -202,7 +224,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">{t('common.loading')}</div>
+        <div className="text-center">Loading...</div>
       </div>
     )
   }
@@ -210,7 +232,7 @@ export default function SettingsPage() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">{t('auth.signIn')}</div>
+        <div className="text-center">Please sign in</div>
       </div>
     )
   }
@@ -218,27 +240,42 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 data-testid="settings-page-title" className="text-3xl font-bold text-gray-900">{t('settings.title')}</h1>
-        <p className="text-gray-600 mt-2">{t('settings.description')}</p>
+        <h1 data-testid="settings-page-title" className="text-3xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-2">Manage your wedding planning preferences and account settings</p>
       </div>
 
       {/* Wedding Details */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('settings.sections.weddingDetails')}</CardTitle>
-          <CardDescription>{t('settings.wedding.basicInfo')}</CardDescription>
+          <CardTitle>Wedding Details</CardTitle>
+          <CardDescription>Basic information about your wedding</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="partner-name">{t('settings.wedding.partner1Name')}</Label>
-              <Input 
-                id="partner-name" 
-                placeholder={t('settings.wedding.partner1Name')}
-                value={coupleSettings.partner1Name}
-                onChange={(e) => setCoupleSettings({...coupleSettings, partner1Name: e.target.value})}
-              />
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-900">Partner Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="partner1-name">Partner 1 Name</Label>
+                <Input 
+                  id="partner1-name" 
+                  placeholder="First partner's full name"
+                  value={coupleSettings.partner1Name}
+                  onChange={(e) => setCoupleSettings({...coupleSettings, partner1Name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="partner2-name">Partner 2 Name</Label>
+                <Input 
+                  id="partner2-name" 
+                  placeholder="Second partner's full name"
+                  value={coupleSettings.partner2Name}
+                  onChange={(e) => setCoupleSettings({...coupleSettings, partner2Name: e.target.value})}
+                />
+              </div>
             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="wedding-style">Wedding Style</Label>
               <Select 
@@ -304,7 +341,7 @@ export default function SettingsPage() {
           </div>
           
           <Button onClick={saveWeddingDetails} disabled={loading}>
-            {loading ? t('common.loading') : t('common.save')}
+            {loading ? 'Loading...' : 'Save'}
           </Button>
         </CardContent>
       </Card>
@@ -312,8 +349,8 @@ export default function SettingsPage() {
       {/* Sharing & Collaboration */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('settings.sections.sharingCollaboration')}</CardTitle>
-          <CardDescription>{t('settings.sharing.description')}</CardDescription>
+          <CardTitle>Sharing & Collaboration</CardTitle>
+          <CardDescription>Invite planners, family members, or vendors</CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/dashboard/settings/sharing">
@@ -391,8 +428,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Push Notifications */}
-      <NotificationSettings />
+      {/* Push Notifications - Removed (API endpoints no longer available) */}
 
       {/* Email Notification Preferences */}
       <Card>
@@ -536,6 +572,12 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Translation Test */}
+      <TranslationTest />
+
+      {/* Language & Region Settings */}
+      <LocaleSelector />
 
       {/* Data & Privacy */}
       <Card>

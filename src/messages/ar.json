@@ -1,0 +1,353 @@
+{
+  "common": {
+    "loading": "جار التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "back": "رجوع",
+    "next": "التالي",
+    "submit": "إرسال",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "yes": "نعم",
+    "no": "لا",
+    "error": "خطأ",
+    "success": "نجاح",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "reload": "إعادة تحميل الصفحة"
+  },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "signOut": "تسجيل الخروج",
+    "welcomeBack": "مرحباً بعودتك!",
+    "createAccount": "إنشاء حسابك"
+  },
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "guests": "الضيوف",
+    "seatingChart": "مخطط الجلوس",
+    "budget": "الميزانية",
+    "vendors": "الموردون",
+    "photos": "الصور",
+    "messages": "الرسائل",
+    "checklist": "قائمة المهام",
+    "settings": "الإعدادات",
+    "account": "الحساب"
+  },
+  "dashboard": {
+    "title": "لوحة تحكم الزفاف",
+    "welcome": "مرحباً بك في لوحة تخطيط زفافك",
+    "daysUntil": "الأيام المتبقية حتى زفافك",
+    "daysToGo": "{days} يوم متبقي!",
+    "yourWeddingDay": "يوم زفافك!",
+    "overview": "نظرة عامة",
+    "recentActivity": "النشاط الأخير",
+    "quickActions": "إجراءات سريعة",
+    "overallProgress": "التقدم الإجمالي",
+    "wedding": "الزفاف",
+    "budgetOverview": "نظرة عامة على الميزانية",
+    "guestRSVPs": "ردود الضيوف",
+    "vendorStatus": "حالة الموردين",
+    "vendorsBooked": "الموردون المحجوزون",
+    "thisWeeksTasks": "مهام هذا الأسبوع",
+    "upcomingPayments": "المدفوعات القادمة",
+    "weddingDetails": "تفاصيل الزفاف",
+    "appChat": "محادثة التطبيق",
+    "upcomingEvents": "الفعاليات القادمة",
+    "seeAll": "عرض الكل",
+    "noRecentMessages": "لا توجد رسائل حديثة",
+    "noUpcomingTasks": "لا توجد مهام قادمة",
+    "noDate": "بدون تاريخ",
+    "stats": {
+      "totalGuests": "إجمالي الضيوف",
+      "confirmedGuests": "الضيوف المؤكدون",
+      "pendingRSVPs": "ردود معلقة",
+      "budgetUsed": "الميزانية المستخدمة",
+      "tasksCompleted": "المهام المكتملة",
+      "photosUploaded": "الصور المرفوعة",
+      "of": "من",
+      "remaining": "متبقي",
+      "confirmed": "مؤكد",
+      "pending": "معلق",
+      "declined": "مرفوض",
+      "booked": "محجوز",
+      "complete": "مكتمل",
+      "taskssDone": "مهام منجزة"
+    },
+    "venue": "المكان",
+    "date": "التاريخ",
+    "editDetails": "تعديل التفاصيل",
+    "sendRSVPReminders": "إرسال تذكيرات الحضور",
+    "contactVendors": "الاتصال بالموردين",
+    "uploadPhotos": "رفع الصور",
+    "addExpense": "إضافة مصروف",
+    "viewAll": "عرض الكل",
+    "viewBudget": "عرض الميزانية",
+    "view": "عرض",
+    "trackExpenses": "تتبع المصروفات",
+    "manageRSVPs": "إدارة الردود",
+    "bookServices": "حجز الخدمات",
+    "weddingGallery": "معرض الزفاف",
+    "dueIn": "مستحق خلال {days} يوم",
+    "in": "خلال",
+    "days": "أيام",
+    "tasksThisWeek": "لديك {count} مهمة مستحقة هذا الأسبوع",
+    "taskSystemComingSoon": "نظام إدارة المهام الكامل قادم قريباً!",
+    "noUpcomingPayments": "لا توجد مدفوعات قادمة"
+  },
+  "guests": {
+    "title": "قائمة الضيوف",
+    "description": "إدارة قائمة ضيوف زفافك والردود",
+    "addGuest": "إضافة ضيف",
+    "importGuests": "استيراد الضيوف",
+    "exportGuests": "تصدير الضيوف",
+    "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني",
+    "filters": {
+      "all": "الكل",
+      "confirmed": "مؤكد",
+      "declined": "مرفوض",
+      "pending": "معلق",
+      "bride": "جانب العروس",
+      "groom": "جانب العريس",
+      "both": "كلا الجانبين"
+    },
+    "form": {
+      "name": "اسم الضيف",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "relationship": "العلاقة",
+      "side": "الجانب",
+      "plusOne": "السماح بمرافق",
+      "dietaryRestrictions": "القيود الغذائية",
+      "specialRequests": "طلبات خاصة",
+      "notes": "ملاحظات",
+      "rsvpStatus": "حالة الرد"
+    },
+    "actions": {
+      "markConfirmed": "وضع علامة مؤكد",
+      "markDeclined": "وضع علامة مرفوض",
+      "markPending": "وضع علامة معلق",
+      "sendInvitation": "إرسال دعوة",
+      "deleteGuest": "حذف الضيف"
+    },
+    "stats": {
+      "total": "إجمالي الضيوف",
+      "confirmed": "مؤكد",
+      "declined": "مرفوض",
+      "pending": "معلق",
+      "plusOnes": "المرافقون"
+    }
+  },
+  "seating": {
+    "title": "مخطط الجلوس",
+    "description": "ترتيب جلوس ضيوفك",
+    "addTable": "إضافة طاولة",
+    "tableNumber": "طاولة {number}",
+    "capacity": "السعة: {current}/{max}",
+    "unassignedGuests": "ضيوف غير مخصصين",
+    "saveArrangement": "حفظ الترتيب",
+    "clearAll": "مسح الكل",
+    "noGuests": "لا يوجد ضيوف للترتيب",
+    "dragToAssign": "اسحب الضيوف لتخصيصهم للطاولات"
+  },
+  "budget": {
+    "title": "ميزانية الزفاف",
+    "description": "تتبع مصروفات زفافك",
+    "totalBudget": "الميزانية الإجمالية",
+    "spent": "المصروف",
+    "remaining": "المتبقي",
+    "addExpense": "إضافة مصروف",
+    "categories": {
+      "venue": "المكان",
+      "catering": "الضيافة",
+      "photography": "التصوير",
+      "flowers": "الزهور",
+      "music": "الموسيقى",
+      "attire": "الملابس",
+      "decorations": "الديكورات",
+      "other": "أخرى"
+    },
+    "form": {
+      "description": "الوصف",
+      "amount": "المبلغ",
+      "category": "الفئة",
+      "date": "التاريخ",
+      "vendor": "المورد",
+      "notes": "ملاحظات",
+      "paid": "مدفوع"
+    }
+  },
+  "vendors": {
+    "title": "الموردون",
+    "description": "إدارة موردي زفافك",
+    "addVendor": "إضافة مورد",
+    "searchPlaceholder": "البحث عن الموردين",
+    "categories": {
+      "all": "جميع الفئات",
+      "venue": "المكان",
+      "catering": "الضيافة",
+      "photography": "التصوير",
+      "videography": "تصوير الفيديو",
+      "florist": "بائع الزهور",
+      "music": "الموسيقى/دي جي",
+      "officiant": "عاقد القران",
+      "other": "أخرى"
+    },
+    "form": {
+      "businessName": "اسم الشركة",
+      "contactName": "اسم جهة الاتصال",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "category": "الفئة",
+      "website": "الموقع الإلكتروني",
+      "instagram": "إنستغرام",
+      "price": "السعر",
+      "depositPaid": "العربون مدفوع",
+      "depositAmount": "مبلغ العربون",
+      "notes": "ملاحظات",
+      "contractSigned": "العقد موقع",
+      "rating": "التقييم"
+    }
+  },
+  "photos": {
+    "title": "الصور",
+    "description": "معرض صور زفافك",
+    "uploadPhotos": "رفع الصور",
+    "createAlbum": "إنشاء ألبوم",
+    "allPhotos": "جميع الصور",
+    "albums": "الألبومات",
+    "favorites": "المفضلة",
+    "dragToUpload": "اسحب الصور هنا أو انقر للرفع",
+    "uploadingCount": "جار رفع {count} صورة...",
+    "deleteConfirm": "هل أنت متأكد من حذف هذه الصورة؟"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "description": "إدارة حسابك وتفضيلات الزفاف",
+    "sections": {
+      "weddingDetails": "تفاصيل الزفاف",
+      "sharingCollaboration": "المشاركة والتعاون",
+      "budgetSettings": "إعدادات الميزانية",
+      "notifications": "الإشعارات",
+      "account": "إعدادات الحساب",
+      "dataPrivacy": "البيانات والخصوصية"
+    },
+    "wedding": {
+      "partnerName": "اسم الشريك",
+      "weddingDate": "تاريخ الزفاف",
+      "venue": "المكان",
+      "location": "الموقع",
+      "expectedGuests": "العدد المتوقع للضيوف",
+      "weddingStyle": "نمط الزفاف",
+      "styles": {
+        "traditional": "تقليدي",
+        "modern": "عصري",
+        "rustic": "ريفي",
+        "vintage": "كلاسيكي",
+        "destination": "وجهة",
+        "casual": "غير رسمي",
+        "formal": "رسمي"
+      }
+    },
+    "sharing": {
+      "title": "إدارة المتعاونين",
+      "description": "دعوة المخططين أو أفراد العائلة أو الموردين",
+      "inviteButton": "دعوة متعاون",
+      "activeCollaborators": "المتعاونون النشطون",
+      "pendingInvitations": "الدعوات المعلقة",
+      "roles": {
+        "planner": "مخطط الزفاف",
+        "family": "فرد من العائلة",
+        "vendor": "مورد",
+        "guest": "ضيف"
+      }
+    },
+    "preferences": {
+      "currency": "العملة",
+      "timezone": "المنطقة الزمنية",
+      "language": "اللغة",
+      "emailNotifications": "إشعارات البريد الإلكتروني",
+      "pushNotifications": "الإشعارات الفورية",
+      "taskReminders": "تذكيرات المهام",
+      "budgetAlerts": "تنبيهات الميزانية",
+      "vendorUpdates": "تحديثات الموردين"
+    },
+    "data": {
+      "exportData": "تصدير البيانات",
+      "deleteAccount": "حذف الحساب",
+      "exportDescription": "تنزيل نسخة من جميع بيانات تخطيط زفافك",
+      "deleteDescription": "حذف حسابك وجميع البيانات نهائياً"
+    }
+  },
+  "onboarding": {
+    "welcome": "مرحباً بك في مخطط زفافك",
+    "letsStart": "لنبدأ في التخطيط ليومك المثالي!",
+    "step1": {
+      "title": "أخبرنا عن نفسك",
+      "yourName": "اسمك",
+      "partnerName": "اسم الشريك",
+      "weddingDate": "تاريخ الزفاف",
+      "weddingDateHelp": "متى هو يومك الكبير؟"
+    },
+    "step2": {
+      "title": "تفاصيل الزفاف",
+      "location": "موقع الزفاف",
+      "locationHelp": "المدينة أو المكان الذي ستتزوجان فيه",
+      "guestCount": "العدد المتوقع للضيوف",
+      "guestCountHelp": "العدد التقريبي للضيوف"
+    },
+    "step3": {
+      "title": "حدد ميزانيتك",
+      "totalBudget": "ميزانية الزفاف الإجمالية",
+      "budgetHelp": "ميزانيتك الإجمالية المقدرة",
+      "currency": "العملة"
+    },
+    "complete": "إكمال الإعداد"
+  },
+  "invitation": {
+    "title": "أنت مدعو للتعاون!",
+    "description": "{couple} دعاك للمساعدة في تخطيط زفافهما",
+    "yourRole": "دورك",
+    "yourPermissions": "صلاحياتك",
+    "weddingDate": "تاريخ الزفاف",
+    "acceptInvitation": "قبول الدعوة",
+    "signUpToAccept": "التسجيل وقبول الدعوة",
+    "signInToAccept": "تسجيل الدخول للقبول",
+    "disclaimer": "بقبول هذه الدعوة، ستحصل على الوصول إلى لوحة تخطيط الزفاف بالصلاحيات المذكورة أعلاه."
+  },
+  "permissions": {
+    "view": "عرض لوحة التحكم",
+    "edit": "تعديل تفاصيل الزفاف",
+    "manage_guests": "إدارة قائمة الضيوف",
+    "edit_guests": "تعديل معلومات الضيوف",
+    "manage_budget": "إدارة الميزانية",
+    "view_budget": "عرض الميزانية",
+    "manage_vendors": "إدارة الموردين",
+    "view_schedule": "عرض الجدول",
+    "manage_tasks": "إدارة المهام",
+    "manage_photos": "إدارة الصور",
+    "view_photos": "عرض الصور",
+    "manage_own_vendor": "إدارة معلومات المورد الخاصة بك"
+  },
+  "errors": {
+    "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "notFound": "الصفحة غير موجودة",
+    "unauthorized": "ليس لديك صلاحية للوصول إلى هذا",
+    "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "invalidData": "البيانات المقدمة غير صالحة",
+    "requiredField": "هذا الحقل مطلوب"
+  },
+  "success": {
+    "saved": "تم الحفظ بنجاح",
+    "deleted": "تم الحذف بنجاح",
+    "updated": "تم التحديث بنجاح",
+    "invited": "تم إرسال الدعوة بنجاح",
+    "uploaded": "تم الرفع بنجاح"
+  }
+}

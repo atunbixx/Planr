@@ -1,80 +1,106 @@
 import { BaseService } from './base.service'
-import { Couple, User, Prisma } from '@prisma/client'
+import { wedding_couples as Couple, User, Prisma } from '@prisma/client'
 import { BadRequestException } from '@/lib/api/errors'
 
 export class CoupleService extends BaseService<Couple> {
-  protected modelName = 'couple' as const
+  protected modelName = 'wedding_couples' as const
 
-  // Get couple by user ID
+  // Get couple by user ID - checks all possible user ID fields
   async getCoupleByUserId(userId: string): Promise<Couple | null> {
-    return await this.findFirst({ userId })
+    return await this.prisma.wedding_couples.findFirst({
+      where: {
+        OR: [
+          { partner1_user_id: userId },
+          { partner2_user_id: userId }
+        ]
+      }
+    })
   }
 
-  // Get couple by clerk user ID
-  async getCoupleByClerkId(clerkId: string): Promise<(Couple & { user: User }) | null> {
+  // Get couple by supabase user ID
+  async getCoupleBySupabaseId(supabaseUserId: string): Promise<(Couple & { primaryUser: User }) | null> {
     const user = await this.prisma.user.findUnique({
-      where: { clerkId },
-      include: { couples: true }
+      where: { supabase_user_id: supabaseUserId }
     })
 
-    if (!user || user.couples.length === 0) {
+    if (!user) {
+      return null
+    }
+
+    const couple = await this.prisma.wedding_couples.findFirst({
+      where: {
+        OR: [
+          { partner1_user_id: user.id },
+          { partner2_user_id: user.id }
+        ]
+      }
+    })
+
+    if (!couple) {
       return null
     }
 
     return {
-      ...user.couples[0],
-      user
+      ...couple,
+      primaryUser: user
     }
   }
 
   // Create or update couple from onboarding
   async upsertCoupleFromOnboarding(data: {
-    clerk_user_id: string
+    supabaseUserId: string
     email?: string
-    partner1_name: string
-    partner2_name?: string
-    wedding_style?: string
-    wedding_date?: string
-    venue_name?: string
-    venue_location?: string
-    guest_count_estimate?: number
-    budget_total?: number
-    onboarding_completed?: boolean
+    partner1Name: string
+    partner2Name?: string
+    weddingStyle?: string
+    weddingDate?: string
+    venueName?: string
+    venueLocation?: string
+    guestCountEstimate?: number
+    totalBudget?: number
+    onboardingCompleted?: boolean
   }): Promise<Couple> {
     // Validate required fields
-    if (!data.clerk_user_id || !data.partner1_name) {
-      throw new BadRequestException('Missing required fields: clerk_user_id and partner1_name')
+    if (!data.supabaseUserId || !data.partner1Name) {
+      throw new BadRequestException('Missing required fields: supabaseUserId and partner1Name')
     }
 
     // First, ensure user exists
     const user = await this.prisma.user.upsert({
-      where: { clerkId: data.clerk_user_id },
+      where: { supabase_user_id: data.supabaseUserId },
       update: {
         email: data.email || undefined,
-        firstName: data.partner1_name.split(' ')[0],
-        lastName: data.partner1_name.split(' ').slice(1).join(' ') || undefined,
+        firstName: data.partner1Name.split(' ')[0],
+        lastName: data.partner1Name.split(' ').slice(1).join(' ') || undefined,
       },
       create: {
-        clerkId: data.clerk_user_id,
-        email: data.email || `${data.clerk_user_id}@placeholder.com`,
-        firstName: data.partner1_name.split(' ')[0],
-        lastName: data.partner1_name.split(' ').slice(1).join(' ') || undefined,
+        supabase_user_id: data.supabaseUserId,
+        email: data.email || `${data.supabaseUserId}@placeholder.com`,
+        firstName: data.partner1Name.split(' ')[0],
+        lastName: data.partner1Name.split(' ').slice(1).join(' ') || undefined,
       }
     })
 
     // Check if couple exists
-    const existingCouple = await this.findFirst({ userId: user.id })
+    const existingCouple = await this.prisma.wedding_couples.findFirst({
+      where: {
+        OR: [
+          { partner1_user_id: user.id },
+          { partner2_user_id: user.id }
+        ]
+      }
+    })
 
     const coupleData = {
-      partnerName: data.partner1_name,
-      partner2Name: data.partner2_name || null,
-      weddingStyle: data.wedding_style || null,
-      weddingDate: data.wedding_date ? new Date(data.wedding_date) : null,
-      venue: data.venue_name || null,
-      location: data.venue_location || null,
-      expectedGuests: data.guest_count_estimate || null,
-      budgetTotal: data.budget_total ? new Prisma.Decimal(data.budget_total) : null,
-      onboardingCompleted: data.onboarding_completed ?? true,
+      partner1Name: data.partner1Name,
+      partner2Name: data.partner2Name || null,
+      weddingStyle: data.weddingStyle || null,
+      weddingDate: data.weddingDate ? new Date(data.weddingDate) : null,
+      venueName: data.venueName || null,
+      venueLocation: data.venueLocation || null,
+      guestCountEstimate: data.guestCountEstimate || null,
+      totalBudget: data.totalBudget ? new Prisma.Decimal(data.totalBudget) : null,
+      onboardingCompleted: data.onboardingCompleted ?? true,
     }
 
     if (existingCouple) {
@@ -84,7 +110,7 @@ export class CoupleService extends BaseService<Couple> {
       // Create new couple
       return await this.create({
         ...coupleData,
-        userId: user.id
+        partner1_user_id: user.id
       })
     }
   }
@@ -94,7 +120,7 @@ export class CoupleService extends BaseService<Couple> {
     id: string,
     userId: string,
     data: Partial<{
-      partnerName: string
+      partner1Name: string
       partner2Name: string
       weddingStyle: string
       weddingDate: string
@@ -106,7 +132,15 @@ export class CoupleService extends BaseService<Couple> {
     }>
   ): Promise<Couple> {
     // Verify ownership
-    const couple = await this.findFirst({ id, userId })
+    const couple = await this.prisma.wedding_couples.findFirst({
+      where: {
+        id,
+        OR: [
+          { partner1_user_id: userId },
+          { partner2_user_id: userId }
+        ]
+      }
+    })
     if (!couple) {
       throw new BadRequestException('Couple not found')
     }
@@ -125,17 +159,27 @@ export class CoupleService extends BaseService<Couple> {
   }
 
   // Get couple with full user data
-  async getCoupleWithUser(coupleId: string): Promise<Couple & { user: User }> {
-    const couple = await this.prisma.couple.findUnique({
-      where: { id: coupleId },
-      include: { user: true }
+  async getCoupleWithUser(coupleId: string): Promise<Couple & { user: User | null }> {
+    const couple = await this.prisma.wedding_couples.findUnique({
+      where: { id: coupleId }
     })
 
     if (!couple) {
       throw new BadRequestException('Couple not found')
     }
 
-    return couple
+    // Get the primary user (partner1)
+    let user = null
+    if (couple.partner1_user_id) {
+      user = await this.prisma.user.findUnique({
+        where: { id: couple.partner1_user_id }
+      })
+    }
+
+    return {
+      ...couple,
+      user
+    }
   }
 
   // Get couple statistics
@@ -161,7 +205,22 @@ export class CoupleService extends BaseService<Couple> {
       photoCount: photos,
       totalExpenses: expenses._sum.amount?.toNumber() || 0,
       daysUntilWedding,
-      budgetTotal: couple?.budgetTotal?.toNumber() || 0
+      budgetTotal: couple?.totalBudget?.toNumber() || 0
     }
+  }
+
+  // Check if a user owns or is part of a couple
+  async userOwnsCouple(userId: string, coupleId: string): Promise<boolean> {
+    const couple = await this.prisma.wedding_couples.findFirst({
+      where: {
+        id: coupleId,
+        OR: [
+          { partner1_user_id: userId },
+          { partner2_user_id: userId }
+        ]
+      }
+    })
+
+    return !!couple
   }
 }

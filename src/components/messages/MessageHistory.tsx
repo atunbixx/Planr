@@ -25,21 +25,22 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { api } from '@/lib/api/client';
 
 interface MessageLog {
   id: string;
   recipient_email?: string;
   recipient_phone?: string;
-  message_type: 'email' | 'sms' | 'whatsapp';
+  messageType: 'email' | 'sms' | 'whatsapp';
   subject?: string;
   body: string;
   status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced' | 'complained';
   error_message?: string;
-  sent_at?: string;
-  delivered_at?: string;
+  sentAt?: string;
+  deliveredAt?: string;
   opened_at?: string;
   clicked_at?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 interface MessageHistoryProps {
@@ -62,19 +63,34 @@ export function MessageHistory({ limit = 50, showStats = true }: MessageHistoryP
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/messages/logs?limit=${limit}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
+      const response = await api.messages.logs();
+      if (response.success && response.data) {
+        // Map the response data to match expected structure
+        const mappedMessages = response.data.slice(0, limit).map(log => ({
+          id: log.id,
+          recipient_email: (log.message as any)?.recipient?.email,
+          recipient_phone: (log.message as any)?.recipient?.phone,
+          messageType: (log.message as any)?.type || 'email',
+          subject: (log.message as any)?.subject,
+          body: (log.message as any)?.content || '',
+          status: log.status as any,
+          error_message: log.error,
+          sentAt: log.createdAt,
+          deliveredAt: undefined,
+          opened_at: undefined,
+          clicked_at: undefined,
+          createdAt: log.createdAt
+        }));
+        setMessages(mappedMessages);
         
         // Calculate stats
         const newStats = {
-          total: data.length,
-          sent: data.filter((m: MessageLog) => m.status === 'sent' || m.status === 'delivered').length,
-          delivered: data.filter((m: MessageLog) => m.status === 'delivered').length,
-          failed: data.filter((m: MessageLog) => m.status === 'failed' || m.status === 'bounced').length,
-          opened: data.filter((m: MessageLog) => m.opened_at).length,
-          clicked: data.filter((m: MessageLog) => m.clicked_at).length,
+          total: mappedMessages.length,
+          sent: mappedMessages.filter((m: MessageLog) => m.status === 'sent' || m.status === 'delivered').length,
+          delivered: mappedMessages.filter((m: MessageLog) => m.status === 'delivered').length,
+          failed: mappedMessages.filter((m: MessageLog) => m.status === 'failed' || m.status === 'bounced').length,
+          opened: mappedMessages.filter((m: MessageLog) => m.opened_at).length,
+          clicked: mappedMessages.filter((m: MessageLog) => m.clicked_at).length,
         };
         setStats(newStats);
       }
@@ -253,7 +269,7 @@ export function MessageHistory({ limit = 50, showStats = true }: MessageHistoryP
                     <TableRow key={message.id}>
                       <TableCell>
                         <div className="flex items-center">
-                          {getMessageIcon(message.message_type)}
+                          {getMessageIcon(message.messageType)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -299,7 +315,7 @@ export function MessageHistory({ limit = 50, showStats = true }: MessageHistoryP
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-muted-foreground">
-                          {format(new Date(message.created_at), 'MMM d, h:mm a')}
+                          {format(new Date(message.createdAt), 'MMM d, h:mm a')}
                         </div>
                       </TableCell>
                     </TableRow>

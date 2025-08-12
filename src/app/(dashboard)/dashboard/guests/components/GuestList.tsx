@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Filter, MoreHorizontal, Mail, Phone } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface Guest {
   id: string
@@ -33,6 +34,7 @@ export default function GuestList({ guests }: GuestListProps) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [sideFilter, setSideFilter] = useState('all')
   const router = useRouter()
+  const { hasPermission } = usePermissions()
 
   const filteredGuests = guests.filter(guest => {
     const matchesSearch = 
@@ -91,7 +93,7 @@ export default function GuestList({ guests }: GuestListProps) {
         },
         body: JSON.stringify({
           status,
-          attending_count: status === 'confirmed' ? 1 : 0
+          attendingCount: status === 'confirmed' ? 1 : 0
         })
       })
 
@@ -211,38 +213,46 @@ export default function GuestList({ guests }: GuestListProps) {
                   <Badge variant="outline" className="text-xs">+1</Badge>
                 )}
                 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      onClick={() => handleRSVPUpdate(guest.id, 'confirmed')}
-                      className="text-green-600"
-                    >
-                      Mark Confirmed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleRSVPUpdate(guest.id, 'declined')}
-                      className="text-red-600"
-                    >
-                      Mark Declined
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleRSVPUpdate(guest.id, 'pending')}
-                    >
-                      Mark Pending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleDeleteGuest(guest.id)}
-                      className="text-red-600"
-                    >
-                      Delete Guest
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {(hasPermission('edit_guests') || hasPermission('manage_guests')) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {hasPermission('edit_guests') && (
+                        <>
+                          <DropdownMenuItem 
+                            onClick={() => handleRSVPUpdate(guest.id, 'confirmed')}
+                            className="text-green-600"
+                          >
+                            Mark Confirmed
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleRSVPUpdate(guest.id, 'declined')}
+                            className="text-red-600"
+                          >
+                            Mark Declined
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleRSVPUpdate(guest.id, 'pending')}
+                          >
+                            Mark Pending
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {hasPermission('manage_guests') && (
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteGuest(guest.id)}
+                          className="text-red-600"
+                        >
+                          Delete Guest
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
           )

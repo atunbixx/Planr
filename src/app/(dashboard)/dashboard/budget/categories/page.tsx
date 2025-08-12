@@ -1,6 +1,5 @@
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { currentUser } from '@clerk/nextjs/server'
+import { requireAuth } from '@/lib/auth/server'
 import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,17 +13,13 @@ const supabase = createClient(
 )
 
 export default async function BudgetCategoriesPage() {
-  const { userId } = await auth()
-  const user = await currentUser()
-  
-  if (!userId) {
-    redirect('/sign-in')
-  }
+  const user = await requireAuth()
+  const userId = user.id
   
   let categories: any[] = []
   let budgetData: any = null
   
-  if (user?.emailAddresses?.[0]?.emailAddress) {
+  if (user?.email) {
     // Get user's couple data and budget categories
     const { data: userData } = await supabase
       .from('users')
@@ -37,14 +32,14 @@ export default async function BudgetCategoriesPage() {
             name,
             icon,
             color,
-            allocated_amount,
-            spent_amount,
+            allocatedAmount,
+            spentAmount,
             priority,
-            industry_average_percentage
+            industryAveragePercentage
           )
         )
       `)
-      .eq('email', user.emailAddresses[0].emailAddress)
+      .eq('supabase_user_id', user.id)
       .single()
     
     if (userData?.couples?.[0]) {
@@ -53,8 +48,8 @@ export default async function BudgetCategoriesPage() {
       
       // Calculate totals
       const totalBudget = Number(coupleData.budget_total) || 0
-      const totalSpent = categories.reduce((sum, cat) => sum + (Number(cat.spent_amount) || 0), 0)
-      const totalAllocated = categories.reduce((sum, cat) => sum + (Number(cat.allocated_amount) || 0), 0)
+      const totalSpent = categories.reduce((sum, cat) => sum + (Number(cat.spentAmount) || 0), 0)
+      const totalAllocated = categories.reduce((sum, cat) => sum + (Number(cat.allocatedAmount) || 0), 0)
       const remaining = totalBudget - totalSpent
       
       budgetData = {
@@ -146,8 +141,8 @@ export default async function BudgetCategoriesPage() {
           {categories.length > 0 ? (
             <div className="space-y-4">
               {categories.map((category) => {
-                const spent = Number(category.spent_amount) || 0
-                const allocated = Number(category.allocated_amount) || 0
+                const spent = Number(category.spentAmount) || 0
+                const allocated = Number(category.allocatedAmount) || 0
                 const percentage = allocated > 0 ? Math.round((spent / allocated) * 100) : 0
                 const remaining = allocated - spent
                 
@@ -174,9 +169,9 @@ export default async function BudgetCategoriesPage() {
                                 🟢 Nice to have
                               </span>
                             )}
-                            {category.industry_average_percentage && (
+                            {category.industryAveragePercentage && (
                               <span className="text-muted-foreground text-xs">
-                                Industry avg: {category.industry_average_percentage}%
+                                Industry avg: {category.industryAveragePercentage}%
                               </span>
                             )}
                           </div>

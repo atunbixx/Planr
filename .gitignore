@@ -69,3 +69,8 @@ claude-flow-*
 hive-mind-*
 .claude-flow*
 .hive-mind*
+
+# Prisma schema backups (keep recent backups in git for safety)
+/prisma/backups/
+# But keep the backup directory structure
+!/prisma/backups/.gitkeep

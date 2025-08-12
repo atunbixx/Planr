@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { api } from '@/lib/api/client'
 
 const predefinedCategories = [
   { name: 'Venue', icon: '🏛️', color: '#8B5CF6', priority: 'essential' },
@@ -35,7 +36,7 @@ export default function AddCategoryDialog() {
     name: '',
     icon: '💰',
     color: '#3B82F6',
-    allocated_amount: '',
+    allocatedAmount: '',
     priority: 'important'
   })
   const router = useRouter()
@@ -45,31 +46,28 @@ export default function AddCategoryDialog() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/budget/categories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          allocated_amount: Number(formData.allocated_amount) || 0
-        }),
+      const response = await api.budget.categories.create({
+        name: formData.name,
+        icon: formData.icon,
+        color: formData.color,
+        allocatedAmount: Number(formData.allocatedAmount) || 0,
+        priority: formData.priority as any
       })
-
-      if (response.ok) {
+      
+      if (response.success && response.data) {
+        console.log('Category created successfully:', response.data)
         setOpen(false)
         setFormData({
           name: '',
           icon: '💰',
           color: '#3B82F6',
-          allocated_amount: '',
+          allocatedAmount: '',
           priority: 'important'
         })
         setIsCustom(false)
         router.refresh()
       } else {
-        const error = await response.json()
-        console.error('Error creating category:', error)
+        console.error('Error creating category:', response)
         alert('Failed to create category. Please try again.')
       }
     } catch (error) {
@@ -169,14 +167,14 @@ export default function AddCategoryDialog() {
               </div>
 
               <div>
-                <Label htmlFor="allocated_amount">Allocated Amount ($)</Label>
+                <Label htmlFor="allocatedAmount">Allocated Amount ($)</Label>
                 <Input
-                  id="allocated_amount"
+                  id="allocatedAmount"
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.allocated_amount}
-                  onChange={(e) => setFormData({ ...formData, allocated_amount: e.target.value })}
+                  value={formData.allocatedAmount}
+                  onChange={(e) => setFormData({ ...formData, allocatedAmount: e.target.value })}
                   placeholder="0.00"
                 />
               </div>
@@ -209,7 +207,7 @@ export default function AddCategoryDialog() {
                         name: '',
                         icon: '💰',
                         color: '#3B82F6',
-                        allocated_amount: '',
+                        allocatedAmount: '',
                         priority: 'important'
                       })
                     }}

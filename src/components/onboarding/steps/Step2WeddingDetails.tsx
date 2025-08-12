@@ -31,13 +31,13 @@ export default function Step2WeddingDetails({ formData, updateFormData, onNext, 
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="wedding_style" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="weddingStyle" className="block text-sm font-medium text-gray-700 mb-2">
           Wedding Style
         </label>
         <select
-          id="wedding_style"
-          value={formData.wedding_style || ''}
-          onChange={(e) => updateFormData({ wedding_style: e.target.value })}
+          id="weddingStyle"
+          value={formData.weddingStyle || ''}
+          onChange={(e) => updateFormData({ weddingStyle: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-colors"
         >
           {weddingStyles.map((style) => (
@@ -52,15 +52,15 @@ export default function Step2WeddingDetails({ formData, updateFormData, onNext, 
       </div>
 
       <div>
-        <label htmlFor="wedding_date" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="weddingDate" className="block text-sm font-medium text-gray-700 mb-2">
           Wedding Date
         </label>
         <input
-          id="wedding_date"
+          id="weddingDate"
           type="date"
           placeholder="Choose your special day"
-          value={formData.wedding_date || ''}
-          onChange={(e) => updateFormData({ wedding_date: e.target.value })}
+          value={formData.weddingDate || ''}
+          onChange={(e) => updateFormData({ weddingDate: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-colors"
         />
         <p className="mt-1 text-sm text-gray-500">

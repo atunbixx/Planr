@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Upload, X, Image, Plus, Check, AlertCircle } from 'lucide-react'
-import { useUser } from '@clerk/nextjs'
+import { useSupabaseAuth } from '@/lib/auth/client'
 
 interface Album {
   id: string
@@ -19,7 +19,7 @@ interface Album {
 
 interface PhotoUploadDialogProps {
   albums: Album[]
-  variant?: 'default' | 'outline' | 'secondary'
+  variant?: 'primary' | 'outline' | 'secondary'
   defaultAlbumId?: string
   trigger?: React.ReactNode
 }
@@ -29,14 +29,14 @@ interface FileWithPreview extends File {
   id: string
 }
 
-export default function PhotoUploadDialog({ albums, variant = 'default', defaultAlbumId, trigger }: PhotoUploadDialogProps) {
+export default function PhotoUploadDialog({ albums, variant = 'primary', defaultAlbumId, trigger }: PhotoUploadDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [uploadResults, setUploadResults] = useState<any>(null)
-  const { user } = useUser()
+  const { user, isSignedIn } = useSupabaseAuth()
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -119,7 +119,7 @@ export default function PhotoUploadDialog({ albums, variant = 'default', default
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user?.id) {
+    if (!isSignedIn || !user) {
       setError('You must be logged in to upload photos')
       return
     }
@@ -142,7 +142,7 @@ export default function PhotoUploadDialog({ albums, variant = 'default', default
       })
 
       // Add metadata
-      if (formData.albumId) formDataObj.append('albumId', formData.albumId)
+      if (formData.albumId && formData.albumId !== 'none') formDataObj.append('albumId', formData.albumId)
       formDataObj.append('eventType', formData.eventType)
       if (formData.photoDate) formDataObj.append('photoDate', formData.photoDate)
       if (formData.location) formDataObj.append('location', formData.location)
@@ -376,7 +376,7 @@ export default function PhotoUploadDialog({ albums, variant = 'default', default
                       <SelectValue placeholder="Select album" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Album</SelectItem>
+                      <SelectItem value="none">No Album</SelectItem>
                       {albums.map((album) => (
                         <SelectItem key={album.id} value={album.id}>
                           {album.name}

@@ -1,70 +1,89 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
-Card.displayName = "Card"
+function cn(...classes: Array<string | undefined | false | null>) {
+  return classes.filter(Boolean).join(" ");
+}
 
-const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
-))
-CardHeader.displayName = "CardHeader"
+export function Card({ className, variant = 'default', ...props }: React.HTMLAttributes<HTMLDivElement> & { variant?: 'default' | 'luxury' }) {
+  return (
+    <div
+      className={cn(
+        // Devias-like styling: softer elevation, larger radius, subtle border, white-ish surface
+        "rounded-2xl border border-border bg-card text-card-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04),_0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-200",
+        variant === 'luxury' && "luxury-card hover:shadow-lg border-border/50",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
-const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
-  />
-))
-CardTitle.displayName = "CardTitle"
+export function CardHeader({ className, variant = 'default', ...props }: React.HTMLAttributes<HTMLDivElement> & { variant?: 'default' | 'luxury' }) {
+  return (
+    <div
+      className={cn(
+        // Compact vertical rhythm similar to Devias cards
+        "flex flex-col space-y-1.5 px-5 py-4",
+        variant === 'luxury' && "px-8 py-6 space-y-3",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
-const CardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-CardDescription.displayName = "CardDescription"
+export function CardTitle({ className, variant = 'default', ...props }: React.HTMLAttributes<HTMLHeadingElement> & { variant?: 'default' | 'luxury' }) {
+  return (
+    <h3
+      className={cn(
+        // Slightly smaller/denser than default, aligns with Devias tone
+        "text-base font-semibold leading-none tracking-tight",
+        variant === 'luxury' && "luxury-heading text-xl font-bold tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-))
-CardContent.displayName = "CardContent"
+export function CardDescription({ className, variant = 'default', ...props }: React.HTMLAttributes<HTMLParagraphElement> & { variant?: 'default' | 'luxury' }) {
+  return (
+    <p
+      className={cn(
+        // Muted tone and compact size
+        "text-sm text-muted-foreground",
+        variant === 'luxury' && "luxury-body text-base leading-relaxed",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
-const CardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
-))
-CardFooter.displayName = "CardFooter"
+export function CardContent({ className, variant = 'default', ...props }: React.HTMLAttributes<HTMLDivElement> & { variant?: 'default' | 'luxury' }) {
+  return (
+    <div
+      className={cn(
+        // Devias cards use tighter padding
+        "px-5 py-4",
+        variant === 'luxury' && "px-8 py-6 space-y-6",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export function CardFooter({ className, variant = 'default', ...props }: React.HTMLAttributes<HTMLDivElement> & { variant?: 'default' | 'luxury' }) {
+  return (
+    <div
+      className={cn(
+        // Footer with compact padding and top separator option via border utils when needed
+        "flex items-center px-5 py-4",
+        variant === 'luxury' && "px-8 py-6 gap-4",
+        className
+      )}
+      {...props}
+    />
+  );
+}

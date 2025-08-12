@@ -1,0 +1,149 @@
+import { NextRequest } from 'next/server';
+import { POST } from '@/app/api/seating/optimize/route';
+import { seatingPlannerService } from '@/lib/api/seating-planner';
+import { GeneticSeatingOptimizer } from '@/lib/algorithms/seating-optimizer';
+// import { auth } from '@clerk/nextjs'; // Removed - migrated to Supabase
+
+jest.mock('@clerk/nextjs');
+jest.mock('@/lib/api/seating-planner');
+jest.mock('@/lib/algorithms/seating-optimizer');
+
+describe('/api/seating/optimize', () => {
+  const mockAuth = auth as jest.MockedFunction<typeof auth>;
+  const mockService = seatingPlannerService as jest.MockedFunction<typeof seatingPlannerService>;
+  const mockOptimizer = GeneticSeatingOptimizer as jest.MockedClass<typeof GeneticSeatingOptimizer>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAuth.mockReturnValue({ userId: 'test-user-id' });
+  });
+
+  it('should run optimization with default parameters', async () => {
+    const mockLayout = {
+      id: 'layout-123',
+      eventId: 'event-123',
+      tables: [
+        { id: 'table-1', name: 'Table 1', capacity: 8 },
+        { id: 'table-2', name: 'Table 2', capacity: 8 }
+      ]
+    };
+
+    const mockGuests = [
+      { id: 'guest-1', name: 'John Doe' },
+      { id: 'guest-2', name: 'Jane Doe' }
+    ];
+
+    const mockPreferences = [
+      {
+        id: 'pref-1',
+        guestId1: 'guest-1',
+        guestId2: 'guest-2',
+        preferenceType: 'must_sit_together'
+      }
+    ];
+
+    const mockOptimizationResult = {
+      fitness: 0.95,
+      generations: 150,
+      solution: [
+        { guestId: 'guest-1', tableId: 'table-1', seatNumber: 1 },
+        { guestId: 'guest-2', tableId: 'table-1', seatNumber: 2 }
+      ],
+      statistics: {
+        averageFitness: 0.85,
+        bestFitness: 0.95
+      },
+      convergenceHistory: []
+    };
+
+    mockService.mockReturnValue({
+      getLayoutWithDetails: jest.fn().mockResolvedValue(mockLayout),
+      getEventGuests: jest.fn().mockResolvedValue(mockGuests),
+      getSeatingPreferences: jest.fn().mockResolvedValue(mockPreferences),
+      saveOptimizedAssignments: jest.fn().mockResolvedValue(true)
+    } as any);
+
+    mockOptimizer.prototype.optimize = jest.fn().mockResolvedValue(mockOptimizationResult);
+
+    const request = new NextRequest('http://localhost/api/seating/optimize', {
+      method: 'POST',
+      body: JSON.stringify({ layoutId: 'layout-123' })
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.result.fitness).toBe(0.95);
+    expect(data.result.generations).toBe(150);
+    expect(mockOptimizer).toHaveBeenCalledWith({
+      populationSize: 100,
+      maxGenerations: 200,
+      mutationRate: 0.05,
+      eliteSize: 10,
+      tournamentSize: 5,
+      crossoverRate: 0.8,
+      targetFitness: 0.95,
+      maxStagnation: 20
+    });
+  });
+
+  it('should use custom optimization parameters', async () => {
+    const mockLayout = { id: 'layout-123', tables: [] };
+    
+    mockService.mockReturnValue({
+      getLayoutWithDetails: jest.fn().mockResolvedValue(mockLayout),
+      getEventGuests: jest.fn().mockResolvedValue([]),
+      getSeatingPreferences: jest.fn().mockResolvedValue([]),
+      saveOptimizedAssignments: jest.fn()
+    } as any);
+
+    mockOptimizer.prototype.optimize = jest.fn().mockResolvedValue({
+      fitness: 0.9,
+      solution: [],
+      statistics: {},
+      convergenceHistory: []
+    });
+
+    const customParams = {
+      populationSize: 200,
+      maxGenerations: 300,
+      mutationRate: 0.1
+    };
+
+    const request = new NextRequest('http://localhost/api/seating/optimize', {
+      method: 'POST',
+      body: JSON.stringify({
+        layoutId: 'layout-123',
+        parameters: customParams
+      })
+    });
+
+    await POST(request);
+
+    expect(mockOptimizer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        populationSize: 200,
+        maxGenerations: 300,
+        mutationRate: 0.1
+      })
+    );
+  });
+
+  it('should return 404 when layout not found', async () => {
+    mockService.mockReturnValue({
+      getLayoutWithDetails: jest.fn().mockResolvedValue(null)
+    } as any);
+
+    const request = new NextRequest('http://localhost/api/seating/optimize', {
+      method: 'POST',
+      body: JSON.stringify({ layoutId: 'non-existent' })
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.error).toBe('Layout not found');
+  });
+});

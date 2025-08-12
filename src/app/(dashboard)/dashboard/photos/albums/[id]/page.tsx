@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { getAdminClient } from '@/lib/supabase-admin-transformed'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,12 +7,7 @@ import Link from 'next/link'
 import PhotoGrid from '../../components/PhotoGrid'
 import PhotoUploadDialog from '../../components/PhotoUploadDialog'
 import { notFound } from 'next/navigation'
-import { currentUser } from '@clerk/nextjs/server'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getCurrentUser } from '@/lib/auth/server'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -20,7 +15,7 @@ interface Props {
 
 export default async function AlbumPage({ params }: Props) {
   const { id } = await params
-  const user = await currentUser()
+  const user = await getCurrentUser()
   
   if (!user?.id) {
     return notFound()
@@ -33,21 +28,22 @@ export default async function AlbumPage({ params }: Props) {
 
   try {
     // Get user's couple data using admin client
-    const { data: userData } = await supabaseAdmin
+    const supabase = getAdminClient()
+    const { data: userData } = await supabase
       .from('users')
       .select(`
         id,
-        couples (id)
+        wedding_couples (id)
       `)
-      .eq('clerk_user_id', user.id)
+      .eq('supabaseUserId', user.id)
       .single()
 
-    if (userData?.couples?.[0]) {
-      const coupleId = userData.couples[0].id
+    if (userData?.wedding_couples?.[0]) {
+      const coupleId = userData.wedding_couples[0].id
 
       try {
         // Check if photo gallery tables exist
-        const { data: tablesCheck } = await supabaseAdmin
+        const { data: tablesCheck } = await supabase
           .from('information_schema.tables')
           .select('table_name')
           .eq('table_schema', 'public')
@@ -58,14 +54,14 @@ export default async function AlbumPage({ params }: Props) {
 
         if (tablesExist) {
           // Get album details
-          const { data: albumData, error: albumError } = await supabaseAdmin
+          const { data: albumData, error: albumError } = await supabase
             .from('photo_albums')
             .select(`
               *,
               photos:photos(count)
             `)
             .eq('id', id)
-            .eq('couple_id', coupleId)
+            .eq('coupleId', coupleId)
             .single()
 
           if (albumError || !albumData) {
@@ -79,7 +75,7 @@ export default async function AlbumPage({ params }: Props) {
           }
 
           // Get photos in this album
-          const { data: photosData } = await supabaseAdmin
+          const { data: photosData } = await supabase
             .from('photos')
             .select(`
               *,
@@ -88,17 +84,17 @@ export default async function AlbumPage({ params }: Props) {
                 name
               )
             `)
-            .eq('album_id', id)
-            .eq('couple_id', coupleId)
-            .order('created_at', { ascending: false })
+            .eq('albumId', id)
+            .eq('coupleId', coupleId)
+            .order('createdAt', { ascending: false })
 
           photos = photosData || []
 
           // Get all albums for moving photos
-          const { data: albumsData } = await supabaseAdmin
+          const { data: albumsData } = await supabase
             .from('photo_albums')
             .select('id, name, description')
-            .eq('couple_id', coupleId)
+            .eq('coupleId', coupleId)
             .order('name', { ascending: true })
 
           allAlbums = albumsData || []
@@ -188,9 +184,9 @@ export default async function AlbumPage({ params }: Props) {
         <Card>
           <CardContent className="p-6 text-center">
             <Image className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-            <div className="text-2xl font-bold">{album.photo_count}</div>
+            <div className="text-2xl font-bold">{album.photos?.length || 0}</div>
             <div className="text-sm text-muted-foreground">
-              Photo{album.photo_count !== 1 ? 's' : ''}
+              Photo{album.photos?.length || 0 !== 1 ? 's' : ''}
             </div>
           </CardContent>
         </Card>
@@ -198,7 +194,7 @@ export default async function AlbumPage({ params }: Props) {
         <Card>
           <CardContent className="p-6 text-center">
             <Calendar className="w-8 h-8 mx-auto mb-2 text-green-600" />
-            <div className="text-sm font-medium">{formatDate(album.created_at)}</div>
+            <div className="text-sm font-medium">{formatDate(album.createdAt)}</div>
             <div className="text-sm text-muted-foreground">Created</div>
           </CardContent>
         </Card>
@@ -207,7 +203,7 @@ export default async function AlbumPage({ params }: Props) {
           <CardContent className="p-6 text-center">
             <Users className="w-8 h-8 mx-auto mb-2 text-purple-600" />
             <div className="text-sm font-medium">
-              {album.is_shared ? 'Shared' : 'Private'}
+              {album.isShared ? 'Shared' : 'Private'}
             </div>
             <div className="text-sm text-muted-foreground">Visibility</div>
           </CardContent>

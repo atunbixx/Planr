@@ -19,15 +19,15 @@ export default function Step3VenueLocation({ formData, updateFormData, onNext, o
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="venue_name" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="venueName" className="block text-sm font-medium text-gray-700 mb-2">
           Venue Name
         </label>
         <input
-          id="venue_name"
+          id="venueName"
           type="text"
           placeholder="The Grand Ballroom"
-          value={formData.venue_name || ''}
-          onChange={(e) => updateFormData({ venue_name: e.target.value })}
+          value={formData.venueName || ''}
+          onChange={(e) => updateFormData({ venueName: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-colors"
         />
         <p className="mt-1 text-sm text-gray-500">
@@ -36,15 +36,15 @@ export default function Step3VenueLocation({ formData, updateFormData, onNext, o
       </div>
 
       <div>
-        <label htmlFor="venue_location" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="venueLocation" className="block text-sm font-medium text-gray-700 mb-2">
           Venue Location
         </label>
         <input
-          id="venue_location"
+          id="venueLocation"
           type="text"
           placeholder="San Francisco, CA"
-          value={formData.venue_location || ''}
-          onChange={(e) => updateFormData({ venue_location: e.target.value })}
+          value={formData.venueLocation || ''}
+          onChange={(e) => updateFormData({ venueLocation: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-colors"
         />
         <p className="mt-1 text-sm text-gray-500">

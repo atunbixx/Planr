@@ -1,0 +1,307 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "submit": "Enviar",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "yes": "Sim",
+    "no": "Não",
+    "error": "Erro",
+    "success": "Sucesso",
+    "warning": "Aviso",
+    "info": "Informação"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Cadastrar",
+    "signOut": "Sair",
+    "welcomeBack": "Bem-vindo de volta!",
+    "createAccount": "Crie sua conta"
+  },
+  "navigation": {
+    "dashboard": "Painel de Controle",
+    "guests": "Convidados",
+    "seatingChart": "Mapa de Mesas",
+    "budget": "Orçamento",
+    "vendors": "Fornecedores",
+    "photos": "Fotos",
+    "messages": "Mensagens",
+    "checklist": "Lista de Tarefas",
+    "settings": "Configurações",
+    "account": "Conta"
+  },
+  "dashboard": {
+    "title": "Painel do Casamento",
+    "welcome": "Bem-vindo ao seu painel de planejamento de casamento",
+    "daysUntil": "Dias até o seu casamento",
+    "overview": "Visão Geral",
+    "recentActivity": "Atividade Recente",
+    "quickActions": "Ações Rápidas",
+    "stats": {
+      "totalGuests": "Total de Convidados",
+      "confirmedGuests": "Convidados Confirmados",
+      "pendingRSVPs": "RSVPs Pendentes",
+      "budgetUsed": "Orçamento Usado",
+      "tasksCompleted": "Tarefas Concluídas",
+      "photosUploaded": "Fotos Enviadas"
+    }
+  },
+  "guests": {
+    "title": "Lista de Convidados",
+    "description": "Gerencie sua lista de convidados e RSVPs",
+    "addGuest": "Adicionar Convidado",
+    "importGuests": "Importar Convidados",
+    "exportGuests": "Exportar Convidados",
+    "searchPlaceholder": "Pesquisar por nome ou email",
+    "filters": {
+      "all": "Todos",
+      "confirmed": "Confirmados",
+      "declined": "Recusados",
+      "pending": "Pendentes",
+      "bride": "Lado da Noiva",
+      "groom": "Lado do Noivo",
+      "both": "Ambos os Lados"
+    },
+    "form": {
+      "name": "Nome do Convidado",
+      "email": "Endereço de Email",
+      "phone": "Telefone",
+      "relationship": "Relacionamento",
+      "side": "Lado",
+      "plusOne": "Acompanhante Permitido",
+      "dietaryRestrictions": "Restrições Alimentares",
+      "specialRequests": "Pedidos Especiais",
+      "notes": "Notas",
+      "rsvpStatus": "Status RSVP"
+    },
+    "actions": {
+      "markConfirmed": "Marcar como Confirmado",
+      "markDeclined": "Marcar como Recusado",
+      "markPending": "Marcar como Pendente",
+      "sendInvitation": "Enviar Convite",
+      "deleteGuest": "Excluir Convidado"
+    },
+    "stats": {
+      "total": "Total de Convidados",
+      "confirmed": "Confirmados",
+      "declined": "Recusados",
+      "pending": "Pendentes",
+      "plusOnes": "Acompanhantes"
+    }
+  },
+  "seating": {
+    "title": "Mapa de Mesas",
+    "description": "Organize seus convidados nas mesas",
+    "addTable": "Adicionar Mesa",
+    "tableNumber": "Mesa {number}",
+    "capacity": "Capacidade: {current}/{max}",
+    "unassignedGuests": "Convidados Não Atribuídos",
+    "saveArrangement": "Salvar Arranjo",
+    "clearAll": "Limpar Tudo",
+    "noGuests": "Nenhum convidado para organizar",
+    "dragToAssign": "Arraste os convidados para atribuí-los às mesas"
+  },
+  "budget": {
+    "title": "Orçamento do Casamento",
+    "description": "Acompanhe suas despesas de casamento",
+    "totalBudget": "Orçamento Total",
+    "spent": "Gasto",
+    "remaining": "Restante",
+    "addExpense": "Adicionar Despesa",
+    "categories": {
+      "venue": "Local",
+      "catering": "Buffet",
+      "photography": "Fotografia",
+      "flowers": "Flores",
+      "music": "Música",
+      "attire": "Vestuário",
+      "decorations": "Decorações",
+      "other": "Outros"
+    },
+    "form": {
+      "description": "Descrição",
+      "amount": "Valor",
+      "category": "Categoria",
+      "date": "Data",
+      "vendor": "Fornecedor",
+      "notes": "Notas",
+      "paid": "Pago"
+    }
+  },
+  "vendors": {
+    "title": "Fornecedores",
+    "description": "Gerencie seus fornecedores de casamento",
+    "addVendor": "Adicionar Fornecedor",
+    "searchPlaceholder": "Pesquisar fornecedores",
+    "categories": {
+      "all": "Todas as Categorias",
+      "venue": "Local",
+      "catering": "Buffet",
+      "photography": "Fotografia",
+      "videography": "Videografia",
+      "florist": "Florista",
+      "music": "Música/DJ",
+      "officiant": "Celebrante",
+      "other": "Outros"
+    },
+    "form": {
+      "businessName": "Nome da Empresa",
+      "contactName": "Nome do Contato",
+      "email": "Email",
+      "phone": "Telefone",
+      "category": "Categoria",
+      "website": "Site",
+      "instagram": "Instagram",
+      "price": "Preço",
+      "depositPaid": "Sinal Pago",
+      "depositAmount": "Valor do Sinal",
+      "notes": "Notas",
+      "contractSigned": "Contrato Assinado",
+      "rating": "Avaliação"
+    }
+  },
+  "photos": {
+    "title": "Fotos",
+    "description": "Sua galeria de fotos do casamento",
+    "uploadPhotos": "Enviar Fotos",
+    "createAlbum": "Criar Álbum",
+    "allPhotos": "Todas as Fotos",
+    "albums": "Álbuns",
+    "favorites": "Favoritos",
+    "dragToUpload": "Arraste fotos aqui ou clique para enviar",
+    "uploadingCount": "Enviando {count} fotos...",
+    "deleteConfirm": "Tem certeza de que deseja excluir esta foto?"
+  },
+  "settings": {
+    "title": "Configurações",
+    "description": "Gerencie sua conta e preferências de casamento",
+    "sections": {
+      "weddingDetails": "Detalhes do Casamento",
+      "sharingCollaboration": "Compartilhamento e Colaboração",
+      "budgetSettings": "Configurações de Orçamento",
+      "notifications": "Notificações",
+      "account": "Configurações da Conta",
+      "dataPrivacy": "Dados e Privacidade"
+    },
+    "wedding": {
+      "partnerName": "Nome do Parceiro",
+      "weddingDate": "Data do Casamento",
+      "venue": "Local",
+      "location": "Localização",
+      "expectedGuests": "Número Esperado de Convidados",
+      "weddingStyle": "Estilo do Casamento",
+      "styles": {
+        "traditional": "Tradicional",
+        "modern": "Moderno",
+        "rustic": "Rústico",
+        "vintage": "Vintage",
+        "destination": "Destino",
+        "casual": "Casual",
+        "formal": "Formal"
+      }
+    },
+    "sharing": {
+      "title": "Gerenciar Colaboradores",
+      "description": "Convide planejadores, familiares ou fornecedores",
+      "inviteButton": "Convidar Colaborador",
+      "activeCollaborators": "Colaboradores Ativos",
+      "pendingInvitations": "Convites Pendentes",
+      "roles": {
+        "planner": "Planejador de Casamento",
+        "family": "Membro da Família",
+        "vendor": "Fornecedor",
+        "guest": "Convidado"
+      }
+    },
+    "preferences": {
+      "currency": "Moeda",
+      "timezone": "Fuso Horário",
+      "language": "Idioma",
+      "emailNotifications": "Notificações por Email",
+      "pushNotifications": "Notificações Push",
+      "taskReminders": "Lembretes de Tarefas",
+      "budgetAlerts": "Alertas de Orçamento",
+      "vendorUpdates": "Atualizações de Fornecedores"
+    },
+    "data": {
+      "exportData": "Exportar Dados",
+      "deleteAccount": "Excluir Conta",
+      "exportDescription": "Baixe uma cópia de todos os seus dados de planejamento",
+      "deleteDescription": "Exclua permanentemente sua conta e todos os dados"
+    }
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo ao seu Planejador de Casamento",
+    "letsStart": "Vamos começar a planejar seu dia perfeito!",
+    "step1": {
+      "title": "Conte-nos sobre vocês",
+      "yourName": "Seu Nome",
+      "partnerName": "Nome do Parceiro",
+      "weddingDate": "Data do Casamento",
+      "weddingDateHelp": "Quando é o grande dia?"
+    },
+    "step2": {
+      "title": "Detalhes do Casamento",
+      "location": "Local do Casamento",
+      "locationHelp": "Cidade ou local onde vocês vão se casar",
+      "guestCount": "Número Esperado de Convidados",
+      "guestCountHelp": "Número aproximado de convidados"
+    },
+    "step3": {
+      "title": "Defina seu Orçamento",
+      "totalBudget": "Orçamento Total do Casamento",
+      "budgetHelp": "Seu orçamento total estimado",
+      "currency": "Moeda"
+    },
+    "complete": "Concluir Configuração"
+  },
+  "invitation": {
+    "title": "Você foi Convidado para Colaborar!",
+    "description": "{couple} convidou você para ajudar a planejar o casamento",
+    "yourRole": "Seu Papel",
+    "yourPermissions": "Suas Permissões",
+    "weddingDate": "Data do Casamento",
+    "acceptInvitation": "Aceitar Convite",
+    "signUpToAccept": "Cadastre-se e Aceite o Convite",
+    "signInToAccept": "Entre para Aceitar",
+    "disclaimer": "Ao aceitar este convite, você terá acesso ao painel de planejamento com as permissões listadas acima."
+  },
+  "permissions": {
+    "view": "Visualizar Painel",
+    "edit": "Editar Detalhes do Casamento",
+    "manage_guests": "Gerenciar Lista de Convidados",
+    "edit_guests": "Editar Informações dos Convidados",
+    "manage_budget": "Gerenciar Orçamento",
+    "view_budget": "Visualizar Orçamento",
+    "manage_vendors": "Gerenciar Fornecedores",
+    "view_schedule": "Visualizar Cronograma",
+    "manage_tasks": "Gerenciar Tarefas",
+    "manage_photos": "Gerenciar Fotos",
+    "view_photos": "Visualizar Fotos",
+    "manage_own_vendor": "Gerenciar suas Informações de Fornecedor"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Por favor, tente novamente.",
+    "notFound": "Página não encontrada",
+    "unauthorized": "Você não tem permissão para acessar isso",
+    "networkError": "Erro de rede. Por favor, verifique sua conexão.",
+    "invalidData": "Dados inválidos fornecidos",
+    "requiredField": "Este campo é obrigatório"
+  },
+  "success": {
+    "saved": "Salvo com sucesso",
+    "deleted": "Excluído com sucesso",
+    "updated": "Atualizado com sucesso",
+    "invited": "Convite enviado com sucesso",
+    "uploaded": "Enviado com sucesso"
+  }
+}

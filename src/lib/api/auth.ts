@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { getCurrentUser } from '@/lib/auth/server'
 import { prisma } from '@/lib/prisma'
 import { AuthContext, ApiResponse } from '@/types/api'
 import { 
@@ -10,15 +10,15 @@ import {
 
 // Main authentication function
 export async function getAuthContext(): Promise<AuthContext> {
-  const { userId: clerkUserId } = await auth()
+  const supabaseUser = await getCurrentUser()
   
-  if (!clerkUserId) {
+  if (!supabaseUser) {
     throw new UnauthorizedException()
   }
 
   // Get user from database
   const user = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkUserId }
+    where: { supabase_user_id: supabaseUser.id }
   })
 
   if (!user) {
@@ -26,12 +26,12 @@ export async function getAuthContext(): Promise<AuthContext> {
   }
 
   // Get couple associated with user (optional - user might not have created profile yet)
-  // Note: We'll skip couple lookup for now to avoid schema issues
-  // This will be handled when the user completes their profile setup
-  const couple = null
+  const couple = await prisma.couple.findUnique({
+    where: { userId: user.id }
+  })
 
   return {
-    userId: clerkUserId,
+    userId: supabaseUser.id,
     user,
     couple // This will be null until user completes wedding profile
   }

@@ -1,39 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminClient } from '@/lib/supabase-admin-transformed'
 import cloudinary, { CLOUDINARY_FOLDER } from '@/lib/cloudinary'
-import { auth } from '@clerk/nextjs/server'
-
-// Use service role key for bypassing RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getCurrentUser } from '@/lib/auth/server'
+import { transformToCamelCase } from '@/lib/db/field-mappings'
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's couple data using admin client
-    const { data: userData, error: userError } = await supabaseAdmin
+    // Get user's couple data using transformed admin client
+    const supabase = getAdminClient()
+    
+    const { data: userData, error: userError } = await supabase
       .from('users')
-      .select(`
-        id,
-        couples (id)
-      `)
-      .eq('clerk_user_id', userId)
+      .select('id')
+      .eq('supabaseUserId', user.id)
       .single()
 
-    if (userError || !userData?.couples?.[0]) {
+    if (userError || !userData) {
+      return NextResponse.json({ 
+        error: 'User not found',
+        redirect: '/sign-in'
+      }, { status: 404 })
+    }
+
+    // Get couple data from wedding_couples table - now we can use camelCase!
+    const { data: coupleData, error: coupleError } = await supabase
+      .from('wedding_couples')
+      .select('id')
+      .or(`partner1UserId.eq.${userData.id},partner2UserId.eq.${userData.id}`)
+      .single()
+
+    if (coupleError || !coupleData) {
       return NextResponse.json({ 
         error: 'No couple data found. Please complete onboarding first.',
         redirect: '/onboarding'
       }, { status: 404 })
     }
 
-    const coupleId = userData.couples[0].id
+    const coupleId = coupleData.id
 
     // Parse form data
     const formData = await request.formData()
@@ -68,9 +76,9 @@ export async function POST(request: NextRequest) {
               ],
               tags: [eventType, 'wedding', coupleId].filter(Boolean),
               context: {
-                couple_id: coupleId,
-                event_type: eventType || 'general',
-                uploaded_by: userId
+                coupleId: coupleId,
+                eventType: eventType || 'general',
+                uploadedBy: user.id
               }
             },
             (error, result) => {
@@ -82,27 +90,28 @@ export async function POST(request: NextRequest) {
 
         const cloudResult = uploadResult as any
 
-        // Save photo metadata to database
+        // Save photo metadata to database - now using camelCase!
         const photoData = {
-          couple_id: coupleId,
-          album_id: albumId || null,
+          coupleId: coupleId,
+          albumId: albumId || null,
           title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
-          cloudinary_public_id: cloudResult.public_id,
-          cloudinary_url: cloudResult.url,
-          cloudinary_secure_url: cloudResult.secure_url,
-          original_filename: file.name,
-          file_size: cloudResult.bytes,
+          cloudinaryPublicId: cloudResult.public_id,
+          cloudinaryUrl: cloudResult.url,
+          cloudinarySecureUrl: cloudResult.secure_url,
+          originalFilename: file.name,
+          fileSize: cloudResult.bytes,
           width: cloudResult.width,
           height: cloudResult.height,
           format: cloudResult.format,
-          photo_date: photoDate ? new Date(photoDate).toISOString().split('T')[0] : null,
+          photoDate: photoDate ? new Date(photoDate).toISOString().split('T')[0] : null,
           location: location || null,
           photographer: photographer || null,
-          event_type: eventType || 'general',
-          tags: [eventType, location, photographer].filter(Boolean)
+          eventType: eventType || 'general',
+          tags: [eventType, location, photographer].filter(Boolean),
+          imageUrl: cloudResult.secure_url // This is required field
         }
 
-        const { data: photo, error: photoError } = await supabaseAdmin
+        const { data: photo, error: photoError } = await supabase
           .from('photos')
           .insert(photoData)
           .select(`
@@ -156,6 +165,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Photo upload API error:', error)
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to upload photos',
@@ -169,33 +188,44 @@ export async function POST(request: NextRequest) {
 // Get photos endpoint
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's couple data
-    const { data: userData } = await supabaseAdmin
+    // Get user's couple data using transformed admin client
+    const supabase = getAdminClient()
+    
+    const { data: userData } = await supabase
       .from('users')
-      .select(`
-        couples (id)
-      `)
-      .eq('clerk_user_id', userId)
+      .select('id')
+      .eq('supabaseUserId', user.id)
       .single()
 
-    if (!userData?.couples?.[0]) {
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Get couple data from wedding_couples table - now we can use camelCase!
+    const { data: coupleData } = await supabase
+      .from('wedding_couples')
+      .select('id')
+      .or(`partner1UserId.eq.${userData.id},partner2UserId.eq.${userData.id}`)
+      .single()
+
+    if (!coupleData) {
       return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
     }
 
-    const coupleId = userData.couples[0].id
+    const coupleId = coupleData.id
     const { searchParams } = new URL(request.url)
     const albumId = searchParams.get('albumId')
     const eventType = searchParams.get('eventType')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Build query
-    let query = supabaseAdmin
+    // Build query - now using camelCase fields!
+    let query = supabase
       .from('photos')
       .select(`
         *,
@@ -205,18 +235,18 @@ export async function GET(request: NextRequest) {
           description
         )
       `)
-      .eq('couple_id', coupleId)
+      .eq('coupleId', coupleId)
 
     if (albumId && albumId !== 'all') {
-      query = query.eq('album_id', albumId)
+      query = query.eq('albumId', albumId)
     }
 
     if (eventType && eventType !== 'all') {
-      query = query.eq('event_type', eventType)
+      query = query.eq('eventType', eventType)
     }
 
     const { data: photos, error } = await query
-      .order('created_at', { ascending: false })
+      .order('createdAt', { ascending: false })
       .range(offset, offset + limit - 1)
 
     if (error) {
@@ -227,22 +257,22 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Get photo statistics
-    const { data: stats } = await supabaseAdmin
-      .rpc('get_photo_stats', { p_couple_id: coupleId })
+    // Get photo statistics - using camelCase parameter
+    const { data: stats } = await supabase
+      .rpc('get_photo_stats', { pCoupleId: coupleId })
 
     return NextResponse.json({
       success: true,
       data: {
         photos: photos || [],
         stats: stats?.[0] || {
-          total_photos: 0,
-          total_albums: 0,
-          favorite_photos: 0,
-          shared_photos: 0,
-          total_comments: 0,
-          total_reactions: 0,
-          storage_used: 0
+          totalPhotos: 0,
+          totalAlbums: 0,
+          favoritePhotos: 0,
+          privatePhotos: 0,
+          totalComments: 0,
+          totalReactions: 0,
+          storageUsed: 0
         },
         pagination: {
           offset,

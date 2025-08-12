@@ -95,25 +95,25 @@
   ],
   "shortcuts": [
     {
+      "name": "Day-of Dashboard",
+      "short_name": "Day Of",
+      "description": "Real-time wedding day coordination",
+      "url": "/dashboard/day-of",
+      "icons": [{ "src": "/icons/dayof-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Seating Planner",
+      "short_name": "Seating",
+      "description": "Design your reception layout",
+      "url": "/dashboard/seating",
+      "icons": [{ "src": "/icons/seating-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+    },
+    {
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "Go to your wedding dashboard",
       "url": "/dashboard",
       "icons": [{ "src": "/icons/dashboard-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
-    },
-    {
-      "name": "Photo Gallery",
-      "short_name": "Photos",
-      "description": "View and manage wedding photos",
-      "url": "/dashboard/photos",
-      "icons": [{ "src": "/icons/photos-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
-    },
-    {
-      "name": "Vendors",
-      "short_name": "Vendors",
-      "description": "Manage wedding vendors",
-      "url": "/dashboard/vendors",
-      "icons": [{ "src": "/icons/vendors-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     },
     {
       "name": "Guest List",
@@ -123,11 +123,11 @@
       "icons": [{ "src": "/icons/guests-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     },
     {
-      "name": "Budget Tracker",
-      "short_name": "Budget",
-      "description": "Track wedding expenses",
-      "url": "/dashboard/budget",
-      "icons": [{ "src": "/icons/budget-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
+      "name": "Vendors",
+      "short_name": "Vendors",
+      "description": "Manage wedding vendors",
+      "url": "/dashboard/vendors",
+      "icons": [{ "src": "/icons/vendors-icon.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     }
   ],
   "protocol_handlers": [

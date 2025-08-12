@@ -1,0 +1,307 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "yes": "Sí",
+    "no": "No",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información"
+  },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "signOut": "Cerrar Sesión",
+    "welcomeBack": "¡Bienvenido de nuevo!",
+    "createAccount": "Crea tu cuenta"
+  },
+  "navigation": {
+    "dashboard": "Panel de Control",
+    "guests": "Invitados",
+    "seatingChart": "Plano de Mesas",
+    "budget": "Presupuesto",
+    "vendors": "Proveedores",
+    "photos": "Fotos",
+    "messages": "Mensajes",
+    "checklist": "Lista de Tareas",
+    "settings": "Configuración",
+    "account": "Cuenta"
+  },
+  "dashboard": {
+    "title": "Panel de Boda",
+    "welcome": "Bienvenido a tu panel de planificación de bodas",
+    "daysUntil": "Días hasta tu boda",
+    "overview": "Resumen",
+    "recentActivity": "Actividad Reciente",
+    "quickActions": "Acciones Rápidas",
+    "stats": {
+      "totalGuests": "Total de Invitados",
+      "confirmedGuests": "Invitados Confirmados",
+      "pendingRSVPs": "RSVPs Pendientes",
+      "budgetUsed": "Presupuesto Usado",
+      "tasksCompleted": "Tareas Completadas",
+      "photosUploaded": "Fotos Subidas"
+    }
+  },
+  "guests": {
+    "title": "Lista de Invitados",
+    "description": "Gestiona tu lista de invitados y RSVPs",
+    "addGuest": "Añadir Invitado",
+    "importGuests": "Importar Invitados",
+    "exportGuests": "Exportar Invitados",
+    "searchPlaceholder": "Buscar por nombre o email",
+    "filters": {
+      "all": "Todos",
+      "confirmed": "Confirmados",
+      "declined": "Rechazados",
+      "pending": "Pendientes",
+      "bride": "Lado de la Novia",
+      "groom": "Lado del Novio",
+      "both": "Ambos Lados"
+    },
+    "form": {
+      "name": "Nombre del Invitado",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "relationship": "Relación",
+      "side": "Lado",
+      "plusOne": "Acompañante Permitido",
+      "dietaryRestrictions": "Restricciones Dietéticas",
+      "specialRequests": "Peticiones Especiales",
+      "notes": "Notas",
+      "rsvpStatus": "Estado RSVP"
+    },
+    "actions": {
+      "markConfirmed": "Marcar Confirmado",
+      "markDeclined": "Marcar Rechazado",
+      "markPending": "Marcar Pendiente",
+      "sendInvitation": "Enviar Invitación",
+      "deleteGuest": "Eliminar Invitado"
+    },
+    "stats": {
+      "total": "Total de Invitados",
+      "confirmed": "Confirmados",
+      "declined": "Rechazados",
+      "pending": "Pendientes",
+      "plusOnes": "Acompañantes"
+    }
+  },
+  "seating": {
+    "title": "Plano de Mesas",
+    "description": "Organiza a tus invitados en las mesas",
+    "addTable": "Añadir Mesa",
+    "tableNumber": "Mesa {number}",
+    "capacity": "Capacidad: {current}/{max}",
+    "unassignedGuests": "Invitados Sin Asignar",
+    "saveArrangement": "Guardar Distribución",
+    "clearAll": "Limpiar Todo",
+    "noGuests": "No hay invitados para organizar",
+    "dragToAssign": "Arrastra invitados para asignarlos a las mesas"
+  },
+  "budget": {
+    "title": "Presupuesto de Boda",
+    "description": "Controla tus gastos de boda",
+    "totalBudget": "Presupuesto Total",
+    "spent": "Gastado",
+    "remaining": "Restante",
+    "addExpense": "Añadir Gasto",
+    "categories": {
+      "venue": "Lugar",
+      "catering": "Catering",
+      "photography": "Fotografía",
+      "flowers": "Flores",
+      "music": "Música",
+      "attire": "Vestuario",
+      "decorations": "Decoraciones",
+      "other": "Otros"
+    },
+    "form": {
+      "description": "Descripción",
+      "amount": "Cantidad",
+      "category": "Categoría",
+      "date": "Fecha",
+      "vendor": "Proveedor",
+      "notes": "Notas",
+      "paid": "Pagado"
+    }
+  },
+  "vendors": {
+    "title": "Proveedores",
+    "description": "Gestiona tus proveedores de boda",
+    "addVendor": "Añadir Proveedor",
+    "searchPlaceholder": "Buscar proveedores",
+    "categories": {
+      "all": "Todas las Categorías",
+      "venue": "Lugar",
+      "catering": "Catering",
+      "photography": "Fotografía",
+      "videography": "Videografía",
+      "florist": "Florista",
+      "music": "Música/DJ",
+      "officiant": "Oficiante",
+      "other": "Otros"
+    },
+    "form": {
+      "businessName": "Nombre del Negocio",
+      "contactName": "Nombre de Contacto",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "category": "Categoría",
+      "website": "Sitio Web",
+      "instagram": "Instagram",
+      "price": "Precio",
+      "depositPaid": "Depósito Pagado",
+      "depositAmount": "Cantidad del Depósito",
+      "notes": "Notas",
+      "contractSigned": "Contrato Firmado",
+      "rating": "Calificación"
+    }
+  },
+  "photos": {
+    "title": "Fotos",
+    "description": "Tu galería de fotos de boda",
+    "uploadPhotos": "Subir Fotos",
+    "createAlbum": "Crear Álbum",
+    "allPhotos": "Todas las Fotos",
+    "albums": "Álbumes",
+    "favorites": "Favoritos",
+    "dragToUpload": "Arrastra fotos aquí o haz clic para subir",
+    "uploadingCount": "Subiendo {count} fotos...",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar esta foto?"
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Gestiona tu cuenta y preferencias de boda",
+    "sections": {
+      "weddingDetails": "Detalles de la Boda",
+      "sharingCollaboration": "Compartir y Colaboración",
+      "budgetSettings": "Configuración del Presupuesto",
+      "notifications": "Notificaciones",
+      "account": "Configuración de Cuenta",
+      "dataPrivacy": "Datos y Privacidad"
+    },
+    "wedding": {
+      "partnerName": "Nombre de tu Pareja",
+      "weddingDate": "Fecha de la Boda",
+      "venue": "Lugar",
+      "location": "Ubicación",
+      "expectedGuests": "Número Esperado de Invitados",
+      "weddingStyle": "Estilo de Boda",
+      "styles": {
+        "traditional": "Tradicional",
+        "modern": "Moderna",
+        "rustic": "Rústica",
+        "vintage": "Vintage",
+        "destination": "Destino",
+        "casual": "Casual",
+        "formal": "Formal"
+      }
+    },
+    "sharing": {
+      "title": "Gestionar Colaboradores",
+      "description": "Invita a planificadores, familiares o proveedores",
+      "inviteButton": "Invitar Colaborador",
+      "activeCollaborators": "Colaboradores Activos",
+      "pendingInvitations": "Invitaciones Pendientes",
+      "roles": {
+        "planner": "Planificador de Bodas",
+        "family": "Miembro de la Familia",
+        "vendor": "Proveedor",
+        "guest": "Invitado"
+      }
+    },
+    "preferences": {
+      "currency": "Moneda",
+      "timezone": "Zona Horaria",
+      "language": "Idioma",
+      "emailNotifications": "Notificaciones por Email",
+      "pushNotifications": "Notificaciones Push",
+      "taskReminders": "Recordatorios de Tareas",
+      "budgetAlerts": "Alertas de Presupuesto",
+      "vendorUpdates": "Actualizaciones de Proveedores"
+    },
+    "data": {
+      "exportData": "Exportar Datos",
+      "deleteAccount": "Eliminar Cuenta",
+      "exportDescription": "Descarga una copia de todos tus datos de planificación",
+      "deleteDescription": "Elimina permanentemente tu cuenta y todos los datos"
+    }
+  },
+  "onboarding": {
+    "welcome": "Bienvenido a tu Planificador de Bodas",
+    "letsStart": "¡Empecemos a planificar tu día perfecto!",
+    "step1": {
+      "title": "Cuéntanos sobre ustedes",
+      "yourName": "Tu Nombre",
+      "partnerName": "Nombre de tu Pareja",
+      "weddingDate": "Fecha de la Boda",
+      "weddingDateHelp": "¿Cuándo es el gran día?"
+    },
+    "step2": {
+      "title": "Detalles de la Boda",
+      "location": "Ubicación de la Boda",
+      "locationHelp": "Ciudad o lugar donde se casarán",
+      "guestCount": "Número Esperado de Invitados",
+      "guestCountHelp": "Número aproximado de invitados"
+    },
+    "step3": {
+      "title": "Establece tu Presupuesto",
+      "totalBudget": "Presupuesto Total de la Boda",
+      "budgetHelp": "Tu presupuesto total estimado",
+      "currency": "Moneda"
+    },
+    "complete": "Completar Configuración"
+  },
+  "invitation": {
+    "title": "¡Estás Invitado a Colaborar!",
+    "description": "{couple} te ha invitado a ayudar a planificar su boda",
+    "yourRole": "Tu Rol",
+    "yourPermissions": "Tus Permisos",
+    "weddingDate": "Fecha de la Boda",
+    "acceptInvitation": "Aceptar Invitación",
+    "signUpToAccept": "Registrarse y Aceptar Invitación",
+    "signInToAccept": "Iniciar Sesión para Aceptar",
+    "disclaimer": "Al aceptar esta invitación, obtendrás acceso al panel de planificación con los permisos listados arriba."
+  },
+  "permissions": {
+    "view": "Ver Panel de Control",
+    "edit": "Editar Detalles de la Boda",
+    "manage_guests": "Gestionar Lista de Invitados",
+    "edit_guests": "Editar Información de Invitados",
+    "manage_budget": "Gestionar Presupuesto",
+    "view_budget": "Ver Presupuesto",
+    "manage_vendors": "Gestionar Proveedores",
+    "view_schedule": "Ver Horario",
+    "manage_tasks": "Gestionar Tareas",
+    "manage_photos": "Gestionar Fotos",
+    "view_photos": "Ver Fotos",
+    "manage_own_vendor": "Gestionar tu Información de Proveedor"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "notFound": "Página no encontrada",
+    "unauthorized": "No tienes permiso para acceder a esto",
+    "networkError": "Error de red. Por favor, verifica tu conexión.",
+    "invalidData": "Datos inválidos proporcionados",
+    "requiredField": "Este campo es obligatorio"
+  },
+  "success": {
+    "saved": "Guardado exitosamente",
+    "deleted": "Eliminado exitosamente",
+    "updated": "Actualizado exitosamente",
+    "invited": "Invitación enviada exitosamente",
+    "uploaded": "Subido exitosamente"
+  }
+}

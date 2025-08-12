@@ -1,0 +1,353 @@
+{
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "back": "वापस",
+    "next": "अगला",
+    "submit": "सबमिट करें",
+    "confirm": "पुष्टि करें",
+    "close": "बंद करें",
+    "yes": "हां",
+    "no": "नहीं",
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "warning": "चेतावनी",
+    "info": "जानकारी",
+    "reload": "पेज को फिर से लोड करें"
+  },
+  "auth": {
+    "signIn": "साइन इन करें",
+    "signUp": "साइन अप करें",
+    "signOut": "साइन आउट करें",
+    "welcomeBack": "वापसी पर स्वागत है!",
+    "createAccount": "अपना खाता बनाएं"
+  },
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "guests": "मेहमान",
+    "seatingChart": "सीटिंग चार्ट",
+    "budget": "बजट",
+    "vendors": "विक्रेता",
+    "photos": "फोटो",
+    "messages": "संदेश",
+    "checklist": "चेकलिस्ट",
+    "settings": "सेटिंग्स",
+    "account": "खाता"
+  },
+  "dashboard": {
+    "title": "शादी डैशबोर्ड",
+    "welcome": "आपके शादी योजना डैशबोर्ड में आपका स्वागत है",
+    "daysUntil": "आपकी शादी तक के दिन",
+    "daysToGo": "{days} दिन बाकी!",
+    "yourWeddingDay": "आपकी शादी का दिन!",
+    "overview": "अवलोकन",
+    "recentActivity": "हाल की गतिविधि",
+    "quickActions": "त्वरित कार्रवाई",
+    "overallProgress": "कुल प्रगति",
+    "wedding": "शादी",
+    "budgetOverview": "बजट अवलोकन",
+    "guestRSVPs": "अतिथि जवाब",
+    "vendorStatus": "विक्रेता स्थिति",
+    "vendorsBooked": "बुक किए गए विक्रेता",
+    "thisWeeksTasks": "इस सप्ताह के कार्य",
+    "upcomingPayments": "आगामी भुगतान",
+    "weddingDetails": "शादी विवरण",
+    "appChat": "ऐप चैट",
+    "upcomingEvents": "आगामी कार्यक्रम",
+    "seeAll": "सभी देखें",
+    "noRecentMessages": "कोई हाल के संदेश नहीं",
+    "noUpcomingTasks": "कोई आगामी कार्य नहीं",
+    "noDate": "कोई तारीख नहीं",
+    "stats": {
+      "totalGuests": "कुल मेहमान",
+      "confirmedGuests": "पुष्ट मेहमान",
+      "pendingRSVPs": "लंबित जवाब",
+      "budgetUsed": "उपयोग किया गया बजट",
+      "tasksCompleted": "पूर्ण किए गए कार्य",
+      "photosUploaded": "अपलोड की गई फोटो",
+      "of": "में से",
+      "remaining": "शेष",
+      "confirmed": "पुष्ट",
+      "pending": "लंबित",
+      "declined": "अस्वीकृत",
+      "booked": "बुक किया गया",
+      "complete": "पूर्ण",
+      "taskssDone": "कार्य पूर्ण"
+    },
+    "venue": "स्थान",
+    "date": "तारीख",
+    "editDetails": "विवरण संपादित करें",
+    "sendRSVPReminders": "RSVP अनुस्मारक भेजें",
+    "contactVendors": "विक्रेताओं से संपर्क करें",
+    "uploadPhotos": "फोटो अपलोड करें",
+    "addExpense": "खर्च जोड़ें",
+    "viewAll": "सभी देखें",
+    "viewBudget": "बजट देखें",
+    "view": "देखें",
+    "trackExpenses": "खर्चों को ट्रैक करें",
+    "manageRSVPs": "RSVPs प्रबंधित करें",
+    "bookServices": "सेवाएं बुक करें",
+    "weddingGallery": "शादी गैलरी",
+    "dueIn": "{days} दिनों में देय",
+    "in": "में",
+    "days": "दिन",
+    "tasksThisWeek": "इस सप्ताह आपके {count} कार्य देय हैं",
+    "taskSystemComingSoon": "पूर्ण कार्य प्रबंधन प्रणाली जल्द ही आ रही है!",
+    "noUpcomingPayments": "कोई आगामी भुगतान नहीं"
+  },
+  "guests": {
+    "title": "अतिथि सूची",
+    "description": "अपनी शादी की अतिथि सूची और RSVPs प्रबंधित करें",
+    "addGuest": "अतिथि जोड़ें",
+    "importGuests": "अतिथि आयात करें",
+    "exportGuests": "अतिथि निर्यात करें",
+    "searchPlaceholder": "नाम या ईमेल से खोजें",
+    "filters": {
+      "all": "सभी",
+      "confirmed": "पुष्ट",
+      "declined": "अस्वीकृत",
+      "pending": "लंबित",
+      "bride": "दुल्हन पक्ष",
+      "groom": "दूल्हा पक्ष",
+      "both": "दोनों पक्ष"
+    },
+    "form": {
+      "name": "अतिथि नाम",
+      "email": "ईमेल पता",
+      "phone": "फोन नंबर",
+      "relationship": "संबंध",
+      "side": "पक्ष",
+      "plusOne": "प्लस वन अनुमति",
+      "dietaryRestrictions": "आहार प्रतिबंध",
+      "specialRequests": "विशेष अनुरोध",
+      "notes": "नोट्स",
+      "rsvpStatus": "RSVP स्थिति"
+    },
+    "actions": {
+      "markConfirmed": "पुष्ट के रूप में चिह्नित करें",
+      "markDeclined": "अस्वीकृत के रूप में चिह्नित करें",
+      "markPending": "लंबित के रूप में चिह्नित करें",
+      "sendInvitation": "निमंत्रण भेजें",
+      "deleteGuest": "अतिथि हटाएं"
+    },
+    "stats": {
+      "total": "कुल अतिथि",
+      "confirmed": "पुष्ट",
+      "declined": "अस्वीकृत",
+      "pending": "लंबित",
+      "plusOnes": "प्लस वन"
+    }
+  },
+  "seating": {
+    "title": "सीटिंग चार्ट",
+    "description": "अपने मेहमानों को टेबल पर व्यवस्थित करें",
+    "addTable": "टेबल जोड़ें",
+    "tableNumber": "टेबल {number}",
+    "capacity": "क्षमता: {current}/{max}",
+    "unassignedGuests": "अनिर्दिष्ट अतिथि",
+    "saveArrangement": "व्यवस्था सहेजें",
+    "clearAll": "सभी साफ़ करें",
+    "noGuests": "व्यवस्थित करने के लिए कोई अतिथि नहीं",
+    "dragToAssign": "टेबल पर असाइन करने के लिए अतिथि को खींचें"
+  },
+  "budget": {
+    "title": "शादी का बजट",
+    "description": "अपने शादी के खर्चों को ट्रैक करें",
+    "totalBudget": "कुल बजट",
+    "spent": "खर्च किया गया",
+    "remaining": "शेष",
+    "addExpense": "खर्च जोड़ें",
+    "categories": {
+      "venue": "स्थान",
+      "catering": "केटरिंग",
+      "photography": "फोटोग्राफी",
+      "flowers": "फूल",
+      "music": "संगीत",
+      "attire": "पोशाक",
+      "decorations": "सजावट",
+      "other": "अन्य"
+    },
+    "form": {
+      "description": "विवरण",
+      "amount": "राशि",
+      "category": "श्रेणी",
+      "date": "तारीख",
+      "vendor": "विक्रेता",
+      "notes": "नोट्स",
+      "paid": "भुगतान किया गया"
+    }
+  },
+  "vendors": {
+    "title": "विक्रेता",
+    "description": "अपने शादी के विक्रेताओं को प्रबंधित करें",
+    "addVendor": "विक्रेता जोड़ें",
+    "searchPlaceholder": "विक्रेता खोजें",
+    "categories": {
+      "all": "सभी श्रेणियां",
+      "venue": "स्थान",
+      "catering": "केटरिंग",
+      "photography": "फोटोग्राफी",
+      "videography": "वीडियोग्राफी",
+      "florist": "फूलवाला",
+      "music": "संगीत/डीजे",
+      "officiant": "पंडित/पुरोहित",
+      "other": "अन्य"
+    },
+    "form": {
+      "businessName": "व्यापार का नाम",
+      "contactName": "संपर्क व्यक्ति",
+      "email": "ईमेल",
+      "phone": "फोन",
+      "category": "श्रेणी",
+      "website": "वेबसाइट",
+      "instagram": "इंस्टाग्राम",
+      "price": "कीमत",
+      "depositPaid": "अग्रिम भुगतान",
+      "depositAmount": "अग्रिम राशि",
+      "notes": "नोट्स",
+      "contractSigned": "अनुबंध हस्ताक्षरित",
+      "rating": "रेटिंग"
+    }
+  },
+  "photos": {
+    "title": "फोटो",
+    "description": "आपकी शादी की फोटो गैलरी",
+    "uploadPhotos": "फोटो अपलोड करें",
+    "createAlbum": "एल्बम बनाएं",
+    "allPhotos": "सभी फोटो",
+    "albums": "एल्बम",
+    "favorites": "पसंदीदा",
+    "dragToUpload": "फोटो यहां खींचें या अपलोड करने के लिए क्लिक करें",
+    "uploadingCount": "{count} फोटो अपलोड हो रही हैं...",
+    "deleteConfirm": "क्या आप इस फोटो को हटाना चाहते हैं?"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "description": "अपने खाते और शादी की प्राथमिकताओं को प्रबंधित करें",
+    "sections": {
+      "weddingDetails": "शादी विवरण",
+      "sharingCollaboration": "साझाकरण और सहयोग",
+      "budgetSettings": "बजट सेटिंग्स",
+      "notifications": "सूचनाएं",
+      "account": "खाता सेटिंग्स",
+      "dataPrivacy": "डेटा और गोपनीयता"
+    },
+    "wedding": {
+      "partnerName": "साथी का नाम",
+      "weddingDate": "शादी की तारीख",
+      "venue": "स्थान",
+      "location": "स्थान",
+      "expectedGuests": "अपेक्षित अतिथि संख्या",
+      "weddingStyle": "शादी की शैली",
+      "styles": {
+        "traditional": "पारंपरिक",
+        "modern": "आधुनिक",
+        "rustic": "देहाती",
+        "vintage": "विंटेज",
+        "destination": "गंतव्य",
+        "casual": "अनौपचारिक",
+        "formal": "औपचारिक"
+      }
+    },
+    "sharing": {
+      "title": "सहयोगी प्रबंधित करें",
+      "description": "योजनाकारों, परिवार के सदस्यों या विक्रेताओं को आमंत्रित करें",
+      "inviteButton": "सहयोगी आमंत्रित करें",
+      "activeCollaborators": "सक्रिय सहयोगी",
+      "pendingInvitations": "लंबित निमंत्रण",
+      "roles": {
+        "planner": "शादी योजनाकार",
+        "family": "परिवार सदस्य",
+        "vendor": "विक्रेता",
+        "guest": "अतिथि"
+      }
+    },
+    "preferences": {
+      "currency": "मुद्रा",
+      "timezone": "समयक्षेत्र",
+      "language": "भाषा",
+      "emailNotifications": "ईमेल सूचनाएं",
+      "pushNotifications": "पुश सूचनाएं",
+      "taskReminders": "कार्य अनुस्मारक",
+      "budgetAlerts": "बजट चेतावनी",
+      "vendorUpdates": "विक्रेता अपडेट"
+    },
+    "data": {
+      "exportData": "डेटा निर्यात करें",
+      "deleteAccount": "खाता हटाएं",
+      "exportDescription": "अपने सभी शादी योजना डेटा की एक प्रति डाउनलोड करें",
+      "deleteDescription": "अपना खाता और सभी डेटा स्थायी रूप से हटाएं"
+    }
+  },
+  "onboarding": {
+    "welcome": "आपके शादी योजनाकार में आपका स्वागत है",
+    "letsStart": "चलो आपके सही दिन की योजना बनाना शुरू करें!",
+    "step1": {
+      "title": "हमें अपने बारे में बताएं",
+      "yourName": "आपका नाम",
+      "partnerName": "साथी का नाम",
+      "weddingDate": "शादी की तारीख",
+      "weddingDateHelp": "आपका बड़ा दिन कब है?"
+    },
+    "step2": {
+      "title": "शादी विवरण",
+      "location": "शादी का स्थान",
+      "locationHelp": "शहर या स्थान जहां आप शादी करेंगे",
+      "guestCount": "अपेक्षित अतिथि संख्या",
+      "guestCountHelp": "अनुमानित अतिथि संख्या"
+    },
+    "step3": {
+      "title": "अपना बजट निर्धारित करें",
+      "totalBudget": "कुल शादी का बजट",
+      "budgetHelp": "आपका अनुमानित कुल बजट",
+      "currency": "मुद्रा"
+    },
+    "complete": "सेटअप पूर्ण करें"
+  },
+  "invitation": {
+    "title": "आपको सहयोग के लिए आमंत्रित किया गया है!",
+    "description": "{couple} ने आपको उनकी शादी की योजना बनाने में मदद के लिए आमंत्रित किया है",
+    "yourRole": "आपकी भूमिका",
+    "yourPermissions": "आपकी अनुमतियां",
+    "weddingDate": "शादी की तारीख",
+    "acceptInvitation": "निमंत्रण स्वीकार करें",
+    "signUpToAccept": "साइन अप करें और निमंत्रण स्वीकार करें",
+    "signInToAccept": "स्वीकार करने के लिए साइन इन करें",
+    "disclaimer": "इस निमंत्रण को स्वीकार करके, आपको ऊपर सूचीबद्ध अनुमतियों के साथ शादी योजना डैशबोर्ड तक पहुंच मिलेगी।"
+  },
+  "permissions": {
+    "view": "डैशबोर्ड देखें",
+    "edit": "शादी विवरण संपादित करें",
+    "manage_guests": "अतिथि सूची प्रबंधित करें",
+    "edit_guests": "अतिथि जानकारी संपादित करें",
+    "manage_budget": "बजट प्रबंधित करें",
+    "view_budget": "बजट देखें",
+    "manage_vendors": "विक्रेताओं को प्रबंधित करें",
+    "view_schedule": "शेड्यूल देखें",
+    "manage_tasks": "कार्य प्रबंधित करें",
+    "manage_photos": "फोटो प्रबंधित करें",
+    "view_photos": "फोटो देखें",
+    "manage_own_vendor": "अपनी विक्रेता जानकारी प्रबंधित करें"
+  },
+  "errors": {
+    "generic": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+    "notFound": "पेज नहीं मिला",
+    "unauthorized": "आपको इसे एक्सेस करने की अनुमति नहीं है",
+    "networkError": "नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें।",
+    "invalidData": "प्रदान किया गया डेटा अमान्य है",
+    "requiredField": "यह फ़ील्ड आवश्यक है"
+  },
+  "success": {
+    "saved": "सफलतापूर्वक सहेजा गया",
+    "deleted": "सफलतापूर्वक हटाया गया",
+    "updated": "सफलतापूर्वक अपडेट किया गया",
+    "invited": "निमंत्रण सफलतापूर्वक भेजा गया",
+    "uploaded": "सफलतापूर्वक अपलोड किया गया"
+  }
+}

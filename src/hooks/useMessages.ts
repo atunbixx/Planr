@@ -5,16 +5,16 @@ export interface MessageLog {
   id: string;
   recipient_email?: string;
   recipient_phone?: string;
-  message_type: 'email' | 'sms' | 'whatsapp';
+  messageType: 'email' | 'sms' | 'whatsapp';
   subject?: string;
   body: string;
   status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced' | 'complained';
   error_message?: string;
-  sent_at?: string;
-  delivered_at?: string;
+  sentAt?: string;
+  deliveredAt?: string;
   opened_at?: string;
   clicked_at?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface MessageStats {
@@ -155,17 +155,17 @@ export function useMessages() {
 
   const getDeliveryRate = () => {
     if (stats.total === 0) return 0;
-    return Math.round((stats.delivered / stats.total) * 100);
+    return Math.round(((stats.delivered / stats.total) * 100) * 100) / 100;
   };
 
   const getOpenRate = () => {
     if (stats.sent === 0) return 0;
-    return Math.round((stats.opened / stats.sent) * 100);
+    return Math.round(((stats.opened / stats.sent) * 100) * 100) / 100;
   };
 
   const getClickRate = () => {
     if (stats.opened === 0) return 0;
-    return Math.round((stats.clicked / stats.opened) * 100);
+    return Math.round(((stats.clicked / stats.opened) * 100) * 100) / 100;
   };
 
   useEffect(() => {

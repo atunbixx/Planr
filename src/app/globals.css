@@ -4,14 +4,16 @@
 
 @layer base {
   :root {
+    /* Base (default) theme tokens */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 350 80% 25%; /* deep burgundy mapped via HSL for Tailwind */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 6 85% 20%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96%;
@@ -22,8 +24,83 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 350 80% 25%;
     --radius: 0.5rem;
+  }
+
+  /* Bridal theme (explicit) — uses project brand burgundy #6b140e and hover #5a0f09 */
+  html[data-theme="bridal"] {
+    --background: 0 0% 100%;
+    --foreground: 24 15% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 15% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 15% 12%;
+    /* #6b140e -> hsl(6,84%,24%) approximated to keep hue/intensity consistent */
+    --primary: 6 84% 24%;
+    --primary-foreground: 0 0% 100%;
+    /* #5a0f09 hover */
+    --primary-hover: 6 85% 20%;
+    /* soft accents for bridal */
+    --secondary: 330 25% 96%;
+    --secondary-foreground: 24 15% 20%;
+    --muted: 330 25% 97%;
+    --muted-foreground: 24 10% 40%;
+    --accent: 135 14% 92%; /* eucalyptus tint */
+    --accent-foreground: 24 15% 20%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 20% 92%;
+    --input: 24 20% 92%;
+    --ring: 6 84% 24%;
+  }
+
+  /* Luxury theme - Devias UI inspired */
+  html[data-theme="luxury"] {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 27%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 25% 27%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 13% 65%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 215 25% 27%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+    
+    /* Luxury specific variables */
+    --luxury-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --luxury-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --luxury-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --luxury-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --luxury-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    --luxury-gradient-primary: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(221 83% 45%) 100%);
+    --luxury-gradient-secondary: linear-gradient(135deg, hsl(210 40% 96%) 0%, hsl(210 40% 92%) 100%);
+    --luxury-gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 20% 99%) 100%);
+    
+    --luxury-spacing-xs: 0.25rem;
+    --luxury-spacing-sm: 0.5rem;
+    --luxury-spacing-md: 1rem;
+    --luxury-spacing-lg: 1.5rem;
+    --luxury-spacing-xl: 2rem;
+    --luxury-spacing-2xl: 3rem;
+    
+    --luxury-border-radius-sm: 0.375rem;
+    --luxury-border-radius: 0.5rem;
+    --luxury-border-radius-md: 0.75rem;
+    --luxury-border-radius-lg: 1rem;
+    --luxury-border-radius-xl: 1.5rem;
   }
 
   .dark {
@@ -55,5 +132,58 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Hide scrollbar for navigation */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Luxury theme typography */
+  html[data-theme="luxury"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+  
+  html[data-theme="luxury"] .luxury-heading {
+    font-family: 'DM Sans', 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  
+  html[data-theme="luxury"] .luxury-body {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  html[data-theme="luxury"] .luxury-card {
+    background: var(--luxury-gradient-card);
+    box-shadow: var(--luxury-shadow);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--luxury-border-radius-md);
+  }
+  
+  html[data-theme="luxury"] .luxury-button-primary {
+    background: var(--luxury-gradient-primary);
+    box-shadow: var(--luxury-shadow-sm);
+    border-radius: var(--luxury-border-radius);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  
+  html[data-theme="luxury"] .luxury-input {
+    border-radius: var(--luxury-border-radius);
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--luxury-shadow-sm);
+    transition: all 0.2s ease-in-out;
+  }
+  
+  html[data-theme="luxury"] .luxury-input:focus {
+    box-shadow: var(--luxury-shadow), 0 0 0 3px hsl(var(--ring) / 0.1);
   }
 }

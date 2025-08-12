@@ -1,0 +1,78 @@
+node_modules
+build
+dist
+.git
+.trae
+.log
+.next
+.vercel
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Development directories
+.claude
+.claude-*
+.claude-flow
+.roo
+.kiro
+.husky
+.swc
+.vscode
+.swarm
+__mocks__
+__tests__
+scripts
+docs
+
+# Documentation files
+*.md
+API_REFERENCE.md
+ARCHITECTURE.md
+CLAUDE.md
+CONTRIBUTING.md
+CURRENT_STATUS.md
+DATABASE_SETUP.md
+ENTERPRISE_ARCHITECTURE.md
+FIELD_NAME_SOLUTION.md
+FIELD_TRANSFORMATION_COMPLETE.md
+IMPLEMENTATION_COMPLETE.md
+MIGRATIONS.md
+MIGRATION_ARCHITECTURE_DESIGN.md
+MIGRATION_GUIDE.md
+MISSING_FRONTEND_FEATURES.md
+PERFORMANCE_OPTIMIZATIONS.md
+PROJECT_TODO.md
+README-migrations.md
+RSVP_SECURITY_IMPLEMENTATION.md
+SCHEMA_PROTECTION.md
+SERVER_DATA_LAYER_IMPLEMENTATION.md
+SMS_SETUP.md
+STRICT_DEVELOPMENT_RULES.md
+TECH_DEBT_REPORT.md
+TESTING_GUIDE.md
+
+# Test files
+playwright.config.*.ts
+test-server.sh
+start-local.sh
+start-server.sh
+
+# Schema and type files
+schema-current.ts
+updated-database-types.ts
+
+# Prisma migrations (keep schema.prisma)
+prisma/migrations
+
+# Development scripts
+*.sh
+
+# Permission-sensitive files
+.claude-flow
+*.flow
+.DS_Store
+*.lock
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

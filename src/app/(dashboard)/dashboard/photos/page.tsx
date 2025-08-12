@@ -89,18 +89,35 @@ export default async function PhotosPage({ searchParams }: PhotosPageProps) {
                   <h2 className="text-2xl font-light tracking-wide text-gray-900 uppercase">Albums</h2>
                   <p className="text-sm font-light text-gray-600 mt-1">Organize your photos into themed collections</p>
                 </div>
-                <AlbumCreateDialog>
-                  <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light tracking-wider uppercase">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Album
-                  </Button>
-                </AlbumCreateDialog>
+                <AlbumCreateDialog 
+                  onAlbumCreated={(album) => {
+                    // Refresh will happen automatically as this is a server component
+                  }}
+                  trigger={
+                    <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light tracking-wider uppercase">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Album
+                    </Button>
+                  }
+                />
               </div>
             </div>
             
             <div className="p-8">
               <Suspense fallback={<AlbumGridSkeleton />}>
-                <AlbumGrid albums={albums} />
+                <AlbumGrid albums={albums.map(album => ({
+                  id: album.id,
+                  name: album.name,
+                  description: album.description || undefined,
+                  photo_count: album._count?.photos || 0,
+                  cover_photo: album.coverPhoto ? {
+                    id: album.coverPhoto.id,
+                    cloudinarySecureUrl: album.coverPhoto.cloudinarySecureUrl || '',
+                    title: album.coverPhoto.title || undefined
+                  } : undefined,
+                  isFeatured: album.isFeatured || false,
+                  isPublic: album.isPublic || false
+                }))} />
               </Suspense>
             </div>
           </div>
@@ -121,19 +138,25 @@ export default async function PhotosPage({ searchParams }: PhotosPageProps) {
                   }
                 </p>
               </div>
-              <PhotoUploadDialog albums={albums}>
-                <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light tracking-wider uppercase">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Upload Photos
-                </Button>
-              </PhotoUploadDialog>
+              <PhotoUploadDialog 
+                albums={albums}
+                trigger={
+                  <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light tracking-wider uppercase">
+                    <Camera className="w-4 h-4 mr-2" />
+                    Upload Photos
+                  </Button>
+                }
+              />
             </div>
           </div>
           
           <div className="p-0">
             <Suspense fallback={<PhotoGridSkeleton />}>
               <PhotoGrid 
-                photos={photos} 
+                photos={photos.map(photo => ({
+                  ...photo,
+                  isFavorite: photo.isFavorite ?? false // Convert null to false
+                }))} 
                 albums={albums} 
                 onPhotosUpdated={async () => {
                   'use server'
@@ -151,12 +174,15 @@ export default async function PhotosPage({ searchParams }: PhotosPageProps) {
             <p className="text-lg font-light text-gray-600 mb-8">
               Start building your wedding photo collection by uploading your first photos
             </p>
-            <PhotoUploadDialog albums={albums}>
-              <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-6 py-3 text-sm font-light tracking-wider uppercase">
-                <Camera className="w-4 h-4 mr-2" />
-                Upload Your First Photos
-              </Button>
-            </PhotoUploadDialog>
+            <PhotoUploadDialog 
+              albums={albums}
+              trigger={
+                <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-6 py-3 text-sm font-light tracking-wider uppercase">
+                  <Camera className="w-4 h-4 mr-2" />
+                  Upload Your First Photos
+                </Button>
+              }
+            />
           </div>
         )}
       </div>

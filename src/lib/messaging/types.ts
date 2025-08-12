@@ -73,12 +73,12 @@ export interface BulkMessageRequest {
 
 export interface MessageLog {
   id: string;
-  couple_id: string;
+  coupleId: string;
   recipient_id?: string;
   recipient_email?: string;
   recipient_phone?: string;
-  message_type: 'email' | 'sms' | 'whatsapp';
-  template_id?: string;
+  messageType: 'email' | 'sms' | 'whatsapp';
+  templateId?: string;
   subject?: string;
   body: string;
   status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced' | 'complained';

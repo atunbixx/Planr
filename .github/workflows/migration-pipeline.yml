@@ -1,0 +1,384 @@
+name: Database Migration Pipeline
+
+on:
+  push:
+    paths:
+      - 'prisma/migrations/**'
+      - 'prisma/schema.prisma'
+    branches:
+      - main
+      - develop
+      - 'release/**'
+  pull_request:
+    paths:
+      - 'prisma/migrations/**'
+      - 'prisma/schema.prisma'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      dry_run:
+        description: 'Perform dry run only'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20.x'
+  MIGRATION_TIMEOUT: '600000'
+
+jobs:
+  validate:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check migration files
+        run: |
+          echo "Checking for migration file changes..."
+          git diff --name-only origin/main...HEAD | grep -E "prisma/migrations/.*\.sql$" || echo "No migration changes"
+
+      - name: Validate SQL syntax
+        run: npm run migrate:validate
+
+      - name: Check for breaking changes
+        run: |
+          node -e "
+          const fs = require('fs');
+          const migrations = fs.readdirSync('./prisma/migrations')
+            .filter(f => f.endsWith('.sql'))
+            .map(f => {
+              const content = fs.readFileSync(\`./prisma/migrations/\${f}\`, 'utf8');
+              const metadata = content.match(/@metadata\\s*({[^}]+})/);
+              return metadata ? { file: f, ...JSON.parse(metadata[1]) } : null;
+            })
+            .filter(Boolean);
+          
+          const breaking = migrations.filter(m => m.breakingChange);
+          if (breaking.length > 0) {
+            console.error('⚠️  Breaking changes detected:', breaking.map(m => m.file));
+            process.exit(1);
+          }
+          "
+
+      - name: Security scan
+        run: |
+          # Check for SQL injection vulnerabilities
+          npm run migrate:validate -- --security-scan
+
+      - name: Upload validation report
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-report
+          path: |
+            migration-validation.json
+            migration-security-scan.txt
+
+  test:
+    name: Test Migrations
+    needs: validate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_migrations
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migration tests
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_migrations
+        run: |
+          # Create migration infrastructure
+          npm run migrate:up -- --env test
+          
+          # Run unit tests
+          npm test -- --testPathPattern=migrations
+
+      - name: Test rollback capability
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_migrations
+        run: |
+          # Test rollback
+          npm run migrate:down -- --dry-run
+          
+          # Verify rollback scripts exist
+          node scripts/verify-rollbacks.js
+
+      - name: Performance impact test
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_migrations
+        run: |
+          # Load test data
+          node scripts/load-test-data.js
+          
+          # Run migrations with timing
+          time npm run migrate:up -- --env test
+
+      - name: Generate test report
+        if: always()
+        run: |
+          node scripts/generate-test-report.js > test-report.md
+          cat test-report.md >> $GITHUB_STEP_SUMMARY
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: test
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create pre-deployment backup
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          npm run migrate:backup
+          echo "Backup created successfully"
+
+      - name: Run migrations (dry run)
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          npm run migrate:up -- --env staging --dry-run
+
+      - name: Deploy migrations
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          MIGRATION_TIMEOUT: ${{ env.MIGRATION_TIMEOUT }}
+        run: |
+          npm run migrate:up -- --env staging
+
+      - name: Verify deployment
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          npm run migrate:status
+          npm run migrate:health
+
+      - name: Run smoke tests
+        env:
+          API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          npm run test:smoke -- --env staging
+
+      - name: Notify team
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging migration deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  approval:
+    name: Production Approval
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production-approval
+    steps:
+      - name: Request approval
+        run: |
+          echo "🚀 Production migration deployment requires approval"
+          echo "Please review staging deployment before approving"
+
+  deploy-production:
+    name: Deploy to Production
+    needs: approval
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pre-deployment checks
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          # Check database health
+          npm run db:health
+          
+          # Verify no active locks
+          npm run migrate:locks -- --check
+          
+          # Check disk space
+          npm run db:disk-usage
+
+      - name: Create pre-deployment backup
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          BACKUP_ID=$(npm run migrate:backup | grep "Backup created:" | cut -d: -f2)
+          echo "BACKUP_ID=$BACKUP_ID" >> $GITHUB_ENV
+          echo "Backup created: $BACKUP_ID"
+
+      - name: Enable maintenance mode
+        run: |
+          curl -X POST ${{ secrets.PROD_API_URL }}/admin/maintenance \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}" \
+            -d '{"enabled": true, "message": "Database maintenance in progress"}'
+
+      - name: Deploy migrations
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          MIGRATION_TIMEOUT: ${{ env.MIGRATION_TIMEOUT }}
+        run: |
+          npm run migrate:up -- --env production
+
+      - name: Verify deployment
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          npm run migrate:status
+          npm run migrate:health
+          npm run db:verify
+
+      - name: Disable maintenance mode
+        if: always()
+        run: |
+          curl -X POST ${{ secrets.PROD_API_URL }}/admin/maintenance \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}" \
+            -d '{"enabled": false}'
+
+      - name: Run production tests
+        env:
+          API_URL: ${{ secrets.PROD_API_URL }}
+        run: |
+          npm run test:production -- --minimal
+
+      - name: Monitor for 5 minutes
+        run: |
+          echo "Monitoring production for 5 minutes..."
+          node scripts/monitor-production.js --duration 300
+
+      - name: Rollback on failure
+        if: failure()
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          echo "⚠️  Deployment failed, initiating rollback..."
+          npm run migrate:down -- --force
+          
+          # Restore from backup if rollback fails
+          if [ $? -ne 0 ]; then
+            echo "Rollback failed, restoring from backup..."
+            npm run migrate:backup -- --restore $BACKUP_ID
+          fi
+
+      - name: Create release
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(npm run migrate:version --silent)
+          gh release create "v$VERSION" \
+            --title "Database Migration v$VERSION" \
+            --notes "Successfully deployed migrations to production"
+
+      - name: Notify team
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production migration deployment ${{ job.status }}
+            Version: ${{ env.VERSION }}
+            Backup ID: ${{ env.BACKUP_ID }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback:
+    name: Emergency Rollback
+    if: failure() && github.ref == 'refs/heads/main'
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Initiate rollback
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          echo "🚨 Initiating emergency rollback..."
+          npm run migrate:down -- --force
+
+      - name: Verify rollback
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          npm run migrate:status
+          npm run db:verify
+
+      - name: Create incident
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Migration Rollback Incident - $(date +%Y-%m-%d)" \
+            --body "Automatic rollback was triggered for production migration deployment. Please investigate." \
+            --label "incident,migration,high-priority"

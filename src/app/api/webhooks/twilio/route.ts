@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { smsService } from '@/lib/messaging/sms-service';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 // Twilio webhook for message status updates
 export async function POST(request: NextRequest) {
@@ -46,18 +46,18 @@ export async function POST(request: NextRequest) {
 
       const updateData: any = {
         status: dbStatus,
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       };
 
       if (MessageStatus === 'delivered') {
-        updateData.delivered_at = new Date().toISOString();
+        updateData.deliveredAt = new Date().toISOString();
       }
 
       if (ErrorCode || ErrorMessage) {
         updateData.error_message = `${ErrorCode}: ${ErrorMessage}`;
       }
 
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('message_logs')
         .update(updateData)
         .eq('external_id', MessageSid);

@@ -1,0 +1,307 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "back": "Retour",
+    "next": "Suivant",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "yes": "Oui",
+    "no": "Non",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Information"
+  },
+  "auth": {
+    "signIn": "Se Connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se Déconnecter",
+    "welcomeBack": "Bon retour !",
+    "createAccount": "Créez votre compte"
+  },
+  "navigation": {
+    "dashboard": "Tableau de Bord",
+    "guests": "Invités",
+    "seatingChart": "Plan de Table",
+    "budget": "Budget",
+    "vendors": "Prestataires",
+    "photos": "Photos",
+    "messages": "Messages",
+    "checklist": "Liste de Contrôle",
+    "settings": "Paramètres",
+    "account": "Compte"
+  },
+  "dashboard": {
+    "title": "Tableau de Bord Mariage",
+    "welcome": "Bienvenue dans votre tableau de bord de planification de mariage",
+    "daysUntil": "Jours jusqu'à votre mariage",
+    "overview": "Vue d'ensemble",
+    "recentActivity": "Activité Récente",
+    "quickActions": "Actions Rapides",
+    "stats": {
+      "totalGuests": "Total des Invités",
+      "confirmedGuests": "Invités Confirmés",
+      "pendingRSVPs": "RSVP en Attente",
+      "budgetUsed": "Budget Utilisé",
+      "tasksCompleted": "Tâches Complétées",
+      "photosUploaded": "Photos Téléchargées"
+    }
+  },
+  "guests": {
+    "title": "Liste des Invités",
+    "description": "Gérez votre liste d'invités et les RSVP",
+    "addGuest": "Ajouter un Invité",
+    "importGuests": "Importer des Invités",
+    "exportGuests": "Exporter des Invités",
+    "searchPlaceholder": "Rechercher par nom ou email",
+    "filters": {
+      "all": "Tous",
+      "confirmed": "Confirmés",
+      "declined": "Refusés",
+      "pending": "En attente",
+      "bride": "Côté Mariée",
+      "groom": "Côté Marié",
+      "both": "Les Deux Côtés"
+    },
+    "form": {
+      "name": "Nom de l'Invité",
+      "email": "Adresse Email",
+      "phone": "Téléphone",
+      "relationship": "Relation",
+      "side": "Côté",
+      "plusOne": "Accompagnant Autorisé",
+      "dietaryRestrictions": "Restrictions Alimentaires",
+      "specialRequests": "Demandes Spéciales",
+      "notes": "Notes",
+      "rsvpStatus": "Statut RSVP"
+    },
+    "actions": {
+      "markConfirmed": "Marquer Confirmé",
+      "markDeclined": "Marquer Refusé",
+      "markPending": "Marquer En Attente",
+      "sendInvitation": "Envoyer l'Invitation",
+      "deleteGuest": "Supprimer l'Invité"
+    },
+    "stats": {
+      "total": "Total des Invités",
+      "confirmed": "Confirmés",
+      "declined": "Refusés",
+      "pending": "En attente",
+      "plusOnes": "Accompagnants"
+    }
+  },
+  "seating": {
+    "title": "Plan de Table",
+    "description": "Organisez vos invités aux tables",
+    "addTable": "Ajouter une Table",
+    "tableNumber": "Table {number}",
+    "capacity": "Capacité: {current}/{max}",
+    "unassignedGuests": "Invités Non Assignés",
+    "saveArrangement": "Enregistrer la Disposition",
+    "clearAll": "Tout Effacer",
+    "noGuests": "Aucun invité à organiser",
+    "dragToAssign": "Faites glisser les invités pour les assigner aux tables"
+  },
+  "budget": {
+    "title": "Budget de Mariage",
+    "description": "Suivez vos dépenses de mariage",
+    "totalBudget": "Budget Total",
+    "spent": "Dépensé",
+    "remaining": "Restant",
+    "addExpense": "Ajouter une Dépense",
+    "categories": {
+      "venue": "Lieu",
+      "catering": "Traiteur",
+      "photography": "Photographie",
+      "flowers": "Fleurs",
+      "music": "Musique",
+      "attire": "Tenue",
+      "decorations": "Décorations",
+      "other": "Autres"
+    },
+    "form": {
+      "description": "Description",
+      "amount": "Montant",
+      "category": "Catégorie",
+      "date": "Date",
+      "vendor": "Prestataire",
+      "notes": "Notes",
+      "paid": "Payé"
+    }
+  },
+  "vendors": {
+    "title": "Prestataires",
+    "description": "Gérez vos prestataires de mariage",
+    "addVendor": "Ajouter un Prestataire",
+    "searchPlaceholder": "Rechercher des prestataires",
+    "categories": {
+      "all": "Toutes les Catégories",
+      "venue": "Lieu",
+      "catering": "Traiteur",
+      "photography": "Photographie",
+      "videography": "Vidéographie",
+      "florist": "Fleuriste",
+      "music": "Musique/DJ",
+      "officiant": "Officiant",
+      "other": "Autres"
+    },
+    "form": {
+      "businessName": "Nom de l'Entreprise",
+      "contactName": "Nom du Contact",
+      "email": "Email",
+      "phone": "Téléphone",
+      "category": "Catégorie",
+      "website": "Site Web",
+      "instagram": "Instagram",
+      "price": "Prix",
+      "depositPaid": "Acompte Payé",
+      "depositAmount": "Montant de l'Acompte",
+      "notes": "Notes",
+      "contractSigned": "Contrat Signé",
+      "rating": "Évaluation"
+    }
+  },
+  "photos": {
+    "title": "Photos",
+    "description": "Votre galerie de photos de mariage",
+    "uploadPhotos": "Télécharger des Photos",
+    "createAlbum": "Créer un Album",
+    "allPhotos": "Toutes les Photos",
+    "albums": "Albums",
+    "favorites": "Favoris",
+    "dragToUpload": "Faites glisser les photos ici ou cliquez pour télécharger",
+    "uploadingCount": "Téléchargement de {count} photos...",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette photo ?"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "description": "Gérez votre compte et vos préférences de mariage",
+    "sections": {
+      "weddingDetails": "Détails du Mariage",
+      "sharingCollaboration": "Partage et Collaboration",
+      "budgetSettings": "Paramètres du Budget",
+      "notifications": "Notifications",
+      "account": "Paramètres du Compte",
+      "dataPrivacy": "Données et Confidentialité"
+    },
+    "wedding": {
+      "partnerName": "Nom de votre Partenaire",
+      "weddingDate": "Date du Mariage",
+      "venue": "Lieu",
+      "location": "Emplacement",
+      "expectedGuests": "Nombre d'Invités Attendu",
+      "weddingStyle": "Style de Mariage",
+      "styles": {
+        "traditional": "Traditionnel",
+        "modern": "Moderne",
+        "rustic": "Rustique",
+        "vintage": "Vintage",
+        "destination": "Destination",
+        "casual": "Décontracté",
+        "formal": "Formel"
+      }
+    },
+    "sharing": {
+      "title": "Gérer les Collaborateurs",
+      "description": "Invitez des planificateurs, membres de la famille ou prestataires",
+      "inviteButton": "Inviter un Collaborateur",
+      "activeCollaborators": "Collaborateurs Actifs",
+      "pendingInvitations": "Invitations en Attente",
+      "roles": {
+        "planner": "Planificateur de Mariage",
+        "family": "Membre de la Famille",
+        "vendor": "Prestataire",
+        "guest": "Invité"
+      }
+    },
+    "preferences": {
+      "currency": "Devise",
+      "timezone": "Fuseau Horaire",
+      "language": "Langue",
+      "emailNotifications": "Notifications par Email",
+      "pushNotifications": "Notifications Push",
+      "taskReminders": "Rappels de Tâches",
+      "budgetAlerts": "Alertes de Budget",
+      "vendorUpdates": "Mises à Jour des Prestataires"
+    },
+    "data": {
+      "exportData": "Exporter les Données",
+      "deleteAccount": "Supprimer le Compte",
+      "exportDescription": "Téléchargez une copie de toutes vos données de planification",
+      "deleteDescription": "Supprimez définitivement votre compte et toutes les données"
+    }
+  },
+  "onboarding": {
+    "welcome": "Bienvenue dans votre Planificateur de Mariage",
+    "letsStart": "Commençons à planifier votre journée parfaite !",
+    "step1": {
+      "title": "Parlez-nous de vous",
+      "yourName": "Votre Nom",
+      "partnerName": "Nom de votre Partenaire",
+      "weddingDate": "Date du Mariage",
+      "weddingDateHelp": "Quand est le grand jour ?"
+    },
+    "step2": {
+      "title": "Détails du Mariage",
+      "location": "Lieu du Mariage",
+      "locationHelp": "Ville ou lieu où vous vous marierez",
+      "guestCount": "Nombre d'Invités Attendu",
+      "guestCountHelp": "Nombre approximatif d'invités"
+    },
+    "step3": {
+      "title": "Définissez votre Budget",
+      "totalBudget": "Budget Total du Mariage",
+      "budgetHelp": "Votre budget total estimé",
+      "currency": "Devise"
+    },
+    "complete": "Terminer la Configuration"
+  },
+  "invitation": {
+    "title": "Vous êtes Invité à Collaborer !",
+    "description": "{couple} vous a invité à aider à planifier leur mariage",
+    "yourRole": "Votre Rôle",
+    "yourPermissions": "Vos Permissions",
+    "weddingDate": "Date du Mariage",
+    "acceptInvitation": "Accepter l'Invitation",
+    "signUpToAccept": "S'inscrire et Accepter l'Invitation",
+    "signInToAccept": "Se Connecter pour Accepter",
+    "disclaimer": "En acceptant cette invitation, vous aurez accès au tableau de bord de planification avec les permissions listées ci-dessus."
+  },
+  "permissions": {
+    "view": "Voir le Tableau de Bord",
+    "edit": "Modifier les Détails du Mariage",
+    "manage_guests": "Gérer la Liste des Invités",
+    "edit_guests": "Modifier les Informations des Invités",
+    "manage_budget": "Gérer le Budget",
+    "view_budget": "Voir le Budget",
+    "manage_vendors": "Gérer les Prestataires",
+    "view_schedule": "Voir le Planning",
+    "manage_tasks": "Gérer les Tâches",
+    "manage_photos": "Gérer les Photos",
+    "view_photos": "Voir les Photos",
+    "manage_own_vendor": "Gérer vos Informations de Prestataire"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "notFound": "Page non trouvée",
+    "unauthorized": "Vous n'avez pas la permission d'accéder à ceci",
+    "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "invalidData": "Données invalides fournies",
+    "requiredField": "Ce champ est obligatoire"
+  },
+  "success": {
+    "saved": "Enregistré avec succès",
+    "deleted": "Supprimé avec succès",
+    "updated": "Mis à jour avec succès",
+    "invited": "Invitation envoyée avec succès",
+    "uploaded": "Téléchargé avec succès"
+  }
+}

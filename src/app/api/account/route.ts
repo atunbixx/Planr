@@ -1,70 +1,57 @@
 import { NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { getCurrentUser } from '@/lib/auth/server'
+import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 
 export async function DELETE() {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Find the user in our database
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      include: {
-        couples: {
-          include: {
-            guests: true,
-            vendors: true,
-            tasks: true,
-            budgetItems: true,
-            photos: true
-          }
-        }
-      }
+      where: { supabase_user_id: user.id }
     })
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Get all couples for this user
+    const couples = await prisma.couple.findMany({
+      where: { userId: dbUser.id }
+    })
+
     // Start transaction to delete all user data
     await prisma.$transaction(async (tx) => {
       // Delete all related data for each couple
-      for (const couple of dbUser.couples) {
+      for (const couple of couples) {
         // Delete guests
         await tx.guest.deleteMany({
           where: { coupleId: couple.id }
         })
 
         // Delete vendors if they exist
-        if (couple.vendors && couple.vendors.length > 0) {
-          await tx.vendor.deleteMany({
-            where: { coupleId: couple.id }
-          })
-        }
+        await tx.vendor.deleteMany({
+          where: { coupleId: couple.id }
+        })
 
-        // Delete tasks if they exist
-        if (couple.tasks && couple.tasks.length > 0) {
-          await tx.task.deleteMany({
-            where: { coupleId: couple.id }
-          })
-        }
+        // Delete checklist items if they exist
+        await tx.checklistItem.deleteMany({
+          where: { coupleId: couple.id }
+        })
 
-        // Delete budget items if they exist
-        if (couple.budgetItems && couple.budgetItems.length > 0) {
-          await tx.budgetItem.deleteMany({
-            where: { coupleId: couple.id }
-          })
-        }
+        // Delete budget categories if they exist
+        await tx.budgetCategory.deleteMany({
+          where: { coupleId: couple.id }
+        })
 
         // Delete photos if they exist
-        if (couple.photos && couple.photos.length > 0) {
-          await tx.photo.deleteMany({
-            where: { coupleId: couple.id }
-          })
-        }
+        await tx.photo.deleteMany({
+          where: { coupleId: couple.id }
+        })
 
         // Delete the couple
         await tx.couple.delete({
@@ -78,13 +65,17 @@ export async function DELETE() {
       })
     })
 
-    // Delete the user from Clerk
+    // Delete the user from Supabase
     try {
-      const client = await clerkClient()
-      await client.users.deleteUser(userId)
-    } catch (clerkError) {
-      console.error('Error deleting user from Clerk:', clerkError)
-      // Continue even if Clerk deletion fails - user data is already deleted from our DB
+      const supabase = await createClient()
+      const { error } = await supabase.auth.admin.deleteUser(user.id)
+      if (error) {
+        console.error('Error deleting user from Supabase:', error)
+        // Continue even if Supabase deletion fails - user data is already deleted from our DB
+      }
+    } catch (supabaseError) {
+      console.error('Error deleting user from Supabase:', supabaseError)
+      // Continue even if Supabase deletion fails - user data is already deleted from our DB
     }
 
     return NextResponse.json({ 
@@ -100,43 +91,40 @@ export async function DELETE() {
 // Also provide a GET endpoint to check account status
 export async function GET() {
   try {
-    const { userId } = await auth()
-    if (!userId) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Find the user and count their data
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      include: {
-        couples: {
-          include: {
-            _count: {
-              select: {
-                guests: true,
-                vendors: true,
-                tasks: true,
-                budgetItems: true,
-                photos: true
-              }
-            }
-          }
-        }
-      }
+      where: { supabase_user_id: user.id }
     })
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Get couples with counts
+    const couples = await prisma.couple.findMany({
+      where: { userId: dbUser.id },
+      include: {
+        _count: {
+          select: {
+            guests: true,
+            vendors: true,
+            photos: true
+          }
+        }
+      }
+    })
+
     // Calculate data summary
     const dataSummary = {
-      couplesCount: dbUser.couples.length,
-      guestsCount: dbUser.couples.reduce((sum, couple) => sum + (couple._count?.guests || 0), 0),
-      vendorsCount: dbUser.couples.reduce((sum, couple) => sum + (couple._count?.vendors || 0), 0),
-      tasksCount: dbUser.couples.reduce((sum, couple) => sum + (couple._count?.tasks || 0), 0),
-      budgetItemsCount: dbUser.couples.reduce((sum, couple) => sum + (couple._count?.budgetItems || 0), 0),
-      photosCount: dbUser.couples.reduce((sum, couple) => sum + (couple._count?.photos || 0), 0)
+      couplesCount: couples.length,
+      guestsCount: couples.reduce((sum: number, couple: any) => sum + (couple._count?.guests || 0), 0),
+      vendorsCount: couples.reduce((sum: number, couple: any) => sum + (couple._count?.vendors || 0), 0),
+      photosCount: couples.reduce((sum: number, couple: any) => sum + (couple._count?.photos || 0), 0)
     }
 
     return NextResponse.json({

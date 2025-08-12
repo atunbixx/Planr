@@ -36,9 +36,9 @@ export async function GET() {
 
     // Also test a simple insert to see what happens
     const testVendor = {
-      couple_id: '00000000-0000-0000-0000-000000000000', // Dummy UUID for testing
+      coupleId: '00000000-0000-0000-0000-000000000000', // Dummy UUID for testing
       name: 'Test Vendor',
-      contact_name: 'Test Contact',
+      contactName: 'Test Contact',
       phone: '555-0123',
       email: 'test@example.com'
     }

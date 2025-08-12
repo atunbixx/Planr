@@ -1,0 +1,124 @@
+import { NextRequest } from 'next/server';
+import { GET, POST } from '@/app/api/day-of/guest-check-in/route';
+import { dayOfDashboardService } from '@/lib/api/day-of-dashboard-service';
+// import { auth } from '@clerk/nextjs'; // Removed - migrated to Supabase
+
+jest.mock('@clerk/nextjs');
+jest.mock('@/lib/api/day-of-dashboard-service');
+
+describe('/api/day-of/guest-check-in', () => {
+  const mockAuth = auth as jest.MockedFunction<typeof auth>;
+  const mockService = dayOfDashboardService as jest.MockedFunction<typeof dayOfDashboardService>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAuth.mockReturnValue({ userId: 'test-user-id' });
+  });
+
+  describe('GET - Check-in Statistics', () => {
+    it('should return check-in statistics', async () => {
+      const mockStats = {
+        total: 100,
+        checkedIn: 75,
+        remaining: 25,
+        percentage: 75,
+        recentCheckIns: [
+          {
+            id: 'checkin-1',
+            guestId: 'guest-1',
+            guest: { name: 'John Doe' },
+            checkInTime: new Date('2024-01-08T14:00:00')
+          }
+        ]
+      };
+
+      mockService.mockReturnValue({
+        getGuestCheckInStats: jest.fn().mockResolvedValue(mockStats)
+      } as any);
+
+      const request = new NextRequest('http://localhost/api/day-of/guest-check-in/stats?eventId=event-123');
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toEqual(mockStats);
+      expect(mockService().getGuestCheckInStats).toHaveBeenCalledWith('event-123');
+    });
+
+    it('should return 400 when eventId is missing', async () => {
+      const request = new NextRequest('http://localhost/api/day-of/guest-check-in/stats');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('Event ID required');
+    });
+  });
+
+  describe('POST - Check In Guest', () => {
+    it('should check in a guest successfully', async () => {
+      const mockCheckInResult = {
+        id: 'checkin-123',
+        eventId: 'event-123',
+        guestId: 'guest-123',
+        checkedIn: true,
+        checkInTime: new Date()
+      };
+
+      mockService.mockReturnValue({
+        checkInGuest: jest.fn().mockResolvedValue(mockCheckInResult)
+      } as any);
+
+      const request = new NextRequest('http://localhost/api/day-of/guest-check-in', {
+        method: 'POST',
+        body: JSON.stringify({
+          eventId: 'event-123',
+          guestId: 'guest-123'
+        })
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toEqual(mockCheckInResult);
+      expect(mockService().checkInGuest).toHaveBeenCalledWith('event-123', 'guest-123');
+    });
+
+    it('should return 400 when required fields are missing', async () => {
+      const request = new NextRequest('http://localhost/api/day-of/guest-check-in', {
+        method: 'POST',
+        body: JSON.stringify({
+          eventId: 'event-123'
+          // missing guestId
+        })
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('Event ID and Guest ID required');
+    });
+
+    it('should handle check-in errors gracefully', async () => {
+      mockService.mockReturnValue({
+        checkInGuest: jest.fn().mockRejectedValue(new Error('Database error'))
+      } as any);
+
+      const request = new NextRequest('http://localhost/api/day-of/guest-check-in', {
+        method: 'POST',
+        body: JSON.stringify({
+          eventId: 'event-123',
+          guestId: 'guest-123'
+        })
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(500);
+      const data = await response.json();
+      expect(data.error).toBe('Failed to check in guest');
+    });
+  });
+});

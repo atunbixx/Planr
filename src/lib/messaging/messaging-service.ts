@@ -9,7 +9,7 @@ import type {
   MessageTemplate,
   MessageLog
 } from './types';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 class MessagingService {
   async sendMessage(request: SendMessageRequest): Promise<MessageStatus> {
@@ -118,23 +118,23 @@ class MessagingService {
   ): Promise<void> {
     try {
       const log: Partial<MessageLog> = {
-        couple_id: coupleId,
+        coupleId: coupleId,
         recipient_id: recipient.id,
         recipient_email: recipient.email,
         recipient_phone: recipient.phone,
-        message_type: type,
-        template_id: templateId,
+        messageType: type,
+        templateId: templateId,
         subject,
         body,
         status: status.status,
         error_message: status.error,
         external_id: status.messageId,
-        sent_at: status.status === 'sent' ? status.timestamp : undefined,
-        created_at: new Date(),
-        updated_at: new Date(),
+        sentAt: status.status === 'sent' ? status.timestamp : undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('message_logs')
         .insert(log);
 
@@ -148,11 +148,11 @@ class MessagingService {
 
   // Get message logs for a couple
   async getMessageLogs(coupleId: string, limit = 50): Promise<MessageLog[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('message_logs')
       .select('*')
       .eq('couple_id', coupleId)
-      .order('created_at', { ascending: false })
+      .order('createdAt', { ascending: false })
       .limit(limit);
 
     if (error) {

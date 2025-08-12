@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { getCurrentUser } from '@/lib/auth/server'
-
-// Use service role key for bypassing RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getAdminClient } from '@/lib/supabase-admin-transformed'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,11 +14,12 @@ export async function POST(request: NextRequest) {
     console.log('User:', user.id)
 
     // Get user's couple data using admin client
-    const { data: userData, error: userError } = await supabaseAdmin
+    const supabase = getAdminClient()
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select(`
         id,
-        couples (id)
+        wedding_couples (id)
       `)
       .eq('supabaseUserId', user.id)
       .single()
@@ -38,14 +33,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    if (!userData?.couples?.[0]) {
+    if (!userData?.wedding_couples?.[0]) {
       return NextResponse.json({ 
         error: 'No couple data found. Please complete onboarding first.',
         redirect: '/onboarding'
       }, { status: 404 })
     }
 
-    const coupleId = userData.couples[0].id
+    const coupleId = userData.wedding_couples[0].id
     console.log('Found couple ID:', coupleId)
 
     // Create new vendor using admin client (bypasses RLS)
@@ -70,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Inserting vendor data:', vendorData)
 
-    const { data: vendor, error } = await supabaseAdmin
+    const { data: vendor, error } = await supabase
       .from('vendors')
       .insert(vendorData)
       .select(`
@@ -118,22 +113,23 @@ export async function GET() {
     }
 
     // Get user's couple data
-    const { data: userData } = await supabaseAdmin
+    const supabase = getAdminClient()
+    const { data: userData } = await supabase
       .from('users')
       .select(`
-        couples (id)
+        wedding_couples (id)
       `)
       .eq('supabaseUserId', user.id)
       .single()
 
-    if (!userData?.couples?.[0]) {
+    if (!userData?.wedding_couples?.[0]) {
       return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
     }
 
-    const coupleId = userData.couples[0].id
+    const coupleId = userData.wedding_couples[0].id
 
     // Get vendors for this couple using admin client
-    const { data: vendors, error } = await supabaseAdmin
+    const { data: vendors, error } = await supabase
       .from('vendors')
       .select(`
         *,
@@ -161,12 +157,12 @@ export async function GET() {
         vendors: vendors || [],
         categoryStats: [], // We can add this later
         summary: {
-          total_vendors: vendors?.length || 0,
-          booked_vendors: vendors?.filter(v => v.status === 'booked').length || 0,
-          pending_vendors: vendors?.filter(v => ['potential', 'contacted', 'quote_requested', 'in_discussion'].includes(v.status)).length || 0,
-          total_estimated_cost: vendors?.reduce((sum, v) => sum + (v.estimatedCost || 0), 0) || 0,
-          total_actual_cost: vendors?.reduce((sum, v) => sum + (v.actualCost || 0), 0) || 0,
-          contracts_signed: vendors?.filter(v => v.contractSigned).length || 0
+          totalVendors: vendors?.length || 0,
+          bookedVendors: vendors?.filter(v => v.status === 'booked').length || 0,
+          pendingVendors: vendors?.filter(v => ['potential', 'contacted', 'quote_requested', 'in_discussion'].includes(v.status)).length || 0,
+          totalEstimatedCost: vendors?.reduce((sum, v) => sum + (v.estimatedCost || 0), 0) || 0,
+          totalActualCost: vendors?.reduce((sum, v) => sum + (v.actualCost || 0), 0) || 0,
+          contractsSigned: vendors?.filter(v => v.contractSigned).length || 0
         }
       }
     })

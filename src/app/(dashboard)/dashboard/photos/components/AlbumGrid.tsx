@@ -12,11 +12,11 @@ interface Album {
   photo_count: number
   cover_photo?: {
     id: string
-    cloudinary_secure_url: string
+    cloudinarySecureUrl: string
     title?: string
   }
-  is_featured: boolean
-  is_public: boolean
+  isFeatured: boolean
+  isPublic: boolean
 }
 
 interface AlbumGridProps {
@@ -75,7 +75,7 @@ export default function AlbumGrid({ albums }: AlbumGridProps) {
             <div className={`aspect-square bg-gradient-to-br ${getGradientClass(index)} rounded-t-lg flex items-center justify-center relative overflow-hidden`}>
               {album.cover_photo ? (
                 <img
-                  src={album.cover_photo.cloudinary_secure_url}
+                  src={album.cover_photo.cloudinarySecureUrl}
                   alt={album.cover_photo.title || album.name}
                   className="w-full h-full object-cover"
                 />
@@ -94,10 +94,10 @@ export default function AlbumGrid({ albums }: AlbumGridProps) {
 
               {/* Album badges */}
               <div className="absolute top-2 left-2 flex gap-1">
-                {album.is_featured && (
+                {album.isFeatured && (
                   <Badge variant="secondary" className="text-xs">Featured</Badge>
                 )}
-                {album.is_public && (
+                {album.isPublic && (
                   <Badge variant="outline" className="text-xs bg-white/80">Public</Badge>
                 )}
               </div>
@@ -111,7 +111,7 @@ export default function AlbumGrid({ albums }: AlbumGridProps) {
                 </p>
               )}
               <p className="text-sm text-muted-foreground">
-                {album.photo_count} photo{album.photo_count !== 1 ? 's' : ''}
+                {album.photo_count || 0} photo{album.photo_count !== 1 ? 's' : ''}
               </p>
             </div>
             </CardContent>

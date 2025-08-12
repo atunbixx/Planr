@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Mail, MessageSquare, Phone, Send, Users, Building2, FileText, Plus, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { api } from '@/lib/api/client';
 
 interface Guest {
   id: string;
@@ -24,7 +25,7 @@ interface Guest {
 interface Vendor {
   id: string;
   name: string;
-  business_name: string;
+  businessName: string;
   email: string;
   phone: string;
   category: string;
@@ -63,24 +64,50 @@ export default function MessagesPage() {
   const fetchData = async () => {
     try {
       // Fetch guests
-      const guestsRes = await fetch('/api/guests');
-      if (guestsRes.ok) {
-        const guestsData = await guestsRes.json();
-        setGuests(guestsData);
+      const guestsRes = await api.guests.list();
+      if (guestsRes.success && guestsRes.data) {
+        // Map the guest data structure
+        const mappedGuests = guestsRes.data.data.map(guest => ({
+          id: guest.id,
+          name: `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || 'Guest',
+          email: guest.email || '',
+          phone: guest.phone || '',
+          rsvp_status: guest.rsvpStatus
+        }));
+        setGuests(mappedGuests);
       }
 
       // Fetch vendors
-      const vendorsRes = await fetch('/api/vendors');
-      if (vendorsRes.ok) {
-        const vendorsData = await vendorsRes.json();
-        setVendors(vendorsData);
+      const vendorsRes = await api.vendors.list();
+      if (vendorsRes.success && vendorsRes.data) {
+        // Map the vendor data structure
+        const mappedVendors = vendorsRes.data.vendors.map(vendor => ({
+          id: vendor.id,
+          name: vendor.contactName || vendor.businessName,
+          businessName: vendor.businessName,
+          email: vendor.email || '',
+          phone: vendor.phone || '',
+          category: vendor.category
+        }));
+        setVendors(mappedVendors);
       }
 
       // Fetch templates
-      const templatesRes = await fetch('/api/messages/templates');
-      if (templatesRes.ok) {
-        const templatesData = await templatesRes.json();
-        setTemplates(templatesData);
+      const templatesRes = await api.messages.templates.list();
+      if (templatesRes.success && templatesRes.data) {
+        // Map the template data structure
+        const mappedTemplates = templatesRes.data.map(template => ({
+          id: template.id,
+          name: template.name,
+          description: '',
+          type: template.type as 'email' | 'sms' | 'whatsapp',
+          subject: template.subject,
+          body: template.content,
+          variables: template.variables,
+          is_system: false,
+          category: template.category
+        }));
+        setTemplates(mappedTemplates);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -95,6 +122,12 @@ export default function MessagesPage() {
   };
 
   const handleTemplateSelect = (templateId: string) => {
+    if (templateId === 'none') {
+      setSelectedTemplate('');
+      setCustomSubject('');
+      setCustomBody('');
+      return;
+    }
     setSelectedTemplate(templateId);
     const template = templates.find(t => t.id === templateId);
     if (template) {
@@ -113,7 +146,8 @@ export default function MessagesPage() {
   };
 
   const handleSelectAll = () => {
-    const recipients = recipientType === 'guest' ? guests : vendors;
+    if (!recipients || recipients.length === 0) return;
+    
     if (selectedRecipients.length === recipients.length) {
       setSelectedRecipients([]);
     } else {
@@ -143,34 +177,30 @@ export default function MessagesPage() {
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          recipientIds: selectedRecipients,
-          recipientType,
-          messageType,
-          templateId: selectedTemplate || undefined,
-          customSubject: messageType === 'email' ? customSubject : undefined,
-          customBody,
-          scheduledFor: scheduledFor || undefined,
-        }),
+      const response = await api.messages.send({
+        recipientIds: selectedRecipients,
+        subject: messageType === 'email' ? customSubject : customBody.substring(0, 50),
+        content: customBody,
+        type: messageType,
+        templateId: selectedTemplate || undefined,
+        scheduledFor: scheduledFor || undefined,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        if (data.scheduled) {
+      if (response.success && response.data) {
+        const data = response.data;
+        if (scheduledFor) {
           toast({
             title: 'Messages Scheduled',
-            description: `${data.count} messages scheduled for ${new Date(data.scheduledFor).toLocaleString()}`,
+            description: `${data.count} messages scheduled for ${new Date(scheduledFor).toLocaleString()}`,
           });
         } else {
+          // Count successes and failures from messages array
+          const successCount = data.messages?.filter(m => m.status === 'sent').length || data.count;
+          const failedCount = data.messages?.filter(m => m.status === 'failed').length || 0;
+          
           toast({
             title: 'Messages Sent',
-            description: `Successfully sent ${data.successCount} messages. Failed: ${data.failedCount}`,
+            description: `Successfully sent ${successCount} messages${failedCount > 0 ? `. Failed: ${failedCount}` : ''}`,
           });
         }
 
@@ -183,7 +213,7 @@ export default function MessagesPage() {
       } else {
         toast({
           title: 'Error',
-          description: data.error || 'Failed to send messages',
+          description: 'Failed to send messages',
           variant: 'destructive',
         });
       }
@@ -191,7 +221,7 @@ export default function MessagesPage() {
       console.error('Error sending messages:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send messages',
+        description: error instanceof Error ? error.message : 'Failed to send messages',
         variant: 'destructive',
       });
     } finally {
@@ -255,12 +285,12 @@ export default function MessagesPage() {
                   size="sm"
                   onClick={handleSelectAll}
                 >
-                  {selectedRecipients.length === recipients.length ? 'Deselect All' : 'Select All'}
+                  {recipients && selectedRecipients.length === recipients.length ? 'Deselect All' : 'Select All'}
                 </Button>
               </div>
 
               <div className="border rounded-md max-h-[400px] overflow-y-auto">
-                {recipients.map(recipient => (
+                {recipients && recipients.length > 0 ? recipients.map(recipient => (
                   <div
                     key={recipient.id}
                     className="flex items-center space-x-2 p-2 hover:bg-accent"
@@ -273,7 +303,7 @@ export default function MessagesPage() {
                       <div className="font-medium">
                         {recipientType === 'guest' 
                           ? recipient.name 
-                          : (recipient as Vendor).business_name || recipient.name}
+                          : (recipient as Vendor).businessName || recipient.name}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {recipient.email && <span>{recipient.email}</span>}
@@ -282,12 +312,16 @@ export default function MessagesPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No {recipientType}s available
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="text-sm text-muted-foreground">
-              {selectedRecipients.length} of {recipients.length} selected
+              {selectedRecipients.length} of {recipients ? recipients.length : 0} selected
             </div>
           </CardContent>
         </Card>
@@ -337,7 +371,7 @@ export default function MessagesPage() {
                   <SelectValue placeholder="Select a template or write custom message" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No template</SelectItem>
+                  <SelectItem value="none">No template</SelectItem>
                   {templates
                     .filter(t => t.type === messageType)
                     .map(template => (

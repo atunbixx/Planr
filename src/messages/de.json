@@ -1,0 +1,307 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "back": "Zurück",
+    "next": "Weiter",
+    "submit": "Absenden",
+    "confirm": "Bestätigen",
+    "close": "Schließen",
+    "yes": "Ja",
+    "no": "Nein",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "info": "Information"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "signOut": "Abmelden",
+    "welcomeBack": "Willkommen zurück!",
+    "createAccount": "Erstellen Sie Ihr Konto"
+  },
+  "navigation": {
+    "dashboard": "Übersicht",
+    "guests": "Gäste",
+    "seatingChart": "Sitzplan",
+    "budget": "Budget",
+    "vendors": "Dienstleister",
+    "photos": "Fotos",
+    "messages": "Nachrichten",
+    "checklist": "Checkliste",
+    "settings": "Einstellungen",
+    "account": "Konto"
+  },
+  "dashboard": {
+    "title": "Hochzeits-Dashboard",
+    "welcome": "Willkommen in Ihrem Hochzeitsplanungs-Dashboard",
+    "daysUntil": "Tage bis zu Ihrer Hochzeit",
+    "overview": "Übersicht",
+    "recentActivity": "Letzte Aktivitäten",
+    "quickActions": "Schnellaktionen",
+    "stats": {
+      "totalGuests": "Gäste insgesamt",
+      "confirmedGuests": "Bestätigte Gäste",
+      "pendingRSVPs": "Ausstehende Rückmeldungen",
+      "budgetUsed": "Budget verwendet",
+      "tasksCompleted": "Erledigte Aufgaben",
+      "photosUploaded": "Hochgeladene Fotos"
+    }
+  },
+  "guests": {
+    "title": "Gästeliste",
+    "description": "Verwalten Sie Ihre Gästeliste und Rückmeldungen",
+    "addGuest": "Gast hinzufügen",
+    "importGuests": "Gäste importieren",
+    "exportGuests": "Gäste exportieren",
+    "searchPlaceholder": "Nach Name oder E-Mail suchen",
+    "filters": {
+      "all": "Alle",
+      "confirmed": "Bestätigt",
+      "declined": "Abgesagt",
+      "pending": "Ausstehend",
+      "bride": "Seite der Braut",
+      "groom": "Seite des Bräutigams",
+      "both": "Beide Seiten"
+    },
+    "form": {
+      "name": "Name des Gastes",
+      "email": "E-Mail-Adresse",
+      "phone": "Telefon",
+      "relationship": "Beziehung",
+      "side": "Seite",
+      "plusOne": "Begleitung erlaubt",
+      "dietaryRestrictions": "Ernährungseinschränkungen",
+      "specialRequests": "Besondere Wünsche",
+      "notes": "Notizen",
+      "rsvpStatus": "RSVP-Status"
+    },
+    "actions": {
+      "markConfirmed": "Als bestätigt markieren",
+      "markDeclined": "Als abgesagt markieren",
+      "markPending": "Als ausstehend markieren",
+      "sendInvitation": "Einladung senden",
+      "deleteGuest": "Gast löschen"
+    },
+    "stats": {
+      "total": "Gäste insgesamt",
+      "confirmed": "Bestätigt",
+      "declined": "Abgesagt",
+      "pending": "Ausstehend",
+      "plusOnes": "Begleitungen"
+    }
+  },
+  "seating": {
+    "title": "Sitzplan",
+    "description": "Ordnen Sie Ihre Gäste an Tischen an",
+    "addTable": "Tisch hinzufügen",
+    "tableNumber": "Tisch {number}",
+    "capacity": "Kapazität: {current}/{max}",
+    "unassignedGuests": "Nicht zugewiesene Gäste",
+    "saveArrangement": "Anordnung speichern",
+    "clearAll": "Alles löschen",
+    "noGuests": "Keine Gäste zum Anordnen",
+    "dragToAssign": "Ziehen Sie Gäste, um sie Tischen zuzuweisen"
+  },
+  "budget": {
+    "title": "Hochzeitsbudget",
+    "description": "Verfolgen Sie Ihre Hochzeitsausgaben",
+    "totalBudget": "Gesamtbudget",
+    "spent": "Ausgegeben",
+    "remaining": "Verbleibend",
+    "addExpense": "Ausgabe hinzufügen",
+    "categories": {
+      "venue": "Location",
+      "catering": "Catering",
+      "photography": "Fotografie",
+      "flowers": "Blumen",
+      "music": "Musik",
+      "attire": "Kleidung",
+      "decorations": "Dekoration",
+      "other": "Sonstiges"
+    },
+    "form": {
+      "description": "Beschreibung",
+      "amount": "Betrag",
+      "category": "Kategorie",
+      "date": "Datum",
+      "vendor": "Dienstleister",
+      "notes": "Notizen",
+      "paid": "Bezahlt"
+    }
+  },
+  "vendors": {
+    "title": "Dienstleister",
+    "description": "Verwalten Sie Ihre Hochzeitsdienstleister",
+    "addVendor": "Dienstleister hinzufügen",
+    "searchPlaceholder": "Dienstleister suchen",
+    "categories": {
+      "all": "Alle Kategorien",
+      "venue": "Location",
+      "catering": "Catering",
+      "photography": "Fotografie",
+      "videography": "Videografie",
+      "florist": "Florist",
+      "music": "Musik/DJ",
+      "officiant": "Standesbeamter",
+      "other": "Sonstiges"
+    },
+    "form": {
+      "businessName": "Firmenname",
+      "contactName": "Ansprechpartner",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "category": "Kategorie",
+      "website": "Webseite",
+      "instagram": "Instagram",
+      "price": "Preis",
+      "depositPaid": "Anzahlung bezahlt",
+      "depositAmount": "Anzahlungsbetrag",
+      "notes": "Notizen",
+      "contractSigned": "Vertrag unterzeichnet",
+      "rating": "Bewertung"
+    }
+  },
+  "photos": {
+    "title": "Fotos",
+    "description": "Ihre Hochzeitsfotogalerie",
+    "uploadPhotos": "Fotos hochladen",
+    "createAlbum": "Album erstellen",
+    "allPhotos": "Alle Fotos",
+    "albums": "Alben",
+    "favorites": "Favoriten",
+    "dragToUpload": "Fotos hierher ziehen oder klicken zum Hochladen",
+    "uploadingCount": "{count} Fotos werden hochgeladen...",
+    "deleteConfirm": "Sind Sie sicher, dass Sie dieses Foto löschen möchten?"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "description": "Verwalten Sie Ihr Konto und Hochzeitseinstellungen",
+    "sections": {
+      "weddingDetails": "Hochzeitsdetails",
+      "sharingCollaboration": "Teilen & Zusammenarbeit",
+      "budgetSettings": "Budgeteinstellungen",
+      "notifications": "Benachrichtigungen",
+      "account": "Kontoeinstellungen",
+      "dataPrivacy": "Daten & Datenschutz"
+    },
+    "wedding": {
+      "partnerName": "Name des Partners",
+      "weddingDate": "Hochzeitsdatum",
+      "venue": "Location",
+      "location": "Ort",
+      "expectedGuests": "Erwartete Gästezahl",
+      "weddingStyle": "Hochzeitsstil",
+      "styles": {
+        "traditional": "Traditionell",
+        "modern": "Modern",
+        "rustic": "Rustikal",
+        "vintage": "Vintage",
+        "destination": "Destination",
+        "casual": "Zwanglos",
+        "formal": "Formell"
+      }
+    },
+    "sharing": {
+      "title": "Mitarbeiter verwalten",
+      "description": "Laden Sie Planer, Familienmitglieder oder Dienstleister ein",
+      "inviteButton": "Mitarbeiter einladen",
+      "activeCollaborators": "Aktive Mitarbeiter",
+      "pendingInvitations": "Ausstehende Einladungen",
+      "roles": {
+        "planner": "Hochzeitsplaner",
+        "family": "Familienmitglied",
+        "vendor": "Dienstleister",
+        "guest": "Gast"
+      }
+    },
+    "preferences": {
+      "currency": "Währung",
+      "timezone": "Zeitzone",
+      "language": "Sprache",
+      "emailNotifications": "E-Mail-Benachrichtigungen",
+      "pushNotifications": "Push-Benachrichtigungen",
+      "taskReminders": "Aufgabenerinnerungen",
+      "budgetAlerts": "Budgetwarnungen",
+      "vendorUpdates": "Dienstleister-Updates"
+    },
+    "data": {
+      "exportData": "Daten exportieren",
+      "deleteAccount": "Konto löschen",
+      "exportDescription": "Laden Sie eine Kopie all Ihrer Hochzeitsplanungsdaten herunter",
+      "deleteDescription": "Löschen Sie Ihr Konto und alle Daten dauerhaft"
+    }
+  },
+  "onboarding": {
+    "welcome": "Willkommen bei Ihrem Hochzeitsplaner",
+    "letsStart": "Lassen Sie uns mit der Planung Ihres perfekten Tages beginnen!",
+    "step1": {
+      "title": "Erzählen Sie uns von sich",
+      "yourName": "Ihr Name",
+      "partnerName": "Name des Partners",
+      "weddingDate": "Hochzeitsdatum",
+      "weddingDateHelp": "Wann ist der große Tag?"
+    },
+    "step2": {
+      "title": "Hochzeitsdetails",
+      "location": "Hochzeitsort",
+      "locationHelp": "Stadt oder Ort, wo Sie heiraten werden",
+      "guestCount": "Erwartete Gästezahl",
+      "guestCountHelp": "Ungefähre Anzahl der Gäste"
+    },
+    "step3": {
+      "title": "Legen Sie Ihr Budget fest",
+      "totalBudget": "Gesamtes Hochzeitsbudget",
+      "budgetHelp": "Ihr geschätztes Gesamtbudget",
+      "currency": "Währung"
+    },
+    "complete": "Einrichtung abschließen"
+  },
+  "invitation": {
+    "title": "Sie sind zur Mitarbeit eingeladen!",
+    "description": "{couple} hat Sie eingeladen, bei der Hochzeitsplanung zu helfen",
+    "yourRole": "Ihre Rolle",
+    "yourPermissions": "Ihre Berechtigungen",
+    "weddingDate": "Hochzeitsdatum",
+    "acceptInvitation": "Einladung annehmen",
+    "signUpToAccept": "Registrieren und Einladung annehmen",
+    "signInToAccept": "Anmelden zum Annehmen",
+    "disclaimer": "Durch das Annehmen dieser Einladung erhalten Sie Zugang zum Planungs-Dashboard mit den oben aufgeführten Berechtigungen."
+  },
+  "permissions": {
+    "view": "Dashboard anzeigen",
+    "edit": "Hochzeitsdetails bearbeiten",
+    "manage_guests": "Gästeliste verwalten",
+    "edit_guests": "Gästeinformationen bearbeiten",
+    "manage_budget": "Budget verwalten",
+    "view_budget": "Budget anzeigen",
+    "manage_vendors": "Dienstleister verwalten",
+    "view_schedule": "Zeitplan anzeigen",
+    "manage_tasks": "Aufgaben verwalten",
+    "manage_photos": "Fotos verwalten",
+    "view_photos": "Fotos anzeigen",
+    "manage_own_vendor": "Ihre Dienstleisterinformationen verwalten"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "notFound": "Seite nicht gefunden",
+    "unauthorized": "Sie haben keine Berechtigung, darauf zuzugreifen",
+    "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "invalidData": "Ungültige Daten angegeben",
+    "requiredField": "Dieses Feld ist erforderlich"
+  },
+  "success": {
+    "saved": "Erfolgreich gespeichert",
+    "deleted": "Erfolgreich gelöscht",
+    "updated": "Erfolgreich aktualisiert",
+    "invited": "Einladung erfolgreich gesendet",
+    "uploaded": "Erfolgreich hochgeladen"
+  }
+}

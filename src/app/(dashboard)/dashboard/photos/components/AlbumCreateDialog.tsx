@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Plus, Loader2, FolderPlus } from 'lucide-react'
 import { toast } from 'sonner'
+import { api } from '@/lib/api/client'
 
 interface Album {
   id: string
@@ -39,27 +40,19 @@ export default function AlbumCreateDialog({ onAlbumCreated, trigger }: AlbumCrea
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/albums', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim() || null
-        })
+      const response = await api.albums.create({
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create album')
+      if (response.success && response.data) {
+        onAlbumCreated(response.data)
+        setIsOpen(false)
+        setFormData({ name: '', description: '' })
+        toast.success('Album created successfully')
+      } else {
+        throw new Error('Failed to create album')
       }
-
-      const { album } = await response.json()
-      onAlbumCreated(album)
-      setIsOpen(false)
-      setFormData({ name: '', description: '' })
-      toast.success('Album created successfully')
     } catch (error) {
       console.error('Create album error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to create album')

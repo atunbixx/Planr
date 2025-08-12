@@ -11,16 +11,17 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { X, Plus, Heart, Edit, Save, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { api } from '@/lib/api/client'
 
 interface Photo {
   id: string
   title: string | null
   description: string | null
-  alt_text: string | null
-  is_favorite: boolean
-  album_id: string | null
+  altText: string | null
+  isFavorite: boolean
+  albumId: string | null
   tags: string[] | null
-  cloudinary_secure_url: string
+  cloudinarySecureUrl: string
   photo_albums?: {
     id: string
     name: string
@@ -46,9 +47,9 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
   const [formData, setFormData] = useState({
     title: photo.title || '',
     description: photo.description || '',
-    alt_text: photo.alt_text || '',
-    is_favorite: photo.is_favorite || false,
-    album_id: photo.album_id || '',
+    altText: photo.altText || '',
+    isFavorite: photo.isFavorite || false,
+    albumId: photo.albumId || '',
     tags: photo.tags || []
   })
   const [newTag, setNewTag] = useState('')
@@ -58,9 +59,9 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
     setFormData({
       title: photo.title || '',
       description: photo.description || '',
-      alt_text: photo.alt_text || '',
-      is_favorite: photo.is_favorite || false,
-      album_id: photo.album_id || '',
+      altText: photo.altText || '',
+      isFavorite: photo.isFavorite || false,
+      albumId: photo.albumId || '',
       tags: photo.tags || []
     })
   }, [photo])
@@ -87,30 +88,24 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
     setIsLoading(true)
 
     try {
-      const response = await fetch(`/api/photos/${photo.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title.trim() || null,
-          description: formData.description.trim() || null,
-          alt_text: formData.alt_text.trim() || null,
-          is_favorite: formData.is_favorite,
-          album_id: formData.album_id || null,
-          tags: formData.tags
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to update photo')
+      const updateData = {
+        title: formData.title.trim() || undefined,
+        description: formData.description.trim() || undefined,
+        altText: formData.altText.trim() || undefined,
+        isFavorite: formData.isFavorite,
+        albumId: formData.albumId === 'none' ? '' : formData.albumId,
+        tags: formData.tags
       }
 
-      const { photo: updatedPhoto } = await response.json()
-      onPhotoUpdated(updatedPhoto)
-      setIsOpen(false)
-      toast.success('Photo updated successfully')
+      const response = await api.photos.update(photo.id, updateData)
+      
+      if (response.success && response.data) {
+        onPhotoUpdated(response.data)
+        setIsOpen(false)
+        toast.success('Photo updated successfully')
+      } else {
+        throw new Error('Failed to update photo')
+      }
     } catch (error) {
       console.error('Update photo error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to update photo')
@@ -144,7 +139,7 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
           <div className="flex gap-4">
             <div className="w-32 h-32 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
               <img
-                src={photo.cloudinary_secure_url}
+                src={photo.cloudinarySecureUrl}
                 alt={photo.title || 'Photo'}
                 className="w-full h-full object-cover"
               />
@@ -165,11 +160,11 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
               <div className="flex items-center space-x-2">
                 <Switch
                   id="favorite"
-                  checked={formData.is_favorite}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_favorite: checked }))}
+                  checked={formData.isFavorite}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isFavorite: checked }))}
                 />
                 <Label htmlFor="favorite" className="flex items-center gap-2">
-                  <Heart className={`w-4 h-4 ${formData.is_favorite ? 'fill-red-500 text-red-500' : ''}`} />
+                  <Heart className={`w-4 h-4 ${formData.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                   Mark as favorite
                 </Label>
               </div>
@@ -190,11 +185,11 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
 
           {/* Alt Text */}
           <div className="space-y-2">
-            <Label htmlFor="alt_text">Alt Text (for accessibility)</Label>
+            <Label htmlFor="altText">Alt Text (for accessibility)</Label>
             <Input
-              id="alt_text"
-              value={formData.alt_text}
-              onChange={(e) => setFormData(prev => ({ ...prev, alt_text: e.target.value }))}
+              id="altText"
+              value={formData.altText}
+              onChange={(e) => setFormData(prev => ({ ...prev, altText: e.target.value }))}
               placeholder="Describe what's in the photo for screen readers..."
             />
           </div>
@@ -203,14 +198,14 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
           <div className="space-y-2">
             <Label htmlFor="album">Album</Label>
             <Select
-              value={formData.album_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, album_id: value }))}
+              value={formData.albumId}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, albumId: value }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select an album (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No Album</SelectItem>
+                <SelectItem value="none">No Album</SelectItem>
                 {albums.map((album) => (
                   <SelectItem key={album.id} value={album.id}>
                     {album.name}

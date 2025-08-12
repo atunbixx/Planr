@@ -1,0 +1,353 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "search": "搜索",
+    "filter": "筛选",
+    "back": "返回",
+    "next": "下一步",
+    "submit": "提交",
+    "confirm": "确认",
+    "close": "关闭",
+    "yes": "是",
+    "no": "否",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "信息",
+    "reload": "重新加载页面"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signOut": "退出",
+    "welcomeBack": "欢迎回来！",
+    "createAccount": "创建您的账户"
+  },
+  "navigation": {
+    "dashboard": "仪表板",
+    "guests": "来宾",
+    "seatingChart": "座位表",
+    "budget": "预算",
+    "vendors": "供应商",
+    "photos": "照片",
+    "messages": "消息",
+    "checklist": "清单",
+    "settings": "设置",
+    "account": "账户"
+  },
+  "dashboard": {
+    "title": "婚礼仪表板",
+    "welcome": "欢迎来到您的婚礼策划仪表板",
+    "daysUntil": "距离您的婚礼还有",
+    "daysToGo": "{days} 天倒计时！",
+    "yourWeddingDay": "您的婚礼日！",
+    "overview": "概览",
+    "recentActivity": "最近活动",
+    "quickActions": "快捷操作",
+    "overallProgress": "总体进度",
+    "wedding": "婚礼",
+    "budgetOverview": "预算概览",
+    "guestRSVPs": "来宾回复",
+    "vendorStatus": "供应商状态",
+    "vendorsBooked": "已预订供应商",
+    "thisWeeksTasks": "本周任务",
+    "upcomingPayments": "即将付款",
+    "weddingDetails": "婚礼详情",
+    "appChat": "应用聊天",
+    "upcomingEvents": "即将到来的活动",
+    "seeAll": "查看全部",
+    "noRecentMessages": "暂无最近消息",
+    "noUpcomingTasks": "暂无即将到来的任务",
+    "noDate": "无日期",
+    "stats": {
+      "totalGuests": "总来宾数",
+      "confirmedGuests": "已确认来宾",
+      "pendingRSVPs": "待回复",
+      "budgetUsed": "已用预算",
+      "tasksCompleted": "已完成任务",
+      "photosUploaded": "已上传照片",
+      "of": "共",
+      "remaining": "剩余",
+      "confirmed": "已确认",
+      "pending": "待定",
+      "declined": "已拒绝",
+      "booked": "已预订",
+      "complete": "完成",
+      "taskssDone": "任务已完成"
+    },
+    "venue": "场地",
+    "date": "日期",
+    "editDetails": "编辑详情",
+    "sendRSVPReminders": "发送回复提醒",
+    "contactVendors": "联系供应商",
+    "uploadPhotos": "上传照片",
+    "addExpense": "添加支出",
+    "viewAll": "查看全部",
+    "viewBudget": "查看预算",
+    "view": "查看",
+    "trackExpenses": "跟踪支出",
+    "manageRSVPs": "管理回复",
+    "bookServices": "预订服务",
+    "weddingGallery": "婚礼相册",
+    "dueIn": "{days} 天后到期",
+    "in": "在",
+    "days": "天",
+    "tasksThisWeek": "您本周有 {count} 个任务到期",
+    "taskSystemComingSoon": "完整的任务管理系统即将推出！",
+    "noUpcomingPayments": "暂无即将付款"
+  },
+  "guests": {
+    "title": "来宾名单",
+    "description": "管理您的婚礼来宾名单和回复",
+    "addGuest": "添加来宾",
+    "importGuests": "导入来宾",
+    "exportGuests": "导出来宾",
+    "searchPlaceholder": "按姓名或邮箱搜索",
+    "filters": {
+      "all": "全部",
+      "confirmed": "已确认",
+      "declined": "已拒绝",
+      "pending": "待定",
+      "bride": "新娘方",
+      "groom": "新郎方",
+      "both": "双方"
+    },
+    "form": {
+      "name": "来宾姓名",
+      "email": "邮箱地址",
+      "phone": "电话号码",
+      "relationship": "关系",
+      "side": "所属方",
+      "plusOne": "允许携伴",
+      "dietaryRestrictions": "饮食限制",
+      "specialRequests": "特殊要求",
+      "notes": "备注",
+      "rsvpStatus": "回复状态"
+    },
+    "actions": {
+      "markConfirmed": "标记为已确认",
+      "markDeclined": "标记为已拒绝",
+      "markPending": "标记为待定",
+      "sendInvitation": "发送邀请",
+      "deleteGuest": "删除来宾"
+    },
+    "stats": {
+      "total": "总来宾数",
+      "confirmed": "已确认",
+      "declined": "已拒绝",
+      "pending": "待定",
+      "plusOnes": "携伴"
+    }
+  },
+  "seating": {
+    "title": "座位表",
+    "description": "安排您的来宾座位",
+    "addTable": "添加桌子",
+    "tableNumber": "桌号 {number}",
+    "capacity": "容量：{current}/{max}",
+    "unassignedGuests": "未分配来宾",
+    "saveArrangement": "保存安排",
+    "clearAll": "清除全部",
+    "noGuests": "暂无来宾需要安排",
+    "dragToAssign": "拖动来宾以分配座位"
+  },
+  "budget": {
+    "title": "婚礼预算",
+    "description": "跟踪您的婚礼支出",
+    "totalBudget": "总预算",
+    "spent": "已支出",
+    "remaining": "剩余",
+    "addExpense": "添加支出",
+    "categories": {
+      "venue": "场地",
+      "catering": "餐饮",
+      "photography": "摄影",
+      "flowers": "鲜花",
+      "music": "音乐",
+      "attire": "服装",
+      "decorations": "装饰",
+      "other": "其他"
+    },
+    "form": {
+      "description": "描述",
+      "amount": "金额",
+      "category": "类别",
+      "date": "日期",
+      "vendor": "供应商",
+      "notes": "备注",
+      "paid": "已支付"
+    }
+  },
+  "vendors": {
+    "title": "供应商",
+    "description": "管理您的婚礼供应商",
+    "addVendor": "添加供应商",
+    "searchPlaceholder": "搜索供应商",
+    "categories": {
+      "all": "所有类别",
+      "venue": "场地",
+      "catering": "餐饮",
+      "photography": "摄影",
+      "videography": "摄像",
+      "florist": "花艺",
+      "music": "音乐/DJ",
+      "officiant": "主持人",
+      "other": "其他"
+    },
+    "form": {
+      "businessName": "公司名称",
+      "contactName": "联系人",
+      "email": "邮箱",
+      "phone": "电话",
+      "category": "类别",
+      "website": "网站",
+      "instagram": "Instagram",
+      "price": "价格",
+      "depositPaid": "已付定金",
+      "depositAmount": "定金金额",
+      "notes": "备注",
+      "contractSigned": "已签合同",
+      "rating": "评分"
+    }
+  },
+  "photos": {
+    "title": "照片",
+    "description": "您的婚礼照片库",
+    "uploadPhotos": "上传照片",
+    "createAlbum": "创建相册",
+    "allPhotos": "所有照片",
+    "albums": "相册",
+    "favorites": "收藏",
+    "dragToUpload": "拖动照片到此处或点击上传",
+    "uploadingCount": "正在上传 {count} 张照片...",
+    "deleteConfirm": "确定要删除这张照片吗？"
+  },
+  "settings": {
+    "title": "设置",
+    "description": "管理您的账户和婚礼偏好设置",
+    "sections": {
+      "weddingDetails": "婚礼详情",
+      "sharingCollaboration": "共享与协作",
+      "budgetSettings": "预算设置",
+      "notifications": "通知",
+      "account": "账户设置",
+      "dataPrivacy": "数据与隐私"
+    },
+    "wedding": {
+      "partnerName": "伴侣姓名",
+      "weddingDate": "婚礼日期",
+      "venue": "场地",
+      "location": "地点",
+      "expectedGuests": "预计来宾数",
+      "weddingStyle": "婚礼风格",
+      "styles": {
+        "traditional": "传统",
+        "modern": "现代",
+        "rustic": "乡村",
+        "vintage": "复古",
+        "destination": "目的地",
+        "casual": "休闲",
+        "formal": "正式"
+      }
+    },
+    "sharing": {
+      "title": "管理协作者",
+      "description": "邀请策划师、家庭成员或供应商",
+      "inviteButton": "邀请协作者",
+      "activeCollaborators": "活跃协作者",
+      "pendingInvitations": "待处理邀请",
+      "roles": {
+        "planner": "婚礼策划师",
+        "family": "家庭成员",
+        "vendor": "供应商",
+        "guest": "来宾"
+      }
+    },
+    "preferences": {
+      "currency": "货币",
+      "timezone": "时区",
+      "language": "语言",
+      "emailNotifications": "邮件通知",
+      "pushNotifications": "推送通知",
+      "taskReminders": "任务提醒",
+      "budgetAlerts": "预算提醒",
+      "vendorUpdates": "供应商更新"
+    },
+    "data": {
+      "exportData": "导出数据",
+      "deleteAccount": "删除账户",
+      "exportDescription": "下载您所有婚礼策划数据的副本",
+      "deleteDescription": "永久删除您的账户和所有数据"
+    }
+  },
+  "onboarding": {
+    "welcome": "欢迎来到您的婚礼策划师",
+    "letsStart": "让我们开始策划您的完美婚礼！",
+    "step1": {
+      "title": "告诉我们关于您自己的信息",
+      "yourName": "您的姓名",
+      "partnerName": "伴侣姓名",
+      "weddingDate": "婚礼日期",
+      "weddingDateHelp": "您的大日子是什么时候？"
+    },
+    "step2": {
+      "title": "婚礼详情",
+      "location": "婚礼地点",
+      "locationHelp": "举办婚礼的城市或场地",
+      "guestCount": "预计来宾数",
+      "guestCountHelp": "大概的来宾数量"
+    },
+    "step3": {
+      "title": "设定您的预算",
+      "totalBudget": "总婚礼预算",
+      "budgetHelp": "您的预计总预算",
+      "currency": "货币"
+    },
+    "complete": "完成设置"
+  },
+  "invitation": {
+    "title": "您被邀请协作！",
+    "description": "{couple} 邀请您帮助策划他们的婚礼",
+    "yourRole": "您的角色",
+    "yourPermissions": "您的权限",
+    "weddingDate": "婚礼日期",
+    "acceptInvitation": "接受邀请",
+    "signUpToAccept": "注册并接受邀请",
+    "signInToAccept": "登录以接受",
+    "disclaimer": "接受此邀请后，您将获得访问婚礼策划仪表板的权限，权限如上所示。"
+  },
+  "permissions": {
+    "view": "查看仪表板",
+    "edit": "编辑婚礼详情",
+    "manage_guests": "管理来宾名单",
+    "edit_guests": "编辑来宾信息",
+    "manage_budget": "管理预算",
+    "view_budget": "查看预算",
+    "manage_vendors": "管理供应商",
+    "view_schedule": "查看日程",
+    "manage_tasks": "管理任务",
+    "manage_photos": "管理照片",
+    "view_photos": "查看照片",
+    "manage_own_vendor": "管理您的供应商信息"
+  },
+  "errors": {
+    "generic": "出了点问题。请重试。",
+    "notFound": "页面未找到",
+    "unauthorized": "您没有权限访问此内容",
+    "networkError": "网络错误。请检查您的连接。",
+    "invalidData": "提供的数据无效",
+    "requiredField": "此字段为必填项"
+  },
+  "success": {
+    "saved": "保存成功",
+    "deleted": "删除成功",
+    "updated": "更新成功",
+    "invited": "邀请发送成功",
+    "uploaded": "上传成功"
+  }
+}

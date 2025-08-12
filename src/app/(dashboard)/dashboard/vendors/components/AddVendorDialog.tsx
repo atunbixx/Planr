@@ -9,12 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, X } from 'lucide-react';
 import { useSupabaseAuth } from '@/lib/auth/client';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { api } from '@/lib/api/client';
 
 interface Category {
   id: string;
@@ -30,13 +25,13 @@ interface AddVendorDialogProps {
 }
 
 interface VendorFormData {
-  name: string;
+  businessName: string;
   contactName: string;
   phone: string;
   email: string;
   website: string;
   address: string;
-  categoryId: string;
+  category: string;
   status: string;
   priority: string;
   estimatedCost: string;
@@ -50,13 +45,13 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
   const { user, isSignedIn } = useSupabaseAuth();
 
   const [formData, setFormData] = useState<VendorFormData>({
-    name: '',
+    businessName: '',
     contactName: '',
     phone: '',
     email: '',
     website: '',
     address: '',
-    categoryId: '',
+    category: '',
     status: 'potential',
     priority: 'medium',
     estimatedCost: '',
@@ -72,13 +67,13 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
 
   const resetForm = () => {
     setFormData({
-      name: '',
+      businessName: '',
       contactName: '',
       phone: '',
       email: '',
       website: '',
       address: '',
-      categoryId: '',
+      category: '',
       status: 'potential',
       priority: 'medium',
       estimatedCost: '',
@@ -98,45 +93,28 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
     setError(null);
     
     try {
-      // Use the API endpoint
-      const response = await fetch('/api/vendors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          contactName: formData.contactName.trim() || null,
-          phone: formData.phone.trim() || null,
-          email: formData.email.trim() || null,
-          website: formData.website.trim() || null,
-          categoryId: formData.categoryId || null,
-          status: formData.status,
-          estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
-          notes: formData.notes.trim() || null,
-          contractSigned: false
-        })
+      // Use the API client
+      const response = await api.vendors.create({
+        businessName: formData.businessName.trim(),
+        contactName: formData.contactName.trim() || undefined,
+        phone: formData.phone.trim() || undefined,
+        email: formData.email.trim() || undefined,
+        website: formData.website.trim() || undefined,
+        category: formData.category || 'other',
+        status: formData.status,
+        estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : undefined,
+        notes: formData.notes.trim() || undefined,
+        contractSigned: false
       });
 
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || 'Failed to create vendor');
-      }
-      
-      const result = await response.json();
-      console.log('Vendor created successfully:', result);
+      console.log('Vendor created successfully:', response.data);
 
-      // Only proceed if successful
-      if (result.success) {
-        // Success - close dialog and reset form
-        setIsOpen(false);
-        resetForm();
-        
-        // Call callback to refresh vendor list
-        onVendorAdded?.();
-      } else {
-        throw new Error(result.error || 'Failed to create vendor');
-      }
+      // Success - close dialog and reset form
+      setIsOpen(false);
+      resetForm();
+      
+      // Call callback to refresh vendor list
+      onVendorAdded?.();
 
     } catch (error: any) {
       console.error('Error creating vendor:', error);
@@ -193,12 +171,12 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
 
             {/* Business Name - Required */}
             <div>
-              <Label htmlFor="name">Business Name *</Label>
+              <Label htmlFor="businessName">Business Name *</Label>
               <Input 
                 data-testid="business-name-input"
-                id="name" 
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                id="businessName" 
+                value={formData.businessName}
+                onChange={(e) => handleInputChange('businessName', e.target.value)}
                 required 
                 placeholder="e.g., Beautiful Blooms Florist"
               />
@@ -268,23 +246,23 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={formData.categoryId} onValueChange={(value) => handleInputChange('categoryId', value)}>
+                <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                   <SelectTrigger data-testid="category-select">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Venue">🏛️ Venue</SelectItem>
-                    <SelectItem value="Catering">🍽️ Catering</SelectItem>
-                    <SelectItem value="Photography">📸 Photography</SelectItem>
-                    <SelectItem value="Videography">🎥 Videography</SelectItem>
-                    <SelectItem value="Music/DJ">🎵 Music/DJ</SelectItem>
-                    <SelectItem value="Flowers">💐 Flowers</SelectItem>
-                    <SelectItem value="Transportation">🚗 Transportation</SelectItem>
-                    <SelectItem value="Wedding Cake">🎂 Wedding Cake</SelectItem>
-                    <SelectItem value="Hair & Makeup">💄 Hair & Makeup</SelectItem>
-                    <SelectItem value="Officiant">👨‍💼 Officiant</SelectItem>
-                    <SelectItem value="Decorations">🎀 Decorations</SelectItem>
-                    <SelectItem value="Other">📝 Other</SelectItem>
+                    <SelectItem value="venue">🏛️ Venue</SelectItem>
+                    <SelectItem value="catering">🍽️ Catering</SelectItem>
+                    <SelectItem value="photography">📸 Photography</SelectItem>
+                    <SelectItem value="videography">🎥 Videography</SelectItem>
+                    <SelectItem value="music">🎵 Music/DJ</SelectItem>
+                    <SelectItem value="flowers">💐 Flowers</SelectItem>
+                    <SelectItem value="transportation">🚗 Transportation</SelectItem>
+                    <SelectItem value="cake">🎂 Wedding Cake</SelectItem>
+                    <SelectItem value="beauty">💄 Hair & Makeup</SelectItem>
+                    <SelectItem value="officiant">👨‍💼 Officiant</SelectItem>
+                    <SelectItem value="decorations">🎀 Decorations</SelectItem>
+                    <SelectItem value="other">📝 Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -360,7 +338,7 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
               >
                 Cancel
               </Button>
-              <Button data-testid="submit-vendor" type="submit" disabled={isLoading || !formData.name.trim()}>
+              <Button data-testid="submit-vendor" type="submit" disabled={isLoading || !formData.businessName.trim()}>
                 {isLoading ? 'Adding...' : 'Add Vendor'}
               </Button>
             </div>

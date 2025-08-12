@@ -1,0 +1,186 @@
+/* Print-specific styles for seating chart exports */
+
+@media print {
+  /* Hide non-essential elements */
+  .no-print,
+  .theme-toggle,
+  .sidebar,
+  .toolbar,
+  .export-button,
+  .optimization-button {
+    display: none !important;
+  }
+
+  /* Reset page margins */
+  @page {
+    margin: 10mm;
+    size: A4 landscape;
+  }
+
+  /* Ensure content fits on page */
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 11pt;
+  }
+
+  /* Table styling for print */
+  .seating-table {
+    page-break-inside: avoid;
+    border: 1px solid #000;
+    margin-bottom: 10mm;
+  }
+
+  .seating-table h3 {
+    font-size: 14pt;
+    margin-bottom: 5mm;
+  }
+
+  /* Guest list styling */
+  .guest-list {
+    columns: 2;
+    column-gap: 10mm;
+  }
+
+  .guest-item {
+    break-inside: avoid;
+    padding: 2mm 0;
+    border-bottom: 1px dotted #ccc;
+  }
+
+  /* Canvas styling for print */
+  #venue-canvas {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #000;
+  }
+
+  /* Color adjustments for print */
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure backgrounds print */
+  .table-shape-round,
+  .table-shape-rectangular,
+  .table-shape-square,
+  .table-shape-oval {
+    background-color: #f0f0f0 !important;
+  }
+
+  /* Text contrast for print */
+  .text-muted-foreground {
+    color: #333 !important;
+  }
+
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  /* Header styling */
+  .print-header {
+    text-align: center;
+    margin-bottom: 10mm;
+  }
+
+  .print-header h1 {
+    font-size: 24pt;
+    margin-bottom: 5mm;
+  }
+
+  .print-header h2 {
+    font-size: 18pt;
+    font-weight: normal;
+    margin-bottom: 3mm;
+  }
+
+  .print-header .date {
+    font-size: 14pt;
+    color: #666;
+  }
+
+  /* Summary section */
+  .print-summary {
+    margin-top: 10mm;
+    padding-top: 5mm;
+    border-top: 2px solid #000;
+    text-align: center;
+    font-size: 10pt;
+  }
+
+  /* Table grid for CSV-like layout */
+  .print-table-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+
+  .print-table-grid th,
+  .print-table-grid td {
+    border: 1px solid #000;
+    padding: 2mm;
+    text-align: left;
+  }
+
+  .print-table-grid th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+
+  /* Dietary restrictions highlighting */
+  .dietary-restriction {
+    font-style: italic;
+    color: #666;
+  }
+
+  /* Notes styling */
+  .seating-note {
+    font-size: 9pt;
+    font-style: italic;
+    color: #666;
+    margin-left: 5mm;
+  }
+}
+
+/* Screen styles for print preview */
+.print-preview {
+  background: white;
+  padding: 20mm;
+  margin: 20px auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 297mm; /* A4 landscape width */
+}
+
+.print-preview .venue-canvas {
+  border: 1px solid #ddd;
+  margin: 20px 0;
+}
+
+/* Export modal styles */
+.export-preview {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  background: #f9f9f9;
+}
+
+.export-preview-header {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.export-preview-content {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+}

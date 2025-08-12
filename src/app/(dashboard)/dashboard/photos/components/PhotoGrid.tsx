@@ -21,17 +21,18 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import PhotoEditDialog from './PhotoEditDialog'
+import { api } from '@/lib/api/client'
 
 interface Photo {
   id: string
   title: string | null
   description: string | null
-  alt_text: string | null
-  is_favorite: boolean
-  album_id: string | null
+  altText: string | null
+  isFavorite: boolean
+  albumId: string | null
   tags: string[] | null
-  cloudinary_secure_url: string
-  created_at: string
+  cloudinarySecureUrl: string
+  createdAt: string
   photo_albums?: {
     id: string
     name: string
@@ -87,29 +88,50 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/photos/bulk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          operation,
-          photo_ids: Array.from(selectedPhotos),
-          data
-        })
-      })
+      let result: any
+      const photoIds = Array.from(selectedPhotos)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to perform operation')
+      switch (operation) {
+        case 'favorite':
+          result = await api.photos.bulkToggleFavorite(photoIds, data.isFavorite)
+          break
+        case 'delete':
+          // Delete photos one by one since there's no bulk delete in the API
+          let successCount = 0
+          let failedCount = 0
+          for (const photoId of photoIds) {
+            try {
+              await api.photos.delete(photoId)
+              successCount++
+            } catch (err) {
+              failedCount++
+            }
+          }
+          result = { success: true, data: { successCount, failedCount } }
+          break
+        case 'move_to_album':
+          // Update photos one by one to move to album
+          let moveSuccessCount = 0
+          let moveFailedCount = 0
+          for (const photoId of photoIds) {
+            try {
+              await api.photos.update(photoId, { albumId: data.albumId })
+              moveSuccessCount++
+            } catch (err) {
+              moveFailedCount++
+            }
+          }
+          result = { success: true, data: { successCount: moveSuccessCount, failedCount: moveFailedCount } }
+          break
+        default:
+          throw new Error(`Unknown operation: ${operation}`)
       }
-
-      const result = await response.json()
       
-      if (result.failedCount > 0) {
-        toast.warning(`Operation completed with ${result.failedCount} failures`)
+      if (result.data?.failedCount > 0) {
+        toast.warning(`Operation completed with ${result.data.failedCount} failures`)
       } else {
-        toast.success(`Successfully ${operation}d ${result.successCount} photo${result.successCount !== 1 ? 's' : ''}`)
+        const count = result.data?.count || result.data?.successCount || photoIds.length
+        toast.success(`Successfully ${operation === 'favorite' ? 'updated' : operation}d ${count} photo${count !== 1 ? 's' : ''}`)
       }
 
       clearSelection()
@@ -128,18 +150,18 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
   }
 
   const handleMoveConfirm = () => {
-    handleBulkOperation('move_to_album', { album_id: targetAlbumId || null })
+    handleBulkOperation('move_to_album', { albumId: targetAlbumId === 'none' ? null : targetAlbumId || null })
     setShowMoveDialog(false)
     setTargetAlbumId('')
   }
 
   const handleFavoriteToggle = (photo: Photo) => {
-    handleBulkOperation('favorite', { is_favorite: !photo.is_favorite })
+    handleBulkOperation('favorite', { isFavorite: !photo.isFavorite })
   }
 
   const downloadPhoto = async (photo: Photo) => {
     try {
-      const response = await fetch(photo.cloudinary_secure_url)
+      const response = await fetch(photo.cloudinarySecureUrl)
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -205,7 +227,7 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleBulkOperation('favorite', { is_favorite: true })}
+                onClick={() => handleBulkOperation('favorite', { isFavorite: true })}
                 disabled={isLoading}
               >
                 <Heart className="w-4 h-4 mr-2" />
@@ -254,14 +276,14 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
             {/* Photo Container */}
             <div className="aspect-square overflow-hidden rounded-lg border bg-gray-100 relative">
               <Image
-                src={photo.cloudinary_secure_url}
-                alt={photo.alt_text || photo.title || 'Wedding photo'}
+                src={photo.cloudinarySecureUrl}
+                alt={photo.altText || photo.title || 'Wedding photo'}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-200"
               />
 
               {/* Favorite Indicator */}
-              {photo.is_favorite && (
+              {photo.isFavorite && (
                 <div className="absolute top-2 right-2">
                   <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                 </div>
@@ -297,7 +319,7 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
                       handleFavoriteToggle(photo)
                     }}
                   >
-                    <Heart className={`w-4 h-4 ${photo.is_favorite ? 'fill-current' : ''}`} />
+                    <Heart className={`w-4 h-4 ${photo.isFavorite ? 'fill-current' : ''}`} />
                   </Button>
                 </div>
               </div>
@@ -375,7 +397,7 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
                 <SelectValue placeholder="Select destination album" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No Album (Remove from current album)</SelectItem>
+                <SelectItem value="none">No Album (Remove from current album)</SelectItem>
                 {albums.map((album) => (
                   <SelectItem key={album.id} value={album.id}>
                     {album.name}

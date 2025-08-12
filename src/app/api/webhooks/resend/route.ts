@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emailService } from '@/lib/messaging/email-service';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import crypto from 'crypto';
 
 // Verify webhook signature from Resend
@@ -46,17 +46,17 @@ export async function POST(request: NextRequest) {
     // Update message log in database based on event type
     if (data.email_id) {
       const updateData: any = {
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       };
 
       switch (type) {
         case 'email.sent':
           updateData.status = 'sent';
-          updateData.sent_at = new Date().toISOString();
+          updateData.sentAt = new Date().toISOString();
           break;
         case 'email.delivered':
           updateData.status = 'delivered';
-          updateData.delivered_at = new Date().toISOString();
+          updateData.deliveredAt = new Date().toISOString();
           break;
         case 'email.bounced':
           updateData.status = 'bounced';
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
           break;
       }
 
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('message_logs')
         .update(updateData)
         .eq('external_id', data.email_id);
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
       // Handle unsubscribe for complaints
       if (type === 'email.complained' && data.to) {
-        const { error: prefError } = await supabase
+        const { error: prefError } = await getSupabase()
           .from('message_preferences')
           .update({
             email_opt_in: false,

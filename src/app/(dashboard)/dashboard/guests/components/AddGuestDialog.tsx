@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import { api } from '@/lib/api/client'
 
 interface AddGuestDialogProps {
   open: boolean
@@ -46,35 +47,20 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
     setError(null)
 
     try {
-      const response = await fetch('/api/guests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          address: formData.address || undefined,
-          relationship: formData.relationship || undefined,
-          side: formData.side,
-          plusOneAllowed: formData.plusOneAllowed,
-          plusOneName: formData.plusOneAllowed ? formData.plusOneName : undefined,
-          dietaryRestrictions: formData.dietaryRestrictions || undefined,
-          notes: formData.notes || undefined,
-          rsvpDeadline: formData.rsvpDeadline || undefined,
-        }),
+      const response = await api.guests.create({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        dietaryRestrictions: formData.dietaryRestrictions || undefined,
+        plusOneAllowed: formData.plusOneAllowed,
+        plusOneName: formData.plusOneAllowed ? formData.plusOneName : undefined,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to add guest' }))
-        throw new Error(errorData.error || 'Failed to add guest')
-      }
-
-      // Wait for the response to be fully processed
-      const data = await response.json()
-      console.log('Guest created successfully:', data)
+      console.log('Guest created successfully:', response)
 
       // Only proceed if successful
-      if (data.success) {
+      if (response.success) {
         onGuestAdded?.()
         onClose()
         
@@ -93,8 +79,6 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
           notes: '',
           rsvpDeadline: ''
         })
-      } else {
-        throw new Error(data.error || 'Failed to create guest')
       }
     } catch (error) {
       console.error('Error adding guest:', error)

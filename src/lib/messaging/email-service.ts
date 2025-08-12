@@ -3,12 +3,14 @@ import { getMessagingConfig } from './config';
 import type { MessageRecipient, MessageStatus, MessageTemplate } from './types';
 
 class EmailService {
-  private resend: Resend;
-  private config: ReturnType<typeof getMessagingConfig>;
+  private resend: Resend | null = null;
+  private config: ReturnType<typeof getMessagingConfig> | null = null;
 
-  constructor() {
-    this.config = getMessagingConfig();
-    this.resend = new Resend(this.config.resend.apiKey);
+  private initialize() {
+    if (!this.config || !this.resend) {
+      this.config = getMessagingConfig();
+      this.resend = new Resend(this.config.resend.apiKey);
+    }
   }
 
   async sendEmail(
@@ -17,6 +19,7 @@ class EmailService {
     body: string,
     variables?: Record<string, string>
   ): Promise<MessageStatus> {
+    this.initialize();
     try {
       const recipients = Array.isArray(to) ? to : [to];
       const emailAddresses = recipients
@@ -39,12 +42,12 @@ class EmailService {
         });
       }
 
-      const { data, error } = await this.resend.emails.send({
-        from: `${this.config.resend.fromName} <${this.config.resend.fromEmail}>`,
+      const { data, error } = await this.resend!.emails.send({
+        from: `${this.config!.resend.fromName} <${this.config!.resend.fromEmail}>`,
         to: emailAddresses,
         subject: processedSubject,
         html: processedBody,
-        replyTo: this.config.resend.replyTo,
+        replyTo: this.config!.resend.replyTo,
       });
 
       if (error) {
@@ -87,6 +90,7 @@ class EmailService {
     template: MessageTemplate,
     variables?: Record<string, string>
   ): Promise<MessageStatus> {
+    this.initialize();
     if (template.type !== 'email') {
       throw new Error('Invalid template type for email');
     }
@@ -105,6 +109,7 @@ class EmailService {
     body: string,
     perRecipientVariables?: Record<string, Record<string, string>>
   ): Promise<MessageStatus[]> {
+    this.initialize();
     const results: MessageStatus[] = [];
     
     // Process in batches to avoid rate limits
@@ -130,8 +135,9 @@ class EmailService {
 
   // Webhook handler for Resend events
   async handleWebhook(payload: any, signature?: string): Promise<void> {
+    this.initialize();
     // Verify webhook signature if provided
-    if (signature && this.config.webhooks.secret) {
+    if (signature && this.config!.webhooks.secret) {
       // TODO: Implement signature verification
       // const isValid = this.verifyWebhookSignature(payload, signature);
       // if (!isValid) {

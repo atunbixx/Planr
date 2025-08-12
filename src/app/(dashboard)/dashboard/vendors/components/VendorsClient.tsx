@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import AddVendorDialog from './AddVendorDialog'
 import VendorList from './VendorList'
+import { api } from '@/lib/api/client'
 
 interface Vendor {
   id: string
@@ -37,8 +38,10 @@ interface VendorCosts {
 }
 
 interface Category {
+  id: string
   name: string
   icon: string
+  color: string
 }
 
 export default function VendorsClient() {
@@ -57,18 +60,18 @@ export default function VendorsClient() {
     actual: 0
   })
   const [categories] = useState<Category[]>([
-    { name: 'Venue', icon: '🏛️' },
-    { name: 'Catering', icon: '🍽️' },
-    { name: 'Photography', icon: '📸' },
-    { name: 'Videography', icon: '🎥' },
-    { name: 'Music/DJ', icon: '🎵' },
-    { name: 'Flowers', icon: '💐' },
-    { name: 'Transportation', icon: '🚗' },
-    { name: 'Wedding Cake', icon: '🎂' },
-    { name: 'Hair & Makeup', icon: '💄' },
-    { name: 'Officiant', icon: '👨‍💼' },
-    { name: 'Decorations', icon: '🎀' },
-    { name: 'Other', icon: '📝' }
+    { id: 'venue', name: 'Venue', icon: '🏛️', color: '#8B5CF6' },
+    { id: 'catering', name: 'Catering', icon: '🍽️', color: '#F59E0B' },
+    { id: 'photography', name: 'Photography', icon: '📸', color: '#EF4444' },
+    { id: 'videography', name: 'Videography', icon: '🎥', color: '#3B82F6' },
+    { id: 'music', name: 'Music/DJ', icon: '🎵', color: '#10B981' },
+    { id: 'flowers', name: 'Flowers', icon: '💐', color: '#F97316' },
+    { id: 'transportation', name: 'Transportation', icon: '🚗', color: '#6366F1' },
+    { id: 'cake', name: 'Wedding Cake', icon: '🎂', color: '#EC4899' },
+    { id: 'beauty', name: 'Hair & Makeup', icon: '💄', color: '#8B5CF6' },
+    { id: 'officiant', name: 'Officiant', icon: '👨‍💼', color: '#059669' },
+    { id: 'decorations', name: 'Decorations', icon: '🎀', color: '#DC2626' },
+    { id: 'other', name: 'Other', icon: '📝', color: '#6B7280' }
   ])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -78,18 +81,19 @@ export default function VendorsClient() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/vendors')
-      if (!response.ok) {
-        throw new Error(`Failed to fetch vendors: ${response.status}`)
-      }
+      const response = await api.vendors.list()
       
-      const data = await response.json()
-      if (data.success) {
-        setVendors(data.vendors)
-        setStats(data.stats)
-        setCosts(data.costs)
+      if (response.success && response.data) {
+        setVendors(response.data.vendors || [])
+        if (response.data.stats) {
+          setStats(response.data.stats)
+        }
+        if (response.data.costs) {
+          setCosts(response.data.costs)
+        }
+        // Categories are static for now
       } else {
-        setError(data.error || 'Failed to load vendors')
+        setError('Failed to load vendors')
       }
     } catch (err) {
       console.error('Error fetching vendors:', err)
@@ -136,25 +140,25 @@ export default function VendorsClient() {
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p data-testid="total-vendors" className="text-3xl font-light text-gray-900">{stats.total}</p>
+          <p data-testid="total-vendors" className="text-3xl font-light text-gray-900">{stats?.total || 0}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Total Vendors</p>
         </div>
 
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-[#7a9b7f]">{stats.booked}</p>
+          <p className="text-3xl font-light text-[#7a9b7f]">{stats?.booked || 0}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Booked</p>
         </div>
 
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-amber-600">{stats.contacted + stats.quoted}</p>
+          <p className="text-3xl font-light text-amber-600">{(stats?.contacted || 0) + (stats?.quoted || 0)}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Pending</p>
           <p className="text-xs font-light text-gray-500 mt-1">In discussion</p>
         </div>
 
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-gray-900">${costs.estimated.toLocaleString()}</p>
+          <p className="text-3xl font-light text-gray-900">${(costs?.estimated || 0).toLocaleString()}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Estimated Cost</p>
-          <p className="text-xs font-light text-gray-500 mt-1">Actual: ${costs.actual.toLocaleString()}</p>
+          <p className="text-xs font-light text-gray-500 mt-1">Actual: ${(costs?.actual || 0).toLocaleString()}</p>
         </div>
       </div>
 
@@ -187,10 +191,7 @@ export default function VendorsClient() {
               No vendors added yet. Start by adding your first vendor.
             </div>
           ) : (
-            <VendorList data-testid="vendor-list" vendors={vendors.map(v => ({
-              ...v,
-              name: v.businessName
-            }))} categories={categories} />
+            <VendorList data-testid="vendor-list" vendors={vendors} categories={categories} />
           )}
         </div>
       </div>

@@ -1,6 +1,5 @@
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { currentUser } from '@clerk/nextjs/server'
+import { requireAuth } from '@/lib/auth/server'
 import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,18 +13,14 @@ const supabase = createClient(
 )
 
 export default async function ExpensesPage() {
-  const { userId } = await auth()
-  const user = await currentUser()
-  
-  if (!userId) {
-    redirect('/sign-in')
-  }
+  const user = await requireAuth()
+  const userId = user.id
   
   let expenses: any[] = []
   let categories: any[] = []
   let vendors: any[] = []
   
-  if (user?.emailAddresses?.[0]?.emailAddress) {
+  if (user?.email) {
     // Get user's couple data first
     const { data: userData } = await supabase
       .from('users')
@@ -40,7 +35,7 @@ export default async function ExpensesPage() {
           )
         )
       `)
-      .eq('email', user.emailAddresses[0].emailAddress)
+      .eq('supabase_user_id', user.id)
       .single()
     
     if (userData?.couples?.[0]) {
@@ -61,7 +56,7 @@ export default async function ExpensesPage() {
             name
           )
         `)
-        .eq('couple_id', coupleData.id)
+        .eq('coupleId', coupleData.id)
         .order('expense_date', { ascending: false })
       
       expenses = expensesData || []
@@ -70,7 +65,7 @@ export default async function ExpensesPage() {
       const { data: vendorsData } = await supabase
         .from('vendors')
         .select('id, name')
-        .eq('couple_id', coupleData.id)
+        .eq('coupleId', coupleData.id)
         .order('name')
       
       vendors = vendorsData || []
@@ -199,10 +194,10 @@ export default async function ExpensesPage() {
                                 <span>{expense.vendors.name}</span>
                               </>
                             )}
-                            {expense.payment_method && expense.payment_method !== 'other' && (
+                            {expense.paymentMethod && expense.paymentMethod !== 'other' && (
                               <>
                                 <span>•</span>
-                                <span className="capitalize">{expense.payment_method}</span>
+                                <span className="capitalize">{expense.paymentMethod}</span>
                               </>
                             )}
                           </div>

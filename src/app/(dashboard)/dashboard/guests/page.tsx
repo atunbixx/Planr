@@ -2,25 +2,36 @@
 
 import { useEffect, useState } from 'react'
 import { useSupabaseAuth } from '@/lib/auth/client'
-import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import AddGuestDialog from './components/AddGuestDialog'
+import EditGuestDialog from './components/EditGuestDialog'
+import InvitationDialog from './components/InvitationDialog'
 import { PermissionGate } from '@/components/PermissionGate'
-import { Search, Plus, Mail, Download, Filter } from 'lucide-react'
+import { Search, Plus, Mail, Download, Filter, Copy, Eye, MoreVertical } from 'lucide-react'
+import { toast } from 'sonner'
+import { api, type Guest as ApiGuest } from '@/lib/api/client'
+import { useApiState } from '@/hooks/useApiState'
+import { LoadingCard, SkeletonTable } from '@/components/ui/loading'
+import { handleApiError } from '@/lib/api/error-handler'
 
 interface Guest {
   id: string
   name: string
   email?: string
   phone?: string
+  address?: string
   relationship?: string
   side: string
   plusOneAllowed: boolean
+  plusOneName?: string
   rsvpStatus: string
   invitationCode?: string
+  attendingCount?: number
+  respondedAt?: string
   dietaryRestrictions?: string
   specialRequests?: string
   notes?: string
+  rsvpDeadline?: string
 }
 
 interface GuestStats {
@@ -33,7 +44,6 @@ interface GuestStats {
 
 export default function GuestsPage() {
   const { user, isSignedIn, isLoading } = useSupabaseAuth()
-  const t = useTranslations()
   const [guests, setGuests] = useState<Guest[]>([])
   const [stats, setStats] = useState<GuestStats>({
     total: 0,
@@ -42,52 +52,55 @@ export default function GuestsPage() {
     pending: 0,
     withPlusOne: 0
   })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const guestsApi = useApiState<Guest[]>([], {
+    onError: (error) => console.error('Failed to load guests:', error)
+  })
   const [isAddingGuest, setIsAddingGuest] = useState(false)
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null)
+  const [isManagingInvitations, setIsManagingInvitations] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterSide, setFilterSide] = useState<string>('all')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  const fetchGuests = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const fetchGuests = async (forceRefresh = false) => {
+    console.log('Fetching guests...', forceRefresh ? '(force refresh)' : '')
+    
+    const response = await guestsApi.execute(api.guests.list())
+    
+    if (response) {
+      // Transform API guests to match the component interface
+      const transformedGuests = response.data.map((guest: ApiGuest) => ({
+        id: guest.id,
+        name: `${guest.firstName || ''} ${guest.lastName || ''}`.trim(),
+        email: guest.email,
+        phone: guest.phone,
+        rsvpStatus: guest.rsvpStatus,
+        plusOneAllowed: guest.plusOneAllowed,
+        plusOneName: guest.plusOneName,
+        dietaryRestrictions: guest.dietaryRestrictions,
+        side: 'both', // Default value, as API doesn't provide this yet
+        tableNumber: guest.tableNumber
+      }))
+      setGuests(transformedGuests)
       
-      const response = await fetch('/api/guests')
-      if (!response.ok) {
-        throw new Error(`Failed to fetch guests: ${response.status}`)
-      }
+      // Calculate stats
+      const newStats = transformedGuests.reduce((acc: GuestStats, guest: any) => {
+        acc.total++
+        if (guest.rsvpStatus === 'confirmed') acc.confirmed++
+        else if (guest.rsvpStatus === 'declined') acc.declined++
+        else acc.pending++
+        if (guest.plusOneAllowed) acc.withPlusOne++
+        return acc
+      }, {
+        total: 0,
+        confirmed: 0,
+        declined: 0,
+        pending: 0,
+        withPlusOne: 0
+      })
       
-      const data = await response.json()
-      if (data.success) {
-        setGuests(data.guests)
-        
-        // Calculate stats
-        const newStats = data.guests.reduce((acc: GuestStats, guest: Guest) => {
-          acc.total++
-          if (guest.rsvpStatus === 'confirmed') acc.confirmed++
-          else if (guest.rsvpStatus === 'declined') acc.declined++
-          else acc.pending++
-          if (guest.plusOneAllowed) acc.withPlusOne++
-          return acc
-        }, {
-          total: 0,
-          confirmed: 0,
-          declined: 0,
-          pending: 0,
-          withPlusOne: 0
-        })
-        
-        setStats(newStats)
-      } else {
-        setError(data.error || 'Failed to load guests')
-      }
-    } catch (err) {
-      console.error('Error fetching guests:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error occurred')
-    } finally {
-      setLoading(false)
+      setStats(newStats)
     }
   }
 
@@ -97,8 +110,11 @@ export default function GuestsPage() {
     }
   }, [isLoading, isSignedIn])
 
+  // Get data from API state
+  const { loading, error } = guestsApi.state
+  
   // Filter guests based on search and filters
-  const filteredGuests = guests.filter(guest => {
+  const filteredGuests = (guests || []).filter(guest => {
     const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          guest.email?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = filterStatus === 'all' || guest.rsvpStatus === filterStatus
@@ -113,6 +129,30 @@ export default function GuestsPage() {
       case 'declined': return 'text-red-600'
       default: return 'text-gray-400'
     }
+  }
+
+  const getRSVPStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <span className="inline-flex items-center px-2 py-1 rounded-sm text-xs font-medium bg-green-100 text-green-800">Confirmed</span>
+      case 'declined':
+        return <span className="inline-flex items-center px-2 py-1 rounded-sm text-xs font-medium bg-red-100 text-red-800">Declined</span>
+      default:
+        return <span className="inline-flex items-center px-2 py-1 rounded-sm text-xs font-medium bg-gray-100 text-gray-800">Pending</span>
+    }
+  }
+
+  const copyRSVPLink = async (guest: Guest) => {
+    if (!guest.invitationCode) return
+    
+    const rsvpUrl = `${window.location.origin}/rsvp/${guest.invitationCode}`
+    await navigator.clipboard.writeText(rsvpUrl)
+    setCopiedId(guest.id)
+    toast.success('RSVP link copied to clipboard!')
+    
+    setTimeout(() => {
+      setCopiedId(null)
+    }, 2000)
   }
 
   if (loading) {
@@ -130,6 +170,35 @@ export default function GuestsPage() {
     )
   }
 
+  // Show loading state
+  if (loading && guests.length === 0) {
+    return (
+      <div className="px-8 py-12">
+        <div className="mb-12">
+          <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
+          <p className="text-lg font-light text-gray-600">Manage your wedding guest list and RSVPs</p>
+        </div>
+        <LoadingCard message="Loading your guest list..." />
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error && guests.length === 0) {
+    return (
+      <div className="px-8 py-12">
+        <div className="mb-12">
+          <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
+          <p className="text-lg font-light text-gray-600">Manage your wedding guest list and RSVPs</p>
+        </div>
+        <div className="bg-white rounded-sm shadow-sm p-8 text-center">
+          <p className="text-red-600 mb-4">Failed to load guest list</p>
+          <Button onClick={() => fetchGuests(true)}>Try Again</Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="px-8 py-12">
       {/* Header */}
@@ -139,7 +208,7 @@ export default function GuestsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
           <p data-testid="total-guests" className="text-3xl font-light text-gray-900">{stats.total}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Total Guests</p>
@@ -159,6 +228,12 @@ export default function GuestsPage() {
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
           <p className="text-3xl font-light text-gray-900">{stats.withPlusOne}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Plus Ones</p>
+        </div>
+        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
+          <p className="text-3xl font-light text-blue-600">
+            {stats.total > 0 ? Math.round(((stats.confirmed + stats.declined) / stats.total) * 100) : 0}%
+          </p>
+          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Response Rate</p>
         </div>
       </div>
 
@@ -208,6 +283,7 @@ export default function GuestsPage() {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
+              onClick={() => setIsManagingInvitations(true)}
               className="border-gray-300 text-gray-600 hover:bg-gray-50 rounded-sm px-4 py-2 text-sm font-light"
             >
               <Mail className="w-4 h-4 mr-2" />
@@ -248,7 +324,13 @@ export default function GuestsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredGuests.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="p-6">
+                  <SkeletonTable rows={5} />
+                </td>
+              </tr>
+            ) : filteredGuests.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-gray-500 font-light" data-testid="empty-guests">
                   {searchTerm || filterStatus !== 'all' || filterSide !== 'all' 
@@ -277,9 +359,21 @@ export default function GuestsPage() {
                     <span className="text-sm font-light text-gray-600 capitalize">{guest.side}</span>
                   </td>
                   <td className="p-6">
-                    <span className={`text-sm font-light capitalize ${getRSVPStatusColor(guest.rsvpStatus)}`}>
-                      {guest.rsvpStatus}
-                    </span>
+                    <div className="space-y-1">
+                      {getRSVPStatusBadge(guest.rsvpStatus)}
+                      {guest.invitationCode && (
+                        <p className="text-xs font-light text-gray-500">
+                          {guest.respondedAt ? (
+                            <>Responded: {new Date(guest.respondedAt).toLocaleDateString()}</>
+                          ) : (
+                            <>Invited</>
+                          )}
+                        </p>
+                      )}
+                      {!guest.invitationCode && (
+                        <p className="text-xs font-light text-amber-600">Not invited yet</p>
+                      )}
+                    </div>
                   </td>
                   <td className="p-6">
                     <span className="text-sm font-light text-gray-600">
@@ -287,21 +381,41 @@ export default function GuestsPage() {
                     </span>
                   </td>
                   <td className="p-6">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => setEditingGuest(guest)}
                         className="text-gray-500 hover:text-gray-900 text-sm font-light"
                       >
                         Edit
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-gray-900 text-sm font-light"
-                      >
-                        Delete
-                      </Button>
+                      {guest.invitationCode && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyRSVPLink(guest)}
+                            className="text-gray-500 hover:text-gray-900"
+                            title="Copy RSVP link"
+                          >
+                            {copiedId === guest.id ? (
+                              <span className="text-green-600 text-xs">Copied!</span>
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(`/rsvp/${guest.invitationCode}`, '_blank')}
+                            className="text-gray-500 hover:text-gray-900"
+                            title="View RSVP page"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -315,7 +429,23 @@ export default function GuestsPage() {
       <AddGuestDialog
         open={isAddingGuest}
         onClose={() => setIsAddingGuest(false)}
-        onGuestAdded={fetchGuests}
+        onGuestAdded={() => fetchGuests(true)}
+      />
+
+      {/* Edit Guest Dialog */}
+      <EditGuestDialog
+        open={!!editingGuest}
+        onClose={() => setEditingGuest(null)}
+        guest={editingGuest}
+        onGuestUpdated={() => fetchGuests(true)}
+      />
+
+      {/* Invitation Management Dialog */}
+      <InvitationDialog
+        open={isManagingInvitations}
+        onClose={() => setIsManagingInvitations(false)}
+        guests={guests}
+        onInvitationsSent={() => fetchGuests(true)}
       />
     </div>
   )

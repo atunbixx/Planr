@@ -1,13 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// Use service role key for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST() {
+  // Create client inside the function to avoid build-time errors
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return NextResponse.json(
+      { error: 'Missing required environment variables' },
+      { status: 500 }
+    )
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
   try {
     console.log('Running full vendor schema setup...')
 
@@ -35,8 +41,8 @@ export async function POST() {
           description TEXT,
           industry_typical BOOLEAN DEFAULT false,
           display_order INTEGER DEFAULT 0,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          createdAt TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updatedAt TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
 
       -- Drop existing vendors table to recreate with proper schema
@@ -45,26 +51,26 @@ export async function POST() {
       -- Create vendors table with proper columns
       CREATE TABLE vendors (
           id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-          couple_id UUID NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          coupleId UUID NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
           name TEXT NOT NULL,
-          contact_name TEXT,
+          contactName TEXT,
           phone TEXT,
           email TEXT,
           website TEXT,
           address TEXT,
-          category_id UUID REFERENCES vendor_categories(id) ON DELETE SET NULL,
+          categoryId UUID REFERENCES vendor_categories(id) ON DELETE SET NULL,
           status VARCHAR(20) DEFAULT 'potential' 
               CHECK (status IN ('potential', 'contacted', 'quote_requested', 'in_discussion', 'booked', 'declined', 'cancelled')),
           priority VARCHAR(10) DEFAULT 'medium' 
               CHECK (priority IN ('low', 'medium', 'high', 'critical')),
           rating INTEGER CHECK (rating >= 1 AND rating <= 5),
-          estimated_cost DECIMAL(10,2),
-          actual_cost DECIMAL(10,2),
+          estimatedCost DECIMAL(10,2),
+          actualCost DECIMAL(10,2),
           notes TEXT,
-          meeting_date DATE,
-          contract_signed BOOLEAN DEFAULT false,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          meetingDate DATE,
+          contractSigned BOOLEAN DEFAULT false,
+          createdAt TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updatedAt TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
 
       -- Enable Row Level Security
@@ -85,43 +91,43 @@ export async function POST() {
       -- RLS Policies for vendors table
       CREATE POLICY "Users can view their couple's vendors" ON vendors
           FOR SELECT USING (
-              couple_id IN (
+              coupleId IN (
                   SELECT couples.id FROM couples
-                  JOIN users ON users.id = couples.user_id
-                  WHERE users.clerk_user_id = auth.jwt() ->> 'sub'
+                  JOIN users ON users.id = couples.userId
+                  WHERE users.clerkUserId = auth.jwt() ->> 'sub'
               )
           );
 
       CREATE POLICY "Users can insert vendors for their couple" ON vendors
           FOR INSERT WITH CHECK (
-              couple_id IN (
+              coupleId IN (
                   SELECT couples.id FROM couples
-                  JOIN users ON users.id = couples.user_id
-                  WHERE users.clerk_user_id = auth.jwt() ->> 'sub'
+                  JOIN users ON users.id = couples.userId
+                  WHERE users.clerkUserId = auth.jwt() ->> 'sub'
               )
           );
 
       CREATE POLICY "Users can update their couple's vendors" ON vendors
           FOR UPDATE USING (
-              couple_id IN (
+              coupleId IN (
                   SELECT couples.id FROM couples
-                  JOIN users ON users.id = couples.user_id
-                  WHERE users.clerk_user_id = auth.jwt() ->> 'sub'
+                  JOIN users ON users.id = couples.userId
+                  WHERE users.clerkUserId = auth.jwt() ->> 'sub'
               )
           );
 
       CREATE POLICY "Users can delete their couple's vendors" ON vendors
           FOR DELETE USING (
-              couple_id IN (
+              coupleId IN (
                   SELECT couples.id FROM couples
-                  JOIN users ON users.id = couples.user_id
-                  WHERE users.clerk_user_id = auth.jwt() ->> 'sub'
+                  JOIN users ON users.id = couples.userId
+                  WHERE users.clerkUserId = auth.jwt() ->> 'sub'
               )
           );
 
       -- Create indexes for performance
-      CREATE INDEX IF NOT EXISTS idx_vendors_couple_id ON vendors(couple_id);
-      CREATE INDEX IF NOT EXISTS idx_vendors_category_id ON vendors(category_id);
+      CREATE INDEX IF NOT EXISTS idx_vendors_couple_id ON vendors(coupleId);
+      CREATE INDEX IF NOT EXISTS idx_vendors_category_id ON vendors(categoryId);
       CREATE INDEX IF NOT EXISTS idx_vendors_status ON vendors(status);
       CREATE INDEX IF NOT EXISTS idx_vendors_priority ON vendors(priority);
     `
@@ -138,9 +144,9 @@ export async function POST() {
 
     // Test the new table structure
     const testVendor = {
-      couple_id: '00000000-0000-0000-0000-000000000000',
+      coupleId: '00000000-0000-0000-0000-000000000000',
       name: 'Schema Test Vendor',
-      contact_name: 'Test Contact',
+      contactName: 'Test Contact',
       phone: '555-0123',
       email: 'test@example.com',
       status: 'potential',
