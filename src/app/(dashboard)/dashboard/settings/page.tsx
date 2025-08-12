@@ -78,23 +78,32 @@ export default function SettingsPage() {
         method: 'POST',
       })
 
-      // Load existing wedding settings
-      const weddingResponse = await api.settings.wedding.get()
-      if (weddingResponse.success && weddingResponse.data) {
-        const wedding = weddingResponse.data
-        setCoupleSettings({
-          partner1Name: wedding.partnerOneName || '',
-          partner2Name: wedding.partnerTwoName || '',
-          weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : '',
-          venue: wedding.venue?.name || '',
-          location: wedding.venue ? `${wedding.venue.city}, ${wedding.venue.state}` : '',
-          expectedGuests: wedding.guestCount || 0,
-          totalBudget: wedding.budget || 0,
-          weddingStyle: wedding.theme || ''
-        })
+      // Load existing wedding settings (only if onboarding is completed)
+      try {
+        const weddingResponse = await api.settings.wedding.get()
+        if (weddingResponse.success && weddingResponse.data) {
+          const wedding = weddingResponse.data
+          setCoupleSettings({
+            partner1Name: wedding.partnerOneName || '',
+            partner2Name: wedding.partnerTwoName || '',
+            weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : '',
+            venue: wedding.venue?.name || '',
+            location: wedding.venue ? `${wedding.venue.city}, ${wedding.venue.state}` : '',
+            expectedGuests: wedding.guestCount || 0,
+            totalBudget: wedding.budget || 0,
+            weddingStyle: wedding.theme || ''
+          })
+        }
+      } catch (weddingError: any) {
+        // If onboarding isn't completed, wedding settings won't be available
+        if (weddingError?.message?.includes('Onboarding must be completed')) {
+          console.log('Wedding settings not available - onboarding not completed')
+        } else {
+          console.error('Error loading wedding settings:', weddingError)
+        }
       }
 
-      // Load existing user preferences
+      // Load existing user preferences (should always work for authenticated users)
       const preferencesResponse = await api.settings.preferences.get()
       if (preferencesResponse.success && preferencesResponse.data) {
         setUserPreferences({
