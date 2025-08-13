@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  supabase_user_id String    @unique(map: "users_clerk_user_id_key") @map("supabase_user_id") @db.VarChar
+  supabaseUserId   String    @unique(map: "users_clerk_user_id_key") @map("supabase_user_id") @db.VarChar
   email            String    @unique @db.VarChar
   firstName        String?   @map("first_name") @db.VarChar
   lastName         String?   @map("last_name") @db.VarChar
