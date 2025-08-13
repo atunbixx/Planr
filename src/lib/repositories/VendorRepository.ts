@@ -463,7 +463,7 @@ export class VendorRepository {
         include: {
           vendorCategory: true
         },
-        orderBy: { businessName: 'asc' }
+        orderBy: { name: 'asc' }
       })
 
       return vendors.map(vendor => this.transformVendor(vendor))
@@ -559,7 +559,7 @@ export class VendorRepository {
         include: {
           vendorCategory: true
         },
-        orderBy: { businessName: 'asc' }
+        orderBy: { name: 'asc' }
       })
 
       return vendors.map(vendor => this.transformVendor(vendor))

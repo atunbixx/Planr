@@ -56,62 +56,34 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const page = parseInt(url.searchParams.get('page') || '1')
       const limit = parseInt(url.searchParams.get('limit') || '50')
       
-      let whereClause: any = { couple_id: coupleId }
+      let whereClause: any = { coupleId }
       
       if (status) whereClause.status = status
-      if (type) whereClause.type = type
+      if (type) whereClause.messageType = type
       if (recipientId) whereClause.recipient_id = recipientId
       
       const skip = (page - 1) * limit
       
       const [messages, total] = await Promise.all([
-        prisma.messages.findMany({
+        prisma.message.findMany({
           where: whereClause,
-          orderBy: { created_at: 'desc' },
+          orderBy: { createdAt: 'desc' },
           skip,
-          take: limit,
-          include: {
-            guests: {
-              select: {
-                id: true,
-                first_name: true,
-                last_name: true,
-                email: true,
-                phone: true
-              }
-            },
-            message_templates: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
+          take: limit
         }),
-        prisma.messages.count({ where: whereClause })
+        prisma.message.count({ where: whereClause })
       ])
       
       // Get message statistics
-      const stats = await prisma.messages.groupBy({
-        by: ['status', 'type'],
-        where: { couple_id: coupleId },
+      const stats = await prisma.message.groupBy({
+        by: ['status', 'messageType'],
+        where: { coupleId },
         _count: true
       })
       
       return {
         messages: messages.map(message => ({
-          ...toApiFormat(message, 'Message'),
-          recipient: message.guests ? {
-            id: message.guests.id,
-            firstName: message.guests.first_name,
-            lastName: message.guests.last_name,
-            email: message.guests.email,
-            phone: message.guests.phone
-          } : null,
-          template: message.message_templates ? {
-            id: message.message_templates.id,
-            name: message.message_templates.name
-          } : null
+          ...toApiFormat(message, 'Message')
         })),
         stats: {
           total,
@@ -120,7 +92,7 @@ export class MessagesHandlerV2 extends BaseApiHandler {
             return acc
           }, {} as Record<string, number>),
           byType: stats.reduce((acc, stat) => {
-            acc[stat.type] = (acc[stat.type] || 0) + stat._count
+            acc[stat.messageType] = (acc[stat.messageType] || 0) + stat._count
             return acc
           }, {} as Record<string, number>)
         },
@@ -140,10 +112,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, createMessageSchema)
       
       // Verify recipient belongs to this couple
-      const recipient = await prisma.guests.findFirst({
+      const recipient = await prisma.guest.findFirst({
         where: {
           id: data.recipientId,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -157,19 +129,18 @@ export class MessagesHandlerV2 extends BaseApiHandler {
         coupleId
       }, 'Message')
       
-      const message = await prisma.messages.create({
+      const message = await prisma.message.create({
         data: {
-          couple_id: coupleId,
+          coupleId,
           recipient_id: dbData.recipientId,
           subject: dbData.subject,
           content: dbData.content,
-          type: dbData.type,
+          messageType: dbData.type,
           status: dbData.status,
-          scheduled_for: dbData.scheduledFor ? new Date(dbData.scheduledFor) : null,
-          template_id: dbData.templateId,
+          sentAt: dbData.status === 'sent' ? new Date() : new Date(),
           metadata: dbData.metadata,
-          created_at: new Date(),
-          updated_at: new Date()
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       })
       
@@ -183,10 +154,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, updateMessageSchema)
       
       // Check if message belongs to this couple
-      const existingMessage = await prisma.messages.findFirst({
+      const existingMessage = await prisma.message.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -202,17 +173,15 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       // Transform to database format
       const dbData = toDbFormat(data, 'Message')
       
-      const updatedMessage = await prisma.messages.update({
+      const updatedMessage = await prisma.message.update({
         where: { id },
         data: {
           subject: dbData.subject,
           content: dbData.content,
-          type: dbData.type,
+          messageType: dbData.type,
           status: dbData.status,
-          scheduled_for: dbData.scheduledFor ? new Date(dbData.scheduledFor) : undefined,
-          template_id: dbData.templateId,
           metadata: dbData.metadata,
-          updated_at: new Date()
+          updatedAt: new Date()
         }
       })
       
@@ -225,10 +194,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const coupleId = this.requireCoupleId()
       
       // Check if message belongs to this couple
-      const existingMessage = await prisma.messages.findFirst({
+      const existingMessage = await prisma.message.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -241,7 +210,7 @@ export class MessagesHandlerV2 extends BaseApiHandler {
         throw new BadRequestException('Cannot delete sent messages')
       }
       
-      await prisma.messages.delete({
+      await prisma.message.delete({
         where: { id }
       })
       
@@ -256,10 +225,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, sendMessageSchema)
       
       // Verify all recipients belong to this couple
-      const recipients = await prisma.guests.findMany({
+      const recipients = await prisma.guest.findMany({
         where: {
           id: { in: data.recipientIds },
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -270,10 +239,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       // If using template, fetch it
       let template = null
       if (data.templateId) {
-        template = await prisma.message_templates.findFirst({
+        template = await prisma.messageTemplate.findFirst({
           where: {
             id: data.templateId,
-            couple_id: coupleId
+            coupleId
           }
         })
         
@@ -302,25 +271,24 @@ export class MessagesHandlerV2 extends BaseApiHandler {
           }
           
           // Add recipient-specific variables
-          subject = subject.replace('{{firstName}}', recipient.first_name || '')
-          subject = subject.replace('{{lastName}}', recipient.last_name || '')
-          content = content.replace('{{firstName}}', recipient.first_name || '')
-          content = content.replace('{{lastName}}', recipient.last_name || '')
+          subject = subject.replace('{{firstName}}', recipient.firstName || '')
+          subject = subject.replace('{{lastName}}', recipient.lastName || '')
+          content = content.replace('{{firstName}}', recipient.firstName || '')
+          content = content.replace('{{lastName}}', recipient.lastName || '')
           
-          const message = await tx.messages.create({
+          const message = await tx.message.create({
             data: {
-              couple_id: coupleId,
+              coupleId,
               recipient_id: recipientId,
               subject,
               content,
-              type: data.type,
+              messageType: data.type,
               status: data.scheduledFor ? 'scheduled' : 'sent',
-              scheduled_for: data.scheduledFor ? new Date(data.scheduledFor) : null,
-              sent_at: data.scheduledFor ? null : new Date(),
+              sentAt: data.scheduledFor ? new Date() : new Date(),
               template_id: data.templateId,
               metadata: data.variables,
-              created_at: new Date(),
-              updated_at: new Date()
+              createdAt: new Date(),
+              updatedAt: new Date()
             }
           })
           
@@ -350,9 +318,9 @@ export class MessagesHandlerV2 extends BaseApiHandler {
     return this.handleRequest(request, async () => {
       const coupleId = this.requireCoupleId()
       
-      const templates = await prisma.message_templates.findMany({
-        where: { couple_id: coupleId },
-        orderBy: { created_at: 'desc' }
+      const templates = await prisma.messageTemplate.findMany({
+        where: { coupleId },
+        orderBy: { createdAt: 'desc' }
       })
       
       return templates.map(template => toApiFormat(template, 'MessageTemplate'))
@@ -370,18 +338,18 @@ export class MessagesHandlerV2 extends BaseApiHandler {
         coupleId
       }, 'MessageTemplate')
       
-      const template = await prisma.message_templates.create({
+      const template = await prisma.messageTemplate.create({
         data: {
-          couple_id: coupleId,
+          coupleId,
           name: dbData.name,
           subject: dbData.subject,
           content: dbData.content,
           type: dbData.type,
           category: dbData.category,
           variables: dbData.variables,
-          is_active: dbData.isActive,
-          created_at: new Date(),
-          updated_at: new Date()
+          isActive: dbData.isActive,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       })
       
@@ -395,10 +363,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, updateTemplateSchema)
       
       // Check if template belongs to this couple
-      const existingTemplate = await prisma.message_templates.findFirst({
+      const existingTemplate = await prisma.messageTemplate.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -409,7 +377,7 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       // Transform to database format
       const dbData = toDbFormat(data, 'MessageTemplate')
       
-      const updatedTemplate = await prisma.message_templates.update({
+      const updatedTemplate = await prisma.messageTemplate.update({
         where: { id },
         data: {
           name: dbData.name,
@@ -418,8 +386,8 @@ export class MessagesHandlerV2 extends BaseApiHandler {
           type: dbData.type,
           category: dbData.category,
           variables: dbData.variables,
-          is_active: dbData.isActive,
-          updated_at: new Date()
+          isActive: dbData.isActive,
+          updatedAt: new Date()
         }
       })
       
@@ -432,10 +400,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const coupleId = this.requireCoupleId()
       
       // Check if template belongs to this couple
-      const existingTemplate = await prisma.message_templates.findFirst({
+      const existingTemplate = await prisma.messageTemplate.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -443,7 +411,7 @@ export class MessagesHandlerV2 extends BaseApiHandler {
         throw new NotFoundException('Template not found')
       }
       
-      await prisma.message_templates.delete({
+      await prisma.messageTemplate.delete({
         where: { id }
       })
       
@@ -462,24 +430,24 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const startDate = url.searchParams.get('startDate')
       const endDate = url.searchParams.get('endDate')
       
-      let whereClause: any = { couple_id: coupleId }
+      let whereClause: any = { coupleId }
       
-      if (messageId) whereClause.message_id = messageId
+      if (messageId) whereClause.messageId = messageId
       if (startDate || endDate) {
         whereClause.created_at = {}
         if (startDate) whereClause.created_at.gte = new Date(startDate)
         if (endDate) whereClause.created_at.lte = new Date(endDate)
       }
       
-      const logs = await prisma.message_logs.findMany({
+      const logs = await prisma.messageLog.findMany({
         where: whereClause,
-        orderBy: { created_at: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: {
-          messages: {
+          message: {
             select: {
               id: true,
               subject: true,
-              type: true
+              messageType: true
             }
           }
         }
@@ -487,10 +455,10 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       
       return logs.map(log => ({
         ...toApiFormat(log, 'MessageLog'),
-        message: log.messages ? {
-          id: log.messages.id,
-          subject: log.messages.subject,
-          type: log.messages.type
+        message: log.message ? {
+          id: log.message.id,
+          subject: log.message.subject,
+          type: log.message.messageType
         } : null
       }))
     })

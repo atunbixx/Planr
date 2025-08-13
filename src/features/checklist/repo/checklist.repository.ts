@@ -5,7 +5,7 @@ import { BaseRepository } from '@/lib/repositories/BaseRepository'
 export class ChecklistRepository extends BaseRepository<any> {
   async findById(id: string): Promise<any | null> {
     return this.executeQuery(() =>
-      prisma.checklist_items.findUnique({ where: { id } })
+      prisma.tasks.findUnique({ where: { id } })
     )
   }
 
@@ -27,7 +27,7 @@ export class ChecklistRepository extends BaseRepository<any> {
         where.due_date = { lte: futureDate }
       }
 
-      return prisma.checklist_items.findMany({ 
+      return prisma.tasks.findMany({ 
         where,
         orderBy: [
           { priority: 'desc' },
@@ -40,7 +40,7 @@ export class ChecklistRepository extends BaseRepository<any> {
 
   async create(data: any): Promise<any> {
     return this.executeQuery(() =>
-      prisma.checklist_items.create({ data })
+      prisma.tasks.create({ data })
     )
   }
 
@@ -99,7 +99,7 @@ export class ChecklistRepository extends BaseRepository<any> {
             dueDate.setDate(dueDate.getDate() - (item.weeksBefore * 7))
           }
 
-          return tx.checklist_items.create({
+          return tx.tasks.create({
             data: {
               couple_id: coupleId,
               title: item.title,
@@ -118,7 +118,7 @@ export class ChecklistRepository extends BaseRepository<any> {
 
   async update(id: string, data: any): Promise<any> {
     return this.executeQuery(() =>
-      prisma.checklist_items.update({ 
+      prisma.tasks.update({ 
         where: { id },
         data 
       })
@@ -127,10 +127,10 @@ export class ChecklistRepository extends BaseRepository<any> {
 
   async toggleComplete(id: string): Promise<any> {
     return this.executeQuery(async () => {
-      const item = await prisma.checklist_items.findUnique({ where: { id } })
+      const item = await prisma.tasks.findUnique({ where: { id } })
       if (!item) throw new Error('Checklist item not found')
 
-      return prisma.checklist_items.update({
+      return prisma.tasks.update({
         where: { id },
         data: { 
           is_completed: !item.is_completed,
@@ -142,7 +142,7 @@ export class ChecklistRepository extends BaseRepository<any> {
 
   async bulkComplete(ids: string[], isCompleted: boolean): Promise<{ count: number }> {
     return this.executeQuery(() =>
-      prisma.checklist_items.updateMany({
+      prisma.tasks.updateMany({
         where: { id: { in: ids } },
         data: { 
           is_completed: isCompleted,
@@ -154,13 +154,13 @@ export class ChecklistRepository extends BaseRepository<any> {
 
   async delete(id: string): Promise<any> {
     return this.executeQuery(() =>
-      prisma.checklist_items.delete({ where: { id } })
+      prisma.tasks.delete({ where: { id } })
     )
   }
 
   async deleteMany(ids: string[]): Promise<{ count: number }> {
     return this.executeQuery(() =>
-      prisma.checklist_items.deleteMany({ 
+      prisma.tasks.deleteMany({ 
         where: { 
           id: { in: ids } 
         } 
@@ -185,7 +185,7 @@ export class ChecklistRepository extends BaseRepository<any> {
     }>
   }> {
     return this.executeQuery(async () => {
-      const items = await prisma.checklist_items.findMany({
+      const items = await prisma.tasks.findMany({
         where: { couple_id: coupleId }
       })
 
@@ -232,7 +232,7 @@ export class ChecklistRepository extends BaseRepository<any> {
     return this.withTransaction(async (tx) => {
       await Promise.all(
         updates.map(({ id, displayOrder }) =>
-          tx.checklist_items.update({
+          tx.tasks.update({
             where: { id },
             data: { display_order: displayOrder }
           })

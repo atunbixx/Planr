@@ -29,7 +29,7 @@ interface Vendor {
   priority: string;
   rating?: number;
   estimatedCost?: number;
-  vendor_categories?: {
+  vendorCategories?: {
     id: string;
     name: string;
     icon: string;
@@ -114,7 +114,7 @@ export default function VendorList({ vendors, categories }: VendorListProps) {
               {/* Header with icon, name and actions */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{vendor.vendor_categories?.icon || '🏢'}</span>
+                  <span className="text-3xl">{vendor.vendorCategories?.icon || '🏢'}</span>
                   <div>
                     <h3 className="text-lg font-light tracking-wide text-gray-900 uppercase">{vendor.name}</h3>
                     {vendor.contactName && (
@@ -160,9 +160,9 @@ export default function VendorList({ vendors, categories }: VendorListProps) {
               {/* Status and category badges */}
               <div className="flex flex-wrap gap-2">
                 {getStatusBadge(vendor.status)}
-                {vendor.vendor_categories && (
+                {vendor.vendorCategories && (
                   <Badge variant="outline">
-                    {vendor.vendor_categories.name}
+                    {vendor.vendorCategories.name}
                   </Badge>
                 )}
                 {vendor.estimatedCost && (

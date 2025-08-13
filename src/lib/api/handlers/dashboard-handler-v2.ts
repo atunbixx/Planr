@@ -89,12 +89,12 @@ export class DashboardHandlerV2 extends BaseApiHandler {
   
   private async getChecklistStats(coupleId: string) {
     const [total, completed] = await Promise.all([
-      prisma.checklistItem.count({
-        where: { coupleId: coupleId }
+      prisma.tasks.count({
+        where: { couple_id: coupleId }
       }),
-      prisma.checklistItem.count({
+      prisma.tasks.count({
         where: {
-          coupleId: coupleId,
+          couple_id: coupleId,
           completed: true
         }
       })
@@ -107,11 +107,11 @@ export class DashboardHandlerV2 extends BaseApiHandler {
     const nextWeek = new Date()
     nextWeek.setDate(nextWeek.getDate() + 7)
     
-    const dueSoon = await prisma.checklistItem.count({
+    const dueSoon = await prisma.tasks.count({
       where: {
-        coupleId: coupleId,
+        couple_id: coupleId,
         completed: false,
-        dueDate: {
+        due_date: {
           lte: nextWeek,
           gte: new Date()
         }
@@ -130,14 +130,14 @@ export class DashboardHandlerV2 extends BaseApiHandler {
   private async getPhotoStats(coupleId: string) {
     const [totalPhotos, totalAlbums, favoriteCount] = await Promise.all([
       prisma.photo.count({
-        where: { coupleId: coupleId }
+        where: { coupleId }
       }),
       prisma.photoAlbum.count({
-        where: { coupleId: coupleId }
+        where: { coupleId }
       }),
       prisma.photo.count({
         where: {
-          coupleId: coupleId,
+          coupleId,
           isFavorite: true
         }
       })
@@ -153,7 +153,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
   private async getMessageStats(coupleId: string) {
     const statusStats = await prisma.message.groupBy({
       by: ['status'],
-      where: { coupleId: coupleId },
+      where: { coupleId },
       _count: true
     })
     
@@ -204,7 +204,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
       ] = await Promise.all([
         // Recent guests
         prisma.guest.findMany({
-          where: { coupleId: coupleId },
+          where: { coupleId },
           orderBy: { createdAt: 'desc' },
           take: limit,
           select: {
@@ -235,29 +235,29 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         }),
         // Recent messages
         prisma.message.findMany({
-          where: { coupleId: coupleId },
+          where: { coupleId },
           orderBy: { createdAt: 'desc' },
           take: limit,
           select: {
             id: true,
             subject: true,
-            type: true,
+            messageType: true,
             status: true,
             createdAt: true
           }
         }),
         // Recent photos
         prisma.photo.findMany({
-          where: { coupleId: coupleId },
+          where: { coupleId },
           orderBy: { createdAt: 'desc' },
           take: limit,
           select: {
             id: true,
-            url: true,
+            imageUrl: true,
             thumbnailUrl: true,
             caption: true,
             createdAt: true,
-            photoAlbums: {
+            photoAlbum: {
               select: {
                 name: true
               }
@@ -290,7 +290,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           id: message.id,
           type: 'message' as const,
           title: message.subject || 'Message',
-          description: `${message.type} - ${message.status}`,
+          description: `${message.messageType} - ${message.status}`,
           timestamp: message.createdAt,
           icon: '✉️',
           data: message
@@ -299,7 +299,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           id: photo.id,
           type: 'photo' as const,
           title: photo.caption || 'New photo',
-          description: photo.photoAlbums?.name || 'No album',
+          description: photo.photoAlbum?.name || 'No album',
           timestamp: photo.createdAt,
           icon: '📸',
           data: photo

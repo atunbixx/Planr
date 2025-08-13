@@ -8,7 +8,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
       prisma.vendor.findUnique({ 
         where: { id },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )
@@ -29,7 +29,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
       return prisma.vendor.findMany({ 
         where,
         include: {
-          vendor_categories: true,
+          vendorCategories: true,
           _count: {
             select: {
               expenses: true,
@@ -53,7 +53,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
           coupleId 
         },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )
@@ -64,7 +64,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
       prisma.vendor.create({ 
         data,
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )
@@ -82,7 +82,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
         where: { id },
         data,
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )
@@ -97,7 +97,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
           contractSigned: status === 'booked' ? true : undefined
         },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )
@@ -108,7 +108,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
       prisma.vendor.delete({ 
         where: { id },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )
@@ -143,7 +143,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
       const vendors = await prisma.vendor.findMany({
         where: { coupleId },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
 
@@ -158,13 +158,13 @@ export class VendorRepository extends BaseRepository<Vendor> {
 
       // Group by category
       const byCategory = vendors.reduce((acc, vendor) => {
-        if (!vendor.categoryId || !vendor.vendor_categories) return acc
+        if (!vendor.categoryId || !vendor.vendorCategories) return acc
         
         const categoryId = vendor.categoryId
         if (!acc[categoryId]) {
           acc[categoryId] = {
             categoryId,
-            categoryName: vendor.vendor_categories.name,
+            categoryName: vendor.vendorCategories.name,
             count: 0,
             totalCost: 0
           }
@@ -203,7 +203,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
           }
         },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         },
         orderBy: { meetingDate: 'asc' }
       })
@@ -219,7 +219,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
           contractSigned: true
         },
         include: {
-          vendor_categories: true
+          vendorCategories: true
         }
       })
     )

@@ -78,28 +78,7 @@ export class CoupleRepository extends BaseRepository<CoupleData> {
             }
           })
 
-          if (!couple) {
-            // Fallback to legacy table if it exists
-            try {
-              const legacyCouple = await (prisma as any).wedding_couples?.findFirst({
-                where: {
-                  OR: [
-                    { partner1_user_id: userId },
-                    { partner2_user_id: userId },
-                    { user_id: userId }
-                  ]
-                }
-              })
-              
-              if (legacyCouple) {
-                // Transform legacy data to current format
-                couple = this.transformLegacyCouple(legacyCouple)
-              }
-            } catch (error) {
-              // Legacy table doesn't exist, ignore
-              console.debug('Legacy wedding_couples table not found, using current schema')
-            }
-          }
+          // Legacy fallback removed - using unified schema only
 
           return couple ? this.transformToApiFormat(couple) : null
         } catch (error) {

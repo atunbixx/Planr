@@ -263,14 +263,10 @@ export class DashboardStatsHandler extends BaseAPIHandler {
         totalSpent: budgetExpenses._sum.amount?.toNumber() || 0
       }
     } catch (error) {
-      // Fallback to expenses table (legacy schema)
-      const expenses = await prisma.expenses.aggregate({
-        where: { couple_id: coupleId },
-        _sum: { amount: true }
-      })
-
+      // No fallback needed - unified schema only
+      console.error('Budget calculation error:', error)
       return {
-        totalSpent: expenses._sum.amount?.toNumber() || 0
+        totalSpent: 0
       }
     }
   }

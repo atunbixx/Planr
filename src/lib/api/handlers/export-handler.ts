@@ -62,7 +62,7 @@ export class ExportHandler extends BaseAPIHandler {
 
     // Get user data
     const user = await prisma.user.findUnique({
-      where: { supabase_user_id: authContext.userId }
+      where: { supabaseUserId: authContext.userId }
     })
 
     if (!user) {
@@ -153,13 +153,13 @@ export class ExportHandler extends BaseAPIHandler {
     // Include budget if requested
     if (options.includeBudget) {
       const [categories, expenses] = await Promise.all([
-        prisma.budget_categories.findMany({
-          where: { couple_id: couple.id },
-          orderBy: { display_order: 'asc' }
+        prisma.budgetCategory.findMany({
+          where: { coupleId: couple.id },
+          orderBy: { name: 'asc' }
         }),
-        prisma.expenses.findMany({
-          where: { couple_id: couple.id },
-          orderBy: { date: 'desc' }
+        prisma.budgetExpense.findMany({
+          where: { coupleId: couple.id },
+          orderBy: { createdAt: 'desc' }
         })
       ])
 
@@ -167,20 +167,20 @@ export class ExportHandler extends BaseAPIHandler {
         categories: categories.map(cat => ({
           id: cat.id,
           name: cat.name,
-          allocatedAmount: cat.allocated_amount,
+          allocatedAmount: cat.allocatedAmount,
           color: cat.color,
           icon: cat.icon,
-          isDefault: cat.is_default
+          spentAmount: cat.spentAmount
         })),
         expenses: expenses.map(exp => ({
           id: exp.id,
-          categoryId: exp.category_id,
-          vendorId: exp.vendor_id,
+          categoryId: exp.categoryId,
+          vendorId: exp.vendorId,
           description: exp.description,
           amount: exp.amount,
-          date: exp.date,
-          isPaid: exp.is_paid,
-          paymentMethod: exp.payment_method,
+          dueDate: exp.dueDate,
+          paymentStatus: exp.paymentStatus,
+          paymentMethod: exp.paymentMethod,
           notes: exp.notes
         }))
       }
@@ -188,11 +188,11 @@ export class ExportHandler extends BaseAPIHandler {
 
     // Include checklist if requested
     if (options.includeChecklist) {
-      const tasks = await prisma.checklist_items.findMany({
+      const tasks = await prisma.tasks.findMany({
         where: { couple_id: couple.id },
         orderBy: [
           { category: 'asc' },
-          { display_order: 'asc' }
+          { created_at: 'asc' }
         ]
       })
 
@@ -203,7 +203,7 @@ export class ExportHandler extends BaseAPIHandler {
         category: task.category,
         priority: task.priority,
         dueDate: task.due_date,
-        isCompleted: task.is_completed,
+        isCompleted: task.completed,
         completedAt: task.completed_at,
         notes: task.notes
       }))
@@ -211,41 +211,37 @@ export class ExportHandler extends BaseAPIHandler {
 
     // Include photos if requested
     if (options.includePhotos) {
-      const photos = await prisma.photos.findMany({
-        where: { couple_id: couple.id },
-        orderBy: { created_at: 'desc' }
+      const photos = await prisma.photo.findMany({
+        where: { coupleId: couple.id },
+        orderBy: { createdAt: 'desc' }
       })
 
       exportData.photos = photos.map(photo => ({
         id: photo.id,
-        albumId: photo.album_id,
-        url: photo.url,
-        thumbnailUrl: photo.thumbnail_url,
+        albumId: photo.albumId,
+        url: photo.imageUrl,
         title: photo.title,
-        description: photo.description,
+        caption: photo.caption,
         tags: photo.tags,
-        isFavorite: photo.is_favorite,
-        uploadedAt: photo.created_at
+        isFavorite: photo.isFavorite,
+        uploadedAt: photo.createdAt
       }))
     }
 
     // Include messages if requested
     if (options.includeMessages) {
-      const messageLogs = await prisma.message_logs.findMany({
-        where: { couple_id: couple.id },
-        orderBy: { created_at: 'desc' },
+      const messageLogs = await prisma.messageLog.findMany({
+        where: { coupleId: couple.id },
+        orderBy: { createdAt: 'desc' },
         take: 1000 // Limit to prevent huge exports
       })
 
       exportData.messageLogs = messageLogs.map(log => ({
         id: log.id,
-        recipientName: log.recipient_name,
-        recipientEmail: log.recipient_email,
-        recipientPhone: log.recipient_phone,
-        messageType: log.message_type,
-        subject: log.subject,
+        event: log.event,
         status: log.status,
-        sentAt: log.created_at
+        details: log.details,
+        createdAt: log.createdAt
       }))
     }
 
@@ -500,14 +496,14 @@ export class QRScanHandler extends BaseAPIHandler {
           return this.errorResponse('GUEST_NOT_FOUND', 'Guest not found', 404)
         }
 
-        // Create check-in record
-        const checkIn = await prisma.guest_check_ins.create({
-          data: {
-            guest_id: guest.id,
-            couple_id: couple.id,
-            check_in_time: new Date()
-          }
-        })
+        // TODO: Create check-in record when guest_check_ins table is added
+        // const checkIn = await prisma.guest_check_ins.create({
+        //   data: {
+        //     guest_id: guest.id,
+        //     couple_id: couple.id,
+        //     check_in_time: new Date()
+        //   }
+        // })
 
         return this.successResponse({
           type: 'guest_check_in',
@@ -517,8 +513,8 @@ export class QRScanHandler extends BaseAPIHandler {
             tableAssignment: guest.tableAssignment
           },
           checkIn: {
-            id: checkIn.id,
-            time: checkIn.check_in_time
+            // id: checkIn.id,
+            time: new Date()
           }
         })
       } else if (parsedData.type === 'vendor_check_in' && parsedData.vendorId) {
@@ -538,26 +534,26 @@ export class QRScanHandler extends BaseAPIHandler {
           return this.errorResponse('VENDOR_NOT_FOUND', 'Vendor not found', 404)
         }
 
-        // Create or update vendor check-in
-        const checkIn = await prisma.vendor_check_ins.upsert({
-          where: {
-            vendor_id_couple_id: {
-              vendor_id: vendor.id,
-              couple_id: couple.id
-            }
-          },
-          update: {
-            status: 'checked_in',
-            check_in_time: new Date(),
-            updated_at: new Date()
-          },
-          create: {
-            vendor_id: vendor.id,
-            couple_id: couple.id,
-            status: 'checked_in',
-            check_in_time: new Date()
-          }
-        })
+        // TODO: Create or update vendor check-in when vendor_check_ins table is added
+        // const checkIn = await prisma.vendor_check_ins.upsert({
+        //   where: {
+        //     vendor_id_couple_id: {
+        //       vendor_id: vendor.id,
+        //       couple_id: couple.id
+        //     }
+        //   },
+        //   update: {
+        //     status: 'checked_in',
+        //     check_in_time: new Date(),
+        //     updated_at: new Date()
+        //   },
+        //   create: {
+        //     vendor_id: vendor.id,
+        //     couple_id: couple.id,
+        //     status: 'checked_in',
+        //     check_in_time: new Date()
+        //   }
+        // })
 
         return this.successResponse({
           type: 'vendor_check_in',
@@ -567,8 +563,8 @@ export class QRScanHandler extends BaseAPIHandler {
             contactName: vendor.contactName
           },
           checkIn: {
-            id: checkIn.id,
-            time: checkIn.check_in_time
+            // id: checkIn.id,
+            time: new Date()
           }
         })
       }

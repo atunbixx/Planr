@@ -33,7 +33,7 @@ interface Photo {
   tags: string[] | null
   cloudinarySecureUrl: string
   createdAt: string
-  photo_albums?: {
+  photoAlbum?: {
     id: string
     name: string
   } | null
@@ -332,9 +332,9 @@ export default function PhotoGrid({ photos, albums, onPhotosUpdated, selectable 
               )}
               
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {photo.photo_albums && (
+                {photo.photoAlbum && (
                   <Badge variant="outline" className="text-xs">
-                    {photo.photo_albums.name}
+                    {photo.photoAlbum.name}
                   </Badge>
                 )}
                 

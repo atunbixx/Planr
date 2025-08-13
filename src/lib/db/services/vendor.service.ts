@@ -19,7 +19,7 @@ export class VendorService extends BaseService<Vendor> {
       },
       orderBy: [
         { category: 'asc' },
-        { businessName: 'asc' }
+        { name: 'asc' }
       ]
     })
 
@@ -79,7 +79,7 @@ export class VendorService extends BaseService<Vendor> {
       include: {
         expenses: true
       },
-      orderBy: { businessName: 'asc' }
+      orderBy: { name: 'asc' }
     })
   }
 
@@ -134,7 +134,7 @@ export class VendorService extends BaseService<Vendor> {
       include: {
         expenses: true
       },
-      orderBy: { businessName: 'asc' }
+      orderBy: { name: 'asc' }
     })
   }
 

@@ -36,10 +36,10 @@ export default async function AlbumPage({ params }: Props) {
       const coupleId = couple.id
 
       // Get album details with photo count
-      const albumData = await prisma.photo_albums.findUnique({
+      const albumData = await prisma.photoAlbum.findUnique({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId: coupleId
         },
         include: {
           _count: {
@@ -58,25 +58,25 @@ export default async function AlbumPage({ params }: Props) {
       }
 
       // Get photos in this album
-      photos = await prisma.photos.findMany({
+      photos = await prisma.photo.findMany({
         where: {
-          album_id: id,
-          couple_id: coupleId
+          albumId: id,
+          coupleId: coupleId
         },
         include: {
-          photo_albums: {
+          photoAlbum: {
             select: {
               id: true,
               name: true
             }
           }
         },
-        orderBy: { created_at: 'desc' }
+        orderBy: { createdAt: 'desc' }
       })
 
       // Get all albums for moving photos
-      allAlbums = await prisma.photo_albums.findMany({
-        where: { couple_id: coupleId },
+      allAlbums = await prisma.photoAlbum.findMany({
+        where: { coupleId: coupleId },
         select: {
           id: true,
           name: true,
@@ -140,7 +140,7 @@ export default async function AlbumPage({ params }: Props) {
         <Card>
           <CardContent className="p-6 text-center">
             <Calendar className="w-8 h-8 mx-auto mb-2 text-green-600" />
-            <div className="text-sm font-medium">{formatDate(album.created_at)}</div>
+            <div className="text-sm font-medium">{formatDate(album.createdAt)}</div>
             <div className="text-sm text-muted-foreground">Created</div>
           </CardContent>
         </Card>
@@ -149,7 +149,7 @@ export default async function AlbumPage({ params }: Props) {
           <CardContent className="p-6 text-center">
             <Users className="w-8 h-8 mx-auto mb-2 text-purple-600" />
             <div className="text-sm font-medium">
-              {album.is_shared ? 'Shared' : 'Private'}
+              {album.isShared ? 'Shared' : 'Private'}
             </div>
             <div className="text-sm text-muted-foreground">Visibility</div>
           </CardContent>

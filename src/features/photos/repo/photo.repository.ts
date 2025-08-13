@@ -8,7 +8,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
       prisma.photo.findUnique({ 
         where: { id },
         include: {
-          photo_albums: true
+          photoAlbum: true
         }
       })
     )
@@ -53,7 +53,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
       prisma.photo.create({ 
         data,
         include: {
-          photo_albums: true
+          photoAlbum: true
         }
       })
     )
@@ -71,7 +71,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
         where: { id },
         data,
         include: {
-          photo_albums: true
+          photoAlbum: true
         }
       })
     )
@@ -95,7 +95,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
         where: { id },
         data: { is_favorite: !photo.is_favorite },
         include: {
-          photo_albums: true
+          photoAlbum: true
         }
       })
     })
@@ -115,7 +115,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
       prisma.photo.delete({ 
         where: { id },
         include: {
-          photo_albums: true
+          photoAlbum: true
         }
       })
     )
@@ -181,7 +181,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
           event_type: eventType
         },
         include: {
-          photo_albums: true
+          photoAlbum: true
         },
         orderBy: { photo_date: 'desc' }
       })
@@ -198,7 +198,7 @@ export class PhotoRepository extends BaseRepository<Photo> {
           }
         },
         include: {
-          photo_albums: true
+          photoAlbum: true
         },
         orderBy: { created_at: 'desc' }
       })

@@ -52,10 +52,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const page = parseInt(url.searchParams.get('page') || '1')
       const limit = parseInt(url.searchParams.get('limit') || '50')
       
-      let whereClause: any = { couple_id: coupleId }
+      let whereClause: any = { coupleId }
       
-      if (albumId) whereClause.album_id = albumId
-      if (isFavorite !== null) whereClause.is_favorite = isFavorite === 'true'
+      if (albumId) whereClause.albumId = albumId
+      if (isFavorite !== null) whereClause.isFavorite = isFavorite === 'true'
       if (tags && tags.length > 0) {
         whereClause.tags = { hasSome: tags }
       }
@@ -63,17 +63,17 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const skip = (page - 1) * limit
       
       const [photos, total] = await Promise.all([
-        prisma.photos.findMany({
+        prisma.photo.findMany({
           where: whereClause,
           orderBy: [
-            { is_favorite: 'desc' },
-            { taken_at: 'desc' },
-            { created_at: 'desc' }
+            { isFavorite: 'desc' },
+            { photoDate: 'desc' },
+            { createdAt: 'desc' }
           ],
           skip,
           take: limit,
           include: {
-            albums: {
+            photoAlbum: {
               select: {
                 id: true,
                 name: true
@@ -81,15 +81,15 @@ export class PhotosHandlerV2 extends BaseApiHandler {
             }
           }
         }),
-        prisma.photos.count({ where: whereClause })
+        prisma.photo.count({ where: whereClause })
       ])
       
       return {
         photos: photos.map(photo => ({
           ...toApiFormat(photo, 'Photo'),
-          album: photo.albums ? {
-            id: photo.albums.id,
-            name: photo.albums.name
+          album: photo.photoAlbum ? {
+            id: photo.photoAlbum.id,
+            name: photo.photoAlbum.name
           } : null
         })),
         pagination: {
@@ -108,10 +108,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, createPhotoSchema)
       
       // Verify album belongs to this couple
-      const album = await prisma.albums.findFirst({
+      const album = await prisma.photoAlbum.findFirst({
         where: {
           id: data.albumId,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -125,32 +125,27 @@ export class PhotosHandlerV2 extends BaseApiHandler {
         coupleId
       }, 'Photo')
       
-      const photo = await prisma.photos.create({
+      const photo = await prisma.photo.create({
         data: {
-          couple_id: coupleId,
-          album_id: dbData.albumId,
-          url: dbData.url,
-          thumbnail_url: dbData.thumbnailUrl,
+          coupleId,
+          albumId: dbData.albumId,
+          imageUrl: dbData.url,
           caption: dbData.caption,
           tags: dbData.tags,
-          metadata: dbData.metadata,
-          taken_at: dbData.takenAt ? new Date(dbData.takenAt) : null,
-          uploaded_by: dbData.uploadedBy,
-          is_favorite: dbData.isFavorite,
-          is_private: dbData.isPrivate,
-          created_at: new Date(),
-          updated_at: new Date()
+          photoDate: dbData.takenAt ? new Date(dbData.takenAt) : null,
+          uploadedBy: dbData.uploadedBy,
+          isFavorite: dbData.isFavorite,
+          isPrivate: dbData.isPrivate,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       })
       
-      // Update album photo count
-      await prisma.albums.update({
+      // Update album's updated timestamp
+      await prisma.photoAlbum.update({
         where: { id: data.albumId },
         data: {
-          photo_count: {
-            increment: 1
-          },
-          updated_at: new Date()
+          updatedAt: new Date()
         }
       })
       
@@ -164,10 +159,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, updatePhotoSchema)
       
       // Check if photo belongs to this couple
-      const existingPhoto = await prisma.photos.findFirst({
+      const existingPhoto = await prisma.photo.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -178,16 +173,15 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       // Transform to database format
       const dbData = toDbFormat(data, 'Photo')
       
-      const updatedPhoto = await prisma.photos.update({
+      const updatedPhoto = await prisma.photo.update({
         where: { id },
         data: {
           caption: dbData.caption,
           tags: dbData.tags,
-          metadata: dbData.metadata,
-          taken_at: dbData.takenAt ? new Date(dbData.takenAt) : undefined,
-          is_favorite: dbData.isFavorite,
-          is_private: dbData.isPrivate,
-          updated_at: new Date()
+          photoDate: dbData.takenAt ? new Date(dbData.takenAt) : undefined,
+          isFavorite: dbData.isFavorite,
+          isPrivate: dbData.isPrivate,
+          updatedAt: new Date()
         }
       })
       
@@ -200,10 +194,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const coupleId = this.requireCoupleId()
       
       // Check if photo belongs to this couple
-      const existingPhoto = await prisma.photos.findFirst({
+      const existingPhoto = await prisma.photo.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -213,17 +207,17 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       
       // Delete photo and update album count
       await prisma.$transaction(async (tx) => {
-        await tx.photos.delete({
+        await tx.photo.delete({
           where: { id }
         })
         
-        await tx.albums.update({
-          where: { id: existingPhoto.album_id },
+        await tx.photoAlbum.update({
+          where: { id: existingPhoto.albumId },
           data: {
-            photo_count: {
+            photoCount: {
               decrement: 1
             },
-            updated_at: new Date()
+            updatedAt: new Date()
           }
         })
       })
@@ -237,21 +231,20 @@ export class PhotosHandlerV2 extends BaseApiHandler {
     return this.handleRequest(request, async () => {
       const coupleId = this.requireCoupleId()
       
-      const albums = await prisma.albums.findMany({
-        where: { couple_id: coupleId },
-        orderBy: { created_at: 'desc' },
+      const albums = await prisma.photoAlbum.findMany({
+        where: { coupleId },
+        orderBy: { createdAt: 'desc' },
         include: {
           photos: {
             select: {
               id: true,
-              url: true,
-              thumbnail_url: true
+              imageUrl: true
             },
             where: {
-              is_private: false
+              isPrivate: false
             },
             orderBy: {
-              created_at: 'desc'
+              createdAt: 'desc'
             },
             take: 1
           }
@@ -262,8 +255,7 @@ export class PhotosHandlerV2 extends BaseApiHandler {
         ...toApiFormat(album, 'Album'),
         coverPhoto: album.photos[0] ? {
           id: album.photos[0].id,
-          url: album.photos[0].url,
-          thumbnailUrl: album.photos[0].thumbnail_url
+          url: album.photos[0].imageUrl
         } : null
       }))
     })
@@ -280,18 +272,18 @@ export class PhotosHandlerV2 extends BaseApiHandler {
         coupleId
       }, 'Album')
       
-      const album = await prisma.albums.create({
+      const album = await prisma.photoAlbum.create({
         data: {
-          couple_id: coupleId,
+          coupleId,
           name: dbData.name,
           description: dbData.description,
-          cover_photo_id: dbData.coverPhotoId,
-          is_private: dbData.isPrivate,
-          share_token: dbData.shareToken || crypto.randomBytes(16).toString('hex'),
+          coverPhotoId: dbData.coverPhotoId,
+          isPrivate: dbData.isPrivate,
+          shareToken: dbData.shareToken || crypto.randomBytes(16).toString('hex'),
           tags: dbData.tags,
-          photo_count: 0,
-          created_at: new Date(),
-          updated_at: new Date()
+          photoCount: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       })
       
@@ -303,17 +295,17 @@ export class PhotosHandlerV2 extends BaseApiHandler {
     return this.handleRequest(request, async () => {
       const coupleId = this.requireCoupleId()
       
-      const album = await prisma.albums.findFirst({
+      const album = await prisma.photoAlbum.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         },
         include: {
           photos: {
             orderBy: [
-              { is_favorite: 'desc' },
-              { taken_at: 'desc' },
-              { created_at: 'desc' }
+              { isFavorite: 'desc' },
+              { photoDate: 'desc' },
+              { createdAt: 'desc' }
             ]
           }
         }
@@ -336,10 +328,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, updateAlbumSchema)
       
       // Check if album belongs to this couple
-      const existingAlbum = await prisma.albums.findFirst({
+      const existingAlbum = await prisma.photoAlbum.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -350,15 +342,15 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       // Transform to database format
       const dbData = toDbFormat(data, 'Album')
       
-      const updatedAlbum = await prisma.albums.update({
+      const updatedAlbum = await prisma.photoAlbum.update({
         where: { id },
         data: {
           name: dbData.name,
           description: dbData.description,
-          cover_photo_id: dbData.coverPhotoId,
-          is_private: dbData.isPrivate,
+          coverPhotoId: dbData.coverPhotoId,
+          isPrivate: dbData.isPrivate,
           tags: dbData.tags,
-          updated_at: new Date()
+          updatedAt: new Date()
         }
       })
       
@@ -371,10 +363,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       const coupleId = this.requireCoupleId()
       
       // Check if album belongs to this couple
-      const existingAlbum = await prisma.albums.findFirst({
+      const existingAlbum = await prisma.photoAlbum.findFirst({
         where: {
           id: id,
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -383,15 +375,15 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       }
       
       // Check if album has photos
-      const photoCount = await prisma.photos.count({
-        where: { album_id: id }
+      const photoCount = await prisma.photo.count({
+        where: { albumId: id }
       })
       
       if (photoCount > 0) {
         throw new BadRequestException('Cannot delete album with photos. Please delete all photos first.')
       }
       
-      await prisma.albums.delete({
+      await prisma.photoAlbum.delete({
         where: { id }
       })
       
@@ -410,10 +402,10 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       }
       
       // Verify all photos belong to this couple
-      const photos = await prisma.photos.findMany({
+      const photos = await prisma.photo.findMany({
         where: {
           id: { in: photoIds },
-          couple_id: coupleId
+          coupleId
         }
       })
       
@@ -422,14 +414,14 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       }
       
       // Update all photos
-      await prisma.photos.updateMany({
+      await prisma.photo.updateMany({
         where: {
           id: { in: photoIds },
-          couple_id: coupleId
+          coupleId
         },
         data: {
-          is_favorite: isFavorite,
-          updated_at: new Date()
+          isFavorite: isFavorite,
+          updatedAt: new Date()
         }
       })
       

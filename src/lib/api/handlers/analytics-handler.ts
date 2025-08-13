@@ -88,7 +88,7 @@ export class DashboardTasksHandler extends BaseAPIHandler {
     }
 
     // Get tasks
-    const tasks = await prisma.checklist_items.findMany({
+    const tasks = await prisma.tasks.findMany({
       where,
       orderBy: [
         { priority: 'desc' },
@@ -99,13 +99,13 @@ export class DashboardTasksHandler extends BaseAPIHandler {
 
     // Get task statistics
     const [totalTasks, completedTasks, overdueTasks] = await Promise.all([
-      prisma.checklist_items.count({
+      prisma.tasks.count({
         where: { couple_id: couple.id }
       }),
-      prisma.checklist_items.count({
+      prisma.tasks.count({
         where: { couple_id: couple.id, is_completed: true }
       }),
-      prisma.checklist_items.count({
+      prisma.tasks.count({
         where: {
           couple_id: couple.id,
           is_completed: false,
@@ -115,14 +115,14 @@ export class DashboardTasksHandler extends BaseAPIHandler {
     ])
 
     // Get tasks by category
-    const tasksByCategory = await prisma.checklist_items.groupBy({
+    const tasksByCategory = await prisma.tasks.groupBy({
       by: ['category'],
       where: { couple_id: couple.id },
       _count: true
     })
 
     // Get upcoming tasks (next 7 days)
-    const upcomingTasks = await prisma.checklist_items.findMany({
+    const upcomingTasks = await prisma.tasks.findMany({
       where: {
         couple_id: couple.id,
         is_completed: false,

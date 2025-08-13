@@ -65,13 +65,13 @@ export async function GET(request: NextRequest) {
     const contracts = await prisma.contracts.findMany({
       where: whereClause,
       include: {
-        couple_vendors: {
+        vendor: {
           select: {
             id: true,
             name: true,
-            business_name: true,
+            businessName: true,
             category: true,
-            contact_person: true
+            contactName: true
           }
         }
       },
@@ -95,9 +95,9 @@ export async function GET(request: NextRequest) {
       contractUrl: contract.contract_url,
       status: contract.status as any,
       paymentStatus: 'pending', // Default since not stored
-      vendor: contract.couple_vendors ? {
-        name: contract.couple_vendors.name,
-        contactName: contract.couple_vendors.contact_person
+      vendor: contract.vendor ? {
+        name: contract.vendor.name,
+        contactName: contract.vendor.contactName
       } : null
     }))
 
@@ -164,9 +164,9 @@ export async function POST(request: NextRequest) {
       contractUrl: validatedData.contractUrl,
       status: validatedData.status,
       paymentStatus: validatedData.paymentStatus,
-      vendor: contract.couple_vendors ? {
-        name: contract.couple_vendors.name,
-        contactName: contract.couple_vendors.contact_person
+      vendor: contract.vendor ? {
+        name: contract.vendor.name,
+        contactName: contract.vendor.contactName
       } : null
     }
 
@@ -264,9 +264,9 @@ export async function PUT(request: NextRequest) {
       contractUrl: validatedData.contractUrl,
       status: validatedData.status,
       paymentStatus: validatedData.paymentStatus,
-      vendor: contract.couple_vendors ? {
-        name: contract.couple_vendors.name,
-        contactName: contract.couple_vendors.contact_person
+      vendor: contract.vendor ? {
+        name: contract.vendor.name,
+        contactName: contract.vendor.contactName
       } : null
     }
 

@@ -120,11 +120,16 @@ export function getErrorMessage(error: any, context?: ErrorContext): string {
 export function handleApiError(error: any, context?: ErrorContext, showToast = true): void {
   const message = getErrorMessage(error, context)
   
-  // Log error for debugging
-  console.error('[API Error]', {
-    error,
+  // Log error for debugging with more detail
+  console.error('[API Error]', error)
+  console.error('[API Error Details]', {
+    type: typeof error,
+    message: error?.message,
+    status: error?.status,
+    code: error?.code,
+    errors: error?.errors,
     context,
-    message
+    finalMessage: message
   })
   
   // Show user-friendly toast

@@ -37,7 +37,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
       if (completed !== null) whereClause.completed = completed === 'true'
       if (priority) whereClause.priority = priority
       
-      const items = await prisma.checklist_items.findMany({
+      const items = await prisma.tasks.findMany({
         where: whereClause,
         orderBy: [
           { completed: 'asc' },
@@ -48,7 +48,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
       })
       
       // Get category statistics
-      const stats = await prisma.checklist_items.groupBy({
+      const stats = await prisma.tasks.groupBy({
         by: ['category', 'completed'],
         where: { couple_id: coupleId },
         _count: true
@@ -93,7 +93,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
         coupleId
       }, 'ChecklistItem')
       
-      const item = await prisma.checklist_items.create({
+      const item = await prisma.tasks.create({
         data: {
           couple_id: coupleId,
           title: dbData.title,
@@ -119,7 +119,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, updateChecklistItemSchema)
       
       // Check if item belongs to this couple
-      const existingItem = await prisma.checklist_items.findFirst({
+      const existingItem = await prisma.tasks.findFirst({
         where: {
           id: id,
           couple_id: coupleId
@@ -141,7 +141,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
         completedAt = null
       }
       
-      const updatedItem = await prisma.checklist_items.update({
+      const updatedItem = await prisma.tasks.update({
         where: { id },
         data: {
           title: dbData.title,
@@ -166,7 +166,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
       const coupleId = this.requireCoupleId()
       
       // Check if item belongs to this couple
-      const existingItem = await prisma.checklist_items.findFirst({
+      const existingItem = await prisma.tasks.findFirst({
         where: {
           id: id,
           couple_id: coupleId
@@ -177,7 +177,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
         throw new NotFoundException('Checklist item not found')
       }
       
-      await prisma.checklist_items.delete({
+      await prisma.tasks.delete({
         where: { id }
       })
       
@@ -190,7 +190,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
     return this.handleRequest(request, async () => {
       const coupleId = this.requireCoupleId()
       
-      const existingItem = await prisma.checklist_items.findFirst({
+      const existingItem = await prisma.tasks.findFirst({
         where: {
           id: id,
           couple_id: coupleId
@@ -201,7 +201,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
         throw new NotFoundException('Checklist item not found')
       }
       
-      const updatedItem = await prisma.checklist_items.update({
+      const updatedItem = await prisma.tasks.update({
         where: { id },
         data: {
           completed: !existingItem.completed,
@@ -225,7 +225,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
       }
       
       // Verify all items belong to this couple
-      const items = await prisma.checklist_items.findMany({
+      const items = await prisma.tasks.findMany({
         where: {
           id: { in: itemIds },
           couple_id: coupleId
@@ -237,7 +237,7 @@ export class ChecklistHandlerV2 extends BaseApiHandler {
       }
       
       // Update all items
-      await prisma.checklist_items.updateMany({
+      await prisma.tasks.updateMany({
         where: {
           id: { in: itemIds },
           couple_id: coupleId
