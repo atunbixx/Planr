@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
-export async function updateSession(request: NextRequest) {
+// Update session helper
+async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -40,29 +41,32 @@ const publicRoutes = [
   '/sign-up',
   '/auth/callback',
   '/api/webhooks',
-  '/api/test-connection',
-  '/api/debug-field-test',
-  '/api/debug-onboarding',
-  '/api/force-onboarding-complete',
   '/invitation',
   '/api/invitation',
   '/api/invitation/accept',
+  '/rsvp',
 ]
 
 // Define routes that are allowed during onboarding (but require authentication)
 const onboardingRoutes = [
   '/onboarding',
-  '/api/couples',
-  '/api/couples-simple',
+  '/api/onboarding',
   '/api/user/initialize',
-  '/api/user/onboarding-status',
-  '/api/user/set-onboarding-cookie',
-  '/api/settings/preferences',
-  '/api/test-db',
-  '/api/test-couples',
-  '/api/auth/status',
-  '/api/debug-auth',
-  '/api/debug/full-auth',
+  '/api/couples', // Needed for onboarding
+]
+
+// Define static assets and files to skip
+const staticAssets = [
+  '/_next',
+  '/static',
+  '/favicon.ico',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/manifest.json',
+  '/service-worker.js',
+  '/sw.js',
+  '/icons',
+  '/screenshots',
 ]
 
 // Helper function to check if a path matches any pattern
@@ -76,21 +80,26 @@ const isRouteMatch = (pathname: string, routes: string[]): boolean => {
   })
 }
 
+// Helper to check if path is a static asset
+const isStaticAsset = (pathname: string): boolean => {
+  return staticAssets.some(asset => pathname.startsWith(asset)) || 
+         pathname.includes('.') && !pathname.startsWith('/api/')
+}
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
-  // Skip authentication for static assets and Next.js internals
-  if (
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/static/') ||
-    pathname.includes('.') ||
-    pathname === '/favicon.ico'
-  ) {
+  // Skip middleware for static assets
+  if (isStaticAsset(pathname)) {
     return NextResponse.next()
   }
   
   // Update user's auth session
   const { response, user } = await updateSession(request)
+  
+  // Store intended destination for post-auth redirect
+  const searchParams = new URLSearchParams(request.nextUrl.searchParams)
+  const next = searchParams.get('next') || pathname
   
   // === UNAUTHENTICATED USER HANDLING ===
   if (!user) {
@@ -99,81 +108,73 @@ export async function middleware(request: NextRequest) {
       return response
     }
     
-    // All other routes require authentication
-    return NextResponse.redirect(new URL('/sign-in', request.url))
+    // Redirect to sign-in with next parameter
+    const signInUrl = new URL('/sign-in', request.url)
+    if (pathname !== '/' && pathname !== '/sign-in') {
+      signInUrl.searchParams.set('next', pathname + request.nextUrl.search)
+    }
+    return NextResponse.redirect(signInUrl)
   }
 
   // === AUTHENTICATED USER HANDLING ===
   // At this point, we know the user is signed in
-
-  // Special handling for sign-in/sign-up pages - redirect to appropriate location
+  
+  // Get onboarding status from database via API
+  // We'll use a lightweight check that doesn't block the middleware
+  const onboardingComplete = request.cookies.get('onboardingCompleted')?.value === 'true'
+  
+  // Handle sign-in/sign-up redirects for authenticated users
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
-    const cookies = request.cookies
-    const hasCompletedOnboarding = cookies.get('onboardingCompleted')?.value === 'true'
-    
-    if (hasCompletedOnboarding) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (onboardingComplete) {
+      // If there's a next parameter, use it; otherwise go to dashboard
+      const destination = searchParams.get('next') || '/dashboard'
+      return NextResponse.redirect(new URL(destination, request.url))
     } else {
-      return NextResponse.redirect(new URL('/onboarding', request.url))
+      return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
     }
   }
 
-  // Handle root path for authenticated users
+  // Handle root path
   if (pathname === '/') {
-    const cookies = request.cookies
-    const hasCompletedOnboarding = cookies.get('onboardingCompleted')?.value === 'true'
-    
-    if (hasCompletedOnboarding) {
+    if (onboardingComplete) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     } else {
-      return NextResponse.redirect(new URL('/onboarding', request.url))
+      return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
     }
   }
 
-  // Allow access to onboarding routes for authenticated users
+  // === ONBOARDING ROUTE HANDLING ===
+  if (pathname.startsWith('/onboarding')) {
+    // If onboarding is complete, redirect to dashboard
+    if (onboardingComplete) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    // Otherwise allow access to onboarding routes
+    return response
+  }
+  
+  // Allow access to onboarding API routes
   if (isRouteMatch(pathname, onboardingRoutes)) {
-    // Let the onboarding page/API handle whether to redirect if already completed
     return response
   }
 
-  // === PROTECTED ROUTES (Dashboard & APIs) ===
-  // These require both authentication AND completed onboarding
-  const isProtectedRoute = 
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/superadmin') ||
-    pathname.startsWith('/api/admin') ||
-    pathname.startsWith('/api/guests') ||
-    pathname.startsWith('/api/vendors') ||
-    pathname.startsWith('/api/budget') ||
-    pathname.startsWith('/api/photos') ||
-    pathname.startsWith('/api/dashboard') ||
-    pathname.startsWith('/api/settings') ||
-    pathname.startsWith('/api/seating') ||
-    pathname.startsWith('/api/checklist') ||
-    pathname.startsWith('/api/messages') ||
-    pathname.startsWith('/api/export') ||
-    pathname.startsWith('/api/albums')
-
-  if (isProtectedRoute) {
-    // Check for onboarding completion cookie
-    const cookies = request.cookies
-    const hasCompletedOnboarding = cookies.get('onboardingCompleted')?.value === 'true'
-
-    if (!hasCompletedOnboarding) {
-      // For API routes, return 403 instead of redirect
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { error: 'Onboarding not completed' },
-          { status: 403 }
-        )
-      }
-      
-      // For page routes, redirect to onboarding
-      return NextResponse.redirect(new URL('/onboarding', request.url))
+  // === PROTECTED ROUTES ===
+  // All other routes require completed onboarding
+  if (!onboardingComplete) {
+    // For API routes, return 403
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Onboarding must be completed to access this resource' },
+        { status: 403 }
+      )
     }
+    
+    // For page routes, redirect to onboarding
+    // We'll redirect to the last step they were on (handled by onboarding page)
+    return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
   }
 
-  // Allow all other authenticated requests
+  // User is authenticated and has completed onboarding
   return response
 }
 
@@ -183,10 +184,8 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files (*.svg, *.png etc.)
+     * - public folder files
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
-    '/(api|trpc)(.*)',
+    '/((?!_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
   ],
 }

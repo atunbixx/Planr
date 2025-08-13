@@ -18,6 +18,7 @@ model User {
   createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   preferences      Json?
+  hasOnboarded     Boolean?  @default(false) @map("has_onboarded")
 
   // Relationships
   coupleAsPartner1          Couple[]                   @relation("CouplePartner1")
@@ -25,6 +26,7 @@ model User {
   coupleAsPrimary           Couple?
   notifications             Notification[]
   notificationPreferences   NotificationPreferences?
+  onboardingProgress        OnboardingProgress?
 
   @@map("users")
 }
@@ -1226,4 +1228,21 @@ model NotificationPreferences {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model OnboardingProgress {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @unique @map("user_id") @db.Uuid
+  stepCurrent     String?   @map("step_current")
+  stepsCompleted  Json      @default("[]") @map("steps_completed")
+  stepData        Json      @default("{}") @map("step_data")
+  done            Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([done])
+  @@map("onboarding_progress")
 }

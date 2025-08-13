@@ -17,6 +17,21 @@ import { LoadingCard } from '@/components/ui/loading'
 
 import type { DashboardStats as ApiDashboardStats } from '@/lib/api/client'
 
+// Type definitions for dashboard data
+interface UpcomingPayment {
+  id: string
+  vendor: string
+  amount: number
+  dueDate: string
+  daysUntil: number
+}
+
+interface RecentActivity {
+  type: string
+  description: string
+  timestamp: string
+}
+
 export default function DashboardPage() {
   const { user, isSignedIn, isLoading } = useSupabaseAuth()
   const { theme } = useTheme()
@@ -43,8 +58,28 @@ export default function DashboardPage() {
         console.warn('User initialization failed, continuing with dashboard:', initError)
       }
       
-      // Fetch dashboard stats
-      const statsData = await dashboardApi.execute(api.dashboard.stats())
+      // Fetch dashboard stats (only if onboarding is completed)
+      let statsData = null
+      try {
+        statsData = await dashboardApi.execute(api.dashboard.stats())
+      } catch (dashboardError: any) {
+        // If onboarding isn't completed, dashboard stats won't be available
+        if (dashboardError?.message?.includes('Onboarding must be completed')) {
+          console.log('Dashboard stats not available - onboarding not completed')
+          // Set default empty stats for users without completed onboarding
+          statsData = {
+            wedding: { daysUntil: null, date: null, venue: null },
+            budget: { totalBudget: 0, totalSpent: 0, remaining: 0, percentageSpent: 0 },
+            guests: { total: 0, confirmed: 0, pending: 0, declined: 0 },
+            vendors: { total: 0, booked: 0, pending: 0, contacted: 0 },
+            checklist: { total: 0, completed: 0, dueSoon: 0 },
+            photos: { totalPhotos: 0 }
+          }
+        } else {
+          console.error('Error loading dashboard stats:', dashboardError)
+          throw dashboardError // Re-throw other errors
+        }
+      }
       
       if (statsData) {
         // Map the API response to the expected format
@@ -308,7 +343,7 @@ export default function DashboardPage() {
               {/* Upcoming Payments List */}
               <div className="space-y-6">
                 <h3 className="text-2xl font-light text-gray-900 mb-6">Upcoming Payments</h3>
-                {(stats?.upcomingPayments || []).slice(0, 5).map((payment, index) => (
+                {(stats?.upcomingPayments || []).slice(0, 5).map((payment: UpcomingPayment, index: number) => (
                   <div key={payment.id} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0">
                     <div>
                       <p className="text-lg font-light text-gray-900">{payment.vendor}</p>
@@ -371,7 +406,7 @@ export default function DashboardPage() {
               <div className="bg-white p-4 sm:p-8 lg:p-12 rounded-sm shadow-sm">
                 <h3 className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-6">Recent Activity</h3>
                 <div className="space-y-4">
-                  {(stats?.recentActivity || []).slice(0, 5).map((activity, index) => (
+                  {(stats?.recentActivity || []).slice(0, 5).map((activity: RecentActivity, index: number) => (
                     <div key={`${activity.type}-${index}`} className="flex items-start gap-4">
                       <div className={`w-2 h-2 rounded-full mt-2 ${
                         activity.type === 'budget' ? 'bg-[#7a9b7f]' :
