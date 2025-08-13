@@ -14,7 +14,7 @@ import { TranslationTest } from '@/components/TranslationTest'
 // import NotificationSettings from '@/components/pwa/NotificationSettings' // Removed - API endpoints no longer available
 import Link from 'next/link'
 import { Users, ArrowRight } from 'lucide-react'
-import { api } from '@/lib/api/client'
+import { enterpriseApi } from '@/lib/api/enterprise-client'
 
 interface CoupleSettings {
   partner1Name: string
@@ -80,20 +80,17 @@ export default function SettingsPage() {
 
       // Load existing wedding settings (only if onboarding is completed)
       try {
-        const weddingResponse = await api.settings.wedding.get()
-        if (weddingResponse.success && weddingResponse.data) {
-          const wedding = weddingResponse.data
-          setCoupleSettings({
-            partner1Name: wedding.partnerOneName || '',
-            partner2Name: wedding.partnerTwoName || '',
-            weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : '',
-            venue: wedding.venue?.name || '',
-            location: wedding.venue ? `${wedding.venue.city}, ${wedding.venue.state}` : '',
-            expectedGuests: wedding.guestCount || 0,
-            totalBudget: wedding.budget || 0,
-            weddingStyle: wedding.theme || ''
-          })
-        }
+        const wedding = await enterpriseApi.settings.wedding.get()
+        setCoupleSettings({
+          partner1Name: wedding.partnerOneName || '',
+          partner2Name: wedding.partnerTwoName || '',
+          weddingDate: wedding.weddingDate ? new Date(wedding.weddingDate).toISOString().split('T')[0] : '',
+          venue: wedding.venue?.name || '',
+          location: wedding.venue ? `${wedding.venue.city}, ${wedding.venue.state}` : '',
+          expectedGuests: wedding.guestCount || 0,
+          totalBudget: wedding.budget || 0,
+          weddingStyle: wedding.theme || ''
+        })
       } catch (weddingError: any) {
         // If onboarding isn't completed, wedding settings won't be available
         if (weddingError?.message?.includes('Onboarding must be completed')) {
@@ -104,19 +101,17 @@ export default function SettingsPage() {
       }
 
       // Load existing user preferences (should always work for authenticated users)
-      const preferencesResponse = await api.settings.preferences.get()
-      if (preferencesResponse.success && preferencesResponse.data) {
-        setUserPreferences({
-          currency: preferencesResponse.data.currency,
-          alertThreshold: 85, // Not in API response, using default
-          emailNotifications: preferencesResponse.data.emailNotifications,
-          taskReminders: true, // Not in API response, using default
-          budgetAlerts: true, // Not in API response, using default
-          vendorUpdates: false, // Not in API response, using default
-          timezone: preferencesResponse.data.timezone,
-          language: preferencesResponse.data.language
-        })
-      }
+      const preferences = await enterpriseApi.settings.preferences.get()
+      setUserPreferences({
+        currency: preferences.currency,
+        alertThreshold: 85, // Not in API response, using default
+        emailNotifications: preferences.emailNotifications,
+        taskReminders: true, // Not in API response, using default
+        budgetAlerts: true, // Not in API response, using default
+        vendorUpdates: false, // Not in API response, using default
+        timezone: preferences.timezone,
+        language: preferences.language
+      })
     } catch (error) {
       console.error('Error loading settings:', error)
     }
@@ -125,7 +120,7 @@ export default function SettingsPage() {
   const saveWeddingDetails = async () => {
     setLoading(true)
     try {
-      const response = await api.settings.wedding.update({
+      await enterpriseApi.settings.wedding.update({
         partnerOneName: coupleSettings.partner1Name,
         partnerTwoName: coupleSettings.partner2Name,
         weddingDate: coupleSettings.weddingDate,
@@ -141,11 +136,7 @@ export default function SettingsPage() {
         theme: coupleSettings.weddingStyle
       })
 
-      if (response.success) {
-        alert('Settings saved successfully!')
-      } else {
-        alert('Failed to save settings. Please try again.')
-      }
+      alert('Settings saved successfully!')
     } catch (error) {
       console.error('Error saving wedding details:', error)
       alert('Failed to save wedding details. Please try again.')
@@ -157,7 +148,7 @@ export default function SettingsPage() {
   const saveUserPreferences = async () => {
     setLoading(true)
     try {
-      const response = await api.settings.preferences.update({
+      await enterpriseApi.settings.preferences.update({
         language: userPreferences.language,
         timezone: userPreferences.timezone,
         currency: userPreferences.currency,
@@ -169,11 +160,7 @@ export default function SettingsPage() {
         pushNotifications: false
       })
 
-      if (response.success) {
-        alert('Preferences saved successfully!')
-      } else {
-        alert('Failed to save preferences. Please try again.')
-      }
+      alert('Preferences saved successfully!')
     } catch (error) {
       console.error('Error saving preferences:', error)
       alert('Failed to save preferences. Please try again.')

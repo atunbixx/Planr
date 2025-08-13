@@ -1,0 +1,1 @@
+export { GuestRepository } from './guest.repository'

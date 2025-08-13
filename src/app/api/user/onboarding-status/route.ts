@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { prisma } from '@/lib/prisma'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+import { getOnboardingState } from '@/lib/onboarding'
+
+const coupleRepository = new CoupleRepository()
 
 export async function GET() {
   try {
@@ -11,30 +14,22 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { supabase_user_id: user.id }
-    });
+    // Check onboarding progress
+    const onboardingState = await getOnboardingState(user.id)
+    
+    // Find the couple associated with this user using repository
+    const couple = await coupleRepository.findByUserId(user.id);
 
-    if (!dbUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Find the couple associated with this user
-    const couple = await prisma.couple.findFirst({
-      where: {
-        OR: [
-          { partner1_user_id: dbUser.id },
-          { partner2_user_id: dbUser.id },
-          { userId: dbUser.id }
-        ]
-      }
-    });
-
-    const hasCompletedOnboarding = couple?.onboardingCompleted || false;
+    const hasCompletedOnboarding = onboardingState.done && (couple?.onboardingCompleted || false);
 
     return NextResponse.json({ 
       hasCompletedOnboarding,
-      hasWeddingProfile: hasCompletedOnboarding 
+      hasWeddingProfile: hasCompletedOnboarding,
+      onboardingProgress: {
+        done: onboardingState.done,
+        lastStep: onboardingState.lastStep,
+        stepsCompleted: onboardingState.stepsCompleted
+      }
     });
   } catch (error) {
     console.error('Error checking onboarding status:', error)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BaseAPIHandler } from '../base-handler'
 import { z } from 'zod'
 import { vendorService } from '@/lib/services/vendor.service'
-import { coupleService } from '@/lib/services/couple.service'
+import { coupleService } from '@/features/couples'
 
 // Validation schemas
 const createVendorSchema = z.object({

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/server'
 import { prisma } from '@/lib/prisma'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+import { UserRepository } from '@/lib/repositories/UserRepository'
+
+const coupleRepository = new CoupleRepository()
+const userRepository = new UserRepository()
 
 export async function GET() {
   try {
@@ -9,10 +14,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // First find the user in our database
-    const dbUser = await prisma.user.findUnique({
-      where: { supabase_user_id: user.id }
-    })
+    // First find the user in our database using repository
+    const dbUser = await userRepository.findBySupabaseUserId(user.id)
 
     if (!dbUser) {
       return NextResponse.json({ 
@@ -22,10 +25,8 @@ export async function GET() {
       })
     }
 
-    // Check if user is the owner (couple)
-    const couple = await prisma.couple.findFirst({
-      where: { userId: dbUser.id }
-    })
+    // Check if user is the owner (couple) using repository
+    const couple = await coupleRepository.findByUserId(dbUser.id)
 
     if (couple) {
       // Owners have all permissions
@@ -49,14 +50,7 @@ export async function GET() {
     }
 
     // Check if user is a wedding couple owner
-    const weddingCouple = await prisma.couples.findFirst({
-      where: {
-        OR: [
-          { partner1_user_id: dbUser.id },
-          { partner2_user_id: dbUser.id }
-        ]
-      }
-    })
+    const weddingCouple = await coupleRepository.findByUserId(dbUser.id)
 
     if (weddingCouple) {
       // Wedding couple owners have all permissions

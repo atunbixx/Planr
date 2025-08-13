@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, X } from 'lucide-react';
 import { useSupabaseAuth } from '@/lib/auth/client';
-import { api } from '@/lib/api/client';
+import { enterpriseApi } from '@/lib/api/enterprise-client';
 
 interface Category {
   id: string;
@@ -93,8 +93,8 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
     setError(null);
     
     try {
-      // Use the API client
-      const response = await api.vendors.create({
+      // Use the enterprise API client
+      const vendor = await enterpriseApi.vendors.create({
         businessName: formData.businessName.trim(),
         contactName: formData.contactName.trim() || undefined,
         phone: formData.phone.trim() || undefined,
@@ -107,7 +107,7 @@ export default function AddVendorDialog({ categories, children, onVendorAdded }:
         contractSigned: false
       });
 
-      console.log('Vendor created successfully:', response.data);
+      console.log('Vendor created successfully:', vendor);
 
       // Success - close dialog and reset form
       setIsOpen(false);

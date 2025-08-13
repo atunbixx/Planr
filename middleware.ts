@@ -119,9 +119,10 @@ export async function middleware(request: NextRequest) {
   // === AUTHENTICATED USER HANDLING ===
   // At this point, we know the user is signed in
   
-  // Get onboarding status from database via API
-  // We'll use a lightweight check that doesn't block the middleware
-  const onboardingComplete = request.cookies.get('onboardingCompleted')?.value === 'true'
+  // Import the onboarding helper (dynamic import to avoid circular dependencies)
+  const { checkOnboardingStatus } = await import('./src/lib/middleware-onboarding')
+  const onboardingStatus = await checkOnboardingStatus(request, user.id)
+  const onboardingComplete = onboardingStatus.isComplete
   
   // Handle sign-in/sign-up redirects for authenticated users
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
@@ -130,7 +131,8 @@ export async function middleware(request: NextRequest) {
       const destination = searchParams.get('next') || '/dashboard'
       return NextResponse.redirect(new URL(destination, request.url))
     } else {
-      return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
+      const redirectPath = onboardingStatus.redirectPath || '/onboarding/welcome'
+      return NextResponse.redirect(new URL(redirectPath, request.url))
     }
   }
 
@@ -139,7 +141,8 @@ export async function middleware(request: NextRequest) {
     if (onboardingComplete) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     } else {
-      return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
+      const redirectPath = onboardingStatus.redirectPath || '/onboarding/welcome'
+      return NextResponse.redirect(new URL(redirectPath, request.url))
     }
   }
 
@@ -161,17 +164,20 @@ export async function middleware(request: NextRequest) {
   // === PROTECTED ROUTES ===
   // All other routes require completed onboarding
   if (!onboardingComplete) {
-    // For API routes, return 403
+    // For API routes, return 403 with helpful message
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
-        { error: 'Onboarding must be completed to access this resource' },
+        { 
+          error: 'Please complete your wedding setup to access this feature',
+          redirectTo: onboardingStatus.redirectPath || '/onboarding/welcome'
+        },
         { status: 403 }
       )
     }
     
-    // For page routes, redirect to onboarding
-    // We'll redirect to the last step they were on (handled by onboarding page)
-    return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
+    // For page routes, redirect to the specific onboarding step
+    const redirectPath = onboardingStatus.redirectPath || '/onboarding/welcome'
+    return NextResponse.redirect(new URL(redirectPath, request.url))
   }
 
   // User is authenticated and has completed onboarding

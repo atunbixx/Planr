@@ -9,7 +9,7 @@ import InvitationDialog from './components/InvitationDialog'
 import { PermissionGate } from '@/components/PermissionGate'
 import { Search, Plus, Mail, Download, Filter, Copy, Eye, MoreVertical } from 'lucide-react'
 import { toast } from 'sonner'
-import { api, type Guest as ApiGuest } from '@/lib/api/client'
+import { enterpriseApi, type GuestResponse } from '@/lib/api/enterprise-client'
 import { useApiState } from '@/hooks/useApiState'
 import { LoadingCard, SkeletonTable } from '@/components/ui/loading'
 import { handleApiError } from '@/lib/api/error-handler'
@@ -66,11 +66,11 @@ export default function GuestsPage() {
   const fetchGuests = async (forceRefresh = false) => {
     console.log('Fetching guests...', forceRefresh ? '(force refresh)' : '')
     
-    const response = await guestsApi.execute(api.guests.list())
+    const response = await guestsApi.execute(enterpriseApi.guests.list())
     
     if (response) {
       // Transform API guests to match the component interface
-      const transformedGuests = response.data.map((guest: ApiGuest) => ({
+      const transformedGuests = response.data.map((guest: GuestResponse) => ({
         id: guest.id,
         name: `${guest.firstName || ''} ${guest.lastName || ''}`.trim(),
         email: guest.email,

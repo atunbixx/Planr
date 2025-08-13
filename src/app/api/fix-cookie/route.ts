@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/server'
-import { prisma } from '@/lib/prisma'
+import { UserRepository } from '@/lib/repositories/UserRepository'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+
+const userRepository = new UserRepository()
+const coupleRepository = new CoupleRepository()
 
 export async function GET() {
   try {
@@ -14,16 +18,8 @@ export async function GET() {
     
     const userId = user.id
 
-    // Check if user has a completed couple profile
-    const dbUser = await prisma.user.findUnique({
-      where: { supabase_user_id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true
-      }
-    })
+    // Check if user has a completed couple profile using repository
+    const dbUser = await userRepository.findBySupabaseUserId(userId)
 
     if (!dbUser) {
       return NextResponse.json({ 
@@ -31,17 +27,8 @@ export async function GET() {
       }, { status: 404 })
     }
 
-    // Find the couple record for this user
-    const couple = await prisma.couple.findFirst({
-      where: { userId: dbUser.id },
-      select: {
-        id: true,
-        partner1Name: true,
-        partner2Name: true,
-        weddingDate: true,
-        onboardingCompleted: true
-      }
-    })
+    // Find the couple record for this user using repository
+    const couple = await coupleRepository.findByUserId(dbUser.id)
 
     if (!couple || !couple.onboardingCompleted) {
       return NextResponse.json({ 

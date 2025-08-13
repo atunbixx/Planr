@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { api } from '@/lib/api/client'
+import { enterpriseApi } from '@/lib/api/enterprise-client'
 
 const predefinedCategories = [
   { name: 'Venue', icon: '🏛️', color: '#8B5CF6', priority: 'essential' },
@@ -46,7 +46,7 @@ export default function AddCategoryDialog() {
     setLoading(true)
 
     try {
-      const response = await api.budget.categories.create({
+      const category = await enterpriseApi.budget.categories.create({
         name: formData.name,
         icon: formData.icon,
         color: formData.color,
@@ -54,10 +54,9 @@ export default function AddCategoryDialog() {
         priority: formData.priority as any
       })
       
-      if (response.success && response.data) {
-        console.log('Category created successfully:', response.data)
-        setOpen(false)
-        setFormData({
+      console.log('Category created successfully:', category)
+      setOpen(false)
+      setFormData({
           name: '',
           icon: '💰',
           color: '#3B82F6',
@@ -66,10 +65,6 @@ export default function AddCategoryDialog() {
         })
         setIsCustom(false)
         router.refresh()
-      } else {
-        console.error('Error creating category:', response)
-        alert('Failed to create category. Please try again.')
-      }
     } catch (error) {
       console.error('Error creating category:', error)
       alert('Failed to create category. Please try again.')

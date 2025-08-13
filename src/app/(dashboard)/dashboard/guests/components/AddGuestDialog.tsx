@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
-import { api } from '@/lib/api/client'
+import { enterpriseApi } from '@/lib/api/enterprise-client'
 
 interface AddGuestDialogProps {
   open: boolean
@@ -47,7 +47,7 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
     setError(null)
 
     try {
-      const response = await api.guests.create({
+      const guest = await enterpriseApi.guests.create({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email || undefined,
@@ -57,29 +57,26 @@ export default function AddGuestDialog({ open, onClose, onGuestAdded }: AddGuest
         plusOneName: formData.plusOneAllowed ? formData.plusOneName : undefined,
       })
 
-      console.log('Guest created successfully:', response)
+      console.log('Guest created successfully:', guest)
 
-      // Only proceed if successful
-      if (response.success) {
-        onGuestAdded?.()
-        onClose()
+      onGuestAdded?.()
+      onClose()
         
-        // Reset form
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          address: '',
-          relationship: '',
-          side: 'both',
-          plusOneAllowed: false,
-          plusOneName: '',
-          dietaryRestrictions: '',
-          notes: '',
-          rsvpDeadline: ''
-        })
-      }
+      // Reset form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address: '',
+        relationship: '',
+        side: 'both',
+        plusOneAllowed: false,
+        plusOneName: '',
+        dietaryRestrictions: '',
+        notes: '',
+        rsvpDeadline: ''
+      })
     } catch (error) {
       console.error('Error adding guest:', error)
       setError(error instanceof Error ? error.message : 'Failed to add guest. Please try again.')

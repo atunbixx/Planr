@@ -1,0 +1,20 @@
+/**
+ * Budget Feature Module - Complete feature barrel export
+ */
+
+// DTOs
+export * from './dto'
+
+// Repositories
+export * from './repo'
+
+// Services
+export * from './service'
+
+// API Handlers
+export * from './api'
+
+// Re-export for convenience
+export { BudgetApiHandler } from './api/budget.handler'
+export { BudgetService } from './service/budget.service'
+export { BudgetCategoryRepository, BudgetExpenseRepository } from './repo'

@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Mail, MessageSquare, Phone, Send, Users, Building2, FileText, Plus, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { api } from '@/lib/api/client';
+import { enterpriseApi } from '@/lib/api/enterprise-client';
 
 interface Guest {
   id: string;

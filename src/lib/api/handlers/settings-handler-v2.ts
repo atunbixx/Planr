@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { BaseApiHandler, NotFoundException } from '../base-handler'
+import { BaseApiHandler, NotFoundException, BadRequestException } from '../base-handler'
 import { prisma } from '@/lib/prisma'
 import { toApiFormat, toDbFormat } from '@/lib/db/transformations'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
 
 // Validation schemas
 const updatePreferencesSchema = z.object({
@@ -67,50 +68,39 @@ const updateCollaboratorSchema = z.object({
 })
 
 export class SettingsHandlerV2 extends BaseApiHandler {
+  private coupleRepository = new CoupleRepository()
   
   // Preferences methods
   async getPreferences(request: NextRequest) {
     return this.handleRequest(request, async () => {
       const userId = this.requireUserId()
       
-      // Get user preferences
-      const preferences = await prisma.user_preferences.findUnique({
-        where: { user_id: userId }
-      })
-      
-      if (!preferences) {
-        // Create default preferences if they don't exist
-        const defaultPreferences = await prisma.user_preferences.create({
-          data: {
-            user_id: userId,
-            language: 'en',
-            timezone: 'UTC',
-            currency: 'USD',
-            date_format: 'MM/DD/YYYY',
-            time_format: '12h',
-            first_day_of_week: 0,
-            email_notifications: true,
-            sms_notifications: false,
-            push_notifications: true,
-            reminder_settings: {
-              enabled: true,
-              daysBefore: 7,
-              timeOfDay: '09:00'
-            },
-            privacy_settings: {
-              showRsvpPublicly: true,
-              allowGuestUploads: true,
-              requirePhotoApproval: false
-            },
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        })
-        
-        return toApiFormat(defaultPreferences, 'UserPreference')
+      // Get user's couple information first
+      const couple = await this.coupleRepository.findByUserId(userId)
+      if (!couple) {
+        throw new BadRequestException('User must be part of a couple to have preferences')
       }
       
-      return toApiFormat(preferences, 'UserPreference')
+      // Get user preferences by couple_id
+      const preferences = await prisma.user_preferences.findMany({
+        where: { couple_id: couple.id }
+      })
+      
+      if (!preferences.length) {
+        // Return empty preferences object
+        return { preferences: {} }
+      }
+      
+      // Convert preferences array to object
+      const preferencesObj = preferences.reduce((acc, pref) => {
+        if (!acc[pref.preference_type]) {
+          acc[pref.preference_type] = {}
+        }
+        acc[pref.preference_type][pref.preference_key] = pref.preference_value
+        return acc
+      }, {} as any)
+      
+      return { preferences: preferencesObj }
     })
   }
   
@@ -119,85 +109,154 @@ export class SettingsHandlerV2 extends BaseApiHandler {
       const userId = this.requireUserId()
       const data = await this.validateRequest(request, updatePreferencesSchema)
       
-      // Transform to database format
-      const dbData = toDbFormat(data, 'UserPreference')
+      // Get couple first
+      const couple = await this.coupleRepository.findByUserId(userId)
+      if (!couple) {
+        throw new BadRequestException('User must be part of a couple to have preferences')
+      }
       
-      // Update or create preferences
-      const preferences = await prisma.user_preferences.upsert({
-        where: { user_id: userId },
-        update: {
-          language: dbData.language,
-          timezone: dbData.timezone,
-          currency: dbData.currency,
-          date_format: dbData.dateFormat,
-          time_format: dbData.timeFormat,
-          first_day_of_week: dbData.firstDayOfWeek,
-          email_notifications: dbData.emailNotifications,
-          sms_notifications: dbData.smsNotifications,
-          push_notifications: dbData.pushNotifications,
-          reminder_settings: dbData.reminderSettings,
-          privacy_settings: dbData.privacy,
-          updated_at: new Date()
-        },
-        create: {
-          user_id: userId,
-          language: dbData.language || 'en',
-          timezone: dbData.timezone || 'UTC',
-          currency: dbData.currency || 'USD',
-          date_format: dbData.dateFormat || 'MM/DD/YYYY',
-          time_format: dbData.timeFormat || '12h',
-          first_day_of_week: dbData.firstDayOfWeek || 0,
-          email_notifications: dbData.emailNotifications ?? true,
-          sms_notifications: dbData.smsNotifications ?? false,
-          push_notifications: dbData.pushNotifications ?? true,
-          reminder_settings: dbData.reminderSettings || {
-            enabled: true,
-            daysBefore: 7,
-            timeOfDay: '09:00'
-          },
-          privacy_settings: dbData.privacy || {
-            showRsvpPublicly: true,
-            allowGuestUploads: true,
-            requirePhotoApproval: false
-          },
-          created_at: new Date(),
-          updated_at: new Date()
+      // Prepare preference updates
+      const updates = []
+      
+      // Convert flat object to preference entries
+      for (const [key, value] of Object.entries(data)) {
+        let preferenceType = 'general'
+        let preferenceKey = key
+        
+        // Categorize preferences
+        if (['emailNotifications', 'smsNotifications', 'pushNotifications'].includes(key)) {
+          preferenceType = 'notifications'
+        } else if (['language', 'timezone', 'currency', 'dateFormat', 'timeFormat', 'firstDayOfWeek'].includes(key)) {
+          preferenceType = 'localization'
+        } else if (key === 'reminderSettings') {
+          preferenceType = 'reminders'
+        } else if (key === 'privacy') {
+          preferenceType = 'privacy'
         }
-      })
+        
+        updates.push({
+          couple_id: couple.id,
+          preference_type: preferenceType,
+          preference_key: preferenceKey,
+          preference_value: value
+        })
+      }
       
-      return toApiFormat(preferences, 'UserPreference')
+      // Upsert each preference
+      const updatedPreferences = await Promise.all(
+        updates.map(update => 
+          prisma.user_preferences.upsert({
+            where: {
+              couple_id_preference_type_preference_key: {
+                couple_id: update.couple_id,
+                preference_type: update.preference_type,
+                preference_key: update.preference_key
+              }
+            },
+            update: {
+              preference_value: update.preference_value,
+              updated_at: new Date()
+            },
+            create: update
+          })
+        )
+      )
+      
+      // Convert back to object format
+      const preferencesObj = updatedPreferences.reduce((acc, pref) => {
+        if (!acc[pref.preference_type]) {
+          acc[pref.preference_type] = {}
+        }
+        acc[pref.preference_type][pref.preference_key] = pref.preference_value
+        return acc
+      }, {} as any)
+      
+      return { preferences: preferencesObj }
     })
   }
   
   // Wedding details methods
   async getWeddingDetails(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
+      const userId = this.requireUserId()
       
-      const couple = await prisma.couples.findUnique({
-        where: { id: coupleId }
-      })
+      // Use repository to get couple data
+      const couple = await this.coupleRepository.findByUserId(userId)
       
-      if (!couple) {
-        throw new NotFoundException('Wedding details not found')
+      if (couple) {
+        // Transform couple data to wedding details format
+        return {
+          partnerOneName: couple.partner1Name,
+          partnerTwoName: couple.partner2Name,
+          weddingDate: couple.weddingDate?.toISOString(),
+          venue: couple.venueLocation ? {
+            name: couple.venueName || couple.venueLocation,
+            city: couple.venueLocation,
+            state: '',
+            country: '',
+            address: ''
+          } : null,
+          ceremonyTime: null,
+          receptionTime: null,
+          guestCount: couple.guestCountEstimate,
+          budget: couple.budget,
+          theme: couple.weddingStyle,
+          primaryColor: null,
+          secondaryColor: null,
+          website: null,
+          hashtag: null,
+          story: null
+        }
       }
       
-      // Transform couple data to wedding details format
+      // If no couple data, try to get from onboarding progress
+      const { getOnboardingState } = await import('@/lib/onboarding')
+      const onboardingState = await getOnboardingState(userId)
+      
+      if (onboardingState.stepData) {
+        const { mapOnboardingToSettings } = await import('@/lib/onboarding-mapping')
+        const mappedSettings = mapOnboardingToSettings(onboardingState.stepData)
+        
+        return {
+          partnerOneName: mappedSettings.partner1Name || '',
+          partnerTwoName: mappedSettings.partner2Name || '',
+          weddingDate: mappedSettings.weddingDate || null,
+          venue: mappedSettings.location ? {
+            name: mappedSettings.venue || `TBD - ${mappedSettings.location} Venue`,
+            city: mappedSettings.location,
+            state: '',
+            country: '',
+            address: ''
+          } : null,
+          ceremonyTime: null,
+          receptionTime: null,
+          guestCount: mappedSettings.expectedGuests || 0,
+          budget: mappedSettings.totalBudget || 0,
+          theme: mappedSettings.weddingStyle || '',
+          primaryColor: null,
+          secondaryColor: null,
+          website: null,
+          hashtag: null,
+          story: null
+        }
+      }
+      
+      // Return empty data if neither couple nor onboarding data exists
       return {
-        partnerOneName: couple.partner1_name,
-        partnerTwoName: couple.partner2_name,
-        weddingDate: couple.wedding_date?.toISOString(),
-        venue: couple.venue_details as any,
-        ceremonyTime: couple.ceremony_time,
-        receptionTime: couple.reception_time,
-        guestCount: couple.estimated_guests,
-        budget: couple.total_budget,
-        theme: couple.wedding_theme,
-        primaryColor: couple.primary_color,
-        secondaryColor: couple.secondary_color,
-        website: couple.wedding_website,
-        hashtag: couple.wedding_hashtag,
-        story: couple.our_story
+        partnerOneName: '',
+        partnerTwoName: '',
+        weddingDate: null,
+        venue: null,
+        ceremonyTime: null,
+        receptionTime: null,
+        guestCount: 0,
+        budget: 0,
+        theme: '',
+        primaryColor: null,
+        secondaryColor: null,
+        website: null,
+        hashtag: null,
+        story: null
       }
     })
   }
@@ -208,43 +267,43 @@ export class SettingsHandlerV2 extends BaseApiHandler {
       const data = await this.validateRequest(request, updateWeddingDetailsSchema)
       
       // Update couple details
-      const updatedCouple = await prisma.couples.update({
+      const updatedCouple = await prisma.couple.update({
         where: { id: coupleId },
         data: {
-          partner1_name: data.partnerOneName,
-          partner2_name: data.partnerTwoName,
-          wedding_date: data.weddingDate ? new Date(data.weddingDate) : undefined,
-          venue_details: data.venue,
-          ceremony_time: data.ceremonyTime,
-          reception_time: data.receptionTime,
-          estimated_guests: data.guestCount,
-          total_budget: data.budget,
-          wedding_theme: data.theme,
-          primary_color: data.primaryColor,
-          secondary_color: data.secondaryColor,
-          wedding_website: data.website,
-          wedding_hashtag: data.hashtag,
-          our_story: data.story,
-          updated_at: new Date()
+          partner1Name: data.partnerOneName,
+          partner2Name: data.partnerTwoName,
+          weddingDate: data.weddingDate ? new Date(data.weddingDate) : undefined,
+          venueName: data.venue?.name,
+          venueLocation: data.venue ? `${data.venue.city}, ${data.venue.state}` : undefined,
+          guestCountEstimate: data.guestCount,
+          totalBudget: data.budget,
+          weddingStyle: data.theme,
+          updatedAt: new Date()
         }
       })
       
       // Return in the same format
       return {
-        partnerOneName: updatedCouple.partner1_name,
-        partnerTwoName: updatedCouple.partner2_name,
-        weddingDate: updatedCouple.wedding_date?.toISOString(),
-        venue: updatedCouple.venue_details as any,
-        ceremonyTime: updatedCouple.ceremony_time,
-        receptionTime: updatedCouple.reception_time,
-        guestCount: updatedCouple.estimated_guests,
-        budget: updatedCouple.total_budget,
-        theme: updatedCouple.wedding_theme,
-        primaryColor: updatedCouple.primary_color,
-        secondaryColor: updatedCouple.secondary_color,
-        website: updatedCouple.wedding_website,
-        hashtag: updatedCouple.wedding_hashtag,
-        story: updatedCouple.our_story
+        partnerOneName: updatedCouple.partner1Name,
+        partnerTwoName: updatedCouple.partner2Name,
+        weddingDate: updatedCouple.weddingDate?.toISOString(),
+        venue: updatedCouple.venueName ? {
+          name: updatedCouple.venueName,
+          city: updatedCouple.venueLocation?.split(',')[0]?.trim() || '',
+          state: updatedCouple.venueLocation?.split(',')[1]?.trim() || '',
+          country: '',
+          address: ''
+        } : null,
+        ceremonyTime: null,
+        receptionTime: null,
+        guestCount: updatedCouple.guestCountEstimate,
+        budget: updatedCouple.totalBudget,
+        theme: updatedCouple.weddingStyle,
+        primaryColor: null,
+        secondaryColor: null,
+        website: null,
+        hashtag: null,
+        story: null
       }
     })
   }
@@ -254,180 +313,30 @@ export class SettingsHandlerV2 extends BaseApiHandler {
     return this.handleRequest(request, async () => {
       const coupleId = this.requireCoupleId()
       
-      const collaborators = await prisma.couple_collaborators.findMany({
-        where: { couple_id: coupleId },
-        include: {
-          users: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              image_url: true
-            }
-          }
-        },
-        orderBy: { created_at: 'desc' }
-      })
-      
-      return collaborators.map(collab => ({
-        id: collab.id,
-        userId: collab.user_id,
-        email: collab.users?.email,
-        name: collab.users?.name,
-        imageUrl: collab.users?.image_url,
-        role: collab.role,
-        permissions: collab.permissions,
-        invitedAt: collab.created_at.toISOString(),
-        acceptedAt: collab.accepted_at?.toISOString()
-      }))
+      // Note: Collaborators feature not yet implemented in schema
+      // Return empty array for now
+      return []
     })
   }
   
   async inviteCollaborator(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      const data = await this.validateRequest(request, createCollaboratorSchema)
-      
-      // Check if user exists
-      const invitedUser = await prisma.users.findUnique({
-        where: { email: data.email }
-      })
-      
-      if (!invitedUser) {
-        // Create invitation record for non-existing user
-        const invitation = await prisma.couple_invitations.create({
-          data: {
-            couple_id: coupleId,
-            email: data.email,
-            role: data.role,
-            permissions: data.permissions,
-            token: crypto.randomBytes(32).toString('hex'),
-            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-            created_at: new Date()
-          }
-        })
-        
-        // TODO: Send invitation email
-        
-        return {
-          success: true,
-          invitation: {
-            id: invitation.id,
-            email: invitation.email,
-            role: invitation.role,
-            expiresAt: invitation.expires_at.toISOString()
-          }
-        }
-      }
-      
-      // Check if already a collaborator
-      const existingCollaborator = await prisma.couple_collaborators.findFirst({
-        where: {
-          couple_id: coupleId,
-          user_id: invitedUser.id
-        }
-      })
-      
-      if (existingCollaborator) {
-        throw new BadRequestException('User is already a collaborator')
-      }
-      
-      // Add as collaborator
-      const collaborator = await prisma.couple_collaborators.create({
-        data: {
-          couple_id: coupleId,
-          user_id: invitedUser.id,
-          role: data.role,
-          permissions: data.permissions,
-          accepted_at: new Date(), // Auto-accept for existing users
-          created_at: new Date(),
-          updated_at: new Date()
-        }
-      })
-      
-      return {
-        success: true,
-        collaborator: {
-          id: collaborator.id,
-          userId: collaborator.user_id,
-          email: invitedUser.email,
-          role: collaborator.role,
-          permissions: collaborator.permissions
-        }
-      }
+      // Note: Collaborators feature not yet implemented in schema
+      throw new BadRequestException('Collaborators feature not yet available')
     })
   }
   
   async updateCollaborator(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      const data = await this.validateRequest(request, updateCollaboratorSchema)
-      
-      // Check if collaborator exists and belongs to this couple
-      const existingCollaborator = await prisma.couple_collaborators.findFirst({
-        where: {
-          id: id,
-          couple_id: coupleId
-        }
-      })
-      
-      if (!existingCollaborator) {
-        throw new NotFoundException('Collaborator not found')
-      }
-      
-      const updatedCollaborator = await prisma.couple_collaborators.update({
-        where: { id },
-        data: {
-          role: data.role,
-          permissions: data.permissions,
-          updated_at: new Date()
-        },
-        include: {
-          users: {
-            select: {
-              id: true,
-              email: true,
-              name: true
-            }
-          }
-        }
-      })
-      
-      return {
-        id: updatedCollaborator.id,
-        userId: updatedCollaborator.user_id,
-        email: updatedCollaborator.users?.email,
-        name: updatedCollaborator.users?.name,
-        role: updatedCollaborator.role,
-        permissions: updatedCollaborator.permissions
-      }
+      // Note: Collaborators feature not yet implemented in schema
+      throw new BadRequestException('Collaborators feature not yet available')
     })
   }
   
   async removeCollaborator(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      
-      // Check if collaborator exists and belongs to this couple
-      const existingCollaborator = await prisma.couple_collaborators.findFirst({
-        where: {
-          id: id,
-          couple_id: coupleId
-        }
-      })
-      
-      if (!existingCollaborator) {
-        throw new NotFoundException('Collaborator not found')
-      }
-      
-      await prisma.couple_collaborators.delete({
-        where: { id }
-      })
-      
-      return { success: true }
+      // Note: Collaborators feature not yet implemented in schema
+      throw new BadRequestException('Collaborators feature not yet available')
     })
   }
 }
-
-// Import crypto for invitation tokens
-import crypto from 'crypto'

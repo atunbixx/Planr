@@ -3,7 +3,7 @@ import { BaseAPIHandler } from '../base-handler'
 import { vendorService } from '@/lib/services/vendor.service'
 import { z } from 'zod'
 import { getSupabase } from '@/lib/supabase'
-import { CoupleService } from '@/lib/db/services/couple.service'
+import { CoupleService } from '@/features/couples'
 
 // Validation schemas
 const createCategorySchema = z.object({

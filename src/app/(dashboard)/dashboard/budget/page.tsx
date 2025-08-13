@@ -5,7 +5,7 @@ import { useSupabaseAuth } from '@/lib/auth/client'
 import BudgetContent from './components/BudgetContent'
 import { useLocale } from '@/providers/LocaleProvider'
 import type { LocaleCode } from '@/lib/localization'
-import { api } from '@/lib/api/client'
+import { enterpriseApi, type BudgetSummaryResponse } from '@/lib/api/enterprise-client'
 
 interface BudgetCategory {
   id: string
@@ -54,31 +54,26 @@ export default function BudgetPage() {
       setLoading(true)
       setError(null)
 
-      const response = await api.budget.summary()
+      const data = await enterpriseApi.budget.getSummary()
       
-      if (response.success && response.data) {
-        const data = response.data
-        setBudgetData({
-          totalBudget: data.totalBudget,
-          totalSpent: data.totalSpent,
-          totalAllocated: data.totalAllocated,
-          remaining: data.totalRemaining,
-          spentPercentage: data.totalBudget > 0 ? (data.totalSpent / data.totalBudget) * 100 : 0
-        })
-        setCategories(data.categories.map(cat => ({
-          id: cat.id,
-          name: cat.name,
-          icon: cat.icon || '💰',
-          color: cat.color || '#667eea',
-          allocatedAmount: cat.allocatedAmount,
-          spentAmount: cat.spent,
-          priority: 'medium',
-          industryAveragePercentage: 0
-        })))
-        setExpenses([]) // Summary doesn't include expenses
-      } else {
-        setError('Failed to load budget data')
-      }
+      setBudgetData({
+        totalBudget: data.totalBudget,
+        totalSpent: data.totalSpent,
+        totalAllocated: data.totalAllocated,
+        remaining: data.totalRemaining,
+        spentPercentage: data.totalBudget > 0 ? (data.totalSpent / data.totalBudget) * 100 : 0
+      })
+      setCategories(data.categories.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon || '💰',
+        color: cat.color || '#667eea',
+        allocatedAmount: cat.allocatedAmount,
+        spentAmount: cat.spent,
+        priority: 'medium',
+        industryAveragePercentage: 0
+      })))
+      setExpenses([]) // Summary doesn't include expenses
     } catch (err) {
       console.error('Error in fetchBudgetData:', err)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')

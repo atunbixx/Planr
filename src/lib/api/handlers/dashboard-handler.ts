@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BaseAPIHandler } from '../base-handler'
 import { prisma } from '@/lib/prisma'
-import { CoupleService } from '@/lib/db/services/couple.service'
+import { CoupleService } from '@/features/couples'
 import { cache } from '@/lib/cache'
 import { getAdminClient } from '@/lib/supabase-admin-transformed'
 

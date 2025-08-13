@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+import { UserRepository } from '@/lib/repositories/UserRepository'
+import { GuestRepository } from '@/features/guests/repo'
+import { VendorRepository } from '@/features/vendors/repo'
+import { PhotoRepository } from '@/features/photos/repo'
+import { ChecklistRepository } from '@/features/checklist/repo'
+import { BudgetCategoryRepository } from '@/features/budget/repo'
+
+const coupleRepository = new CoupleRepository()
+const userRepository = new UserRepository()
+const guestRepository = new GuestRepository()
+const vendorRepository = new VendorRepository()
+const photoRepository = new PhotoRepository()
+const checklistRepository = new ChecklistRepository()
+const budgetCategoryRepository = new BudgetCategoryRepository()
 
 export async function DELETE() {
   try {
@@ -10,19 +25,15 @@ export async function DELETE() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Find the user in our database
-    const dbUser = await prisma.user.findUnique({
-      where: { supabase_user_id: user.id }
-    })
+    // Find the user in our database using repository
+    const dbUser = await userRepository.findBySupabaseUserId(user.id)
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get all couples for this user
-    const couples = await prisma.couple.findMany({
-      where: { userId: dbUser.id }
-    })
+    // Get all couples for this user using repository
+    const couples = await coupleRepository.findByUserId(dbUser.id)
 
     // Start transaction to delete all user data
     await prisma.$transaction(async (tx) => {
@@ -96,35 +107,40 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Find the user and count their data
-    const dbUser = await prisma.user.findUnique({
-      where: { supabase_user_id: user.id }
-    })
+    // Find the user using repository
+    const dbUser = await userRepository.findBySupabaseUserId(user.id)
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get couples with counts
-    const couples = await prisma.couple.findMany({
-      where: { userId: dbUser.id },
-      include: {
+    // Get couples using repository
+    const couples = await coupleRepository.findByUserId(dbUser.id)
+    
+    // Get counts for each couple using repositories
+    const couplesWithCounts = await Promise.all(couples.map(async (couple) => {
+      const [guestsCount, vendorsCount, photosCount] = await Promise.all([
+        guestRepository.countByCoupleId(couple.id),
+        vendorRepository.countByCoupleId(couple.id),
+        photoRepository.countByCoupleId(couple.id)
+      ])
+      
+      return {
+        ...couple,
         _count: {
-          select: {
-            guests: true,
-            vendors: true,
-            photos: true
-          }
+          guests: guestsCount,
+          vendors: vendorsCount,
+          photos: photosCount
         }
       }
-    })
+    }))
 
     // Calculate data summary
     const dataSummary = {
-      couplesCount: couples.length,
-      guestsCount: couples.reduce((sum: number, couple: any) => sum + (couple._count?.guests || 0), 0),
-      vendorsCount: couples.reduce((sum: number, couple: any) => sum + (couple._count?.vendors || 0), 0),
-      photosCount: couples.reduce((sum: number, couple: any) => sum + (couple._count?.photos || 0), 0)
+      couplesCount: couplesWithCounts.length,
+      guestsCount: couplesWithCounts.reduce((sum: number, couple: any) => sum + (couple._count?.guests || 0), 0),
+      vendorsCount: couplesWithCounts.reduce((sum: number, couple: any) => sum + (couple._count?.vendors || 0), 0),
+      photosCount: couplesWithCounts.reduce((sum: number, couple: any) => sum + (couple._count?.photos || 0), 0)
     }
 
     return NextResponse.json({

@@ -1,24 +1,18 @@
-import { BudgetExpensesHandler } from '@/lib/api/handlers/budget-handler'
+/**
+ * Budget API - Expense management
+ * GET /api/budget/expenses - Get budget expenses
+ * POST /api/budget/expenses - Create budget expense
+ */
 
-const handler = new BudgetExpensesHandler()
+import { NextRequest } from 'next/server'
+import { BudgetApiHandler } from '@/features/budget'
 
-export async function GET(request: Request) {
-  return handler.handle(request as any)
+const handler = new BudgetApiHandler()
+
+export async function GET(request: NextRequest) {
+  return handler.getBudgetExpenses(request)
 }
 
-export async function POST(request: Request) {
-  return handler.handle(request as any)
-}
-
-export async function PATCH(request: Request, context: any) {
-  return handler.handle(request as any, context)
-}
-
-export async function PUT(request: Request, context: any) {
-  // For backward compatibility, route PUT to PATCH
-  return handler.handle(request as any, context)
-}
-
-export async function DELETE(request: Request, context: any) {
-  return handler.handle(request as any, context)
+export async function POST(request: NextRequest) {
+  return handler.createBudgetExpense(request)
 }

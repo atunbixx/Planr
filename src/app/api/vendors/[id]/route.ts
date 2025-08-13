@@ -1,20 +1,23 @@
+/**
+ * Vendors API - Individual vendor management
+ * GET /api/vendors/[id] - Get vendor by ID
+ * PATCH /api/vendors/[id] - Update vendor
+ * DELETE /api/vendors/[id] - Delete vendor
+ */
+
 import { NextRequest } from 'next/server'
-import { VendorsHandler } from '@/lib/api/handlers/vendors-handler'
+import { VendorsApiHandler } from '@/features/vendors'
 
-const handler = new VendorsHandler()
+const handler = new VendorsApiHandler()
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const resolvedParams = await params
-  return handler.handle(request, { params: resolvedParams })
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  return handler.getVendorById(request, params)
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const resolvedParams = await params
-  return handler.handle(request, { params: resolvedParams })
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  return handler.updateVendor(request, params)
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  return handler.deleteVendor(request, params)
 }

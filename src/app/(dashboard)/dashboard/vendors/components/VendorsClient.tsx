@@ -6,35 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import AddVendorDialog from './AddVendorDialog'
 import VendorList from './VendorList'
-import { api } from '@/lib/api/client'
-
-interface Vendor {
-  id: string
-  businessName: string
-  contactName?: string
-  email?: string
-  phone?: string
-  website?: string
-  category: string
-  status: string
-  estimatedCost?: number
-  actualCost?: number
-  contractSigned: boolean
-  notes?: string
-}
+import { enterpriseApi, type VendorResponse } from '@/lib/api/enterprise-client'
 
 interface VendorStats {
-  total: number
-  potential: number
-  contacted: number
-  quoted: number
-  booked: number
-  completed: number
-}
-
-interface VendorCosts {
-  estimated: number
-  actual: number
+  totalVendors: number
+  byStatus: Record<string, number>
+  totalEstimatedCost: number
+  contractedVendors: number
+  pendingDeadlines: number
 }
 
 interface Category {
@@ -46,18 +25,13 @@ interface Category {
 
 export default function VendorsClient() {
   const { user, isSignedIn, isLoading } = useSupabaseAuth()
-  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [vendors, setVendors] = useState<VendorResponse[]>([])
   const [stats, setStats] = useState<VendorStats>({
-    total: 0,
-    potential: 0,
-    contacted: 0,
-    quoted: 0,
-    booked: 0,
-    completed: 0
-  })
-  const [costs, setCosts] = useState<VendorCosts>({
-    estimated: 0,
-    actual: 0
+    totalVendors: 0,
+    byStatus: {},
+    totalEstimatedCost: 0,
+    contractedVendors: 0,
+    pendingDeadlines: 0
   })
   const [categories] = useState<Category[]>([
     { id: 'venue', name: 'Venue', icon: '🏛️', color: '#8B5CF6' },
@@ -81,20 +55,15 @@ export default function VendorsClient() {
       setLoading(true)
       setError(null)
       
-      const response = await api.vendors.list()
+      // Fetch vendors and stats in parallel
+      const [vendorsResponse, statsResponse] = await Promise.all([
+        enterpriseApi.vendors.list(),
+        enterpriseApi.vendors.getStats()
+      ])
       
-      if (response.success && response.data) {
-        setVendors(response.data.vendors || [])
-        if (response.data.stats) {
-          setStats(response.data.stats)
-        }
-        if (response.data.costs) {
-          setCosts(response.data.costs)
-        }
-        // Categories are static for now
-      } else {
-        setError('Failed to load vendors')
-      }
+      setVendors(vendorsResponse.data)
+      setStats(statsResponse)
+      
     } catch (err) {
       console.error('Error fetching vendors:', err)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
@@ -140,25 +109,25 @@ export default function VendorsClient() {
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p data-testid="total-vendors" className="text-3xl font-light text-gray-900">{stats?.total || 0}</p>
+          <p data-testid="total-vendors" className="text-3xl font-light text-gray-900">{stats?.totalVendors || 0}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Total Vendors</p>
         </div>
 
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-[#7a9b7f]">{stats?.booked || 0}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Booked</p>
+          <p className="text-3xl font-light text-[#7a9b7f]">{stats?.contractedVendors || 0}</p>
+          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Contracted</p>
         </div>
 
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-amber-600">{(stats?.contacted || 0) + (stats?.quoted || 0)}</p>
+          <p className="text-3xl font-light text-amber-600">{stats?.pendingDeadlines || 0}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Pending</p>
-          <p className="text-xs font-light text-gray-500 mt-1">In discussion</p>
+          <p className="text-xs font-light text-gray-500 mt-1">Deadlines</p>
         </div>
 
         <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-gray-900">${(costs?.estimated || 0).toLocaleString()}</p>
+          <p className="text-3xl font-light text-gray-900">${(stats?.totalEstimatedCost || 0).toLocaleString()}</p>
           <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Estimated Cost</p>
-          <p className="text-xs font-light text-gray-500 mt-1">Actual: ${(costs?.actual || 0).toLocaleString()}</p>
+          <p className="text-xs font-light text-gray-500 mt-1">Total budget</p>
         </div>
       </div>
 

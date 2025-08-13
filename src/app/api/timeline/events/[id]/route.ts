@@ -1,13 +1,15 @@
 'use server'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+const coupleRepository = new CoupleRepository()
 
 async function getCoupleId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser()
@@ -16,17 +18,8 @@ async function getCoupleId(): Promise<string> {
     throw new Error('Unauthorized')
   }
 
-  // Find couple by user ID
-  const couple = await prisma.wedding_couples.findFirst({
-    where: {
-      OR: [
-        { partner1_user_id: user.id },
-        { partner2_user_id: user.id },
-        { partner1_email: user.email },
-        { partner2_email: user.email }
-      ]
-    }
-  })
+  // Find couple by user ID using repository
+  const couple = await coupleRepository.findByUserId(user.id)
 
   if (!couple) {
     throw new Error('No couple found for user')

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/server'
-import { getAdminClient } from '@/lib/supabase-admin-transformed'
+import { VendorRepository } from '@/features/vendors/repo'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+
+const coupleRepository = new CoupleRepository()
+const vendorRepository = new VendorRepository()
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,78 +17,60 @@ export async function POST(request: NextRequest) {
     console.log('Creating vendor with admin privileges:', body)
     console.log('User:', user.id)
 
-    // Get user's couple data using admin client
-    const supabase = getAdminClient()
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select(`
-        id,
-        wedding_couples (id)
-      `)
-      .eq('supabaseUserId', user.id)
-      .single()
-
-    console.log('User lookup result:', { userData, userError })
-
-    if (userError) {
-      return NextResponse.json({ 
-        error: 'Failed to find user profile',
-        details: userError.message 
-      }, { status: 400 })
-    }
-
-    if (!userData?.wedding_couples?.[0]) {
+    // Get user's couple data using repository
+    const couple = await coupleRepository.findByUserId(user.id)
+    
+    if (!couple) {
       return NextResponse.json({ 
         error: 'No couple data found. Please complete onboarding first.',
         redirect: '/onboarding'
       }, { status: 404 })
     }
 
-    const coupleId = userData.wedding_couples[0].id
+    const coupleId = couple.id
     console.log('Found couple ID:', coupleId)
 
-    // Create new vendor using admin client (bypasses RLS)
+    // Create new vendor using repository
     const vendorData = {
       coupleId: coupleId,
       name: body.name,
-      categoryId: body.categoryId || null,
+      category: body.category || 'other',
+      subcategory: body.subcategory,
       contactName: body.contactName || null,
-      phone: body.phone || null,
       email: body.email || null,
-      address: body.address || null,
+      phone: body.phone || null,
       website: body.website || null,
-      status: body.status || 'potential',
-      priority: body.priority || 'medium',
-      rating: body.rating || null,
+      businessAddress: body.address || null,
+      description: body.description,
+      specialties: body.specialties || [],
+      priceRange: body.priceRange || 'medium',
       estimatedCost: body.estimatedCost ? Number(body.estimatedCost) : null,
-      actualCost: body.actualCost ? Number(body.actualCost) : null,
+      currency: body.currency || 'USD',
+      status: body.status || 'potential',
+      contractSigned: body.contractSigned || false,
+      contractDate: body.contractDate,
+      contractAmount: body.actualCost ? Number(body.actualCost) : null,
+      serviceDate: body.serviceDate,
+      bookingDeadline: body.bookingDeadline,
+      rating: body.rating || null,
+      reviewNotes: body.reviewNotes,
+      tags: body.tags || [],
       notes: body.notes || null,
-      meetingDate: body.meetingDate || null,
-      contractSigned: body.contractSigned || false
+      priority: body.priority || 'medium',
+      isRecommended: body.isRecommended || false,
+      externalId: body.externalId,
+      source: body.source || 'manual'
     }
 
     console.log('Inserting vendor data:', vendorData)
 
-    const { data: vendor, error } = await supabase
-      .from('vendors')
-      .insert(vendorData)
-      .select(`
-        *,
-        vendor_categories (
-          id,
-          name,
-          icon,
-          color
-        )
-      `)
-      .single()
+    // Create vendor using repository
+    const vendor = await vendorRepository.create(vendorData)
 
-    if (error) {
-      console.error('Error creating vendor:', error)
+    if (!vendor) {
+      console.error('Error creating vendor')
       return NextResponse.json({
-        error: 'Failed to create vendor',
-        details: error.message,
-        code: error.code
+        error: 'Failed to create vendor'
       }, { status: 500 })
     }
 
@@ -112,44 +98,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's couple data
-    const supabase = getAdminClient()
-    const { data: userData } = await supabase
-      .from('users')
-      .select(`
-        wedding_couples (id)
-      `)
-      .eq('supabaseUserId', user.id)
-      .single()
-
-    if (!userData?.wedding_couples?.[0]) {
+    // Get user's couple data using repository
+    const couple = await coupleRepository.findByUserId(user.id)
+    
+    if (!couple) {
       return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
     }
 
-    const coupleId = userData.wedding_couples[0].id
+    const coupleId = couple.id
 
-    // Get vendors for this couple using admin client
-    const { data: vendors, error } = await supabase
-      .from('vendors')
-      .select(`
-        *,
-        vendor_categories (
-          id,
-          name,
-          icon,
-          color
-        )
-      `)
-      .eq('coupleId', coupleId)
-      .order('createdAt', { ascending: false })
-
-    if (error) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to fetch vendors',
-        details: error.message
-      }, { status: 400 })
-    }
+    // Get vendors for this couple using repository
+    const vendors = await vendorRepository.findByCoupleId(coupleId)
 
     return NextResponse.json({
       success: true,
@@ -160,8 +119,8 @@ export async function GET() {
           totalVendors: vendors?.length || 0,
           bookedVendors: vendors?.filter(v => v.status === 'booked').length || 0,
           pendingVendors: vendors?.filter(v => ['potential', 'contacted', 'quote_requested', 'in_discussion'].includes(v.status)).length || 0,
-          totalEstimatedCost: vendors?.reduce((sum, v) => sum + (v.estimatedCost || 0), 0) || 0,
-          totalActualCost: vendors?.reduce((sum, v) => sum + (v.actualCost || 0), 0) || 0,
+          totalEstimatedCost: vendors?.reduce((sum, v) => sum + (Number(v.estimatedCost) || 0), 0) || 0,
+          totalActualCost: vendors?.reduce((sum, v) => sum + (Number(v.contractAmount) || 0), 0) || 0,
           contractsSigned: vendors?.filter(v => v.contractSigned).length || 0
         }
       }

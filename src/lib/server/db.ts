@@ -3,6 +3,9 @@ import { z } from 'zod'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { calculatePercentage } from '@/lib/utils'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+
+const coupleRepository = new CoupleRepository()
 
 // Input validation schemas
 const PaginationSchema = z.object({
@@ -72,40 +75,23 @@ export async function getCurrentUserCouple() {
     throw new Error('User not found in database')
   }
 
-  // Get couple data separately using partner1_user_id field
-  const coupleData = await prisma.wedding_couples.findFirst({
-    where: {
-      OR: [
-        { partner1_user_id: userData.id },
-        { partner2_user_id: userData.id }
-      ]
-    },
-    select: {
-      id: true,
-      partner1_name: true,
-      partner2_name: true,
-      wedding_date: true,
-      venue: true,
-      total_budget: true,
-      currency: true,
-      onboarding_completed: true
-    }
-  })
-
+  // Get couple data separately using repository
+  const fullCoupleData = await coupleRepository.findByUserId(userData.id)
+  
+  // Return couple data directly without unnecessary field mapping
   return {
     user: userData,
-    couple: coupleData ? {
-      id: coupleData.id,
-      partner1Name: coupleData.partner1_name,
-      partner2Name: coupleData.partner2_name,
-      weddingDate: coupleData.wedding_date,
-      venueName: coupleData.venue,
-      venueLocation: null, // This field doesn't exist in wedding_couples
-      totalBudget: coupleData.total_budget,
-      currency: coupleData.currency,
-      onboardingCompleted: coupleData.onboarding_completed
+    couple: fullCoupleData ? {
+      id: fullCoupleData.id,
+      partner1Name: fullCoupleData.partner1Name,
+      partner2Name: fullCoupleData.partner2Name,
+      weddingDate: fullCoupleData.weddingDate,
+      venueName: fullCoupleData.venueName,
+      totalBudget: fullCoupleData.totalBudget,
+      currency: fullCoupleData.currency,
+      onboardingCompleted: fullCoupleData.onboardingCompleted
     } : null,
-    coupleId: coupleData?.id || null
+    coupleId: fullCoupleData?.id || null
   }
 }
 
@@ -566,10 +552,7 @@ export async function getDashboardStats() {
         where: { coupleId: coupleId },
         _sum: { amount: true }
       }),
-      prisma.wedding_couples.findUnique({
-        where: { id: coupleId },
-        select: { total_budget: true }
-      })
+      coupleRepository.findById(coupleId).then(couple => ({ total_budget: couple?.totalBudget }))
     ]),
     
     // Task stats (if tasks table exists)

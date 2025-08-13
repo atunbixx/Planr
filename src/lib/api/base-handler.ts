@@ -3,6 +3,10 @@ import { z } from 'zod'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { prisma } from '@/lib/prisma'
 import { toApiFormat, toDbFormat, ModelName } from '@/lib/db/transformations'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+import { BudgetRepository } from '@/lib/repositories/BudgetRepository'
+import { VendorRepository } from '@/lib/repositories/VendorRepository'
+import { GuestRepository } from '@/lib/repositories/GuestRepository'
 
 export interface ApiResponse<T = any> {
   success: boolean
@@ -26,6 +30,12 @@ export interface AuthContext {
 export abstract class BaseApiHandler {
   protected model?: ModelName
   protected authContext?: AuthContext
+  
+  // Repository instances - ONLY way to access data
+  protected coupleRepo = new CoupleRepository()
+  protected budgetRepo = new BudgetRepository()
+  protected vendorRepo = new VendorRepository()
+  protected guestRepo = new GuestRepository()
   
   /**
    * Main request handler with automatic field transformation
@@ -121,16 +131,8 @@ export abstract class BaseApiHandler {
       throw new UnauthorizedException('Authentication required')
     }
     
-    // Get user's couple information
-    const couple = await prisma.couple.findFirst({
-      where: {
-        OR: [
-          { partner1_user_id: user.id },
-          { partner2_user_id: user.id },
-          { userId: user.id }
-        ]
-      }
-    })
+    // Get user's couple information using repository
+    const couple = await this.coupleRepo.findByUserId(user.id)
     
     return {
       userId: user.id,
@@ -140,11 +142,21 @@ export abstract class BaseApiHandler {
   }
   
   /**
+   * Get user ID from auth context (with validation)
+   */
+  protected requireUserId(): string {
+    if (!this.authContext?.userId) {
+      throw new UnauthorizedException('Authentication required')
+    }
+    return this.authContext.userId
+  }
+
+  /**
    * Get couple ID from auth context (with validation)
    */
   protected requireCoupleId(): string {
     if (!this.authContext?.coupleId) {
-      throw new BadRequestException('Onboarding must be completed to access this resource')
+      throw new BadRequestException('Please complete your wedding setup to access this feature')
     }
     return this.authContext.coupleId
   }

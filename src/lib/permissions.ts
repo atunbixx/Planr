@@ -1,4 +1,7 @@
 import { prisma } from '@/lib/prisma'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+
+const coupleRepository = new CoupleRepository()
 
 export type Permission = 
   | 'view'
@@ -30,14 +33,7 @@ export async function checkUserPermission(
     }
 
     // Check if user is a wedding couple owner
-    const weddingCouple = await prisma.couples.findFirst({
-      where: {
-        OR: [
-          { partner1_user_id: userId },
-          { partner2_user_id: userId }
-        ]
-      }
-    })
+    const weddingCouple = await coupleRepository.findByUserId(userId)
 
     if (weddingCouple) {
       // Wedding couple owners have all permissions
@@ -99,14 +95,7 @@ export async function getCoupleIdForUser(userId: string): Promise<string | null>
 
     if (couple) {
       // Find the couples record
-      const weddingCouple = await prisma.couples.findFirst({
-        where: {
-          OR: [
-            { partner1_user_id: userId },
-            { partner2_user_id: userId }
-          ]
-        }
-      })
+      const weddingCouple = await coupleRepository.findByUserId(userId)
       return weddingCouple?.id || null
     }
 

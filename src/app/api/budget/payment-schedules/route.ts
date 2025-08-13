@@ -1,6 +1,9 @@
 'use server'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+import { VendorRepository } from '@/features/vendors/repo'
+import { BudgetCategoryRepository, BudgetExpenseRepository } from '@/features/budget/repo'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
@@ -9,6 +12,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+const coupleRepository = new CoupleRepository()
+const vendorRepository = new VendorRepository()
+const budgetCategoryRepository = new BudgetCategoryRepository()
+const budgetExpenseRepository = new BudgetExpenseRepository()
 
 // Validation schemas
 const paymentItemSchema = z.object({
@@ -35,17 +43,8 @@ async function getCoupleId(): Promise<string> {
     throw new Error('Unauthorized')
   }
 
-  // Find couple by user ID
-  const couple = await prisma.wedding_couples.findFirst({
-    where: {
-      OR: [
-        { partner1_user_id: user.id },
-        { partner2_user_id: user.id },
-        { partner1_email: user.email },
-        { partner2_email: user.email }
-      ]
-    }
-  })
+  // Find couple by user ID using repository
+  const couple = await coupleRepository.findByUserId(user.id)
 
   if (!couple) {
     throw new Error('No couple found for user')
@@ -68,69 +67,58 @@ export async function GET(request: NextRequest) {
     let paymentSchedules: any[] = []
 
     if (vendorId) {
-      // Get payment schedules from vendor payment_schedule field
-      const vendor = await prisma.couple_vendors.findFirst({
-        where: {
-          id: vendorId,
-          couple_id: coupleId
-        },
-        select: {
-          payment_schedule: true,
-          name: true,
-          estimated_cost: true
-        }
-      })
-
-      if (vendor && vendor.payment_schedule) {
+      // Get payment schedules from vendor using repository
+      const vendor = await vendorRepository.findById(vendorId)
+      
+      if (vendor && vendor.coupleId === coupleId && vendor.paymentSchedule) {
         paymentSchedules.push({
           id: `vendor_${vendorId}`,
           vendorId: vendorId,
           vendorName: vendor.name,
-          totalAmount: vendor.estimated_cost || 0,
+          totalAmount: vendor.estimatedCost || 0,
           currency: 'USD',
-          schedule: Array.isArray(vendor.payment_schedule) ? vendor.payment_schedule : []
+          schedule: Array.isArray(vendor.paymentSchedule) ? vendor.paymentSchedule : []
         })
       }
     }
 
     if (categoryId) {
-      // Get payment schedules from budget category
-      const category = await prisma.budgetCategories.findFirst({
-        where: {
-          id: categoryId,
-          coupleId: coupleId
-        },
-        include: {
-          budgetExpenses: {
-            where: {
-              paymentStatus: { in: ['pending', 'deposit_paid', 'partial'] }
-            },
-            orderBy: { dueDate: 'asc' }
-          }
-        }
-      })
-
-      if (category) {
-        // Create schedule from upcoming expenses
-        const schedule = category.budgetExpenses.map(expense => ({
-          id: expense.id,
-          description: expense.description,
-          amount: Number(expense.amount),
-          dueDate: expense.dueDate?.toISOString().split('T')[0] || '',
-          status: expense.paymentStatus === 'pending' ? 'pending' : 
-                  expense.paymentStatus === 'deposit_paid' ? 'paid' : 'pending',
-          notes: expense.notes
-        }))
-
-        paymentSchedules.push({
-          id: `category_${categoryId}`,
-          categoryId: categoryId,
-          categoryName: category.name,
-          totalAmount: Number(category.allocatedAmount || 0),
-          currency: 'USD',
-          schedule: schedule
+      // Get payment schedules from budget category using repository
+      const category = await budgetCategoryRepository.findById(categoryId)
+      
+      if (!category || category.coupleId !== coupleId) {
+        // Skip if category doesn't belong to this couple
+        return NextResponse.json({
+          success: true,
+          data: paymentSchedules
         })
       }
+      
+      // Get pending expenses for this category
+      const expenses = await budgetExpenseRepository.findByCategoryId(categoryId, {
+        paymentStatus: ['pending', 'deposit_paid', 'partial'],
+        orderBy: 'dueDate'
+      })
+
+      // Create schedule from upcoming expenses
+      const schedule = expenses.map(expense => ({
+        id: expense.id,
+        description: expense.description,
+        amount: Number(expense.amount),
+        dueDate: expense.dueDate?.toISOString().split('T')[0] || '',
+        status: expense.paymentStatus === 'pending' ? 'pending' : 
+                expense.paymentStatus === 'deposit_paid' ? 'paid' : 'pending',
+        notes: expense.notes
+      }))
+
+      paymentSchedules.push({
+        id: `category_${categoryId}`,
+        categoryId: categoryId,
+        categoryName: category.name,
+        totalAmount: Number(category.allocatedAmount || 0),
+        currency: 'USD',
+        schedule: schedule
+      })
     }
 
     return NextResponse.json({
@@ -154,17 +142,18 @@ export async function POST(request: NextRequest) {
     const validatedData = paymentScheduleSchema.parse(body)
 
     if (validatedData.vendorId) {
-      // Update vendor payment schedule
-      await prisma.couple_vendors.update({
-        where: { 
-          id: validatedData.vendorId,
-          couple_id: coupleId
-        },
-        data: {
-          payment_schedule: validatedData.schedule,
-          estimated_cost: validatedData.totalAmount,
-          updated_at: new Date()
-        }
+      // Update vendor payment schedule using repository
+      const vendor = await vendorRepository.findById(validatedData.vendorId)
+      if (!vendor || vendor.coupleId !== coupleId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Vendor not found'
+        }, { status: 404 })
+      }
+      
+      await vendorRepository.update(validatedData.vendorId, {
+        paymentSchedule: validatedData.schedule,
+        estimatedCost: validatedData.totalAmount
       })
 
       return NextResponse.json({
@@ -177,43 +166,33 @@ export async function POST(request: NextRequest) {
     }
 
     if (validatedData.categoryId) {
-      // Create budget expenses for each payment in schedule
-      const existingExpenses = await prisma.budgetExpenses.findMany({
-        where: {
-          categoryId: validatedData.categoryId,
-          coupleId: coupleId,
-          paymentStatus: { in: ['pending', 'deposit_paid', 'partial'] }
-        }
-      })
-
+      // Verify category belongs to couple
+      const category = await budgetCategoryRepository.findById(validatedData.categoryId)
+      if (!category || category.coupleId !== coupleId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Category not found'
+        }, { status: 404 })
+      }
+      
       // Delete existing pending expenses to replace with new schedule
-      await prisma.budgetExpenses.deleteMany({
-        where: {
-          categoryId: validatedData.categoryId,
-          coupleId: coupleId,
-          paymentStatus: 'pending'
-        }
-      })
+      await budgetExpenseRepository.deletePendingByCategoryId(validatedData.categoryId)
 
-      // Create new expenses for each payment
-      await Promise.all(
-        validatedData.schedule
-          .filter(item => item.status === 'pending')
-          .map(item => 
-            prisma.budgetExpenses.create({
-              data: {
-                coupleId: coupleId,
-                categoryId: validatedData.categoryId!,
-                description: item.description,
-                amount: item.amount,
-                dueDate: new Date(item.dueDate),
-                paymentStatus: 'pending',
-                notes: item.notes,
-                expenseType: 'planned'
-              }
-            })
-          )
-      )
+      // Create new expenses for each payment using repository
+      const pendingPayments = validatedData.schedule.filter(item => item.status === 'pending')
+      
+      for (const item of pendingPayments) {
+        await budgetExpenseRepository.create({
+          coupleId: coupleId,
+          categoryId: validatedData.categoryId!,
+          description: item.description,
+          amount: item.amount,
+          dueDate: new Date(item.dueDate),
+          paymentStatus: 'pending',
+          notes: item.notes,
+          expenseType: 'planned'
+        })
+      }
 
       return NextResponse.json({
         success: true,
@@ -262,47 +241,46 @@ export async function PUT(request: NextRequest) {
 
     if (id.startsWith('vendor_')) {
       const vendorId = id.replace('vendor_', '')
-      await prisma.couple_vendors.update({
-        where: { 
-          id: vendorId,
-          couple_id: coupleId
-        },
-        data: {
-          payment_schedule: validatedData.schedule,
-          estimated_cost: validatedData.totalAmount,
-          updated_at: new Date()
-        }
+      const vendor = await vendorRepository.findById(vendorId)
+      if (!vendor || vendor.coupleId !== coupleId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Vendor not found'
+        }, { status: 404 })
+      }
+      
+      await vendorRepository.update(vendorId, {
+        paymentSchedule: validatedData.schedule,
+        estimatedCost: validatedData.totalAmount
       })
     } else if (id.startsWith('category_')) {
       const categoryId = id.replace('category_', '')
       
+      // Verify category belongs to couple
+      const category = await budgetCategoryRepository.findById(categoryId)
+      if (!category || category.coupleId !== coupleId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Category not found'
+        }, { status: 404 })
+      }
+      
       // Update existing expenses and create new ones as needed
-      await prisma.budgetExpenses.deleteMany({
-        where: {
-          categoryId: categoryId,
-          coupleId: coupleId,
-          paymentStatus: 'pending'
-        }
-      })
+      await budgetExpenseRepository.deletePendingByCategoryId(categoryId)
 
-      await Promise.all(
-        validatedData.schedule
-          .filter(item => item.status === 'pending')
-          .map(item => 
-            prisma.budgetExpenses.create({
-              data: {
-                coupleId: coupleId,
-                categoryId: categoryId,
-                description: item.description,
-                amount: item.amount,
-                dueDate: new Date(item.dueDate),
-                paymentStatus: 'pending',
-                notes: item.notes,
-                expenseType: 'planned'
-              }
-            })
-          )
-      )
+      const pendingPayments = validatedData.schedule.filter(item => item.status === 'pending')
+      for (const item of pendingPayments) {
+        await budgetExpenseRepository.create({
+          coupleId: coupleId,
+          categoryId: categoryId,
+          description: item.description,
+          amount: item.amount,
+          dueDate: new Date(item.dueDate),
+          paymentStatus: 'pending',
+          notes: item.notes,
+          expenseType: 'planned'
+        })
+      }
     }
 
     return NextResponse.json({
@@ -341,25 +319,28 @@ export async function DELETE(request: NextRequest) {
 
     if (id.startsWith('vendor_')) {
       const vendorId = id.replace('vendor_', '')
-      await prisma.couple_vendors.update({
-        where: { 
-          id: vendorId,
-          couple_id: coupleId
-        },
-        data: {
-          payment_schedule: [],
-          updated_at: new Date()
-        }
+      const vendor = await vendorRepository.findById(vendorId)
+      if (!vendor || vendor.coupleId !== coupleId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Vendor not found'
+        }, { status: 404 })
+      }
+      
+      await vendorRepository.update(vendorId, {
+        paymentSchedule: []
       })
     } else if (id.startsWith('category_')) {
       const categoryId = id.replace('category_', '')
-      await prisma.budgetExpenses.deleteMany({
-        where: {
-          categoryId: categoryId,
-          coupleId: coupleId,
-          paymentStatus: 'pending'
-        }
-      })
+      const category = await budgetCategoryRepository.findById(categoryId)
+      if (!category || category.coupleId !== coupleId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Category not found'
+        }, { status: 404 })
+      }
+      
+      await budgetExpenseRepository.deletePendingByCategoryId(categoryId)
     }
 
     return NextResponse.json({

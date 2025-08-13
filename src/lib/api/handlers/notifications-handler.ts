@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BaseAPIHandler } from '../base-handler'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { CoupleService } from '@/lib/db/services/couple.service'
+import { CoupleService } from '@/features/couples'
 import { notificationService } from '@/lib/notifications/notification-service'
 import { NotificationCategory, NotificationPriority, NotificationType } from '@/lib/notifications/types'
 

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { api } from '@/lib/api/client'
+import { enterpriseApi } from '@/lib/api/enterprise-client'
 
 interface Category {
   id: string
@@ -48,7 +48,7 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
     setLoading(true)
 
     try {
-      const response = await api.budget.expenses.create({
+      const expense = await enterpriseApi.budget.expenses.create({
         description: formData.description,
         amount: Number(formData.amount),
         categoryId: formData.categoryId,
@@ -59,10 +59,9 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
         notes: formData.notes || undefined
       })
       
-      if (response.success && response.data) {
-        console.log('Expense created successfully:', response.data)
-        setOpen(false)
-        setFormData({
+      console.log('Expense created successfully:', expense)
+      setOpen(false)
+      setFormData({
           description: '',
           amount: '',
           categoryId: '',
@@ -73,10 +72,6 @@ export default function AddExpenseDialog({ categories, vendors }: AddExpenseDial
           notes: ''
         })
         router.refresh()
-      } else {
-        console.error('Error creating expense:', response)
-        alert('Failed to create expense. Please try again.')
-      }
     } catch (error) {
       console.error('Error creating expense:', error)
       alert('Failed to create expense. Please try again.')

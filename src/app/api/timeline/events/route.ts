@@ -1,7 +1,8 @@
 'use server'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+import { TimelineEventRepository } from '@/features/timeline/repo'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 
@@ -9,6 +10,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+const coupleRepository = new CoupleRepository()
+const timelineEventRepository = new TimelineEventRepository()
 
 // Validation schema
 const timelineEventSchema = z.object({
@@ -32,17 +36,8 @@ async function getCoupleId(): Promise<string> {
     throw new Error('Unauthorized')
   }
 
-  // Find couple by user ID
-  const couple = await prisma.wedding_couples.findFirst({
-    where: {
-      OR: [
-        { partner1_user_id: user.id },
-        { partner2_user_id: user.id },
-        { partner1_email: user.email },
-        { partner2_email: user.email }
-      ]
-    }
-  })
+  // Find couple by user ID using repository
+  const couple = await coupleRepository.findByUserId(user.id)
 
   if (!couple) {
     throw new Error('No couple found for user')
@@ -76,30 +71,39 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch timeline items
-    const timelineItems = await prisma.timeline_items.findMany({
-      where: whereClause,
-      orderBy: {
-        start_time: 'asc'
-      }
-    })
+    // Fetch timeline items using repository
+    let timelineItems = await timelineEventRepository.findByCoupleId(coupleId)
+    
+    // Apply date filter if provided
+    if (date) {
+      const startOfDay = new Date(date)
+      startOfDay.setHours(0, 0, 0, 0)
+      
+      const endOfDay = new Date(date)
+      endOfDay.setHours(23, 59, 59, 999)
+      
+      timelineItems = timelineItems.filter(item => {
+        const itemDate = new Date(item.startTime)
+        return itemDate >= startOfDay && itemDate <= endOfDay
+      })
+    }
 
     // Transform data to match frontend interface
     const transformedEvents = timelineItems.map(item => ({
       id: item.id,
       title: item.title,
       description: item.description,
-      startTime: item.start_time.toISOString(),
-      endTime: item.end_time?.toISOString(),
+      startTime: item.startTime instanceof Date ? item.startTime.toISOString() : item.startTime,
+      endTime: item.endTime ? (item.endTime instanceof Date ? item.endTime.toISOString() : item.endTime) : undefined,
       duration: item.duration,
       location: item.location,
       category: item.category,
-      vendorIds: item.vendor_ids || [],
+      vendorIds: item.vendorIds || [],
       status: item.status || 'scheduled',
       priority: item.priority || 'medium',
       notes: item.notes,
-      createdAt: item.created_at?.toISOString() || new Date().toISOString(),
-      updatedAt: item.updated_at?.toISOString() || new Date().toISOString()
+      createdAt: item.createdAt ? (item.createdAt instanceof Date ? item.createdAt.toISOString() : item.createdAt) : new Date().toISOString(),
+      updatedAt: item.updatedAt ? (item.updatedAt instanceof Date ? item.updatedAt.toISOString() : item.updatedAt) : new Date().toISOString()
     }))
 
     // Filter by vendor if specified
@@ -138,24 +142,20 @@ export async function POST(request: NextRequest) {
       duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)) // minutes
     }
 
-    // Create timeline item
-    const timelineItem = await prisma.timeline_items.create({
-      data: {
-        couple_id: coupleId,
-        title: validatedData.title,
-        description: validatedData.description,
-        start_time: new Date(validatedData.startTime),
-        end_time: validatedData.endTime ? new Date(validatedData.endTime) : new Date(validatedData.startTime),
-        duration: duration,
-        location: validatedData.location,
-        category: validatedData.category,
-        vendor_ids: validatedData.vendorIds,
-        status: validatedData.status,
-        priority: validatedData.priority,
-        notes: validatedData.notes,
-        created_at: new Date(),
-        updated_at: new Date()
-      }
+    // Create timeline item using repository
+    const timelineItem = await timelineEventRepository.create({
+      coupleId: coupleId,
+      title: validatedData.title,
+      description: validatedData.description,
+      startTime: new Date(validatedData.startTime),
+      endTime: validatedData.endTime ? new Date(validatedData.endTime) : new Date(validatedData.startTime),
+      duration: duration,
+      location: validatedData.location,
+      category: validatedData.category,
+      vendorIds: validatedData.vendorIds,
+      status: validatedData.status,
+      priority: validatedData.priority,
+      notes: validatedData.notes
     })
 
     // Transform response
@@ -211,15 +211,10 @@ export async function PUT(request: NextRequest) {
 
     const validatedData = timelineEventSchema.parse(updateData)
 
-    // Check if timeline item belongs to this couple
-    const existingItem = await prisma.timeline_items.findFirst({
-      where: {
-        id: id,
-        couple_id: coupleId
-      }
-    })
+    // Check if timeline item belongs to this couple using repository
+    const existingItem = await timelineEventRepository.findById(id)
 
-    if (!existingItem) {
+    if (!existingItem || existingItem.coupleId !== coupleId) {
       return NextResponse.json({
         success: false,
         error: 'Timeline event not found'
@@ -234,23 +229,19 @@ export async function PUT(request: NextRequest) {
       duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60)) // minutes
     }
 
-    // Update timeline item
-    const updatedItem = await prisma.timeline_items.update({
-      where: { id: id },
-      data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        start_time: new Date(validatedData.startTime),
-        end_time: validatedData.endTime ? new Date(validatedData.endTime) : new Date(validatedData.startTime),
-        duration: duration,
-        location: validatedData.location,
-        category: validatedData.category,
-        vendor_ids: validatedData.vendorIds,
-        status: validatedData.status,
-        priority: validatedData.priority,
-        notes: validatedData.notes,
-        updated_at: new Date()
-      }
+    // Update timeline item using repository
+    const updatedItem = await timelineEventRepository.update(id, {
+      title: validatedData.title,
+      description: validatedData.description,
+      startTime: new Date(validatedData.startTime),
+      endTime: validatedData.endTime ? new Date(validatedData.endTime) : new Date(validatedData.startTime),
+      duration: duration,
+      location: validatedData.location,
+      category: validatedData.category,
+      vendorIds: validatedData.vendorIds,
+      status: validatedData.status,
+      priority: validatedData.priority,
+      notes: validatedData.notes
     })
 
     // Transform response

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BaseAPIHandler } from '../base-handler'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { CoupleService } from '@/lib/db/services/couple.service'
+import { CoupleService } from '@/features/couples'
 import { v4 as uuidv4 } from 'uuid'
 
 // Validation schemas

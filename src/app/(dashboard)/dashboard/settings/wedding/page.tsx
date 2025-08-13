@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Heart } from 'lucide-react'
 import Link from 'next/link'
-import { api } from '@/lib/api/client'
+import { enterpriseApi } from '@/lib/api/enterprise-client'
 
 interface WeddingSettings {
   partner1Name: string
@@ -55,11 +55,8 @@ export default function WeddingSettingsPage() {
       })
 
       // Load existing wedding settings
-      const response = await api.settings.wedding.get()
-      console.log('Settings API response:', response)
-      
-      if (response.success && response.data) {
-        const wedding = response.data
+      try {
+        const wedding = await enterpriseApi.settings.wedding.get()
         console.log('Settings data received:', wedding)
         
         const newSettings = {
@@ -74,8 +71,74 @@ export default function WeddingSettingsPage() {
         }
         console.log('Setting new settings:', newSettings)
         setSettings(newSettings)
-      } else {
-        console.log('No wedding data found in response')
+      } catch (weddingError) {
+        console.log('No wedding data found, checking onboarding data...')
+        
+        // If no settings data, try to load from onboarding progress
+        try {
+          const onboardingResponse = await fetch('/api/user/onboarding-status')
+          if (onboardingResponse.ok) {
+            const onboardingData = await onboardingResponse.json()
+            
+            if (onboardingData.onboardingProgress && !onboardingData.onboardingProgress.done) {
+              // Load onboarding step data to pre-populate
+              const stepDataResponses = await Promise.allSettled([
+                fetch('/api/onboarding/profile'),
+                fetch('/api/onboarding/event'),
+                fetch('/api/onboarding/budget')
+              ])
+              
+              let onboardingSettings: any = {}
+              
+              // Process profile data
+              if (stepDataResponses[0].status === 'fulfilled') {
+                const profileResponse = await (stepDataResponses[0].value as Response).json()
+                if (profileResponse.success && profileResponse.stepData) {
+                  const profile = profileResponse.stepData
+                  onboardingSettings.partner1Name = profile.userName || ''
+                  onboardingSettings.partner2Name = profile.partnerName || ''
+                }
+              }
+              
+              // Process event data
+              if (stepDataResponses[1].status === 'fulfilled') {
+                const eventResponse = await (stepDataResponses[1].value as Response).json()
+                if (eventResponse.success && eventResponse.stepData) {
+                  const event = eventResponse.stepData
+                  onboardingSettings.weddingDate = event.weddingDate || ''
+                  onboardingSettings.location = event.city || ''
+                  onboardingSettings.expectedGuests = parseInt(event.estimatedGuests) || 0
+                  onboardingSettings.venue = event.city ? `TBD - ${event.city} Venue` : ''
+                }
+              }
+              
+              // Process budget data
+              if (stepDataResponses[2].status === 'fulfilled') {
+                const budgetResponse = await (stepDataResponses[2].value as Response).json()
+                if (budgetResponse.success && budgetResponse.stepData) {
+                  const budget = budgetResponse.stepData
+                  if (budget.exactBudget) {
+                    onboardingSettings.totalBudget = parseFloat(budget.exactBudget)
+                  } else if (budget.budgetTier) {
+                    // Map budget tiers to amounts
+                    const tierAmounts: Record<string, number> = {
+                      basic: 25000,
+                      standard: 50000,
+                      premium: 100000,
+                      luxury: 200000
+                    }
+                    onboardingSettings.totalBudget = tierAmounts[budget.budgetTier] || 50000
+                  }
+                }
+              }
+              
+              console.log('Pre-populating from onboarding:', onboardingSettings)
+              setSettings(prev => ({ ...prev, ...onboardingSettings }))
+            }
+          }
+        } catch (onboardingError) {
+          console.error('Error loading onboarding data:', onboardingError)
+        }
       }
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -87,7 +150,7 @@ export default function WeddingSettingsPage() {
   const saveSettings = async () => {
     setSaving(true)
     try {
-      const response = await api.settings.wedding.update({
+      await enterpriseApi.settings.wedding.update({
         partnerOneName: settings.partner1Name,
         partnerTwoName: settings.partner2Name,
         weddingDate: settings.weddingDate,
@@ -103,13 +166,9 @@ export default function WeddingSettingsPage() {
         theme: settings.weddingStyle
       })
 
-      if (response.success) {
-        alert('Wedding details saved successfully! You can now access all features.')
-        // Redirect back to where they came from (guests page) or dashboard
-        router.push('/dashboard/guests')
-      } else {
-        alert('Failed to save wedding details. Please try again.')
-      }
+      alert('Wedding details saved successfully! You can now access all features.')
+      // Redirect back to where they came from (guests page) or dashboard
+      router.push('/dashboard/guests')
     } catch (error) {
       console.error('Error saving wedding details:', error)
       alert(error instanceof Error ? error.message : 'Failed to save wedding details. Please try again.')

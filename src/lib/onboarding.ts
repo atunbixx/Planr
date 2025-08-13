@@ -195,31 +195,57 @@ export async function completeOnboarding(userId: string): Promise<void> {
     })
 
     if (!couple) {
-      // Create new couple record
+      // Create new couple record with all onboarding data
       transaction.push(
         prisma.couple.create({
           data: {
             userId,
             partner1Name: profileData.userName || 'Partner 1',
-            partner2Name: profileData.partnerName,
+            partner2Name: profileData.partnerName || '',
             weddingDate: eventData.weddingDate ? new Date(eventData.weddingDate) : null,
-            venueLocation: eventData.city,
+            venueLocation: eventData.city || '',
             guestCountEstimate: parseInt(eventData.estimatedGuests) || 100,
-            totalBudget: budgetData.exactBudget ? parseFloat(budgetData.exactBudget) : 50000,
+            totalBudget: budgetData.exactBudget ? parseFloat(budgetData.exactBudget) : 
+                        (budgetData.budgetTier ? 50000 : 25000), // Default based on tier selection
             currency: profileData.currency || 'USD',
             onboardingCompleted: true
           }
         })
       )
     } else {
-      // Update existing couple record
+      // Update existing couple record with onboarding data
+      const updateData: any = {
+        onboardingCompleted: true,
+        updatedAt: new Date()
+      }
+      
+      // Update with onboarding data if not already set
+      if (!couple.partner1Name && profileData.userName) {
+        updateData.partner1Name = profileData.userName
+      }
+      if (!couple.partner2Name && profileData.partnerName) {
+        updateData.partner2Name = profileData.partnerName
+      }
+      if (!couple.weddingDate && eventData.weddingDate) {
+        updateData.weddingDate = new Date(eventData.weddingDate)
+      }
+      if (!couple.venueLocation && eventData.city) {
+        updateData.venueLocation = eventData.city
+      }
+      if (!couple.guestCountEstimate && eventData.estimatedGuests) {
+        updateData.guestCountEstimate = parseInt(eventData.estimatedGuests)
+      }
+      if (!couple.totalBudget && (budgetData.exactBudget || budgetData.budgetTier)) {
+        updateData.totalBudget = budgetData.exactBudget ? parseFloat(budgetData.exactBudget) : 50000
+      }
+      if (!couple.currency && profileData.currency) {
+        updateData.currency = profileData.currency
+      }
+      
       transaction.push(
         prisma.couple.update({
           where: { id: couple.id },
-          data: {
-            onboardingCompleted: true,
-            updatedAt: new Date()
-          }
+          data: updateData
         })
       )
     }

@@ -11,7 +11,7 @@ import { useLocale } from '@/providers/LocaleProvider'
 import { formatDistanceToNow } from 'date-fns'
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton'
 import { StatCardSkeleton } from '@/components/ui/StatCardSkeleton'
-import { api } from '@/lib/api/client'
+import { enterpriseApi } from '@/lib/api/enterprise-client'
 import { useApiState } from '@/hooks/useApiState'
 import { LoadingCard } from '@/components/ui/loading'
 
@@ -61,7 +61,7 @@ export default function DashboardPage() {
       // Fetch dashboard stats (only if onboarding is completed)
       let statsData = null
       try {
-        statsData = await dashboardApi.execute(api.dashboard.stats())
+        statsData = await dashboardApi.execute(enterpriseApi.dashboard.getStats())
       } catch (dashboardError: any) {
         // If onboarding isn't completed, dashboard stats won't be available
         if (dashboardError?.message?.includes('Onboarding must be completed')) {
@@ -122,7 +122,7 @@ export default function DashboardPage() {
         dashboardApi.setData(mappedStats)
         
         // Fetch recent activity separately
-        const activityData = await activityApi.execute(api.dashboard.activity(10))
+        const activityData = await activityApi.execute(enterpriseApi.dashboard.getActivity(10))
         
         if (activityData) {
           dashboardApi.setData((prev: any) => ({

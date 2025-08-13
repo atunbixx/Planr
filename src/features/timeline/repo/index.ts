@@ -1,0 +1,1 @@
+export { TimelineEventRepository } from './timeline-event.repository'

@@ -1,19 +1,18 @@
-import { BudgetCategoriesHandler } from '@/lib/api/handlers/budget-handler'
+/**
+ * Budget API - Category management
+ * GET /api/budget/categories - Get budget categories
+ * POST /api/budget/categories - Create budget category
+ */
 
-const handler = new BudgetCategoriesHandler()
+import { NextRequest } from 'next/server'
+import { BudgetApiHandler } from '@/features/budget'
 
-export async function GET(request: Request) {
-  return handler.handle(request as any)
+const handler = new BudgetApiHandler()
+
+export async function GET(request: NextRequest) {
+  return handler.getBudgetCategories(request)
 }
 
-export async function POST(request: Request) {
-  return handler.handle(request as any)
-}
-
-export async function PATCH(request: Request, context: any) {
-  return handler.handle(request as any, context)
-}
-
-export async function DELETE(request: Request, context: any) {
-  return handler.handle(request as any, context)
+export async function POST(request: NextRequest) {
+  return handler.createBudgetCategory(request)
 }

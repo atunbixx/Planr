@@ -8,10 +8,8 @@ export class DashboardHandlerV2 extends BaseApiHandler {
     return this.handleRequest(request, async () => {
       const coupleId = this.requireCoupleId()
       
-      // Get couple information
-      const couple = await prisma.couple.findUnique({
-        where: { id: coupleId }
-      })
+      // Get couple information using repository
+      const couple = await this.coupleRepo.findById(coupleId)
       
       if (!couple) {
         throw new Error('Couple not found')
@@ -68,123 +66,25 @@ export class DashboardHandlerV2 extends BaseApiHandler {
   }
   
   private async getGuestStats(coupleId: string) {
-    const [total, invitations] = await Promise.all([
-      prisma.guest.count({
-        where: { coupleId: coupleId }
-      }),
-      prisma.invitation.groupBy({
-        by: ['status'],
-        where: { couple_id: coupleId },
-        _count: true
-      })
-    ])
-    
-    const stats = {
-      total,
-      confirmed: 0,
-      declined: 0,
-      pending: 0,
-      notInvited: 0
-    }
-    
-    invitations.forEach(stat => {
-      switch (stat.status) {
-        case 'confirmed':
-        case 'accepted':
-          stats.confirmed = stat._count
-          break
-        case 'declined':
-          stats.declined = stat._count
-          break
-        case 'pending':
-          stats.pending = stat._count
-          break
-      }
-    })
-    
-    return stats
+    return await this.guestRepo.getStats(coupleId)
   }
   
   private async getBudgetStats(coupleId: string) {
-    // Get couple for total budget
-    const couple = await prisma.couple.findUnique({
-      where: { id: coupleId },
-      select: { totalBudget: true }
-    })
-    
-    // Get category statistics
-    const categories = await prisma.budgetCategory.findMany({
-      where: { coupleId },
-      include: {
-        _count: {
-          select: { budgetExpenses: true }
-        }
-      }
-    })
-    
-    // Get expense totals
-    const expenses = await prisma.budgetExpense.aggregate({
-      where: { coupleId },
-      _sum: { amount: true },
-      _count: true
-    })
-    
-    const totalBudget = Number(couple?.totalBudget || 0)
-    const totalAllocated = categories.reduce((sum, cat) => sum + Number(cat.allocatedAmount || 0), 0)
-    const totalSpent = Number(expenses._sum.amount || 0)
+    const summary = await this.budgetRepo.getBudgetSummary(coupleId)
     
     return {
-      totalBudget,
-      totalAllocated,
-      totalSpent,
-      remaining: totalBudget - totalSpent,
-      percentageSpent: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
-      categoryCount: categories.length,
-      expenseCount: expenses._count
+      totalBudget: summary.totalBudget,
+      totalAllocated: summary.totalAllocated,
+      totalSpent: summary.totalSpent,
+      remaining: summary.totalRemaining,
+      percentageSpent: summary.spentPercentage,
+      categoryCount: summary.categories.length,
+      expenseCount: summary.recentExpenses.length
     }
   }
   
   private async getVendorStats(coupleId: string) {
-    const statusStats = await prisma.vendor.groupBy({
-      by: ['status'],
-      where: { coupleId: coupleId },
-      _count: true,
-      _sum: {
-        estimatedCost: true,
-        actualCost: true
-      }
-    })
-    
-    const stats = {
-      total: 0,
-      booked: 0,
-      contacted: 0,
-      pending: 0,
-      totalEstimatedCost: 0,
-      totalActualCost: 0
-    }
-    
-    statusStats.forEach(stat => {
-      stats.total += stat._count
-      stats.totalEstimatedCost += Number(stat._sum.estimatedCost || 0)
-      stats.totalActualCost += Number(stat._sum.actualCost || 0)
-      
-      switch (stat.status) {
-        case 'booked':
-          stats.booked = stat._count
-          break
-        case 'contacted':
-        case 'in_discussion':
-          stats.contacted += stat._count
-          break
-        case 'potential':
-        case 'quote_requested':
-          stats.pending += stat._count
-          break
-      }
-    })
-    
-    return stats
+    return await this.vendorRepo.getStats(coupleId)
   }
   
   private async getChecklistStats(coupleId: string) {
@@ -303,16 +203,16 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         recentPhotos
       ] = await Promise.all([
         // Recent guests
-        prisma.guests.findMany({
-          where: { couple_id: coupleId },
-          orderBy: { created_at: 'desc' },
+        prisma.guest.findMany({
+          where: { coupleId: coupleId },
+          orderBy: { createdAt: 'desc' },
           take: limit,
           select: {
             id: true,
-            first_name: true,
-            last_name: true,
-            created_at: true,
-            rsvp_status: true
+            firstName: true,
+            lastName: true,
+            createdAt: true,
+            rsvpStatus: true
           }
         }),
         // Recent expenses
@@ -334,36 +234,30 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           }
         }),
         // Recent messages
-        prisma.messages.findMany({
-          where: { couple_id: coupleId },
-          orderBy: { created_at: 'desc' },
+        prisma.message.findMany({
+          where: { coupleId: coupleId },
+          orderBy: { createdAt: 'desc' },
           take: limit,
           select: {
             id: true,
             subject: true,
             type: true,
             status: true,
-            created_at: true,
-            guests: {
-              select: {
-                first_name: true,
-                last_name: true
-              }
-            }
+            createdAt: true
           }
         }),
         // Recent photos
-        prisma.photos.findMany({
-          where: { couple_id: coupleId },
-          orderBy: { created_at: 'desc' },
+        prisma.photo.findMany({
+          where: { coupleId: coupleId },
+          orderBy: { createdAt: 'desc' },
           take: limit,
           select: {
             id: true,
             url: true,
-            thumbnail_url: true,
+            thumbnailUrl: true,
             caption: true,
-            created_at: true,
-            albums: {
+            createdAt: true,
+            photoAlbums: {
               select: {
                 name: true
               }
@@ -377,9 +271,9 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         ...recentGuests.map(guest => ({
           id: guest.id,
           type: 'guest' as const,
-          title: `${guest.first_name} ${guest.last_name}`,
-          description: `RSVP: ${guest.rsvp_status}`,
-          timestamp: guest.created_at,
+          title: `${guest.firstName} ${guest.lastName}`,
+          description: `RSVP: ${guest.rsvpStatus}`,
+          timestamp: guest.createdAt,
           icon: '👤',
           data: guest
         })),
@@ -395,9 +289,9 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         ...recentMessages.map(message => ({
           id: message.id,
           type: 'message' as const,
-          title: message.subject,
+          title: message.subject || 'Message',
           description: `${message.type} - ${message.status}`,
-          timestamp: message.created_at,
+          timestamp: message.createdAt,
           icon: '✉️',
           data: message
         })),
@@ -405,8 +299,8 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           id: photo.id,
           type: 'photo' as const,
           title: photo.caption || 'New photo',
-          description: photo.albums?.name || 'No album',
-          timestamp: photo.created_at,
+          description: photo.photoAlbums?.name || 'No album',
+          timestamp: photo.createdAt,
           icon: '📸',
           data: photo
         }))

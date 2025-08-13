@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAdminClient } from '@/lib/supabase-admin-transformed'
 import cloudinary, { CLOUDINARY_FOLDER } from '@/lib/cloudinary'
 import { getCurrentUser } from '@/lib/auth/server'
-import { transformToCamelCase } from '@/lib/db/field-mappings'
+import { PhotoRepository } from '@/features/photos/repo'
+import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
+
+const coupleRepository = new CoupleRepository()
+const photoRepository = new PhotoRepository()
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,37 +14,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's couple data using transformed admin client
-    const supabase = getAdminClient()
+    // Get user's couple data using repository
+    const couple = await coupleRepository.findByUserId(user.id)
     
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('supabaseUserId', user.id)
-      .single()
-
-    if (userError || !userData) {
-      return NextResponse.json({ 
-        error: 'User not found',
-        redirect: '/sign-in'
-      }, { status: 404 })
-    }
-
-    // Get couple data from wedding_couples table - now we can use camelCase!
-    const { data: coupleData, error: coupleError } = await supabase
-      .from('wedding_couples')
-      .select('id')
-      .or(`partner1UserId.eq.${userData.id},partner2UserId.eq.${userData.id}`)
-      .single()
-
-    if (coupleError || !coupleData) {
+    if (!couple) {
       return NextResponse.json({ 
         error: 'No couple data found. Please complete onboarding first.',
         redirect: '/onboarding'
       }, { status: 404 })
     }
 
-    const coupleId = coupleData.id
+    const coupleId = couple.id
 
     // Parse form data
     const formData = await request.formData()
@@ -111,23 +94,33 @@ export async function POST(request: NextRequest) {
           imageUrl: cloudResult.secure_url // This is required field
         }
 
-        const { data: photo, error: photoError } = await supabase
-          .from('photos')
-          .insert(photoData)
-          .select(`
-            *,
-            photo_albums (
-              id,
-              name
-            )
-          `)
-          .single()
+        // Save photo using repository
+        const photo = await photoRepository.create({
+          coupleId: coupleId,
+          albumId: albumId || null,
+          title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+          cloudinaryPublicId: cloudResult.public_id,
+          cloudinaryUrl: cloudResult.url,
+          cloudinarySecureUrl: cloudResult.secure_url,
+          originalFilename: file.name,
+          fileSize: cloudResult.bytes,
+          width: cloudResult.width,
+          height: cloudResult.height,
+          format: cloudResult.format,
+          photoDate: photoDate ? new Date(photoDate) : null,
+          location: location || null,
+          photographer: photographer || null,
+          eventType: eventType || 'general',
+          tags: [eventType, location, photographer].filter(Boolean),
+          url: cloudResult.secure_url, // This is required field
+          thumbnailUrl: cloudResult.secure_url // Use same URL for thumbnail for now
+        })
 
-        if (photoError) {
-          console.error('Error saving photo to database:', photoError)
+        if (!photo) {
+          console.error('Error saving photo to database')
           // Delete from Cloudinary if database save fails
           await cloudinary.uploader.destroy(cloudResult.public_id)
-          throw new Error(`Failed to save photo: ${photoError.message}`)
+          throw new Error('Failed to save photo')
         }
 
         uploadResults.push({
@@ -193,79 +186,58 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's couple data using transformed admin client
-    const supabase = getAdminClient()
+    // Get user's couple data using repository
+    const couple = await coupleRepository.findByUserId(user.id)
     
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('supabaseUserId', user.id)
-      .single()
-
-    if (!userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Get couple data from wedding_couples table - now we can use camelCase!
-    const { data: coupleData } = await supabase
-      .from('wedding_couples')
-      .select('id')
-      .or(`partner1UserId.eq.${userData.id},partner2UserId.eq.${userData.id}`)
-      .single()
-
-    if (!coupleData) {
+    if (!couple) {
       return NextResponse.json({ error: 'No couple data found' }, { status: 404 })
     }
 
-    const coupleId = coupleData.id
+    const coupleId = couple.id
     const { searchParams } = new URL(request.url)
     const albumId = searchParams.get('albumId')
     const eventType = searchParams.get('eventType')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Build query - now using camelCase fields!
-    let query = supabase
-      .from('photos')
-      .select(`
-        *,
-        photo_albums (
-          id,
-          name,
-          description
-        )
-      `)
-      .eq('coupleId', coupleId)
+    // Build query parameters
+    const queryParams: any = {
+      coupleId: coupleId,
+      page: offset / limit + 1,
+      pageSize: limit
+    }
 
     if (albumId && albumId !== 'all') {
-      query = query.eq('albumId', albumId)
+      queryParams.albumId = albumId
     }
 
     if (eventType && eventType !== 'all') {
-      query = query.eq('eventType', eventType)
+      queryParams.eventType = eventType
     }
 
-    const { data: photos, error } = await query
-      .order('createdAt', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (error) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to fetch photos',
-        details: error.message
-      }, { status: 400 })
+    // Get photos using repository
+    const photosResult = await photoRepository.findByCoupleId(coupleId)
+    
+    // Filter photos based on query params
+    let filteredPhotos = photosResult
+    if (queryParams.albumId) {
+      filteredPhotos = filteredPhotos.filter(p => p.albumId === queryParams.albumId)
     }
-
-    // Get photo statistics - using camelCase parameter
-    const { data: stats } = await supabase
-      .rpc('get_photo_stats', { pCoupleId: coupleId })
+    if (queryParams.eventType) {
+      filteredPhotos = filteredPhotos.filter(p => p.eventType === queryParams.eventType)
+    }
+    
+    // Apply pagination
+    const paginatedPhotos = filteredPhotos.slice(offset, offset + limit)
+    
+    // Get photo statistics using repository
+    const photoStats = await photoRepository.getStatsByCouple(coupleId)
 
     return NextResponse.json({
       success: true,
       data: {
-        photos: photos || [],
-        stats: stats?.[0] || {
+        photos: paginatedPhotos || [],
+        stats: photoStats || {
           totalPhotos: 0,
           totalAlbums: 0,
           favoritePhotos: 0,
@@ -277,7 +249,7 @@ export async function GET(request: NextRequest) {
         pagination: {
           offset,
           limit,
-          hasMore: photos && photos.length === limit
+          hasMore: paginatedPhotos.length === limit
         }
       }
     })
