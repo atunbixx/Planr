@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     let user = await prisma.user.findUnique({
-      where: { supabase_user_id: supabaseUser.id }
+      where: { supabaseUserId: supabaseUser.id }
     })
 
     if (!user) {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       // Create new user with Supabase data and locale preferences
       user = await prisma.user.create({
         data: {
-          supabase_user_id: supabaseUser.id,
+          supabaseUserId: supabaseUser.id,
           email: supabaseUser.email || `${supabaseUser.id}@placeholder.com`,
           firstName: supabaseUser.user_metadata?.first_name || 'User',
           lastName: supabaseUser.user_metadata?.last_name || '',

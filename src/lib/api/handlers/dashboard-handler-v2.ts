@@ -6,13 +6,14 @@ export class DashboardHandlerV2 extends BaseApiHandler {
   
   async getStats(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
+      const userId = this.requireUserId()
       
-      // Get couple information using repository
-      const couple = await this.coupleRepo.findById(coupleId)
+      // Get couple information using repository - don't require couple to exist yet
+      const couple = await this.coupleRepo.findByUserId(userId)
       
       if (!couple) {
-        throw new Error('Couple not found')
+        // Return empty stats if no couple exists yet (user hasn't completed onboarding)
+        return this.getEmptyStats()
       }
       
       // Calculate days until wedding
@@ -189,7 +190,15 @@ export class DashboardHandlerV2 extends BaseApiHandler {
   // Get recent activity
   async getRecentActivity(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
+      const userId = this.requireUserId()
+      
+      // Get couple information - return empty if no couple yet
+      const couple = await this.coupleRepo.findByUserId(userId)
+      if (!couple) {
+        return []
+      }
+      
+      const coupleId = couple.id
       
       // Parse query parameters
       const url = new URL(request.url)
@@ -311,5 +320,45 @@ export class DashboardHandlerV2 extends BaseApiHandler {
       
       return activities.slice(0, limit)
     })
+  }
+
+  /**
+   * Returns empty stats for users who haven't completed onboarding
+   */
+  private getEmptyStats() {
+    return {
+      wedding: {
+        daysUntil: null,
+        date: null,
+        venue: null
+      },
+      budget: {
+        totalBudget: 0,
+        totalSpent: 0,
+        remaining: 0,
+        percentageSpent: 0
+      },
+      guests: {
+        total: 0,
+        confirmed: 0,
+        pending: 0,
+        declined: 0
+      },
+      vendors: {
+        total: 0,
+        booked: 0,
+        pending: 0,
+        contacted: 0
+      },
+      checklist: {
+        total: 0,
+        completed: 0,
+        dueSoon: 0
+      },
+      photos: {
+        totalPhotos: 0,
+        totalAlbums: 0
+      }
+    }
   }
 }

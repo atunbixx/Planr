@@ -78,7 +78,8 @@ export class SettingsHandlerV2 extends BaseApiHandler {
       // Get user's couple information first
       const couple = await this.coupleRepository.findByUserId(userId)
       if (!couple) {
-        throw new BadRequestException('User must be part of a couple to have preferences')
+        // Return empty preferences if user doesn't have a couple yet
+        return { preferences: {} }
       }
       
       // Get user preferences by couple_id
