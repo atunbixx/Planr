@@ -7,6 +7,14 @@ import { Plus } from 'lucide-react'
 import AddVendorDialog from './AddVendorDialog'
 import VendorList from './VendorList'
 import { enterpriseApi, type VendorResponse } from '@/lib/api/enterprise-client'
+import { 
+  WeddingPageLayout, 
+  WeddingPageHeader,
+  WeddingStatCard,
+  WeddingCard,
+  WeddingButton,
+  WeddingContentSection
+} from '@/components/wedding-theme'
 
 interface VendorStats {
   totalVendors: number
@@ -61,8 +69,31 @@ export default function VendorsClient() {
         enterpriseApi.vendors.getStats()
       ])
       
-      setVendors(vendorsResponse.data)
-      setStats(statsResponse)
+      // Handle both array and paginated responses
+      const vendorArray = Array.isArray(vendorsResponse) 
+        ? vendorsResponse 
+        : (vendorsResponse?.data || [])
+      
+      // Transform vendor summary response to full vendor response format
+      const fullVendors = vendorArray.map((vendor: any) => ({
+        ...vendor,
+        specialties: vendor.specialties || [],
+        tags: vendor.tags || [],
+        coupleId: vendor.coupleId || '', // Will be filled by backend
+        createdAt: vendor.createdAt || new Date().toISOString(),
+        updatedAt: vendor.updatedAt || new Date().toISOString(),
+        businessName: vendor.businessName || vendor.name,
+        source: vendor.source || 'manual'
+      }))
+      
+      setVendors(fullVendors)
+      setStats(statsResponse || {
+        totalVendors: 0,
+        byStatus: {},
+        totalEstimatedCost: 0,
+        contractedVendors: 0,
+        pendingDeadlines: 0
+      })
       
     } catch (err) {
       console.error('Error fetching vendors:', err)
@@ -80,7 +111,7 @@ export default function VendorsClient() {
 
   if (loading) {
     return (
-      <div className="px-8 py-12">
+      <WeddingPageLayout>
         <div className="animate-pulse">
           <div className="h-16 bg-gray-200/50 rounded-sm mb-8"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -94,67 +125,72 @@ export default function VendorsClient() {
             ))}
           </div>
         </div>
-      </div>
+      </WeddingPageLayout>
     )
   }
 
   return (
-    <div className="px-8 py-12">
+    <WeddingPageLayout>
       {/* Header */}
-      <div className="mb-12">
-        <h1 data-testid="vendors-page-title" className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Vendors</h1>
-        <p className="text-lg font-light text-gray-600">Manage your wedding vendors and track contracts</p>
-      </div>
+      <WeddingPageHeader
+        title="Vendors"
+        subtitle="Manage your wedding vendors and track contracts"
+        data-testid="vendors-page-title"
+      />
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p data-testid="total-vendors" className="text-3xl font-light text-gray-900">{stats?.totalVendors || 0}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Total Vendors</p>
+      <WeddingContentSection>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
+          <WeddingStatCard
+            value={stats?.totalVendors || 0}
+            label="Total Vendors"
+            data-testid="total-vendors"
+          />
+          <WeddingStatCard
+            value={stats?.contractedVendors || 0}
+            label="Contracted"
+            valueColor="sage"
+          />
+          <WeddingStatCard
+            value={stats?.pendingDeadlines || 0}
+            label="Pending"
+            sublabel="Deadlines"
+            valueColor="amber"
+          />
+          <WeddingStatCard
+            value={`$${(stats?.totalEstimatedCost || 0).toLocaleString()}`}
+            label="Estimated Cost"
+            sublabel="Total budget"
+          />
         </div>
-
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-[#7a9b7f]">{stats?.contractedVendors || 0}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Contracted</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-amber-600">{stats?.pendingDeadlines || 0}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Pending</p>
-          <p className="text-xs font-light text-gray-500 mt-1">Deadlines</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-gray-900">${(stats?.totalEstimatedCost || 0).toLocaleString()}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Estimated Cost</p>
-          <p className="text-xs font-light text-gray-500 mt-1">Total budget</p>
-        </div>
-      </div>
+      </WeddingContentSection>
 
       {error && (
-        <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-600 rounded-sm text-sm">
-          {error}
-        </div>
+        <WeddingContentSection>
+          <WeddingCard className="bg-red-50 border border-red-200">
+            <p className="text-red-600 text-sm">{error}</p>
+          </WeddingCard>
+        </WeddingContentSection>
       )}
 
       {/* Vendors List */}
-      <div className="bg-white rounded-sm shadow-sm">
-        <div className="p-8 border-b border-gray-100">
+      <WeddingCard>
+        <div className="border-b border-gray-100 pb-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-light tracking-wide text-gray-900 uppercase">Your Vendors</h2>
               <p className="text-sm font-light text-gray-600 mt-1">Track vendors, manage contracts, and stay organized</p>
             </div>
             <AddVendorDialog categories={categories} onVendorAdded={fetchVendors}>
-              <Button data-testid="add-vendor-button" className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light tracking-wider uppercase">
+              <WeddingButton data-testid="add-vendor-button" size="sm">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Vendor
-              </Button>
+              </WeddingButton>
             </AddVendorDialog>
           </div>
         </div>
         
-        <div className="p-8">
+        <div>
           {vendors.length === 0 ? (
             <div data-testid="empty-vendors" className="text-center py-12 text-gray-500 font-light">
               No vendors added yet. Start by adding your first vendor.
@@ -163,7 +199,7 @@ export default function VendorsClient() {
             <VendorList data-testid="vendor-list" vendors={vendors} categories={categories} />
           )}
         </div>
-      </div>
-    </div>
+      </WeddingCard>
+    </WeddingPageLayout>
   )
 }

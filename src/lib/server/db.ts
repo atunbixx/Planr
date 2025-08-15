@@ -64,10 +64,10 @@ export async function getCurrentUserCouple() {
     throw new Error('User email not found')
   }
 
-  // Get user data first using supabase_user_id
+  // Get user data first using supabaseUserId
   const userData = await prisma.user.findUnique({
     where: {
-      supabase_user_id: user.id
+      supabaseUserId: user.id
     }
   })
 
@@ -200,6 +200,21 @@ export async function getPhotosData(options?: {
   pagination?: z.infer<typeof PaginationSchema>
 }) {
   const { coupleId } = await getCurrentUserCouple()
+  
+  // If no coupleId, return empty data
+  if (!coupleId) {
+    return {
+      photos: [],
+      albums: [],
+      stats: {
+        total_photos: 0,
+        total_albums: 0,
+        favorite_photos: 0,
+        shared_photos: 0,
+        storage_used: 0
+      }
+    }
+  }
   
   // Validate inputs
   const filters = FilterSchema.parse(options?.filters || {})

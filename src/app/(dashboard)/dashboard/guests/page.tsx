@@ -13,6 +13,15 @@ import { enterpriseApi, type GuestResponse } from '@/lib/api/enterprise-client'
 import { useApiState } from '@/hooks/useApiState'
 import { LoadingCard, SkeletonTable } from '@/components/ui/loading'
 import { handleApiError } from '@/lib/api/error-handler'
+import { 
+  WeddingPageLayout, 
+  WeddingPageHeader,
+  WeddingStatCard,
+  WeddingCard,
+  WeddingButton,
+  WeddingGrid,
+  WeddingContentSection
+} from '@/components/wedding-theme'
 
 interface Guest {
   id: string
@@ -70,16 +79,19 @@ export default function GuestsPage() {
     
     if (response) {
       // Transform API guests to match the component interface
-      const transformedGuests = response.data.map((guest: GuestResponse) => ({
+      // response is already the data array, not wrapped in { data: ... }
+      // Handle both paginated and array responses
+      const guestArray = Array.isArray(response) ? response : (response as any).data || []
+      const transformedGuests = guestArray.map((guest: GuestResponse) => ({
         id: guest.id,
-        name: `${guest.firstName || ''} ${guest.lastName || ''}`.trim(),
+        name: guest.name,
         email: guest.email,
         phone: guest.phone,
         rsvpStatus: guest.rsvpStatus,
-        plusOneAllowed: guest.plusOneAllowed,
+        plusOneAllowed: guest.hasPlusOne || false,
         plusOneName: guest.plusOneName,
         dietaryRestrictions: guest.dietaryRestrictions,
-        side: 'both', // Default value, as API doesn't provide this yet
+        side: guest.side || 'both',
         tableNumber: guest.tableNumber
       }))
       setGuests(transformedGuests)
@@ -157,7 +169,7 @@ export default function GuestsPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-12">
+      <WeddingPageLayout>
         <div className="animate-pulse">
           <div className="h-16 bg-gray-200/50 rounded-sm mb-8"></div>
           <div className="space-y-4">
@@ -166,79 +178,85 @@ export default function GuestsPage() {
             ))}
           </div>
         </div>
-      </div>
+      </WeddingPageLayout>
     )
   }
 
   // Show loading state
   if (loading && guests.length === 0) {
     return (
-      <div className="px-8 py-12">
-        <div className="mb-12">
-          <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
-          <p className="text-lg font-light text-gray-600">Manage your wedding guest list and RSVPs</p>
-        </div>
+      <WeddingPageLayout>
+        <WeddingPageHeader
+          title="Guest List"
+          subtitle="Manage your wedding guest list and RSVPs"
+        />
         <LoadingCard message="Loading your guest list..." />
-      </div>
+      </WeddingPageLayout>
     )
   }
 
   // Show error state
   if (error && guests.length === 0) {
     return (
-      <div className="px-8 py-12">
-        <div className="mb-12">
-          <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
-          <p className="text-lg font-light text-gray-600">Manage your wedding guest list and RSVPs</p>
-        </div>
-        <div className="bg-white rounded-sm shadow-sm p-8 text-center">
+      <WeddingPageLayout>
+        <WeddingPageHeader
+          title="Guest List"
+          subtitle="Manage your wedding guest list and RSVPs"
+        />
+        <WeddingCard className="text-center">
           <p className="text-red-600 mb-4">Failed to load guest list</p>
-          <Button onClick={() => fetchGuests(true)}>Try Again</Button>
-        </div>
-      </div>
+          <WeddingButton onClick={() => fetchGuests(true)}>Try Again</WeddingButton>
+        </WeddingCard>
+      </WeddingPageLayout>
     )
   }
 
   return (
-    <div className="px-8 py-12">
+    <WeddingPageLayout>
       {/* Header */}
-      <div className="mb-12">
-        <h1 data-testid="guests-page-title" className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Guest List</h1>
-        <p className="text-lg font-light text-gray-600">Manage your wedding guest list and RSVPs</p>
-      </div>
+      <WeddingPageHeader
+        title="Guest List"
+        subtitle="Manage your wedding guest list and RSVPs"
+        data-testid="guests-page-title"
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p data-testid="total-guests" className="text-3xl font-light text-gray-900">{stats.total}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Total Guests</p>
+      <WeddingContentSection>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+          <WeddingStatCard
+            value={stats.total}
+            label="Total Guests"
+            data-testid="total-guests"
+          />
+          <WeddingStatCard
+            value={stats.confirmed}
+            label="Confirmed"
+            valueColor="sage"
+          />
+          <WeddingStatCard
+            value={stats.pending}
+            label="Pending"
+          />
+          <WeddingStatCard
+            value={stats.declined}
+            label="Declined"
+            valueColor="amber"
+          />
+          <WeddingStatCard
+            value={stats.withPlusOne}
+            label="Plus Ones"
+          />
+          <WeddingStatCard
+            value={`${stats.total > 0 ? Math.round(((stats.confirmed + stats.declined) / stats.total) * 100) : 0}%`}
+            label="Response Rate"
+            valueColor="sage"
+          />
         </div>
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-[#7a9b7f]">{stats.confirmed}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Confirmed</p>
-        </div>
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-gray-400">{stats.pending}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Pending</p>
-        </div>
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-red-600">{stats.declined}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Declined</p>
-        </div>
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-gray-900">{stats.withPlusOne}</p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Plus Ones</p>
-        </div>
-        <div className="bg-white p-6 rounded-sm shadow-sm text-center">
-          <p className="text-3xl font-light text-blue-600">
-            {stats.total > 0 ? Math.round(((stats.confirmed + stats.declined) / stats.total) * 100) : 0}%
-          </p>
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2">Response Rate</p>
-        </div>
-      </div>
+      </WeddingContentSection>
 
       {/* Actions Bar */}
-      <div className="bg-white p-6 rounded-sm shadow-sm mb-8">
+      <WeddingContentSection>
+        <WeddingCard padding="sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Search */}
           <div className="flex items-center gap-4 flex-1">
@@ -297,21 +315,22 @@ export default function GuestsPage() {
               Export
             </Button>
             <PermissionGate permissions="manage_guests" fallback={null}>
-              <Button
+              <WeddingButton
                 data-testid="add-guest-button"
                 onClick={() => setIsAddingGuest(true)}
-                className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-4 py-2 text-sm font-light"
+                size="sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Guest
-              </Button>
+              </WeddingButton>
             </PermissionGate>
           </div>
         </div>
-      </div>
+        </WeddingCard>
+      </WeddingContentSection>
 
       {/* Guest List Table */}
-      <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+      <WeddingCard className="overflow-hidden" padding="sm">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100">
@@ -423,7 +442,7 @@ export default function GuestsPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </WeddingCard>
 
       {/* Add Guest Dialog */}
       <AddGuestDialog
@@ -447,6 +466,6 @@ export default function GuestsPage() {
         guests={guests}
         onInvitationsSent={() => fetchGuests(true)}
       />
-    </div>
+    </WeddingPageLayout>
   )
 }

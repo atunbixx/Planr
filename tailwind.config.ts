@@ -24,6 +24,28 @@ const config: Config = {
         luxury: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        // Wedding theme colors
+        wedding: {
+          background: {
+            primary: '#faf9f7',
+            secondary: '#ffffff',
+            muted: '#f9fafb',
+          },
+          sage: {
+            DEFAULT: '#7a9b7f',
+            hover: '#6a8b6f',
+            light: '#8aab8f',
+            dark: '#5a7b5f',
+          },
+          brown: {
+            DEFAULT: '#5a524a',
+            hover: '#4a423a',
+            light: '#6a625a',
+            dark: '#3a322a',
+          },
+        },
+        
+        // Existing theme colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

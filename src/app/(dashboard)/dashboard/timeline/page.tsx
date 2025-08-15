@@ -21,6 +21,14 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import TimelineEventDialog from './components/TimelineEventDialog'
 import VendorTimelineDialog from './components/VendorTimelineDialog'
+import { 
+  WeddingPageLayout, 
+  WeddingPageHeader,
+  WeddingStatCard,
+  WeddingCard,
+  WeddingButton,
+  WeddingContentSection
+} from '@/components/wedding-theme'
 
 interface TimelineEvent {
   id: string
@@ -95,13 +103,19 @@ export default function TimelinePage() {
     }
   }
 
-  const handleEventSave = (event: TimelineEvent) => {
+  const handleEventSave = (event: any) => {
+    const fullEvent: TimelineEvent = {
+      ...event,
+      id: event.id || `temp-${Date.now()}`,
+      createdAt: event.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
     setEvents(prev => {
-      const existing = prev.findIndex(e => e.id === event.id)
+      const existing = prev.findIndex(e => e.id === fullEvent.id)
       if (existing >= 0) {
-        return prev.map(e => e.id === event.id ? event : e)
+        return prev.map(e => e.id === fullEvent.id ? fullEvent : e)
       }
-      return [...prev, event]
+      return [...prev, fullEvent]
     })
     setIsAddingEvent(false)
     setEditingEvent(null)
@@ -194,7 +208,7 @@ export default function TimelinePage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-12">
+      <WeddingPageLayout>
         <div className="animate-pulse">
           <div className="h-16 bg-gray-200/50 rounded-sm mb-8"></div>
           <div className="h-32 bg-gray-200/50 rounded-sm mb-8"></div>
@@ -204,19 +218,17 @@ export default function TimelinePage() {
             ))}
           </div>
         </div>
-      </div>
+      </WeddingPageLayout>
     )
   }
 
   return (
-    <div className="px-8 py-12">
+    <WeddingPageLayout>
       {/* Header */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-5xl font-light tracking-wide text-gray-900 mb-2 uppercase">Wedding Timeline</h1>
-            <p className="text-lg font-light text-gray-600">Coordinate your vendors and manage your wedding day schedule</p>
-          </div>
+      <WeddingPageHeader
+        title="Wedding Timeline"
+        subtitle="Coordinate your vendors and manage your wedding day schedule"
+        action={
           <div className="flex items-center gap-3">
             <Button onClick={shareTimeline} variant="outline" className="gap-2">
               <Share2 className="h-4 w-4" />
@@ -230,14 +242,14 @@ export default function TimelinePage() {
               vendors={vendors}
               onSave={handleEventSave}
             >
-              <Button className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white gap-2">
-                <Plus className="h-4 w-4" />
+              <WeddingButton size="sm">
+                <Plus className="h-4 w-4 mr-2" />
                 Add Event
-              </Button>
+              </WeddingButton>
             </TimelineEventDialog>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Date Selector */}
       <Card className="mb-8">
@@ -445,6 +457,6 @@ export default function TimelinePage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </WeddingPageLayout>
   )
 }

@@ -6,6 +6,12 @@ import BudgetContent from './components/BudgetContent'
 import { useLocale } from '@/providers/LocaleProvider'
 import type { LocaleCode } from '@/lib/localization'
 import { enterpriseApi, type BudgetSummaryResponse } from '@/lib/api/enterprise-client'
+import { 
+  WeddingPageLayout, 
+  WeddingPageHeader,
+  WeddingCard,
+  WeddingButton
+} from '@/components/wedding-theme'
 
 interface BudgetCategory {
   id: string
@@ -22,7 +28,7 @@ interface Expense {
   id: string
   description: string
   amount: number
-  expense_date?: Date | string | null
+  expense_date: string
   dueDate: string | null
   paymentStatus: string | null
   category?: {
@@ -59,17 +65,17 @@ export default function BudgetPage() {
       setBudgetData({
         totalBudget: data.totalBudget,
         totalSpent: data.totalSpent,
-        totalAllocated: data.totalAllocated,
+        totalAllocated: data.categoryBreakdown?.reduce((acc, cat) => acc + cat.plannedAmount, 0) || 0,
         remaining: data.totalRemaining,
         spentPercentage: data.totalBudget > 0 ? (data.totalSpent / data.totalBudget) * 100 : 0
       })
-      setCategories(data.categories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon || '💰',
-        color: cat.color || '#667eea',
-        allocatedAmount: cat.allocatedAmount,
-        spentAmount: cat.spent,
+      setCategories((data.categoryBreakdown || []).map(cat => ({
+        id: cat.categoryId,
+        name: cat.categoryName,
+        icon: '💰',
+        color: '#667eea',
+        allocatedAmount: cat.plannedAmount,
+        spentAmount: cat.actualSpent,
         priority: 'medium',
         industryAveragePercentage: 0
       })))
@@ -90,7 +96,7 @@ export default function BudgetPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="px-8 py-12">
+      <WeddingPageLayout>
         <div className="animate-pulse">
           <div className="h-16 bg-gray-200/50 rounded-sm mb-8"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -104,43 +110,40 @@ export default function BudgetPage() {
             ))}
           </div>
         </div>
-      </div>
+      </WeddingPageLayout>
     )
   }
 
   if (!isSignedIn) {
     return (
-      <div className="px-8 py-12">
-        <div className="text-center py-16">
+      <WeddingPageLayout>
+        <WeddingCard className="text-center py-16">
           <h3 className="text-2xl font-light tracking-wide text-gray-900 uppercase mb-4">
             Sign In Required
           </h3>
           <p className="text-lg font-light text-gray-600">
             Please sign in to view your budget
           </p>
-        </div>
-      </div>
+        </WeddingCard>
+      </WeddingPageLayout>
     )
   }
 
   if (error) {
     return (
-      <div className="px-8 py-12">
-        <div className="text-center py-16">
+      <WeddingPageLayout>
+        <WeddingCard className="text-center py-16">
           <h3 className="text-2xl font-light tracking-wide text-gray-900 uppercase mb-4">
             Error Loading Budget
           </h3>
           <p className="text-lg font-light text-gray-600 mb-8">
             {error}
           </p>
-          <button
-            onClick={fetchBudgetData}
-            className="bg-[#7a9b7f] hover:bg-[#6a8b6f] text-white rounded-sm px-6 py-2 text-sm font-light tracking-wider uppercase"
-          >
+          <WeddingButton onClick={fetchBudgetData}>
             Try Again
-          </button>
-        </div>
-      </div>
+          </WeddingButton>
+        </WeddingCard>
+      </WeddingPageLayout>
     )
   }
 

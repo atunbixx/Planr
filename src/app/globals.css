@@ -148,6 +148,88 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   }
   
+  /* Wedding Theme Utility Classes */
+  .wedding-bg-primary {
+    background-color: #faf9f7;
+  }
+  
+  .wedding-card {
+    @apply bg-white rounded-sm shadow-sm;
+  }
+  
+  .wedding-card-hover {
+    @apply hover:shadow-md transition-shadow;
+  }
+  
+  /* Wedding Theme Typography */
+  .wedding-hero-header {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-wide text-gray-900 uppercase;
+  }
+  
+  .wedding-page-header {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide text-gray-900 uppercase;
+  }
+  
+  .wedding-section-header {
+    @apply text-xs font-medium tracking-[0.2em] text-gray-500 uppercase;
+  }
+  
+  .wedding-body-text {
+    @apply text-sm sm:text-base font-light text-gray-600;
+  }
+  
+  .wedding-muted-text {
+    @apply text-sm font-light text-gray-500;
+  }
+  
+  /* Wedding Theme Buttons */
+  .wedding-btn-primary {
+    @apply bg-wedding-sage hover:bg-wedding-sage-hover text-white rounded-sm font-light tracking-wider uppercase transition-colors;
+  }
+  
+  .wedding-btn-secondary {
+    @apply border border-wedding-brown text-wedding-brown hover:bg-wedding-brown hover:text-white rounded-sm font-light tracking-wider uppercase transition-colors;
+  }
+  
+  .wedding-btn-ghost {
+    @apply text-wedding-sage hover:bg-gray-50 rounded-sm font-light tracking-wider uppercase transition-colors;
+  }
+  
+  /* Wedding Theme Progress */
+  .wedding-progress {
+    @apply h-1 bg-gray-100 rounded-full overflow-hidden;
+  }
+  
+  .wedding-progress-fill {
+    @apply h-full bg-wedding-sage transition-all;
+  }
+  
+  /* Wedding Theme Stat Cards */
+  .wedding-stat-card {
+    @apply bg-white p-4 sm:p-6 lg:p-8 rounded-sm shadow-sm text-center hover:shadow-md transition-shadow;
+  }
+  
+  .wedding-stat-value {
+    @apply text-3xl sm:text-4xl font-light text-gray-900;
+  }
+  
+  .wedding-stat-label {
+    @apply text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mt-2;
+  }
+  
+  /* Wedding Theme Container Spacing */
+  .wedding-page-container {
+    @apply min-h-screen bg-wedding-background-primary w-full;
+  }
+  
+  .wedding-content-container {
+    @apply w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12;
+  }
+  
+  .wedding-section-spacing {
+    @apply mb-8 sm:mb-12 lg:mb-16;
+  }
+  
   html[data-theme="luxury"] .luxury-heading {
     font-family: 'DM Sans', 'Inter', sans-serif;
     font-weight: 600;
