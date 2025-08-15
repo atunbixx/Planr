@@ -58,7 +58,18 @@ export async function GET(request: NextRequest) {
         console.log('✅ Authentication successful:', {
           userId: data.user.id,
           email: data.user.email,
-          provider: data.user.app_metadata?.provider
+          provider: data.user.app_metadata?.provider,
+          session: data.session ? 'present' : 'missing',
+          hasAccessToken: data.session?.access_token ? 'yes' : 'no'
+        })
+        
+        // Verify the session was properly set by checking it again
+        const { data: verifyData, error: verifyError } = await supabase.auth.getSession()
+        console.log('🔍 Session verification after exchange:', {
+          sessionExists: !!verifyData?.session,
+          hasAccessToken: verifyData?.session?.access_token ? 'yes' : 'no',
+          userId: verifyData?.session?.user?.id,
+          error: verifyError?.message
         })
       }
       

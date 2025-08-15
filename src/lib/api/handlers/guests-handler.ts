@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { BaseApiHandler } from '../base-handler'
-import { guestService } from '@/lib/services/guest.service'
+import { GuestService } from '@/features/guests/service/guest.service'
 
 // Validation schemas
 const createGuestSchema = z.object({
@@ -18,20 +18,19 @@ const updateGuestSchema = createGuestSchema.partial()
 
 export class GuestsHandler extends BaseApiHandler {
   protected model = 'Guest' as const
+  private guestService = new GuestService()
   
   async list(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      
       // Parse query parameters
       const url = new URL(request.url)
       const page = parseInt(url.searchParams.get('page') || '1')
       const limit = parseInt(url.searchParams.get('limit') || '50')
       const rsvpStatus = url.searchParams.get('rsvpStatus')
       
-      return await guestService.getGuestsForCouple(coupleId, {
+      return await this.guestService.getGuestsForCouple({
         page,
-        limit,
+        pageSize: limit,
         rsvpStatus
       })
     })
@@ -39,42 +38,49 @@ export class GuestsHandler extends BaseApiHandler {
   
   async create(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
       const data = await this.validateRequest(request, createGuestSchema)
       
-      // Transform to database format
-      const dbData = this.transformInput({
-        ...data,
-        coupleId
-      })
+      // Transform to enterprise service format
+      const createRequest = {
+        name: `${data.firstName} ${data.lastName || ''}`.trim(),
+        email: data.email,
+        phone: data.phone,
+        relationship: data.side, // Map side to relationship
+        side: data.side,
+        hasPlusOne: data.plusOneAllowed,
+        dietaryRestrictions: data.dietaryRestrictions ? [data.dietaryRestrictions] : []
+      }
       
-      return await guestService.createGuest(dbData)
+      return await this.guestService.createGuest(createRequest)
     })
   }
   
   async update(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
       const data = await this.validateRequest(request, updateGuestSchema)
       
-      // Transform to database format
-      const dbData = this.transformInput(data)
+      // Transform to enterprise service format
+      const updateRequest = {
+        ...(data.firstName && { name: `${data.firstName} ${data.lastName || ''}`.trim() }),
+        ...(data.email && { email: data.email }),
+        ...(data.phone && { phone: data.phone }),
+        ...(data.side && { side: data.side, relationship: data.side }),
+        ...(data.plusOneAllowed !== undefined && { hasPlusOne: data.plusOneAllowed }),
+        ...(data.dietaryRestrictions && { dietaryRestrictions: [data.dietaryRestrictions] })
+      }
       
-      return await guestService.updateGuest(id, coupleId, dbData)
+      return await this.guestService.updateGuest(id, updateRequest)
     })
   }
   
   async delete(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      return await guestService.deleteGuest(id, coupleId)
+      return await this.guestService.deleteGuest(id)
     })
   }
   
   async updateRsvp(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      
       const rsvpSchema = z.object({
         status: z.enum(['pending', 'confirmed', 'declined']),
         dietaryRestrictions: z.string().optional(),
@@ -82,9 +88,15 @@ export class GuestsHandler extends BaseApiHandler {
       })
       
       const data = await this.validateRequest(request, rsvpSchema)
-      const dbData = this.transformInput(data)
       
-      return await guestService.updateRsvp(id, coupleId, dbData)
+      // Transform to enterprise service format
+      const updateRequest = {
+        rsvpStatus: data.status,
+        ...(data.dietaryRestrictions && { dietaryRestrictions: [data.dietaryRestrictions] }),
+        ...(data.plusOneName && { plusOneName: data.plusOneName })
+      }
+      
+      return await this.guestService.updateGuest(id, updateRequest)
     })
   }
 }

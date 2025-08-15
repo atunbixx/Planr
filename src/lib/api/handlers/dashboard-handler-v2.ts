@@ -16,6 +16,8 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         return this.getEmptyStats()
       }
       
+      const coupleId = couple.id
+      
       // Calculate days until wedding
       const today = new Date()
       const weddingDate = couple.weddingDate

@@ -1,6 +1,3 @@
 export * from './base.service'
-export * from './guest.service'
 export * from './couple.service'
-export * from './vendor.service'
-export * from './budget.service'
 export * from './checklist.service'

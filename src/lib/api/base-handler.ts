@@ -7,6 +7,7 @@ import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
 import { BudgetRepository } from '@/lib/repositories/BudgetRepository'
 import { VendorRepository } from '@/lib/repositories/VendorRepository'
 import { GuestRepository } from '@/lib/repositories/GuestRepository'
+import { getUser } from '@/lib/supabase/server'
 
 export interface ApiResponse<T = any> {
   success: boolean
@@ -104,30 +105,10 @@ export abstract class BaseApiHandler {
    * Require authentication and return user context
    */
   protected async requireAuth(request: NextRequest): Promise<AuthContext> {
-    // Create Supabase client with proper cookie handling
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            // Route handlers can't set cookies during request
-            // This is handled by middleware
-          },
-          remove(name: string, options: CookieOptions) {
-            // Route handlers can't remove cookies during request
-            // This is handled by middleware
-          },
-        },
-      }
-    )
+    // Use enhanced getUser helper that handles JWT signature validation and refresh
+    const user = await getUser()
     
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
-    if (error || !user) {
+    if (!user) {
       throw new UnauthorizedException('Authentication required')
     }
     

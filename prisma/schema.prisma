@@ -9,16 +9,16 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  supabaseUserId   String    @unique(map: "users_clerk_user_id_key") @map("supabase_user_id") @db.VarChar
-  email            String    @unique @db.VarChar
-  firstName        String?   @map("first_name") @db.VarChar
-  lastName         String?   @map("last_name") @db.VarChar
-  phone            String?   @db.VarChar
-  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  preferences      Json?
-  hasOnboarded     Boolean?  @default(false) @map("has_onboarded")
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supabaseUserId String    @unique(map: "users_clerk_user_id_key") @map("supabase_user_id") @db.VarChar
+  email          String    @unique @db.VarChar
+  firstName      String?   @map("first_name") @db.VarChar
+  lastName       String?   @map("last_name") @db.VarChar
+  phone          String?   @db.VarChar
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  preferences    Json?
+  hasOnboarded   Boolean?  @default(false) @map("has_onboarded")
 
   // Relationships
   coupleAsPartner1        Couple[]                 @relation("CouplePartner1")
@@ -32,8 +32,8 @@ model User {
 
 model Couple {
   id                  String    @id(map: "couples_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  partner1_user_id    String?   @db.Uuid
-  partner2_user_id    String?   @db.Uuid
+  partner1UserId      String?   @map("partner1_user_id") @db.Uuid
+  partner2UserId      String?   @map("partner2_user_id") @db.Uuid
   partner1Name        String    @map("partner1_name") @db.VarChar(100)
   partner2Name        String?   @map("partner2_name") @db.VarChar(100)
   weddingDate         DateTime? @map("wedding_date") @db.Date
@@ -45,63 +45,61 @@ model Couple {
   weddingStyle        String?   @default("traditional") @map("wedding_style") @db.VarChar(50)
   createdAt           DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  budget_total        Decimal?  @db.Decimal(10, 2)
   onboardingCompleted Boolean?  @default(false) @map("onboarding_completed")
   userId              String?   @unique @map("user_id") @db.Uuid
 
   // Relationships
-  partner1    User? @relation("CouplePartner1", fields: [partner1_user_id], references: [id])
-  partner2    User? @relation("CouplePartner2", fields: [partner2_user_id], references: [id])
+  partner1    User? @relation("CouplePartner1", fields: [partner1UserId], references: [id])
+  partner2    User? @relation("CouplePartner2", fields: [partner2UserId], references: [id])
   primaryUser User? @relation(fields: [userId], references: [id])
 
-  guests           Guest[]
-  invitations      Invitation[]
-  photoAlbums      PhotoAlbum[]
-  vendor_documents vendor_documents[]
-  vendors          Vendor[]
-  notifications    Notification[]
+  guests          Guest[]
+  invitations     Invitation[]
+  photoAlbums     PhotoAlbum[]
+  vendorDocuments vendor_documents[]
+  vendors         Vendor[]
+  notifications   Notification[]
 
   // Budget related
   budgetCategories BudgetCategory[]
   budgetExpenses   BudgetExpense[]
-  budget_items     budget_items[]
+  budgetItems      budget_items[]
   expenses         expenses[]
   receipts         receipts[]
 
   // Vendor related
-  couple_vendors        couple_vendors[]
-  couple_vendor_reviews couple_vendor_reviews[]
-  couple_vendor_tasks   couple_vendor_tasks[]
-  vendor_favorites      vendor_favorites[]
-  vendor_inquiries      vendor_inquiries[]
-  vendor_reviews        vendor_reviews[]
-  vendor_tasks          vendor_tasks[]
-  contracts             contracts[]
+  coupleVendors       couple_vendors[]
+  coupleVendorReviews couple_vendor_reviews[]
+  coupleVendorTasks   couple_vendor_tasks[]
+  vendorFavorites     vendor_favorites[]
+  vendorInquiries     vendor_inquiries[]
+  vendorReviews       vendor_reviews[]
+  vendorTasks         vendor_tasks[]
+  contracts           contracts[]
 
   // Event related
-  tables             Table[]
-  messages           Message[]
-  messageTemplates   MessageTemplate[]
-  messageLogs        MessageLog[]
-  photos             Photo[]
-  inspiration_photos inspiration_photos[]
+  tables            Table[]
+  messages          Message[]
+  messageTemplates  MessageTemplate[]
+  messageLogs       MessageLog[]
+  photos            Photo[]
+  inspirationPhotos inspiration_photos[]
 
   // Planning related
-  activity_feed   activity_feed[]
-  tasks           tasks[]
-  urgent_tasks    urgent_tasks[]
-  timeline_events timeline_events[]
-  timeline_items  timeline_items[]
-  timeline_tasks  timeline_tasks[]
-  milestones      milestones[]
-  deadline_alerts deadline_alerts[]
+  activityFeed   activity_feed[]
+  tasks          tasks[]
+  urgentTasks    urgent_tasks[]
+  timelineEvents timeline_events[]
+  timelineItems  timeline_items[]
+  timelineTasks  timeline_tasks[]
+  milestones     milestones[]
+  deadlineAlerts deadline_alerts[]
 
   // User related
-  couple_collaborators couple_collaborators[]
-  user_preferences     user_preferences[]
-  onboarding_progress  onboarding_progress[]
-  guest_groups         guest_groups[]
-  legacy_notifications legacy_notifications[]
+  coupleCollaborators  couple_collaborators[]
+  userPreferences      user_preferences[]
+  onboardingProgress   onboarding_progress[]
+  guestGroups          guest_groups[]
 
   @@map("couples")
 }
@@ -122,10 +120,10 @@ model Guest {
   notes               String?
   createdAt           DateTime?             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime?             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  attendingCount      Int                   @default(0)
-  invitationSentAt    DateTime?
-  rsvpDeadline        DateTime?
-  guest_group_members guest_group_members[]
+  attendingCount      Int                   @default(0) @map("attending_count")
+  invitationSentAt    DateTime?             @map("invitation_sent_at")
+  rsvpDeadline        DateTime?             @map("rsvp_deadline")
+  guestGroupMembers   guest_group_members[]
   couple              Couple                @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "guests_couple_id_fkey1")
   invitations         Invitation[]
 
@@ -135,7 +133,7 @@ model Guest {
 model Invitation {
   id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   guestId             String    @map("guest_id") @db.Uuid
-  couple_id           String    @db.Uuid
+  coupleId            String    @map("couple_id") @db.Uuid
   invitationCode      String?   @unique @map("invitation_code") @db.VarChar(50)
   status              String?   @default("pending") @db.VarChar(20)
   attendingCount      Int?      @default(0) @map("attending_count")
@@ -143,12 +141,12 @@ model Invitation {
   plusOneName         String?   @map("plus_one_name") @db.VarChar(200)
   dietaryRestrictions String?   @map("dietary_restrictions")
   rsvpNotes           String?   @map("rsvp_notes")
-  invited_at          DateTime? @default(now()) @db.Timestamptz(6)
+  invitedAt           DateTime? @default(now()) @map("invited_at") @db.Timestamptz(6)
   respondedAt         DateTime? @map("responded_at") @db.Timestamptz(6)
   rsvpDeadline        DateTime? @map("rsvp_deadline") @db.Date
   createdAt           DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  couples             Couple    @relation(fields: [couple_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  couple              Couple    @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   guest               Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("invitations")
@@ -185,16 +183,16 @@ model Vendor {
 }
 
 model VendorCategory {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name             String    @unique @db.VarChar(100)
-  icon             String?   @default("🏢") @db.VarChar(10)
-  color            String?   @default("#3B82F6") @db.VarChar(7)
-  description      String?
-  industry_typical Boolean?  @default(false)
-  display_order    Int?      @default(0)
-  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  updated_at       DateTime? @default(now()) @db.Timestamptz(6)
-  vendors          Vendor[]
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String    @unique @db.VarChar(100)
+  icon            String?   @default("🏢") @db.VarChar(10)
+  color           String?   @default("#3B82F6") @db.VarChar(7)
+  description     String?
+  industryTypical Boolean?  @default(false) @map("industry_typical")
+  displayOrder    Int?      @default(0) @map("display_order")
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
+  vendors         Vendor[]
 
   @@map("vendor_categories")
 }
@@ -338,28 +336,28 @@ model Table {
 }
 
 model Message {
-  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  coupleId          String          @map("couple_id") @db.Uuid
-  senderId          String          @map("sender_id") @db.Uuid
-  sender_name       String          @db.VarChar(100)
-  sender_email      String          @db.VarChar(255)
-  recipient_id      String?         @db.Uuid
-  recipient_name    String?         @db.VarChar(100)
-  recipient_email   String?         @db.VarChar(255)
-  vendor_id         String?         @db.Uuid
-  subject           String          @db.VarChar(255)
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  coupleId          String           @map("couple_id") @db.Uuid
+  senderId          String           @map("sender_id") @db.Uuid
+  sender_name       String           @db.VarChar(100)
+  sender_email      String           @db.VarChar(255)
+  recipient_id      String?          @db.Uuid
+  recipient_name    String?          @db.VarChar(100)
+  recipient_email   String?          @db.VarChar(255)
+  vendor_id         String?          @db.Uuid
+  subject           String           @db.VarChar(255)
   content           String
-  messageType       String          @default("internal") @map("message_type") @db.VarChar(20)
-  status            String          @default("sent") @db.VarChar(20)
-  thread_id         String?         @db.Uuid
-  parent_message_id String?         @db.Uuid
-  template_id       String?         @db.Uuid
+  messageType       String           @default("internal") @map("message_type") @db.VarChar(20)
+  status            String           @default("sent") @db.VarChar(20)
+  thread_id         String?          @db.Uuid
+  parent_message_id String?          @db.Uuid
+  template_id       String?          @db.Uuid
   attachments       String[]
-  metadata          Json?           @default("{}")
-  sentAt            DateTime        @map("sent_at") @db.Timestamptz(6)
-  read_at           DateTime?       @db.Timestamptz(6)
-  createdAt         DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  metadata          Json?            @default("{}")
+  sentAt            DateTime         @map("sent_at") @db.Timestamptz(6)
+  read_at           DateTime?        @db.Timestamptz(6)
+  createdAt         DateTime?        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime?        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   couple            Couple           @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   messages          Message?         @relation("messagesTomessages", fields: [parent_message_id], references: [id], onUpdate: NoAction)
   other_messages    Message[]        @relation("messagesTomessages")
@@ -377,19 +375,19 @@ model Message {
 }
 
 model MessageTemplate {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  coupleId   String    @map("couple_id") @db.Uuid
-  name       String    @db.VarChar(255)
-  subject    String    @db.VarChar(255)
-  content    String
-  type       String    @default("email") @db.VarChar(20)
-  category   String    @default("general") @db.VarChar(50)
-  variables  String[]  @default([])
-  isActive   Boolean   @default(true) @map("is_active")
-  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  couple     Couple    @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  messages   Message[]
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  coupleId  String    @map("couple_id") @db.Uuid
+  name      String    @db.VarChar(255)
+  subject   String    @db.VarChar(255)
+  content   String
+  type      String    @default("email") @db.VarChar(20)
+  category  String    @default("general") @db.VarChar(50)
+  variables String[]  @default([])
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  couple    Couple    @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messages  Message[]
 
   @@index([coupleId], map: "idx_message_templates_couple_id")
   @@index([category], map: "idx_message_templates_category")
@@ -398,15 +396,15 @@ model MessageTemplate {
 }
 
 model MessageLog {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  coupleId   String    @map("couple_id") @db.Uuid
-  messageId  String    @map("message_id") @db.Uuid
-  event      String    @db.VarChar(50)
-  status     String    @db.VarChar(50)
-  details    Json?     @default("{}")
-  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  couple     Couple    @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  message    Message   @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  coupleId  String    @map("couple_id") @db.Uuid
+  messageId String    @map("message_id") @db.Uuid
+  event     String    @db.VarChar(50)
+  status    String    @db.VarChar(50)
+  details   Json?     @default("{}")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  couple    Couple    @relation(fields: [coupleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([coupleId], map: "idx_message_logs_couple_id")
   @@index([messageId], map: "idx_message_logs_message_id")
@@ -733,21 +731,6 @@ model milestones {
   @@index([target_date], map: "idx_milestones_target_date")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model legacy_notifications {
-  id         String    @id(map: "notifications_pkey") @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  couple_id  String?   @db.Uuid
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  title      String
-  message    String
-  type       String?
-  read       Boolean?  @default(false)
-  action_url String?
-  couple     Couple?   @relation(fields: [couple_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([couple_id], map: "idx_legacy_notifications_couple_id")
-  @@map("notifications")
-}
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model onboarding_progress {

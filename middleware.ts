@@ -30,7 +30,45 @@ async function updateSession(request: NextRequest) {
   )
 
   // This will refresh the session if expired - required for Server Components
-  const { data: { user } } = await supabase.auth.getUser()
+  let { data: { user }, error: userError } = await supabase.auth.getUser()
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  
+  // If we get a JWT signature error, try to refresh the session
+  if (userError && (userError.message.includes('signature is invalid') || userError.message.includes('invalid JWT'))) {
+    console.log('🔄 Middleware: JWT signature invalid, attempting to refresh session...')
+    
+    try {
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+      
+      if (!refreshError && refreshData?.session) {
+        // Try to get user again after refresh
+        const { data: { user: refreshedUser }, error: retryError } = await supabase.auth.getUser()
+        
+        if (!retryError && refreshedUser) {
+          console.log('✅ Middleware: Session refreshed successfully')
+          user = refreshedUser
+          userError = null
+        }
+      }
+    } catch (refreshErr) {
+      console.error('❌ Middleware: Session refresh attempt failed:', refreshErr)
+    }
+  }
+  
+  // Add detailed logging for authentication debugging
+  if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/api/dashboard')) {
+    console.log('🔍 Middleware auth check:', {
+      path: request.nextUrl.pathname,
+      user: user ? { id: user.id, email: user.email } : null,
+      session: session ? { 
+        hasAccessToken: !!session.access_token,
+        expiresAt: session.expires_at 
+      } : null,
+      userError: userError?.message,
+      sessionError: sessionError?.message,
+      cookies: request.cookies.getAll().filter(c => c.name.includes('supabase')).length
+    })
+  }
 
   return { response, user }
 }

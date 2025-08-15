@@ -29,7 +29,36 @@ export default function SignInPage() {
 
     try {
       // Use Supabase client directly for sign in
-      await signIn(email, password)
+      const result = await signIn(email, password)
+      console.log('✅ Sign-in successful:', {
+        userId: result?.user?.id,
+        email: result?.user?.email,
+        hasSession: !!result?.session,
+        hasAccessToken: result?.session?.access_token ? 'yes' : 'no'
+      })
+      
+      // Wait a moment for session to fully establish and cookies to be set
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Call session refresh endpoint to ensure server-side session sync
+      try {
+        const refreshResponse = await fetch('/api/auth/refresh-session', {
+          method: 'POST',
+          credentials: 'include'
+        })
+        const refreshData = await refreshResponse.json()
+        console.log('🔄 Session refresh result:', refreshData)
+        
+        if (!refreshData.success || !refreshData.authenticated) {
+          console.warn('⚠️ Session refresh indicated authentication issue:', refreshData)
+          setError('Authentication sync failed. Please try signing in again.')
+          setLoading(false)
+          return
+        }
+      } catch (refreshError) {
+        console.warn('⚠️ Session refresh failed:', refreshError)
+        // Continue anyway, as the original sign-in might still work
+      }
       
       // Force a hard navigation to ensure cookies are properly set
       window.location.href = '/dashboard'

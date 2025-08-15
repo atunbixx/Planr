@@ -289,7 +289,7 @@ export class GuestRepository {
         }),
         prisma.invitation.groupBy({
           by: ['status'],
-          where: { couple_id: coupleId },
+          where: { coupleId: coupleId },
           _count: true,
           _sum: {
             attendingCount: true

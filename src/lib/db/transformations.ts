@@ -1,6 +1,10 @@
 /**
  * Enhanced Field Transformation Layer
  * Provides automatic snake_case <-> camelCase conversion for API boundaries
+ * 
+ * @deprecated This file will be replaced by the new casing utilities in @/lib/utils/casing.ts
+ * The new utilities provide better type safety and automatic field mapping detection.
+ * Use this for legacy compatibility during the migration period.
  */
 
 // Model-specific field mappings (database field -> API field)
@@ -14,7 +18,9 @@ export const fieldMappings = {
     plus_one_name: 'plusOneName',
     table_number: 'tableNumber',
     rsvp_status: 'rsvpStatus',
+    attending_count: 'attendingCount',
     invitation_sent_at: 'invitationSentAt',
+    rsvp_deadline: 'rsvpDeadline',
     rsvp_responded_at: 'rsvpRespondedAt',
     created_at: 'createdAt',
     updated_at: 'updatedAt'

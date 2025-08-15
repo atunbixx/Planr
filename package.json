@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:naming": "npx tsx scripts/lint-naming.ts",
+    "lint:all": "npm run lint && npm run lint:naming",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "superadmin:list": "npx tsx scripts/list-users.ts",

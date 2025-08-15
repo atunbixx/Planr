@@ -67,22 +67,37 @@ export class CoupleRepository extends BaseRepository<CoupleData> {
       `couple:userId:${userId}`,
       async () => {
         try {
+          console.log('🔍 CoupleRepository: Finding couple for userId:', userId)
+          
           // Try the main couple table first (current schema)
           let couple = await prisma.couple.findFirst({
             where: {
               OR: [
-                { partner1_user_id: userId },
-                { partner2_user_id: userId },
+                { partner1UserId: userId },
+                { partner2UserId: userId },
                 { userId: userId }
               ]
             }
+          })
+
+          console.log('📊 CoupleRepository: Query result:', {
+            found: !!couple,
+            coupleId: couple?.id,
+            userId: couple?.userId,
+            partner1UserId: couple?.partner1UserId,
+            partner2UserId: couple?.partner2UserId
           })
 
           // Legacy fallback removed - using unified schema only
 
           return couple ? this.transformToApiFormat(couple) : null
         } catch (error) {
-          console.error('Error finding couple by userId:', error)
+          console.error('❌ CoupleRepository: Database error finding couple by userId:', {
+            userId,
+            error: error.message,
+            stack: error.stack,
+            code: error.code
+          })
           throw new Error('Failed to find couple')
         }
       },
@@ -352,8 +367,8 @@ export class CoupleRepository extends BaseRepository<CoupleData> {
       weddingStyle: couple.weddingStyle || couple.wedding_style || null,
       onboardingCompleted: couple.onboardingCompleted ?? couple.onboarding_completed ?? false,
       userId: couple.userId || couple.user_id || null,
-      partner1UserId: couple.partner1_user_id || couple.partner1UserId || null,
-      partner2UserId: couple.partner2_user_id || couple.partner2UserId || null,
+      partner1UserId: couple.partner1UserId || null,
+      partner2UserId: couple.partner2UserId || null,
       createdAt: couple.createdAt || couple.created_at || null,
       updatedAt: couple.updatedAt || couple.updated_at || null
     }
@@ -377,8 +392,8 @@ export class CoupleRepository extends BaseRepository<CoupleData> {
     if (data.onboardingCompleted !== undefined) dbData.onboardingCompleted = data.onboardingCompleted
     
     if ('userId' in data && data.userId !== undefined) dbData.userId = data.userId
-    if ('partner1UserId' in data && data.partner1UserId !== undefined) dbData.partner1_user_id = data.partner1UserId
-    if ('partner2UserId' in data && data.partner2UserId !== undefined) dbData.partner2_user_id = data.partner2UserId
+    if ('partner1UserId' in data && data.partner1UserId !== undefined) dbData.partner1UserId = data.partner1UserId
+    if ('partner2UserId' in data && data.partner2UserId !== undefined) dbData.partner2UserId = data.partner2UserId
 
     return dbData
   }
@@ -400,8 +415,8 @@ export class CoupleRepository extends BaseRepository<CoupleData> {
       weddingStyle: legacyCouple.wedding_style || null,
       onboardingCompleted: legacyCouple.onboarding_completed || false,
       userId: legacyCouple.user_id || null,
-      partner1_user_id: legacyCouple.partner1_user_id || null,
-      partner2_user_id: legacyCouple.partner2_user_id || null,
+      partner1UserId: legacyCouple.partner1_user_id || null,
+      partner2UserId: legacyCouple.partner2_user_id || null,
       createdAt: legacyCouple.created_at || null,
       updatedAt: legacyCouple.updated_at || null
     }

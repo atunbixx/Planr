@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { BaseApiHandler } from '../base-handler'
-import { vendorService } from '@/lib/services/vendor.service'
+import { VendorService } from '@/features/vendors/service/vendor.service'
 
 // Validation schemas
 const createVendorSchema = z.object({
@@ -22,6 +22,7 @@ const updateVendorSchema = createVendorSchema.partial()
 
 export class VendorsHandlerV2 extends BaseApiHandler {
   protected model = 'Vendor' as const
+  private vendorService = new VendorService()
   
   async list(request: NextRequest) {
     return this.handleRequest(request, async () => {
@@ -34,51 +35,19 @@ export class VendorsHandlerV2 extends BaseApiHandler {
       const category = url.searchParams.get('category')
       const status = url.searchParams.get('status')
       
-      const result = await vendorService.getVendorsForCouple(coupleId, {
+      const result = await this.vendorService.getVendorsForCouple({
         page,
         pageSize: limit,
         category,
         status
       })
       
-      // Get categories
-      const categories = await vendorService.getCategories()
-      
-      // Calculate stats from the vendors
-      const stats = result.data.reduce((acc, vendor) => {
-        acc.total++
-        acc[vendor.status || 'potential']++
-        if (vendor.contractSigned) acc.contractsSigned++
-        acc.estimatedTotal += Number(vendor.estimatedCost || 0)
-        acc.actualTotal += Number(vendor.actualCost || 0)
-        return acc
-      }, {
-        total: 0,
-        potential: 0,
-        contacted: 0,
-        quoted: 0,
-        booked: 0,
-        completed: 0,
-        contractsSigned: 0,
-        estimatedTotal: 0,
-        actualTotal: 0
-      })
+      // Get vendor statistics
+      const stats = await this.vendorService.getVendorStats()
       
       return {
         vendors: result.data,
-        categories,
-        stats: {
-          total: stats.total,
-          potential: stats.potential,
-          contacted: stats.contacted,
-          quoted: stats.quoted,
-          booked: stats.booked,
-          completed: stats.completed
-        },
-        costs: {
-          estimated: stats.estimatedTotal,
-          actual: stats.actualTotal
-        },
+        stats,
         pagination: result.pagination
       }
     })
@@ -86,39 +55,51 @@ export class VendorsHandlerV2 extends BaseApiHandler {
   
   async create(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
       const data = await this.validateRequest(request, createVendorSchema)
       
-      // Transform to database format
-      const dbData = this.transformInput({
-        ...data,
-        coupleId,
-        name: data.businessName // Map businessName to name for database
-      })
+      // Transform to enterprise service format
+      const createRequest = {
+        name: data.businessName,
+        contactName: data.contactName,
+        phone: data.phone,
+        email: data.email,
+        website: data.website,
+        category: data.category,
+        status: data.status,
+        estimatedCost: data.estimatedCost,
+        contractSigned: data.contractSigned,
+        notes: data.notes
+      }
       
-      return await vendorService.createVendor(coupleId, dbData)
+      return await this.vendorService.createVendor(createRequest)
     })
   }
   
   async update(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
       const data = await this.validateRequest(request, updateVendorSchema)
       
-      // Transform to database format
-      const dbData = this.transformInput(data)
-      if (data.businessName) {
-        dbData.name = data.businessName // Map businessName to name for database
+      // Transform to enterprise service format
+      const updateRequest = {
+        ...(data.businessName && { name: data.businessName }),
+        ...(data.contactName && { contactName: data.contactName }),
+        ...(data.phone && { phone: data.phone }),
+        ...(data.email && { email: data.email }),
+        ...(data.website && { website: data.website }),
+        ...(data.category && { category: data.category }),
+        ...(data.status && { status: data.status }),
+        ...(data.estimatedCost && { estimatedCost: data.estimatedCost }),
+        ...(data.contractSigned !== undefined && { contractSigned: data.contractSigned }),
+        ...(data.notes && { notes: data.notes })
       }
       
-      return await vendorService.updateVendor(id, coupleId, dbData)
+      return await this.vendorService.updateVendor(id, updateRequest)
     })
   }
   
   async delete(request: NextRequest, id: string) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      await vendorService.deleteVendor(id, coupleId)
+      await this.vendorService.deleteVendor(id)
       return { success: true }
     })
   }

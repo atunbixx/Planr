@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { BaseApiHandler } from '../base-handler'
-import { budgetService } from '@/lib/services/budget.service'
+import { BudgetService } from '@/features/budget/service/budget.service'
 
 // Validation schemas
 const createCategorySchema = z.object({
@@ -30,16 +30,13 @@ const createExpenseSchema = z.object({
 const updateExpenseSchema = createExpenseSchema.partial()
 
 export class BudgetHandlerV2 extends BaseApiHandler {
+  private budgetService = new BudgetService()
   
   // Category methods
   async listCategories(request: NextRequest) {
     return this.handleRequest(request, async () => {
-      const coupleId = this.requireCoupleId()
-      
-      const categories = await budgetService.getCategoriesForCouple(coupleId)
-      
-      // Transform using BudgetCategory model
-      return categories.map(cat => this.transformCategory(cat))
+      const result = await this.budgetService.getBudgetCategories()
+      return result
     })
   }
   

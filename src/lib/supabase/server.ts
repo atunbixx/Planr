@@ -38,10 +38,41 @@ export const createClient = async () => {
 // Helper function to get the current user on the server
 export const getUser = async () => {
   const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  // First try to get the user
+  let { data: { user }, error } = await supabase.auth.getUser()
+  
+  // If we get a JWT signature error, try to refresh the session
+  if (error && (error.message.includes('signature is invalid') || error.message.includes('invalid JWT'))) {
+    console.log('🔄 JWT signature invalid, attempting to refresh session...')
+    
+    try {
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+      
+      if (refreshError) {
+        console.error('❌ Session refresh failed:', refreshError)
+        return null
+      }
+      
+      // Try to get user again after refresh
+      const { data: { user: refreshedUser }, error: retryError } = await supabase.auth.getUser()
+      
+      if (retryError) {
+        console.error('❌ User fetch failed after refresh:', retryError)
+        return null
+      }
+      
+      console.log('✅ Session refreshed successfully, user retrieved')
+      return refreshedUser
+      
+    } catch (refreshErr) {
+      console.error('❌ Session refresh attempt failed:', refreshErr)
+      return null
+    }
+  }
   
   if (error) {
-    console.error('Error getting user:', error)
+    console.error('❌ Error getting user:', error)
     return null
   }
   

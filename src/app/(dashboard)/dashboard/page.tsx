@@ -47,6 +47,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isLoading) return
+    
+    // Only proceed if user is signed in
+    if (!isSignedIn || !user) {
+      console.log('User not authenticated, skipping dashboard data fetch')
+      return
+    }
 
     const initializeAndFetch = async () => {
       try {
@@ -63,10 +69,34 @@ export default function DashboardPage() {
       try {
         statsData = await dashboardApi.execute(enterpriseApi.dashboard.getStats())
       } catch (dashboardError: any) {
-        // If onboarding isn't completed, dashboard stats won't be available
-        if (dashboardError?.message?.includes('Onboarding must be completed')) {
-          console.log('Dashboard stats not available - onboarding not completed')
-          // Set default empty stats for users without completed onboarding
+        console.error('Dashboard API Error:', {
+          error: dashboardError,
+          statusCode: dashboardError?.statusCode,
+          message: dashboardError?.message,
+          name: dashboardError?.name
+        })
+        
+        // Check if this is an authentication error (401) or onboarding completion error (403)
+        if (dashboardError?.statusCode === 401 || 
+            dashboardError?.statusCode === 403 || 
+            dashboardError?.message?.includes('Authentication required') ||
+            dashboardError?.message?.includes('complete your wedding setup') ||
+            dashboardError?.message?.includes('Onboarding must be completed')) {
+          
+          // For auth errors (401), redirect to sign-in
+          if (dashboardError?.statusCode === 401 || dashboardError?.message?.includes('Authentication required')) {
+            console.log('Authentication required, redirecting to sign-in...')
+            window.location.href = '/sign-in?message=Please sign in to access your dashboard'
+            return
+          }
+          
+          // For onboarding errors (403), redirect to onboarding
+          console.log('Onboarding not completed, redirecting...')
+          window.location.href = '/onboarding/welcome?message=Please complete your wedding setup to access your dashboard'
+          return
+        } else {
+          console.error('Error loading dashboard stats:', dashboardError)
+          // Set empty stats instead of throwing error to prevent page crash
           statsData = {
             wedding: { daysUntil: null, date: null, venue: null },
             budget: { totalBudget: 0, totalSpent: 0, remaining: 0, percentageSpent: 0 },
@@ -75,9 +105,6 @@ export default function DashboardPage() {
             checklist: { total: 0, completed: 0, dueSoon: 0 },
             photos: { totalPhotos: 0 }
           }
-        } else {
-          console.error('Error loading dashboard stats:', dashboardError)
-          throw dashboardError // Re-throw other errors
         }
       }
       
@@ -145,6 +172,11 @@ export default function DashboardPage() {
     let cancelled = false;
 
     async function load() {
+      // Only proceed if user is authenticated
+      if (!isSignedIn || !user) {
+        return;
+      }
+      
       if (theme !== 'bridal') {
         setMessagesPreview([]);
         setTasksPreview([]);
@@ -218,6 +250,21 @@ export default function DashboardPage() {
             </div>
             <DashboardSkeleton />
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect to home if not authenticated
+  if (!isSignedIn || !user) {
+    return (
+      <div className="min-h-screen bg-[#faf9f7] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+          <p className="text-gray-600 mb-6">Please sign in to access your dashboard.</p>
+          <Link href="/" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Go to Home
+          </Link>
         </div>
       </div>
     )

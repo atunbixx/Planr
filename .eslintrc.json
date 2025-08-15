@@ -1,6 +1,48 @@
 {
   "extends": ["next/core-web-vitals"],
   "rules": {
-    "react/no-unescaped-entities": "off"
-  }
+    "react/no-unescaped-entities": "off",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": "variableLike",
+        "format": ["camelCase", "PascalCase"],
+        "leadingUnderscore": "allow"
+      },
+      {
+        "selector": "property",
+        "format": ["camelCase", "PascalCase"],
+        "filter": {
+          "regex": "^(_.*|created_at|updated_at|partner1_user_id|partner2_user_id|couple_id|invitation_sent_at|rsvp_deadline|attending_count|invited_at|industry_typical|display_order)$",
+          "match": false
+        }
+      },
+      {
+        "selector": "objectLiteralProperty",
+        "format": ["camelCase", "PascalCase", "snake_case"],
+        "filter": {
+          "regex": "^(created_at|updated_at|partner1_user_id|partner2_user_id|couple_id|invitation_sent_at|rsvp_deadline|attending_count|invited_at|industry_typical|display_order)$",
+          "match": true
+        }
+      },
+      {
+        "selector": "typeProperty",
+        "format": ["camelCase", "PascalCase"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/lib/utils/casing.ts", "src/lib/api/compatibility.ts", "src/__tests__/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/naming-convention": "off"
+      }
+    },
+    {
+      "files": ["prisma/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/naming-convention": "off"
+      }
+    }
+  ]
 }

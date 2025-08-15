@@ -20,10 +20,21 @@ class EnterpriseApiClient {
     try {
       // Get Supabase session for authentication
       const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      // Debug session state for API calls
+      console.log('🔍 Enterprise API request:', {
+        url: `${this.baseUrl}${url}`,
+        method: options?.method || 'GET',
+        sessionExists: !!session,
+        hasAccessToken: !!session?.access_token,
+        userId: session?.user?.id,
+        sessionError: sessionError?.message
+      })
       
       const response = await fetch(`${this.baseUrl}${url}`, {
         ...options,
+        credentials: 'include', // Ensure cookies are sent
         headers: {
           'Content-Type': 'application/json',
           ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` }),

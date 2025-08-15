@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BaseAPIHandler } from '../base-handler'
 import { z } from 'zod'
-import { vendorService } from '@/lib/services/vendor.service'
+import { VendorService } from '@/features/vendors/service/vendor.service'
 import { coupleService } from '@/features/couples'
 
 // Validation schemas

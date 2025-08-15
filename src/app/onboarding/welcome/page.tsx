@@ -1,16 +1,24 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Heart, Calendar, Users, DollarSign } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Heart, Calendar, Users, DollarSign, AlertCircle } from 'lucide-react'
 import { trackOnboardingEvent } from '@/lib/onboarding'
 
 export default function WelcomePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [redirectMessage, setRedirectMessage] = useState<string | null>(null)
   
   useEffect(() => {
     trackOnboardingEvent('ob_started', { step: 'welcome' })
-  }, [])
+    
+    // Check if user was redirected with a message
+    const message = searchParams.get('message')
+    if (message) {
+      setRedirectMessage(decodeURIComponent(message))
+    }
+  }, [searchParams])
   
   const handleGetStarted = () => {
     router.push('/onboarding/profile')
@@ -26,6 +34,19 @@ export default function WelcomePage() {
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
           Welcome to Your Wedding Journey
         </h1>
+        
+        {redirectMessage && (
+          <div className="mb-6 max-w-2xl mx-auto">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-blue-800 font-medium">Almost there!</p>
+                <p className="text-blue-700 text-sm mt-1">{redirectMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
           Let's create your perfect wedding plan together. In just a few minutes, 
           we'll set up everything you need to start planning your dream day.

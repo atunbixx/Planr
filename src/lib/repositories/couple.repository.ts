@@ -8,8 +8,8 @@ export class CoupleRepository extends BaseRepository<Couple> {
     return await this.model.findFirst({
       where: {
         OR: [
-          { partner1_user_id: userId },
-          { partner2_user_id: userId }
+          { partner1UserId: userId },
+          { partner2UserId: userId }
         ]
       }
     })

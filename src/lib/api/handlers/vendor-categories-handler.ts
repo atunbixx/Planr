@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BaseAPIHandler } from '../base-handler'
-import { vendorService } from '@/lib/services/vendor.service'
+import { VendorService } from '@/features/vendors/service/vendor.service'
 import { z } from 'zod'
 import { getSupabase } from '@/lib/supabase'
 import { CoupleService } from '@/features/couples'

@@ -1,5 +1,5 @@
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals'
-import { GuestService } from '../../lib/services/guest.service'
+import { GuestService } from '../../features/guests/service/guest.service'
 import { 
   createMockPrismaClient, 
   createMockCache, 

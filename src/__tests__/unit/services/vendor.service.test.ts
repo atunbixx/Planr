@@ -1,4 +1,4 @@
-import { VendorService } from '@/application/services/vendor.service'
+import { VendorService } from '@/features/vendors/service/vendor.service'
 import { IVendorRepository } from '@/infrastructure/persistence/vendor.repository'
 import { Vendor, VendorStatus, Money, ContactInfo } from '@/domain/vendor/vendor.entity'
 import { NotFoundError, BusinessError } from '@/core/errors'
