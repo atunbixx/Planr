@@ -43,9 +43,11 @@ export interface FilterParams {
 export interface ApiResponse<T = any> {
   success: boolean
   data?: T
+  message?: string
   error?: string
   errors?: ValidationError[]
   timestamp: string
+  meta?: Record<string, any>
 }
 
 export interface ValidationError {

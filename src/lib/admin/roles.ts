@@ -127,9 +127,9 @@ export async function logAdminAction(
 }
 
 // Middleware helper for API routes
-export async function withSuperAdmin<T>(
+export function withSuperAdmin<T>(
   handler: (req: Request, userId: string) => Promise<T>
-): Promise<(req: Request) => Promise<Response>> {
+): (req: Request) => Promise<Response> {
   return async (req: Request) => {
     try {
       const supabase = await createClient()

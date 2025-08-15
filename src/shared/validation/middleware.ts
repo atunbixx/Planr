@@ -18,7 +18,7 @@ export async function validateRequest<T>(
     return schema.parse(data)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const validationErrors: ValidationError[] = error.errors.map(err => ({
+      const validationErrors: ValidationError[] = error.issues.map(err => ({
         field: err.path.join('.'),
         message: err.message,
         code: err.code
@@ -108,7 +108,7 @@ export function validateQueryParams<T>(
     return schema.parse(data)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const validationErrors: ValidationError[] = error.errors.map(err => ({
+      const validationErrors: ValidationError[] = error.issues.map(err => ({
         field: err.path.join('.'),
         message: err.message,
         code: err.code
