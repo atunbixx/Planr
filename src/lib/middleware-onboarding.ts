@@ -21,18 +21,22 @@ export async function checkOnboardingStatus(request: NextRequest, userId: string
       }
     }
 
-    // Check onboarding progress in database
-    const progress = await prisma.onboardingProgress.findUnique({
-      where: { userId },
-      select: {
-        done: true,
-        stepCurrent: true,
-        stepsCompleted: true
+    // First get couple_id for the user  
+    const couple = await prisma.couple.findFirst({
+      where: {
+        OR: [
+          { partner1UserId: userId },
+          { partner2UserId: userId },
+          { userId: userId }
+        ]
+      },
+      select: { 
+        id: true,
+        onboardingCompleted: true 
       }
     })
 
-    // If no progress record, user needs to start onboarding
-    if (!progress) {
+    if (!couple) {
       return {
         isComplete: false,
         lastStep: 'welcome',
@@ -41,35 +45,55 @@ export async function checkOnboardingStatus(request: NextRequest, userId: string
       }
     }
 
-    // If onboarding is marked as done, check couple record
-    if (progress.done) {
-      const couple = await prisma.couple.findFirst({
-        where: {
-          OR: [
-            { partner1_user_id: userId },
-            { partner2_user_id: userId },
-            { userId: userId }
-          ]
-        },
-        select: { onboardingCompleted: true }
-      })
+    // Check onboarding progress in database
+    const progress = await prisma.onboarding_progress.findMany({
+      where: { couple_id: couple.id },
+      select: {
+        step: true,
+        completed: true,
+        completed_at: true
+      }
+    })
 
-      const isComplete = couple?.onboardingCompleted || false
+    // If no progress records, user needs to start onboarding
+    if (!progress || progress.length === 0) {
       return {
-        isComplete,
-        lastStep: progress.stepCurrent || 'success',
-        needsRedirect: !isComplete,
-        redirectPath: isComplete ? undefined : '/onboarding/review'
+        isComplete: false,
+        lastStep: 'welcome',
+        needsRedirect: true,
+        redirectPath: '/onboarding/welcome'
       }
     }
 
-    // User has progress but hasn't completed onboarding
-    const lastStep = progress.stepCurrent || 'welcome'
+    // Check if couple has marked onboarding as completed
+    if (couple.onboardingCompleted) {
+      return {
+        isComplete: true,
+        lastStep: 'success',
+        needsRedirect: false
+      }
+    }
+
+    // Find the last completed step and current step  
+    const completedSteps = progress.filter(p => p.completed)
+    const lastCompletedStep = completedSteps[completedSteps.length - 1]
+    
+    // Determine next step based on progress
+    const stepOrder = ['welcome', 'names', 'basics', 'budget', 'review', 'success']
+    let nextStepIndex = 0
+    
+    if (lastCompletedStep) {
+      const currentIndex = stepOrder.indexOf(lastCompletedStep.step)
+      nextStepIndex = Math.min(currentIndex + 1, stepOrder.length - 1)
+    }
+    
+    const nextStep = stepOrder[nextStepIndex]
+    
     return {
       isComplete: false,
-      lastStep,
+      lastStep: nextStep,
       needsRedirect: true,
-      redirectPath: `/onboarding/${lastStep}`
+      redirectPath: `/onboarding/${nextStep}`
     }
 
   } catch (error) {

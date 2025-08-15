@@ -4,7 +4,14 @@ import { Database } from '@/types/database'
 export const createClient = () => {
   return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      // Only auth configuration is valid for @supabase/ssr
+      auth: {
+        persistSession: true,
+        storageKey: 'supabase-auth-token'
+      }
+    }
   )
 }
 

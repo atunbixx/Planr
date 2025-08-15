@@ -14,20 +14,36 @@ export const createClient = async () => {
         },
         set(name: string, value: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value, ...options })
+            // Enhanced cookie settings for development
+            const cookieOptions = {
+              ...options,
+              domain: process.env.NODE_ENV === 'development' ? 'localhost' : options.domain,
+              path: '/',
+              sameSite: 'lax' as const,
+              secure: process.env.NODE_ENV !== 'development',
+              httpOnly: false, // Allow client-side access
+            }
+            cookieStore.set({ name, value, ...cookieOptions })
           } catch (error) {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
+            console.warn('Failed to set cookie on server:', error)
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value: '', ...options })
+            cookieStore.set({ 
+              name, 
+              value: '', 
+              ...options,
+              expires: new Date(0)
+            })
           } catch (error) {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
+            console.warn('Failed to remove cookie on server:', error)
           }
         },
       },

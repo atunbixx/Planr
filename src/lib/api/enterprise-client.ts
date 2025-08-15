@@ -44,6 +44,37 @@ class EnterpriseApiClient {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        console.error('🚨 Enterprise API Request Failed:', {
+          url: `${this.baseUrl}${url}`,
+          method: options?.method || 'GET',
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          headers: Object.fromEntries(response.headers.entries())
+        })
+
+        // Handle authentication errors with user-friendly redirects
+        if (response.status === 401) {
+          // User needs to sign in
+          const currentPath = window.location.pathname + window.location.search
+          const signInUrl = `/sign-in?next=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please sign in to access this feature')}`
+          
+          console.log('🔄 Redirecting to sign-in due to 401 error')
+          window.location.href = signInUrl
+          return
+        }
+        
+        if (response.status === 403) {
+          // User needs to complete onboarding or lacks permissions
+          const redirectTo = errorData.redirectTo || '/onboarding/welcome'
+          const message = errorData.error || errorData.message || 'Please complete your wedding setup to access this feature'
+          const onboardingUrl = `${redirectTo}?message=${encodeURIComponent(message)}`
+          
+          console.log('🔄 Redirecting to onboarding due to 403 error')
+          window.location.href = onboardingUrl
+          return
+        }
+
         throw new ApiError(
           errorData.message || 'Request failed',
           response.status,
