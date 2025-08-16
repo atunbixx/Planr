@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums for better type safety
+enum UserRole {
+  couple
+  planner
+  vendor
+}
+
+enum RsvpStatus {
+  pending
+  accepted
+  declined
+}
+
+enum Side {
+  bride
+  groom
+}
+
+enum BudgetStatus {
+  planned
+  quoted
+  booked
+  paid
+}
+
+// User Model - Represents the user (couple, planner, vendor)
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique
+  password            String
+  role                UserRole  @default(couple)
+  onboardingCompleted Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  weddingDetails WeddingDetails?
+  vendors        Vendor[]
+  guests         Guest[]
+  budgets        Budget[]
+
+  @@map("users")
+}
+
+// WeddingDetails Model - Contains wedding-specific details
+model WeddingDetails {
+  userId     String   @id @db.Uuid
+  venue      String?
+  weddingDate DateTime?
+  budget     Decimal? @db.Decimal(10, 2)
+  guestCount Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wedding_details")
+}
+
+// Vendor Model - Represents a wedding vendor
+model Vendor {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  name       String
+  category   String
+  priceRange String?
+  contact    String?
+  website    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("vendors")
+}
+
+// Guest Model - Represents a wedding guest
+model Guest {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  name            String
+  rsvpStatus      RsvpStatus @default(pending)
+  mealPreference  String?
+  side            Side?
+  invitationSent  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rsvp RSVP?
+
+  @@map("guests")
+}
+
+// RSVP Model - Contains the status of guest RSVP
+model RSVP {
+  guestId       String     @id @db.Uuid
+  status        RsvpStatus @default(pending)
+  dateResponded DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@map("rsvps")
+}
+
+// Budget Model - Tracks the wedding budget details
+model Budget {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  category  String
+  amount    Decimal      @db.Decimal(10, 2)
+  allocated Decimal      @db.Decimal(10, 2)
+  actual    Decimal      @default(0) @db.Decimal(10, 2)
+  status    BudgetStatus @default(planned)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}
