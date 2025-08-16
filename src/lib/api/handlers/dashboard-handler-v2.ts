@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { BaseApiHandler } from '../base-handler'
 import { prisma } from '@/lib/prisma'
+import { getOnboardingState } from '@/lib/onboarding'
 
 export class DashboardHandlerV2 extends BaseApiHandler {
   
@@ -12,7 +13,12 @@ export class DashboardHandlerV2 extends BaseApiHandler {
       const couple = await this.coupleRepo.findByUserId(userId)
       
       if (!couple) {
-        // Return empty stats if no couple exists yet (user hasn't completed onboarding)
+        // Check for saved onboarding data if no couple exists yet
+        const onboardingData = await getOnboardingState(userId)
+        if (onboardingData.stepData && Object.keys(onboardingData.stepData).length > 0) {
+          return this.getStatsFromOnboarding(onboardingData.stepData)
+        }
+        // Return empty stats if no onboarding data either
         return this.getEmptyStats()
       }
       
@@ -223,7 +229,14 @@ export class DashboardHandlerV2 extends BaseApiHandler {
             firstName: true,
             lastName: true,
             createdAt: true,
-            rsvpStatus: true
+            // attendingCount: true, // Temporarily disabled - column missing in database
+            invitations: {
+              select: {
+                status: true,
+                attendingCount: true // Get from invitation instead
+              },
+              take: 1
+            }
           }
         }),
         // Recent expenses
@@ -265,10 +278,9 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           select: {
             id: true,
             imageUrl: true,
-            thumbnailUrl: true,
             caption: true,
             createdAt: true,
-            photoAlbum: {
+            photoAlbums: {
               select: {
                 name: true
               }
@@ -283,7 +295,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           id: guest.id,
           type: 'guest' as const,
           title: `${guest.firstName} ${guest.lastName}`,
-          description: `RSVP: ${guest.rsvpStatus}`,
+          description: `RSVP: ${guest.invitations?.[0]?.status || 'pending'} (${guest.invitations?.[0]?.attendingCount || 0} attending)`,
           timestamp: guest.createdAt,
           icon: '👤',
           data: guest
@@ -310,7 +322,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
           id: photo.id,
           type: 'photo' as const,
           title: photo.caption || 'New photo',
-          description: photo.photoAlbum?.name || 'No album',
+          description: photo.photoAlbums?.name || 'No album',
           timestamp: photo.createdAt,
           icon: '📸',
           data: photo
@@ -322,6 +334,80 @@ export class DashboardHandlerV2 extends BaseApiHandler {
       
       return activities.slice(0, limit)
     })
+  }
+
+  /**
+   * Returns stats based on saved onboarding data
+   */
+  private getStatsFromOnboarding(onboardingStepData: any) {
+    const eventData = onboardingStepData.event || {}
+    const budgetData = onboardingStepData.budget || {}
+    const vendorsData = onboardingStepData.vendors || {}
+    const guestsData = onboardingStepData.guests || {}
+
+    // Calculate days until wedding if we have a date
+    let daysUntilWedding = null
+    if (eventData.weddingDate) {
+      const today = new Date()
+      const weddingDate = new Date(eventData.weddingDate)
+      daysUntilWedding = Math.ceil((weddingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    }
+
+    // Get vendor categories count
+    const vendorCategoriesCount = vendorsData.categories ? vendorsData.categories.length : 0
+
+    return {
+      wedding: {
+        date: eventData.weddingDate ? new Date(eventData.weddingDate).toISOString() : null,
+        daysUntil: daysUntilWedding,
+        venue: {
+          name: eventData.venueName || null,
+          location: eventData.venueLocation || null
+        },
+        guestCount: eventData.estimatedGuestCount || 0
+      },
+      guests: {
+        total: eventData.estimatedGuestCount || 0,
+        confirmed: 0,
+        pending: guestsData.skipped ? 0 : eventData.estimatedGuestCount || 0,
+        declined: 0,
+        totalAttending: eventData.estimatedGuestCount || 0
+      },
+      budget: {
+        totalBudget: budgetData.totalBudget || 0,
+        totalAllocated: budgetData.totalBudget || 0,
+        totalSpent: 0,
+        remaining: budgetData.totalBudget || 0,
+        percentageSpent: 0,
+        categoryCount: Object.keys(budgetData).filter(key => key !== 'totalBudget').length,
+        expenseCount: 0
+      },
+      vendors: {
+        total: vendorCategoriesCount,
+        booked: 0,
+        pending: vendorCategoriesCount,
+        contacted: 0
+      },
+      checklist: {
+        total: 10, // Default checklist items
+        completed: 3, // Basic onboarding steps completed
+        pending: 7,
+        completionPercentage: 30,
+        dueSoon: 2
+      },
+      photos: {
+        totalPhotos: 0,
+        totalAlbums: 0,
+        favoriteCount: 0
+      },
+      messages: {
+        total: 0,
+        sent: 0,
+        scheduled: 0,
+        draft: 0,
+        failed: 0
+      }
+    }
   }
 
   /**

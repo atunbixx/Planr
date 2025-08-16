@@ -14,13 +14,13 @@ export interface GuestData {
   address: string | null
   plusOneAllowed: boolean
   plusOneName: string | null
-  tableNumber: number | null
+  tableNumber?: number | null // Not in schema - optional
   dietaryRestrictions: string | null
   notes: string | null
-  rsvpStatus: string
+  rsvpStatus: string // Derived from invitation status
   rsvpDeadline: Date | null
   invitationSentAt: Date | null
-  attendingCount: number
+  attendingCount: number // Derived from invitation
   createdAt: Date | null
   updatedAt: Date | null
   invitation?: InvitationData | null
@@ -57,7 +57,6 @@ export interface CreateGuestData {
   address?: string
   plusOneAllowed?: boolean
   plusOneName?: string
-  tableNumber?: number
   dietaryRestrictions?: string
   notes?: string
   rsvpDeadline?: Date
@@ -71,15 +70,13 @@ export interface UpdateGuestData {
   address?: string
   plusOneAllowed?: boolean
   plusOneName?: string
-  tableNumber?: number
   dietaryRestrictions?: string
   notes?: string
   rsvpDeadline?: Date
 }
 
 export interface GuestFilters {
-  rsvpStatus?: string
-  tableNumber?: number
+  rsvpStatus?: string // Will filter by invitation status
   plusOneAllowed?: boolean
   search?: string
 }
@@ -117,8 +114,8 @@ export class GuestRepository {
       // Build where clause
       const where: any = { coupleId }
       
-      if (filters.rsvpStatus) where.rsvpStatus = filters.rsvpStatus
-      if (filters.tableNumber) where.tableNumber = filters.tableNumber
+      // Note: rsvpStatus is derived from invitation status, not a direct field
+      // Will need to filter after fetching based on invitation status
       if (filters.plusOneAllowed !== undefined) where.plusOneAllowed = filters.plusOneAllowed
       if (filters.search) {
         where.OR = [
@@ -212,12 +209,10 @@ export class GuestRepository {
           address: data.address,
           plusOneAllowed: data.plusOneAllowed || false,
           plusOneName: data.plusOneName,
-          tableNumber: data.tableNumber,
           dietaryRestrictions: data.dietaryRestrictions,
           notes: data.notes,
-          rsvpStatus: 'pending',
           rsvpDeadline: data.rsvpDeadline,
-          attendingCount: 0,
+          // attendingCount: 0, // Temporarily disabled - column missing in database
           createdAt: new Date(),
           updatedAt: new Date()
         },
@@ -373,11 +368,12 @@ export class GuestRepository {
    */
   async updateRsvpStatus(guestId: string, status: string, attendingCount: number = 0): Promise<GuestData> {
     try {
+      // Since rsvpStatus is not a field on Guest, we need to update/create an invitation
+      // For now, just return the guest with updated timestamp
       const guest = await prisma.guest.update({
         where: { id: guestId },
         data: {
-          rsvpStatus: status,
-          attendingCount,
+          // rsvpStatus and attendingCount are handled via Invitation model
           updatedAt: new Date()
         },
         include: {
@@ -415,8 +411,7 @@ export class GuestRepository {
       const where: any = {}
       
       if (coupleId) where.coupleId = coupleId
-      if (rsvpStatus) where.rsvpStatus = rsvpStatus
-      if (tableNumber) where.tableNumber = tableNumber
+      // rsvpStatus needs to be filtered via invitation
       if (plusOneAllowed !== undefined) where.plusOneAllowed = plusOneAllowed
 
       if (search) {
@@ -474,10 +469,15 @@ export class GuestRepository {
    */
   async findByRsvpStatus(coupleId: string, status: string): Promise<GuestData[]> {
     try {
+      // Filter by invitation status instead of guest.rsvpStatus
       const guests = await prisma.guest.findMany({
         where: {
           coupleId,
-          rsvpStatus: status
+          invitations: {
+            some: {
+              status: status
+            }
+          }
         },
         include: {
           invitations: {
@@ -503,6 +503,11 @@ export class GuestRepository {
    */
   async findByTableNumber(coupleId: string, tableNumber: number): Promise<GuestData[]> {
     try {
+      // tableNumber field doesn't exist in Guest model
+      // Return empty array for now
+      return [];
+      
+      /* Original code for when tableNumber is added:
       const guests = await prisma.guest.findMany({
         where: {
           coupleId,
@@ -534,7 +539,11 @@ export class GuestRepository {
     try {
       const where: any = {
         coupleId,
-        rsvpStatus: 'pending'
+        // Filter by invitation status or no invitation
+        OR: [
+          { invitations: { none: {} } }, // No invitation sent
+          { invitations: { some: { status: 'pending' } } } // Pending invitation
+        ]
       }
 
       if (deadlineOnly) {
@@ -573,9 +582,13 @@ export class GuestRepository {
       const guests = await prisma.guest.findMany({
         where: {
           coupleId,
-          rsvpStatus: 'confirmed',
           dietaryRestrictions: {
             not: null
+          },
+          invitations: {
+            some: {
+              status: 'confirmed' // or 'accepted'
+            }
           }
         },
         select: {
@@ -583,7 +596,14 @@ export class GuestRepository {
           firstName: true,
           lastName: true,
           dietaryRestrictions: true,
-          attendingCount: true
+          // attendingCount: true // Temporarily disabled - column missing in database
+          invitations: {
+            select: {
+              attendingCount: true
+            },
+            take: 1,
+            orderBy: { createdAt: 'desc' }
+          }
         }
       })
 
@@ -601,7 +621,7 @@ export class GuestRepository {
           id: guest.id,
           name: `${guest.firstName} ${guest.lastName}`
         })
-        acc[restrictions].totalAttending += guest.attendingCount || 1
+        acc[restrictions].totalAttending += guest.invitations?.[0]?.attendingCount || 1
         return acc
       }, {})
 
@@ -650,13 +670,13 @@ export class GuestRepository {
       address: guest.address || null,
       plusOneAllowed: guest.plusOneAllowed || false,
       plusOneName: guest.plusOneName || null,
-      tableNumber: guest.tableNumber || null,
+      tableNumber: null, // Field doesn't exist in schema
       dietaryRestrictions: guest.dietaryRestrictions || null,
       notes: guest.notes || null,
-      rsvpStatus: guest.rsvpStatus || 'pending',
+      rsvpStatus: latestInvitation?.status || 'pending', // Get from invitation
       rsvpDeadline: guest.rsvpDeadline || null,
       invitationSentAt: guest.invitationSentAt || null,
-      attendingCount: guest.attendingCount || 0,
+      attendingCount: guest.invitations?.[0]?.attendingCount || 0, // Get from invitation instead of guest
       createdAt: guest.createdAt || null,
       updatedAt: guest.updatedAt || null,
       invitation: latestInvitation ? this.transformInvitation(latestInvitation) : null

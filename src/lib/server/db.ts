@@ -328,8 +328,8 @@ export async function getGuestsData(options?: {
     coupleId: coupleId
   }
 
-  // Guest model doesn't have attendingStatus field
-  // TODO: Add RSVP status tracking to Guest model or use Invitation status
+  // Note: attendingCount field exists in schema but may be missing in database
+  // Using Invitation's attendingCount as workaround
 
   if (filters.search) {
     where.OR = [
