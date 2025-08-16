@@ -526,6 +526,7 @@ export class GuestRepository {
       })
 
       return guests.map(guest => this.transformGuest(guest))
+      */
     } catch (error) {
       console.error('Error finding guests by table number:', error)
       throw new Error('Failed to find guests by table number')
