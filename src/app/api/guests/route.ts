@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
+import { tempStorage } from '@/lib/db/temp-storage'
 import { requireOnboarding, AuthenticatedRequest } from '@/lib/auth/middleware'
 import { createErrorResponse } from '@/lib/auth/jwt'
 import { createGuestSchema } from '@/lib/validation/guest'
@@ -20,12 +21,21 @@ async function getHandler(request: AuthenticatedRequest) {
       data: guests
     })
   } catch (error) {
-    console.error('Get guests error:', error)
-    // For now return empty array - temp storage for guests not implemented yet
-    return NextResponse.json({
-      success: true,
-      data: []
-    })
+    console.error('Database not available, using temp storage for guests')
+    // Use temp storage as fallback
+    try {
+      const guests = await tempStorage.findGuestsByUserId(request.user!.id)
+      return NextResponse.json({
+        success: true,
+        data: guests
+      })
+    } catch (tempError) {
+      console.error('Temp storage error:', tempError)
+      return NextResponse.json({
+        success: true,
+        data: []
+      })
+    }
   }
 }
 
@@ -73,30 +83,21 @@ async function postHandler(request: AuthenticatedRequest) {
         return { guest, rsvp }
       })
     } catch (dbError) {
-      console.log('Database not available for guest creation')
-      // For now return mock success - temp storage for guests not implemented yet
-      const mockGuest = {
-        id: Date.now().toString(),
+      console.log('Database not available, using temp storage for guest creation')
+      // Use temp storage as fallback
+      const tempGuest = await tempStorage.createGuest({
         userId: request.user!.id,
         name,
         rsvpStatus,
         mealPreference,
         side,
-        invitationSent,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
+        invitationSent
+      })
       
-      const mockRsvp = {
-        id: Date.now().toString(),
-        guestId: mockGuest.id,
-        status: rsvpStatus,
-        dateResponded: null,
-        createdAt: new Date(),
-        updatedAt: new Date()
+      result = { 
+        guest: tempGuest, 
+        rsvp: tempGuest.rsvp 
       }
-      
-      result = { guest: mockGuest, rsvp: mockRsvp }
     }
 
     return NextResponse.json({
