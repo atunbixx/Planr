@@ -30,7 +30,7 @@ export class GuestService {
         },
         checkIns: true
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' as const }
     });
   }
 

@@ -311,7 +311,7 @@ export class VendorRepository {
   async getCategories(coupleId: string): Promise<VendorCategoryData[]> {
     try {
       const categories = await prisma.vendorCategory.findMany({
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' as const }
       })
 
       return categories.map(cat => this.transformCategory(cat))
@@ -423,7 +423,7 @@ export class VendorRepository {
         include: {
           vendorCategories: true
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy]: sortOrder } as const,
         skip,
         take: pageSize
       })
@@ -463,7 +463,7 @@ export class VendorRepository {
         include: {
           vendorCategories: true
         },
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' as const }
       })
 
       return vendors.map(vendor => this.transformVendor(vendor))
@@ -559,7 +559,7 @@ export class VendorRepository {
         include: {
           vendorCategories: true
         },
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' as const }
       })
 
       return vendors.map(vendor => this.transformVendor(vendor))

@@ -233,7 +233,7 @@ export class PhotosHandlerV2 extends BaseApiHandler {
       
       const albums = await prisma.photoAlbum.findMany({
         where: { coupleId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' as const },
         include: {
           photos: {
             select: {

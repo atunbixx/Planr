@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { BaseApiHandler } from '../base-handler'
 import { GuestService } from '@/features/guests/service/guest.service'
@@ -37,22 +37,16 @@ export class GuestsHandler extends BaseApiHandler {
   }
   
   async create(request: NextRequest) {
-    return this.handleRequest(request, async () => {
-      const data = await this.validateRequest(request, createGuestSchema)
-      
-      // Transform to enterprise service format
-      const createRequest = {
-        name: `${data.firstName} ${data.lastName || ''}`.trim(),
-        email: data.email,
-        phone: data.phone,
-        relationship: data.side, // Map side to relationship
-        side: data.side,
-        hasPlusOne: data.plusOneAllowed,
-        dietaryRestrictions: data.dietaryRestrictions ? [data.dietaryRestrictions] : []
+    return NextResponse.json(
+      {
+        error: 'This endpoint is deprecated. Use POST /api/v1/guests instead.',
+        documentation: '/api/docs'
+      },
+      { 
+        status: 410,
+        headers: { 'X-Handler': 'deprecated/guests-handler' }
       }
-      
-      return await this.guestService.createGuest(createRequest)
-    })
+    );
   }
   
   async update(request: NextRequest, id: string) {

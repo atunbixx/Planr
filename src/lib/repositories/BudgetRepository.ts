@@ -435,7 +435,7 @@ export class BudgetRepository {
             }
           }
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy]: sortOrder } as const,
         skip,
         take: pageSize
       })
@@ -829,7 +829,7 @@ export class BudgetRepository {
       // Calculate spending by month
       const expenses = await prisma.budgetExpense.findMany({
         where: { coupleId },
-        orderBy: { createdAt: 'asc' }
+        orderBy: { createdAt: 'asc' as const }
       })
 
       const spendingByMonth = expenses.reduce((acc: any, exp: any) => {
@@ -905,7 +905,7 @@ export class BudgetRepository {
 
       const categories = await prisma.budgetCategory.findMany({
         where,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy]: sortOrder } as const,
         skip,
         take: pageSize
       })

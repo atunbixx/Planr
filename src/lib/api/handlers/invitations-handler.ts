@@ -60,7 +60,7 @@ export class SendInvitationsHandler extends BaseAPIHandler {
       },
       include: {
         invitations: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           take: 1
         }
       }

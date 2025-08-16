@@ -62,8 +62,12 @@ export default function GuestsPage() {
     withPlusOne: 0
   })
   const guestsApi = useApiState<Guest[]>([], {
-    onError: (error) => console.error('Failed to load guests:', error)
-  })
+      showErrorToast: false,
+      onError: (error) => {
+        // Allow authentication errors to bubble up for enterprise-client redirect handling
+        console.error('Error in guests API:', error)
+      }
+    })
   const [isAddingGuest, setIsAddingGuest] = useState(false)
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null)
   const [isManagingInvitations, setIsManagingInvitations] = useState(false)
@@ -73,52 +77,89 @@ export default function GuestsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const fetchGuests = async (forceRefresh = false) => {
-    console.log('Fetching guests...', forceRefresh ? '(force refresh)' : '')
-    
-    const response = await guestsApi.execute(enterpriseApi.guests.list())
-    
-    if (response) {
-      // Transform API guests to match the component interface
-      // response is already the data array, not wrapped in { data: ... }
-      // Handle both paginated and array responses
-      const guestArray = Array.isArray(response) ? response : (response as any).data || []
-      const transformedGuests = guestArray.map((guest: GuestResponse) => ({
-        id: guest.id,
-        name: guest.name,
-        email: guest.email,
-        phone: guest.phone,
-        rsvpStatus: guest.rsvpStatus,
-        plusOneAllowed: guest.hasPlusOne || false,
-        plusOneName: guest.plusOneName,
-        dietaryRestrictions: guest.dietaryRestrictions,
-        side: guest.side || 'both',
-        tableNumber: guest.tableNumber
-      }))
-      setGuests(transformedGuests)
-      
-      // Calculate stats
-      const newStats = transformedGuests.reduce((acc: GuestStats, guest: any) => {
-        acc.total++
-        if (guest.rsvpStatus === 'confirmed') acc.confirmed++
-        else if (guest.rsvpStatus === 'declined') acc.declined++
-        else acc.pending++
-        if (guest.plusOneAllowed) acc.withPlusOne++
-        return acc
-      }, {
+    if (!isSignedIn) {
+      console.log('Skipping guest fetch - user not signed in')
+      setGuests([])
+      setStats({
         total: 0,
         confirmed: 0,
         declined: 0,
         pending: 0,
         withPlusOne: 0
       })
-      
-      setStats(newStats)
+      return
     }
+    
+    console.log('Fetching guests...', forceRefresh ? '(force refresh)' : '')
+    
+    try {
+      const response = await guestsApi.execute(enterpriseApi.guests.list())
+      
+      if (response) {
+        // Transform API guests to match the component interface
+        const guestArray = Array.isArray(response) ? response : (response as any).data || []
+        const transformedGuests = guestArray.map((guest: GuestResponse) => ({
+          id: guest.id,
+          name: guest.name,
+          email: guest.email,
+          phone: guest.phone,
+          rsvpStatus: guest.rsvpStatus,
+          plusOneAllowed: guest.hasPlusOne || false,
+          plusOneName: guest.plusOneName,
+          dietaryRestrictions: guest.dietaryRestrictions,
+          side: guest.side || 'both',
+          tableNumber: guest.tableNumber
+        }))
+        setGuests(transformedGuests)
+        
+        // Calculate stats
+        const newStats = transformedGuests.reduce((acc: GuestStats, guest: any) => {
+          acc.total++
+          if (guest.rsvpStatus === 'confirmed') acc.confirmed++
+          else if (guest.rsvpStatus === 'declined') acc.declined++
+          else acc.pending++
+          if (guest.plusOneAllowed) acc.withPlusOne++
+          return acc
+        }, {
+          total: 0,
+          confirmed: 0,
+          declined: 0,
+          pending: 0,
+          withPlusOne: 0
+        })
+        
+        setStats(newStats)
+      }
+    } catch (error) {
+        console.error('Error fetching guests:', error)
+        // Handle authentication errors by clearing data and allowing redirect
+        const errorMessage = (error as Error)?.message || ''
+        if (errorMessage.includes('401') || errorMessage.includes('403') || errorMessage.includes('Unauthorized')) {
+          setGuests([])
+          setStats({
+            total: 0,
+            confirmed: 0,
+            declined: 0,
+            pending: 0,
+            withPlusOne: 0
+          })
+        }
+      }
   }
 
   useEffect(() => {
     if (!isLoading && isSignedIn) {
       fetchGuests()
+    } else if (!isLoading && !isSignedIn) {
+      // Handle unauthenticated state gracefully
+      setGuests([])
+      setStats({
+        total: 0,
+        confirmed: 0,
+        declined: 0,
+        pending: 0,
+        withPlusOne: 0
+      })
     }
   }, [isLoading, isSignedIn])
 
@@ -197,6 +238,26 @@ export default function GuestsPage() {
 
   // Show error state
   if (error && guests.length === 0) {
+    // Check if this is an authentication error
+    const isAuthError = error.message?.includes('401') || error.message?.includes('Unauthorized')
+    
+    if (isAuthError) {
+      return (
+        <WeddingPageLayout>
+          <WeddingPageHeader
+            title="Guest List"
+            subtitle="Manage your wedding guest list and RSVPs"
+          />
+          <WeddingCard className="text-center">
+            <p className="text-red-600 mb-4">Please sign in to view your guest list</p>
+            <WeddingButton onClick={() => window.location.href = '/sign-in?next=/dashboard/guests'}>
+              Sign In
+            </WeddingButton>
+          </WeddingCard>
+        </WeddingPageLayout>
+      )
+    }
+    
     return (
       <WeddingPageLayout>
         <WeddingPageHeader

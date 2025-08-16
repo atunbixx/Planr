@@ -257,7 +257,7 @@ export class CoupleRepository extends BaseRepository<CoupleData> {
 
       const couples = await prisma.couple.findMany({
         where,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy]: sortOrder } as const,
         skip,
         take: pageSize
       })

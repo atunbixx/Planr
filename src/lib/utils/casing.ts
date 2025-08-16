@@ -5,6 +5,11 @@
 
 export type CasingStyle = 'camelCase' | 'snake_case'
 
+/** Helper to check for plain object (not null, not array, not Date) */
+function isObjectLike(value: unknown): value is Record<string, any> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date)
+}
+
 /**
  * Convert camelCase to snake_case
  */
@@ -102,7 +107,7 @@ export const FIELD_MAPPINGS = {
  * Apply field mappings to object (snake_case to camelCase)
  */
 export function applyFieldMappings<T extends Record<string, any>>(obj: T): Record<string, any> {
-  const result = { ...obj }
+  const result: Record<string, any> = { ...obj }
   
   for (const [snakeField, camelField] of Object.entries(FIELD_MAPPINGS)) {
     if (snakeField in result) {
@@ -118,7 +123,7 @@ export function applyFieldMappings<T extends Record<string, any>>(obj: T): Recor
  * Apply reverse field mappings to object (camelCase to snake_case)  
  */
 export function applyReverseFieldMappings<T extends Record<string, any>>(obj: T): Record<string, any> {
-  const result = { ...obj }
+  const result: Record<string, any> = { ...obj }
   const reverseMap = Object.fromEntries(
     Object.entries(FIELD_MAPPINGS).map(([snake, camel]) => [camel, snake])
   )
@@ -164,8 +169,18 @@ export function legacyOutput<T extends Record<string, any>>(internal: T): Record
 /**
  * Detect the casing style of an object based on its keys
  */
-export function detectCasingStyle(obj: Record<string, any>): CasingStyle {
+export function detectCasingStyle(obj: unknown): CasingStyle {
+  if (Array.isArray(obj)) {
+    // Inspect first element if it's an object
+    const first = obj.find((v) => isObjectLike(v))
+    if (first) return detectCasingStyle(first)
+    return 'camelCase'
+  }
+  if (!isObjectLike(obj)) {
+    return 'camelCase'
+  }
   const keys = Object.keys(obj)
+  if (keys.length === 0) return 'camelCase'
   const snakeCount = keys.filter(key => key.includes('_')).length
   const camelCount = keys.filter(key => /[A-Z]/.test(key)).length
   
@@ -174,14 +189,29 @@ export function detectCasingStyle(obj: Record<string, any>): CasingStyle {
 
 /**
  * Smart normalization: automatically detect input format and normalize to camelCase
+ * - Preserves the original type T (objects, arrays, primitives)
+ * - Handles arrays by normalizing each element
  */
-export function smartNormalize<T extends Record<string, any>>(input: T): Record<string, any> {
-  const style = detectCasingStyle(input)
-  
-  if (style === 'snake_case') {
-    return normalizeInput(input)
+export function smartNormalize<T>(input: T): T {
+  // Arrays: normalize each element if object-like
+  if (Array.isArray(input)) {
+    if (input.length === 0) return input
+    const style = detectCasingStyle(input)
+    const arr = input as unknown[]
+    const normalized = arr.map((item) => {
+      if (!isObjectLike(item)) return item
+      return style === 'snake_case' ? normalizeInput(item) : objectToCamelCase(item)
+    })
+    return normalized as unknown as T
   }
-  
-  // Already camelCase, return as-is but ensure deep normalization
-  return objectToCamelCase(input)
+
+  // Non-objects or Date: return as-is
+  if (!isObjectLike(input)) {
+    return input
+  }
+
+  // Plain objects: detect casing and normalize
+  const style = detectCasingStyle(input)
+  const result = style === 'snake_case' ? normalizeInput(input) : objectToCamelCase(input)
+  return result as unknown as T
 }

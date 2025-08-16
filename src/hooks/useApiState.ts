@@ -79,7 +79,13 @@ export function useApiState<T>(
         isValidating: false
       }))
       
-      if (showErrorToast) {
+      // Allow authentication errors to bubble up for enterprise-client redirect handling
+      const isAuthError = err.message?.includes('401') || 
+                         err.message?.includes('403') || 
+                         err.message?.includes('Unauthorized') ||
+                         err.message?.includes('Forbidden')
+      
+      if (showErrorToast && !isAuthError) {
         handleApiError(error)
       }
       

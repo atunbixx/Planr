@@ -350,7 +350,7 @@ export class DashboardStatsHandler extends BaseAPIHandler {
           lastName: true,
           createdAt: true
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' as const },
         take: 10
       }),
       prisma.vendor.findMany({
@@ -364,7 +364,7 @@ export class DashboardStatsHandler extends BaseAPIHandler {
           status: true,
           createdAt: true
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' as const },
         take: 10
       }),
       prisma.tasks.findMany({

@@ -106,33 +106,16 @@ export class GuestsCompatibleHandler extends BaseApiHandler {
    * CREATE: Create guest with input compatibility
    */
   async create(request: NextRequest) {
-    return withCompatibility(async (normalizedRequest, normalizedBody) => {
-      return this.handleRequest(normalizedRequest, async () => {
-        // Validate against modern schema (normalizedBody is already camelCase)
-        const validationResult = createGuestSchema.safeParse(normalizedBody)
-        
-        if (!validationResult.success) {
-          return this.error('Validation failed', 400, {
-            errors: validationResult.error.format(),
-            hint: 'Use camelCase field names (firstName, lastName, attendingCount, etc.)'
-          })
-        }
-
-        const result = await this.guestService.create(validationResult.data)
-        
-        // Validate response format
-        const responseValidation = validateCamelCase(result)
-        if (!responseValidation.isValid) {
-          console.warn('[API Response] Non-camelCase fields in response:', responseValidation.violations)
-        }
-
-        return this.success(ensureCamelCaseResponse(result))
-      })
-    }, {
-      supportLegacyInput: true,
-      logWarnings: true,
-      addDeprecationWarning: true
-    })(request)
+    return NextResponse.json(
+      {
+        error: 'This endpoint is deprecated. Use POST /api/v1/guests instead.',
+        documentation: '/api/docs'
+      },
+      { 
+        status: 410,
+        headers: { 'X-Handler': 'deprecated/guests-handler-compatible' }
+      }
+    );
   }
 
   /**

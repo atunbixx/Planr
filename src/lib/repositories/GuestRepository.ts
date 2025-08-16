@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 export interface GuestData {
   id: string
@@ -99,6 +100,51 @@ export interface GuestsResponse {
 
 export class GuestRepository {
   /**
+   * Get the select fields for guest queries (excludes missing database columns)
+   */
+  private getGuestSelectFields() {
+    return {
+      id: true,
+      coupleId: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      address: true,
+      relationship: true,
+      side: true,
+      plusOneAllowed: true,
+      plusOneName: true,
+      dietaryRestrictions: true,
+      notes: true,
+      createdAt: true,
+      updatedAt: true,
+      // attendingCount: true, // Excluded - column doesn't exist in database
+      invitationSentAt: true,
+      rsvpDeadline: true,
+      invitations: {
+        select: {
+          id: true,
+          invitationCode: true,
+          status: true,
+          attendingCount: true,
+          plusOneAttending: true,
+          plusOneName: true,
+          dietaryRestrictions: true,
+          rsvpNotes: true,
+          invitedAt: true,
+          respondedAt: true,
+          rsvpDeadline: true,
+          createdAt: true,
+          updatedAt: true
+        },
+        orderBy: { createdAt: 'desc' as const },
+        take: 1
+      }
+    }
+  }
+
+  /**
    * Get all guests for a couple with pagination and filtering
    */
   async getGuests(
@@ -129,15 +175,10 @@ export class GuestRepository {
       const [guests, total, stats] = await Promise.all([
         prisma.guest.findMany({
           where,
-          include: {
-            invitations: {
-              orderBy: { createdAt: 'desc' },
-              take: 1
-            }
-          },
+          select: this.getGuestSelectFields(),
           orderBy: [
-            { lastName: 'asc' },
-            { firstName: 'asc' }
+            { lastName: 'asc' as const },
+            { firstName: 'asc' as const }
           ],
           skip,
           take: pageSize
@@ -173,7 +214,7 @@ export class GuestRepository {
         where: { id: guestId },
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         }
@@ -218,7 +259,7 @@ export class GuestRepository {
         },
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         }
@@ -245,7 +286,7 @@ export class GuestRepository {
         },
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         }
@@ -344,15 +385,10 @@ export class GuestRepository {
             { phone: { contains: query, mode: 'insensitive' } }
           ]
         },
-        include: {
-          invitations: {
-            orderBy: { createdAt: 'desc' },
-            take: 1
-          }
-        },
+        select: this.getGuestSelectFields(),
         orderBy: [
-          { lastName: 'asc' },
-          { firstName: 'asc' }
+          { lastName: 'asc' as const },
+          { firstName: 'asc' as const }
         ]
       })
 
@@ -378,7 +414,7 @@ export class GuestRepository {
         },
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         }
@@ -427,15 +463,13 @@ export class GuestRepository {
       const totalPages = Math.ceil(total / pageSize)
       const skip = (page - 1) * pageSize
 
+      const sortOrderValue: Prisma.SortOrder = sortOrder === 'desc' ? 'desc' : 'asc'
+      const orderBy: Prisma.GuestOrderByWithRelationInput = ({ [sortBy]: sortOrderValue } as any)
+
       const guests = await prisma.guest.findMany({
         where,
-        include: {
-          invitations: {
-            orderBy: { createdAt: 'desc' },
-            take: 1
-          }
-        },
-        orderBy: { [sortBy]: sortOrder },
+        select: this.getGuestSelectFields(),
+        orderBy: orderBy,
         skip,
         take: pageSize
       })
@@ -481,20 +515,20 @@ export class GuestRepository {
         },
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         },
         orderBy: [
-          { lastName: 'asc' },
-          { firstName: 'asc' }
+          { lastName: 'asc' as const },
+          { firstName: 'asc' as const }
         ]
       })
 
       return guests.map(guest => this.transformGuest(guest))
     } catch (error) {
-      console.error('Error finding guests by RSVP status:', error)
-      throw new Error('Failed to find guests by RSVP status')
+      console.error('Error getting guests by RSVP status:', error)
+      throw new Error('Failed to get guests by RSVP status')
     }
   }
 
@@ -515,7 +549,7 @@ export class GuestRepository {
         },
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         },
@@ -557,7 +591,7 @@ export class GuestRepository {
         where,
         include: {
           invitations: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' as const },
             take: 1
           }
         },

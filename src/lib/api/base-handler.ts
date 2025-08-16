@@ -8,6 +8,7 @@ import { BudgetRepository } from '@/lib/repositories/BudgetRepository'
 import { VendorRepository } from '@/lib/repositories/VendorRepository'
 import { GuestRepository } from '@/lib/repositories/GuestRepository'
 import { getUser } from '@/lib/supabase/server'
+import { smartNormalize } from '@/lib/utils/casing'
 
 export interface ApiResponse<T = any> {
   success: boolean
@@ -26,6 +27,16 @@ export interface AuthContext {
   userId: string
   email?: string
   coupleId?: string
+}
+
+function normalizeAny(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((v) => normalizeAny(v))
+  }
+  if (value && typeof value === 'object') {
+    return smartNormalize(value as Record<string, any>)
+  }
+  return value
 }
 
 export abstract class BaseApiHandler {
@@ -59,7 +70,7 @@ export abstract class BaseApiHandler {
         ? toApiFormat(result, this.model)
         : result
       
-      return this.successResponse(transformed)
+      return this.successResponse(transformed as T)
     } catch (error) {
       return this.handleError(error)
     } finally {
@@ -74,7 +85,9 @@ export abstract class BaseApiHandler {
    */
   protected transformInput<T extends Record<string, any>>(data: T): T {
     if (!this.model || !data) return data
-    return toDbFormat(data, this.model) as T
+    // Normalize to camelCase first, then map to DB format (snake_case/field mappings)
+    const normalized = smartNormalize(data)
+    return toDbFormat(normalized, this.model) as T
   }
   
   /**
@@ -85,8 +98,10 @@ export abstract class BaseApiHandler {
     schema: z.Schema<T>
   ): Promise<T> {
     try {
-      const body = await request.json()
-      return schema.parse(body)
+      const body: unknown = await request.json()
+      // Accept snake_case input by normalizing to camelCase before validation (supports arrays)
+      const normalized = normalizeAny(body)
+      return schema.parse(normalized)
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new ValidationException(
@@ -146,9 +161,11 @@ export abstract class BaseApiHandler {
    * Success response helper
    */
   protected successResponse<T>(data: T): NextResponse<ApiResponse<T>> {
+    // Ensure camelCase output including arrays of objects
+    const normalizedData = normalizeAny(data) as T
     return NextResponse.json({
       success: true,
-      data,
+      data: normalizedData,
       timestamp: new Date().toISOString()
     })
   }

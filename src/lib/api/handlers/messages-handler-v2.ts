@@ -67,7 +67,7 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       const [messages, total] = await Promise.all([
         prisma.message.findMany({
           where: whereClause,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           skip,
           take: limit
         }),
@@ -441,7 +441,7 @@ export class MessagesHandlerV2 extends BaseApiHandler {
       
       const logs = await prisma.messageLog.findMany({
         where: whereClause,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' as const },
         include: {
           message: {
             select: {

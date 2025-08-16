@@ -121,7 +121,7 @@ export class PhotosHandler extends BaseAPIHandler {
             }
           }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' as const },
         take: limit,
         skip: offset
       }),
@@ -781,7 +781,7 @@ export class AlbumDetailHandler extends BaseAPIHandler {
           }
         },
         photos: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           take: 50 // Limit for initial load
         }
       }

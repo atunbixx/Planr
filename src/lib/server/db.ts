@@ -151,7 +151,7 @@ export async function getVendorsData(options?: {
 
   // Get vendor categories
   const categories = await prisma.vendorCategory.findMany({
-    orderBy: { name: 'asc' }
+    orderBy: { name: 'asc' as const }
   })
 
   // Calculate summary statistics
@@ -255,7 +255,7 @@ export async function getPhotosData(options?: {
         }
       }
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' as const }
   })
 
   // Get photos
@@ -429,10 +429,10 @@ export async function getBudgetData(options?: {
           dueDate: true,
           paymentStatus: true
         },
-        orderBy: { dueDate: 'desc' }
+        orderBy: { dueDate: 'desc' as const }
       }
     },
-    orderBy: { createdAt: 'asc' }
+    orderBy: { createdAt: 'asc' as const }
   })
 
   // Get recent expenses across all categories
@@ -447,7 +447,7 @@ export async function getBudgetData(options?: {
         }
       }
     },
-    orderBy: { dueDate: 'desc' },
+    orderBy: { dueDate: 'asc' as const },
     take: 10
   })
 

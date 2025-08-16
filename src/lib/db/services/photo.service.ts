@@ -21,7 +21,7 @@ export class PhotoService extends BaseService<Photo> {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' as const }
     })
 
     // Calculate statistics
@@ -52,7 +52,7 @@ export class PhotoService extends BaseService<Photo> {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' as const }
     })
   }
 
@@ -173,7 +173,7 @@ export class PhotoService extends BaseService<Photo> {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' as const }
     })
   }
 }

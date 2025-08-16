@@ -3,12 +3,12 @@
  */
 
 import { createClient } from '@/lib/supabase/client'
-import { ApiResponse } from '@/shared/validation/middleware'
+import { ApiResponse, ValidationError } from '@/types/api-contracts'
 import { ApiError } from '@/shared/validation/errors'
 import { VendorsPaginatedResponse, VendorResponse, VendorSearchRequest } from '@/features/vendors/dto'
 import { GuestsPaginatedResponse, GuestResponse, GuestSearchRequest } from '@/features/guests/dto'
 import { BudgetSummaryResponse, BudgetCategoryResponse, BudgetExpenseResponse } from '@/features/budget/dto'
-import { CoupleResponse, CoupleCreateRequest, CoupleUpdateRequest } from '@/features/couples/dto'
+import { CoupleResponse, CreateCoupleRequest, UpdateCoupleRequest } from '@/features/couples/dto'
 
 class EnterpriseApiClient {
   private baseUrl = '/api'
@@ -61,7 +61,8 @@ class EnterpriseApiClient {
           
           console.log('🔄 Redirecting to sign-in due to 401 error')
           window.location.href = signInUrl
-          return
+          // Return a promise that never resolves to prevent further execution
+          return new Promise(() => {}) as Promise<T>
         }
         
         if (response.status === 403) {
@@ -72,14 +73,14 @@ class EnterpriseApiClient {
           
           console.log('🔄 Redirecting to onboarding due to 403 error')
           window.location.href = onboardingUrl
-          return
+          // Return a promise that never resolves to prevent further execution
+          return new Promise(() => {}) as Promise<T>
         }
 
         throw new ApiError(
           errorData.message || 'Request failed',
           response.status,
-          errorData.code,
-          errorData.errors
+          errorData.errors || []
         )
       }
       
@@ -89,8 +90,7 @@ class EnterpriseApiClient {
         throw new ApiError(
           result.error || 'Request failed',
           response.status,
-          result.code,
-          result.errors
+          result.errors || []
         )
       }
       
@@ -102,11 +102,11 @@ class EnterpriseApiClient {
       
       // Handle network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new ApiError('Network error', 0, 'network_error')
+        throw new ApiError('Network error', 0, [])
       }
       
       // Wrap unknown errors
-      throw new ApiError('Unknown error', 0, 'unknown_error')
+      throw new ApiError('Unknown error', 0, [])
     }
   }
   
@@ -193,11 +193,33 @@ class EnterpriseApiClient {
       return this.request<GuestsPaginatedResponse>(`/guests${query}`)
     },
     
-    create: (data: any) =>
-      this.request<GuestResponse>('/guests', {
+    create: (data: any) => {
+      // Frontend shim: normalize data for unified API
+      const normalizedData = { ...data };
+      
+      // Handle name field transformation
+      if (data.firstName && !data.name) {
+        normalizedData.name = `${data.firstName} ${data.lastName || ''}`.trim();
+      }
+      
+      // Handle plusOne field normalization
+      if (data.plusOneAllowed !== undefined) {
+        normalizedData.hasPlusOne = data.plusOneAllowed;
+      }
+      if (data.hasPlusOne !== undefined) {
+        normalizedData.hasPlusOne = data.hasPlusOne;
+      }
+      
+      // Ensure relationship is provided
+      if (!data.relationship && data.side) {
+        normalizedData.relationship = data.side;
+      }
+      
+      return this.request<GuestResponse>('/v1/guests', {
         method: 'POST',
-        body: JSON.stringify(data)
-      }),
+        body: JSON.stringify(normalizedData)
+      });
+    },
     
     get: (id: string) =>
       this.request<GuestResponse>(`/guests/${id}`),

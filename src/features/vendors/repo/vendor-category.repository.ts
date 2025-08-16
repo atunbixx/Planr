@@ -6,7 +6,7 @@ export class VendorCategoryRepository extends BaseRepository<VendorCategory> {
   async findAll(): Promise<VendorCategory[]> {
     return this.executeQuery(() =>
       prisma.vendorCategory.findMany({
-        orderBy: { name: 'asc' },
+        orderBy: { name: 'asc' as const },
         include: {
           _count: {
             select: { vendors: true }

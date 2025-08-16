@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { smartNormalize } from '@/lib/utils/casing'
 
 // Common schemas
 export const IdSchema = z.string().uuid()
@@ -95,5 +96,6 @@ export async function validateRequestBody<T>(
   schema: z.ZodSchema<T>
 ): Promise<T> {
   const body = await request.json()
-  return schema.parse(body)
+  const normalized = Array.isArray(body) ? body.map((v) => smartNormalize(v)) : (body && typeof body === 'object' ? smartNormalize(body as Record<string, any>) : body)
+  return schema.parse(normalized)
 }

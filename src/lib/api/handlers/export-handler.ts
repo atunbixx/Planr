@@ -127,7 +127,7 @@ export class ExportHandler extends BaseAPIHandler {
     if (options.includeVendors) {
       const vendors = await prisma.vendor.findMany({
         where: { coupleId: couple.id },
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' as const }
       })
 
       exportData.vendors = vendors.map(vendor => ({
@@ -155,11 +155,11 @@ export class ExportHandler extends BaseAPIHandler {
       const [categories, expenses] = await Promise.all([
         prisma.budgetCategory.findMany({
           where: { coupleId: couple.id },
-          orderBy: { name: 'asc' }
+          orderBy: { name: 'asc' as const }
         }),
         prisma.budgetExpense.findMany({
           where: { coupleId: couple.id },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' as const }
         })
       ])
 
@@ -213,7 +213,7 @@ export class ExportHandler extends BaseAPIHandler {
     if (options.includePhotos) {
       const photos = await prisma.photo.findMany({
         where: { coupleId: couple.id },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' as const }
       })
 
       exportData.photos = photos.map(photo => ({
@@ -232,7 +232,7 @@ export class ExportHandler extends BaseAPIHandler {
     if (options.includeMessages) {
       const messageLogs = await prisma.messageLog.findMany({
         where: { coupleId: couple.id },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' as const },
         take: 1000 // Limit to prevent huge exports
       })
 

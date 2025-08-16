@@ -5,6 +5,13 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUserCouple } from './db'
 import { z } from 'zod'
 
+// Helper to ensure coupleId is present where required
+function ensureCoupleId(coupleId: string | null): asserts coupleId is string {
+  if (!coupleId) {
+    throw new Error('No couple associated with current user')
+  }
+}
+
 // Vendor actions
 const VendorSchema = z.object({
   name: z.string().min(1).max(255),
@@ -26,6 +33,7 @@ const VendorSchema = z.object({
 export async function createVendor(data: z.infer<typeof VendorSchema>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = VendorSchema.parse(data)
 
     const vendor = await prisma.vendor.create({
@@ -58,6 +66,7 @@ export async function createVendor(data: z.infer<typeof VendorSchema>) {
 export async function updateVendor(id: string, data: Partial<z.infer<typeof VendorSchema>>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = VendorSchema.partial().parse(data)
 
     // Verify vendor belongs to user's couple
@@ -98,6 +107,7 @@ export async function updateVendor(id: string, data: Partial<z.infer<typeof Vend
 export async function deleteVendor(id: string) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
 
     // Verify vendor belongs to user's couple
     const existingVendor = await prisma.vendor.findFirst({
@@ -122,7 +132,7 @@ export async function deleteVendor(id: string) {
 
 // Guest actions
 const GuestSchema = z.object({
-  first_name: z.string().min(1).max(100),
+  firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
   email: z.string().email().optional(),
   phone: z.string().optional(),
@@ -132,20 +142,18 @@ const GuestSchema = z.object({
   plusOneAllowed: z.boolean().default(false),
   plusOneName: z.string().max(200).optional(),
   dietaryRestrictions: z.string().optional(),
-  notes: z.string().optional(),
-  age_group: z.enum(['child', 'teen', 'adult', 'senior']).optional(),
-  attendingStatus: z.enum(['pending', 'yes', 'no', 'maybe']).default('pending')
+  notes: z.string().optional()
 })
 
 export async function createGuest(data: z.infer<typeof GuestSchema>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = GuestSchema.parse(data)
 
     const guest = await prisma.guest.create({
       data: {
         ...validatedData,
-        name: `${validatedData.firstName} ${validatedData.lastName}`.trim(),
         coupleId: coupleId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -163,6 +171,7 @@ export async function createGuest(data: z.infer<typeof GuestSchema>) {
 export async function updateGuest(id: string, data: Partial<z.infer<typeof GuestSchema>>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = GuestSchema.partial().parse(data)
 
     // Verify guest belongs to user's couple
@@ -174,21 +183,12 @@ export async function updateGuest(id: string, data: Partial<z.infer<typeof Guest
       return { success: false, error: 'Guest not found' }
     }
 
-    // Update name if first_name or last_name changed
-    let updateData: any = {
-      ...validatedData,
-      updatedAt: new Date()
-    }
-
-    if (validatedData.firstName || validatedData.lastName) {
-      const firstName = validatedData.firstName || existingGuest.firstName
-      const lastName = validatedData.lastName || existingGuest.lastName
-      updateData.name = `${firstName} ${lastName}`.trim()
-    }
-
     const guest = await prisma.guest.update({
       where: { id },
-      data: updateData
+      data: {
+        ...validatedData,
+        updatedAt: new Date()
+      }
     })
 
     revalidatePath('/dashboard/guests')
@@ -202,6 +202,7 @@ export async function updateGuest(id: string, data: Partial<z.infer<typeof Guest
 export async function deleteGuest(id: string) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
 
     // Verify guest belongs to user's couple
     const existingGuest = await prisma.guest.findFirst({
@@ -237,6 +238,7 @@ const BudgetCategorySchema = z.object({
 export async function createBudgetCategory(data: z.infer<typeof BudgetCategorySchema>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = BudgetCategorySchema.parse(data)
 
     const category = await prisma.budgetCategory.create({
@@ -260,7 +262,7 @@ const BudgetExpenseSchema = z.object({
   categoryId: z.string().uuid(),
   description: z.string().min(1).max(255),
   amount: z.number().min(0),
-  date: z.date(),
+  dueDate: z.date(),
   vendorName: z.string().optional(),
   paymentMethod: z.enum(['cash', 'card', 'check', 'bank_transfer', 'other']).optional(),
   paymentStatus: z.enum(['pending', 'paid', 'overdue', 'cancelled']).default('pending'),
@@ -271,6 +273,7 @@ const BudgetExpenseSchema = z.object({
 export async function createBudgetExpense(data: z.infer<typeof BudgetExpenseSchema>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = BudgetExpenseSchema.parse(data)
 
     // Verify category belongs to user's couple
@@ -330,6 +333,7 @@ const PhotoSchema = z.object({
 export async function createPhoto(data: z.infer<typeof PhotoSchema>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = PhotoSchema.parse(data)
 
     // Verify album belongs to user's couple if album_id provided
@@ -345,7 +349,21 @@ export async function createPhoto(data: z.infer<typeof PhotoSchema>) {
 
     const photo = await prisma.photo.create({
       data: {
-        ...validatedData,
+        // Required field in Prisma schema
+        imageUrl: validatedData.cloudinarySecureUrl,
+        // Optional Cloudinary fields for richer metadata
+        cloudinarySecureUrl: validatedData.cloudinarySecureUrl,
+        cloudinaryPublicId: validatedData.cloudinaryPublicId,
+        // Optional metadata
+        title: validatedData.title,
+        description: validatedData.description,
+        altText: validatedData.altText,
+        albumId: validatedData.albumId,
+        tags: validatedData.tags,
+        isFavorite: validatedData.isFavorite,
+        fileSize: validatedData.fileSize,
+        width: validatedData.width,
+        height: validatedData.height,
         coupleId: coupleId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -371,6 +389,7 @@ const AlbumSchema = z.object({
 export async function createAlbum(data: z.infer<typeof AlbumSchema>) {
   try {
     const { coupleId } = await getCurrentUserCouple()
+    ensureCoupleId(coupleId)
     const validatedData = AlbumSchema.parse(data)
 
     const album = await prisma.photoAlbum.create({

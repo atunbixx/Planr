@@ -38,7 +38,7 @@ export class GuestRepository extends BaseRepository<Guest> {
       where: { id: guestId },
       include: {
         invitations: {
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' as const }
         }
       }
     })

@@ -71,7 +71,7 @@ export default async function AlbumPage({ params }: Props) {
             }
           }
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' as const }
       })
 
       // Get all albums for moving photos
@@ -82,7 +82,7 @@ export default async function AlbumPage({ params }: Props) {
           name: true,
           description: true
         },
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' as const }
       })
     }
   } catch (error) {

@@ -39,7 +39,7 @@ export class SeatingPlannerService {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' as const }
     });
   }
 
@@ -137,7 +137,7 @@ export class SeatingPlannerService {
           }
         }
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' as const }
     });
   }
 
@@ -287,7 +287,7 @@ export class SeatingPlannerService {
           }
         }
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' as const }
     });
   }
 

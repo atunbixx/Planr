@@ -6,6 +6,13 @@ import { z } from 'zod'
 import { NextResponse } from 'next/server'
 import { ApiResponse, ValidationError } from '@/shared/types/common'
 import { ApiError } from './errors'
+import { smartNormalize } from '@/lib/utils/casing'
+
+function normalizeAny(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(v => normalizeAny(v))
+  if (value && typeof value === 'object') return smartNormalize(value as Record<string, any>)
+  return value
+}
 
 /**
  * Validate request data against a Zod schema
@@ -15,7 +22,8 @@ export async function validateRequest<T>(
   data: unknown
 ): Promise<T> {
   try {
-    return schema.parse(data)
+    const normalized = normalizeAny(data) as unknown
+    return schema.parse(normalized)
   } catch (error) {
     if (error instanceof z.ZodError) {
       const validationErrors: ValidationError[] = error.issues.map(err => ({
@@ -91,7 +99,12 @@ export function validateQueryParams<T>(
 ): T {
   const data: Record<string, any> = {}
   
-  for (const [key, value] of searchParams.entries()) {
+  for (const [rawKey, value] of searchParams.entries()) {
+    // Convert snake_case keys to camelCase automatically
+    const key = rawKey.includes('_')
+      ? rawKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+      : rawKey
+
     // Handle arrays (e.g., ?tags=a&tags=b)
     if (data[key]) {
       if (Array.isArray(data[key])) {

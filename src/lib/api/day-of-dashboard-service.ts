@@ -358,7 +358,7 @@ export class DayOfDashboardService {
   async getWeatherUpdates(eventId: string, limit: number = 10) {
     return prisma.weatherUpdate.findMany({
       where: { eventId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'desc' as const },
       take: limit
     });
   }

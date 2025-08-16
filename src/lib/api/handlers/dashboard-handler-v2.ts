@@ -222,7 +222,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         // Recent guests
         prisma.guest.findMany({
           where: { coupleId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           take: limit,
           select: {
             id: true,
@@ -242,7 +242,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         // Recent expenses
         prisma.budgetExpense.findMany({
           where: { coupleId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           take: limit,
           select: {
             id: true,
@@ -260,7 +260,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         // Recent messages
         prisma.message.findMany({
           where: { coupleId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           take: limit,
           select: {
             id: true,
@@ -273,7 +273,7 @@ export class DashboardHandlerV2 extends BaseApiHandler {
         // Recent photos
         prisma.photo.findMany({
           where: { coupleId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc' as const },
           take: limit,
           select: {
             id: true,

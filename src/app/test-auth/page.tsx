@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 export default function TestAuthPage() {
   const [email, setEmail] = useState('test@example.com')
   const [password, setPassword] = useState('TestPassword123!')
-  const [status, setStatus] = useState<any>({})
+  const [status, setStatus] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(false)
   
   const supabase = createClient()
@@ -42,10 +42,10 @@ export default function TestAuthPage() {
       
       if (error) throw error
       
-      setStatus(prev => ({ ...prev, signUp: { success: true, userId: data.user?.id } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, signUp: { success: true, userId: data.user?.id } }))
       setEmail(testEmail)
     } catch (error: any) {
-      setStatus(prev => ({ ...prev, signUp: { error: error.message } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, signUp: { error: error.message } }))
     } finally {
       setLoading(false)
       checkAuthStatus()
@@ -63,14 +63,14 @@ export default function TestAuthPage() {
       
       if (error) throw error
       
-      setStatus(prev => ({ ...prev, signIn: { success: true, userId: data.user?.id } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, signIn: { success: true, userId: data.user?.id } }))
       
       // Wait a bit for cookies to be set
       setTimeout(() => {
         checkAuthStatus()
       }, 500)
     } catch (error: any) {
-      setStatus(prev => ({ ...prev, signIn: { error: error.message } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, signIn: { error: error.message } }))
     } finally {
       setLoading(false)
     }
@@ -83,9 +83,9 @@ export default function TestAuthPage() {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       
-      setStatus(prev => ({ ...prev, signOut: { success: true } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, signOut: { success: true } }))
     } catch (error: any) {
-      setStatus(prev => ({ ...prev, signOut: { error: error.message } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, signOut: { error: error.message } }))
     } finally {
       setLoading(false)
       checkAuthStatus()
@@ -96,9 +96,9 @@ export default function TestAuthPage() {
     try {
       const response = await fetch('/api/auth/status')
       const data = await response.json()
-      setStatus(prev => ({ ...prev, apiAuth: data }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, apiAuth: data }))
     } catch (error: any) {
-      setStatus(prev => ({ ...prev, apiAuth: { error: error.message } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, apiAuth: { error: error.message } }))
     }
   }
   
@@ -106,9 +106,9 @@ export default function TestAuthPage() {
     try {
       const response = await fetch('/api/dashboard/stats')
       const data = await response.json()
-      setStatus(prev => ({ ...prev, protectedRoute: { status: response.status, data } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, protectedRoute: { status: response.status, data } }))
     } catch (error: any) {
-      setStatus(prev => ({ ...prev, protectedRoute: { error: error.message } }))
+      setStatus((prev: Record<string, any>) => ({ ...prev, protectedRoute: { error: error.message } }))
     }
   }
   
