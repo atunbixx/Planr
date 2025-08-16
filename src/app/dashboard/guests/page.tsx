@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import AuthClient from '@/lib/auth/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -45,7 +46,12 @@ export default function GuestsPage() {
 
   const loadGuests = async () => {
     try {
-      const token = localStorage.getItem('authToken')
+      const token = AuthClient.getToken()
+      if (!token) {
+        console.error('No auth token available')
+        return
+      }
+      
       const response = await fetch('/api/guests', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -57,6 +63,11 @@ export default function GuestsPage() {
         setGuests(result.data)
       } else {
         console.error('Failed to load guests:', result.error)
+        // Handle auth errors
+        if (response.status === 401) {
+          console.log('Token expired, redirecting to signin')
+          AuthClient.signout()
+        }
       }
     } catch (error) {
       console.error('Error loading guests:', error)
@@ -97,7 +108,12 @@ export default function GuestsPage() {
     if (!validateForm()) return
 
     try {
-      const token = localStorage.getItem('authToken')
+      const token = AuthClient.getToken()
+      if (!token) {
+        setErrors({ submit: 'Authentication required. Please sign in again.' })
+        return
+      }
+      
       const response = await fetch('/api/guests', {
         method: 'POST',
         headers: {
@@ -131,6 +147,11 @@ export default function GuestsPage() {
         setErrors({})
       } else {
         setErrors({ submit: result.error?.message || 'Failed to add guest' })
+        // Handle auth errors
+        if (response.status === 401) {
+          console.log('Token expired during guest creation, redirecting to signin')
+          AuthClient.signout()
+        }
       }
     } catch (error) {
       setErrors({ submit: 'An unexpected error occurred' })
