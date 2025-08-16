@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "guest_1755362045636_iz3loillu",
+    "userId": "user_1755360162220_cfl15k7bo",
+    "name": "david ayoola",
+    "rsvpStatus": "pending",
+    "side": "bride",
+    "invitationSent": false,
+    "createdAt": "2025-08-16T16:34:05.636Z",
+    "updatedAt": "2025-08-16T16:34:05.636Z",
+    "rsvp": {
+      "id": "rsvp_1755362045636_yepw5933m",
+      "guestId": "guest_1755362045636_iz3loillu",
+      "status": "pending",
+      "createdAt": "2025-08-16T16:34:05.636Z",
+      "updatedAt": "2025-08-16T16:34:05.636Z"
+    }
+  }
+]
