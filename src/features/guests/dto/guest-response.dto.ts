@@ -117,6 +117,7 @@ export const GuestSummaryResponseSchema = z.object({
   hasPlusOne: z.boolean(),
   tableNumber: z.number().int().optional(),
   isVip: z.boolean(),
+  invitationCode: z.string().optional(),
   invitationSent: z.boolean(),
   giftReceived: z.boolean(),
   thankYouSent: z.boolean()

@@ -108,7 +108,8 @@ export default function GuestsPage() {
           plusOneName: guest.plusOneName,
           dietaryRestrictions: guest.dietaryRestrictions,
           side: guest.side || 'both',
-          tableNumber: guest.tableNumber
+          tableNumber: guest.tableNumber,
+          invitationCode: guest.invitationCode,
         }))
         setGuests(transformedGuests)
         
@@ -169,7 +170,7 @@ export default function GuestsPage() {
   // Filter guests based on search and filters
   const filteredGuests = (guests || []).filter(guest => {
     const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         guest.email?.toLowerCase().includes(searchTerm.toLowerCase())
+                         (guest.email || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = filterStatus === 'all' || guest.rsvpStatus === filterStatus
     const matchesSide = filterSide === 'all' || guest.side === filterSide
     

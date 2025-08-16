@@ -593,6 +593,7 @@ export class GuestService {
       hasPlusOne: guest.plusOneAllowed || false, // Map from plusOneAllowed
       tableNumber: guest.tableNumber || null,
       isVip: guest.isVip || false,
+      invitationCode: guest.invitation?.invitationCode || guest.invitationCode || null,
       invitationSent: guest.invitationSentAt ? true : false, // Check if invitation was sent
       giftReceived: guest.giftReceived || false,
       thankYouSent: guest.thankYouSent || false
