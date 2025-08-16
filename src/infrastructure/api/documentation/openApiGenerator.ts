@@ -23,13 +23,14 @@ interface OpenApiConfig {
   }>;
 }
 
-interface Parameter {
+type Parameter = {
   name: string;
   in: 'query' | 'path' | 'header' | 'cookie';
   description?: string;
   required?: boolean;
   schema?: any;
-  $ref?: string;
+} | {
+  $ref: string;
 }
 
 interface RequestBody {

@@ -8,6 +8,7 @@ import { BudgetApiHandler } from '@/features/budget'
 
 const handler = new BudgetApiHandler()
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.recordPayment(request, params)
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.recordPayment(request, resolvedParams)
 }

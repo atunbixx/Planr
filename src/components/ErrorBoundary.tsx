@@ -26,10 +26,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
-    
-    // You can log the error to an error reporting service here
-    // logErrorToService(error, errorInfo)
+    // Import logger dynamically to avoid SSR issues
+     import('@/lib/monitoring/Logger').then(({ logger }) => {
+         logger.error('Error caught by boundary', error, {
+           componentStack: errorInfo.componentStack,
+           errorBoundary: true
+         })
+       })
   }
 
   handleReset = () => {
@@ -63,7 +66,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </div>
               )}
               <div className="flex gap-2">
-                <Button onClick={this.handleReset} variant="default" size="sm">
+                <Button onClick={this.handleReset} size="sm">
                   Try Again
                 </Button>
                 <Button onClick={() => window.location.reload()} variant="outline" size="sm">
@@ -138,7 +141,7 @@ export function AsyncErrorBoundary({ children, fallback }: Props) {
             <div className="text-sm bg-gray-100 rounded p-3">
               <code className="text-red-600">{error.message}</code>
             </div>
-            <Button onClick={() => setError(null)} variant="default" size="sm">
+            <Button onClick={() => setError(null)} size="sm">
               Dismiss
             </Button>
           </CardContent>

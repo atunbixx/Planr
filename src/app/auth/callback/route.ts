@@ -8,22 +8,25 @@ export async function GET(request: NextRequest) {
   const errorDescription = searchParams.get('error_description')
   const next = searchParams.get('next') ?? '/'
 
-  console.log('🔄 Auth callback received:', {
-    hasCode: !!code,
-    error,
-    errorDescription,
-    next,
-    origin,
-    fullUrl: request.url
-  })
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Auth Callback] Request received:', {
+      hasCode: !!code,
+      error,
+      errorDescription,
+      next,
+      timestamp: new Date().toISOString()
+    })
+  }
 
   // Handle OAuth errors from provider
   if (error) {
-    console.error('❌ OAuth provider error:', {
-      error,
-      description: errorDescription,
-      url: request.url
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Auth Callback] OAuth provider error:', {
+        error,
+        description: errorDescription,
+        url: request.url
+      })
+    }
     
     // Redirect to error page with specific error info
     const errorUrl = new URL('/auth/auth-code-error', origin)
@@ -36,15 +39,20 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     try {
-      console.log('🔄 Exchanging code for session...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Callback] Exchanging code for session...')
+      }
+      
       const supabase = await createClient()
+      const startTime = Date.now()
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      const exchangeDuration = Date.now() - startTime
       
       if (exchangeError) {
-        console.error('❌ Code exchange failed:', {
+        console.error('[Auth Callback] Code exchange failed:', {
           message: exchangeError.message,
           status: exchangeError.status,
-          details: exchangeError
+          duration: exchangeDuration + 'ms'
         })
         
         // Redirect to error page with exchange error info
@@ -55,22 +63,37 @@ export async function GET(request: NextRequest) {
       }
       
       if (data?.user) {
-        console.log('✅ Authentication successful:', {
-          userId: data.user.id,
-          email: data.user.email,
-          provider: data.user.app_metadata?.provider,
-          session: data.session ? 'present' : 'missing',
-          hasAccessToken: data.session?.access_token ? 'yes' : 'no'
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Auth Callback] Authentication successful:', {
+            userId: data.user.id,
+            email: data.user.email,
+            provider: data.user.app_metadata?.provider,
+            session: data.session ? 'present' : 'missing',
+            duration: exchangeDuration + 'ms'
+          })
+        }
         
-        // Verify the session was properly set by checking it again
+        // Clear auth caches after successful login to prevent stale data
+        const { clearSessionCache } = await import('@/lib/supabase/server')
+        const { clearAuthContextCache } = await import('@/core/auth/context')
+        const { clearOnboardingCache } = await import('@/lib/middleware-onboarding')
+        
+        // Clear all caches to ensure fresh state
+        clearSessionCache()
+        clearAuthContextCache()
+        clearOnboardingCache(data.user.id)
+        
+        // Also clear middleware cache by setting a header
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Auth Callback] Cleared all auth caches for user:', data.user.id)
+        }
+        
+        // Verify the session was properly set
         const { data: verifyData, error: verifyError } = await supabase.auth.getSession()
-        console.log('🔍 Session verification after exchange:', {
-          sessionExists: !!verifyData?.session,
-          hasAccessToken: verifyData?.session?.access_token ? 'yes' : 'no',
-          userId: verifyData?.session?.user?.id,
-          error: verifyError?.message
-        })
+        
+        if (process.env.NODE_ENV === 'development' && verifyError) {
+          console.error('[Auth Callback] Session verification failed:', verifyError)
+        }
       }
       
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
@@ -86,14 +109,17 @@ export async function GET(request: NextRequest) {
         redirectUrl = `${origin}${next}`
       }
       
-      console.log('🔄 Redirecting to:', redirectUrl)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Callback] Redirecting to:', redirectUrl)
+      }
+      
       return NextResponse.redirect(redirectUrl)
       
-    } catch (error) {
-      console.error('❌ Unexpected error in auth callback:', {
+    } catch (error: any) {
+      console.error('[Auth Callback] Unexpected error:', {
         message: error.message,
-        stack: error.stack,
-        code
+        code,
+        timestamp: new Date().toISOString()
       })
       
       // Redirect to error page with unexpected error info
@@ -104,8 +130,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  console.error('❌ No authorization code received in callback')
-  // return the user to an error page with instructions
+  // No code received
+  console.error('[Auth Callback] No authorization code received')
   const errorUrl = new URL('/auth/auth-code-error', origin)
   errorUrl.searchParams.set('error', 'no_code')
   errorUrl.searchParams.set('description', 'No authorization code received from OAuth provider')

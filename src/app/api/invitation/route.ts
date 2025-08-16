@@ -17,7 +17,7 @@ export async function GET(request: Request) {
         status: 'pending'
       },
       include: {
-        couples: true
+        couple: true
       }
     })
 
@@ -29,13 +29,13 @@ export async function GET(request: Request) {
     }
 
     // Get couple names
-    const couple_names = `${collaborator.couples.partner1Name} & ${collaborator.couples.partner2Name}`
+    const couple_names = `${collaborator.couple.partner1Name} & ${collaborator.couple.partner2Name}`
 
     return NextResponse.json({
       invitation: {
         id: collaborator.id,
         couple_names,
-        weddingDate: collaborator.couples.weddingDate,
+        weddingDate: collaborator.couple.weddingDate,
         role: collaborator.role,
         permissions: collaborator.permissions
       }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import prisma from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 import { getOnboardingState, setStep } from '@/lib/onboarding'
 
 export async function handleOnboardingStep(
@@ -42,7 +42,16 @@ export async function handleOnboardingStep(
   } else if (request.method === 'POST') {
     // Save step data
     try {
-      const body = await request.json()
+      let body = {}
+      
+      // Try to parse JSON, but handle empty body gracefully
+      try {
+        const text = await request.text()
+        body = text ? JSON.parse(text) : {}
+      } catch (parseError) {
+        console.log('No JSON body provided, using empty object')
+        body = {}
+      }
       
       // If body contains only { completed: true }, mark step as completed
       if (body.completed === true && Object.keys(body).length === 1) {

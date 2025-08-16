@@ -20,7 +20,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     if (supabaseUser) {
       // Get user from database
       const dbUser = await prisma.user.findUnique({
-        where: { supabase_user_id: supabaseUser.id }
+        where: { supabaseUserId: supabaseUser.id }
       })
       
       return {
@@ -44,7 +44,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
 export async function ensureDbUser(supabaseUserId: string, email: string): Promise<string> {
   try {
     const existingUser = await prisma.user.findUnique({
-      where: { supabase_user_id: supabaseUserId }
+      where: { supabaseUserId: supabaseUserId }
     })
     
     if (existingUser) {
@@ -54,7 +54,7 @@ export async function ensureDbUser(supabaseUserId: string, email: string): Promi
     // Create new user
     const newUser = await prisma.user.create({
       data: {
-        supabase_user_id: supabaseUserId,
+        supabaseUserId: supabaseUserId,
         email: email
       }
     })

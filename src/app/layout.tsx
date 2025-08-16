@@ -4,8 +4,13 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { IntlProvider } from '@/providers/IntlProvider';
 import { LocaleProvider } from '@/providers/LocaleProvider';
 import { PWAProvider } from '@/components/providers/pwa-provider';
+import { ErrorBoundaryWrapper } from '@/components/ErrorBoundaryWrapper';
 import messages from '@/messages/en.json';
 import { Toaster } from 'sonner';
+
+// Initialize application configuration and environment validation
+// Temporarily disabled for development
+// import '@/lib/config/initialize';
 
 export const metadata: Metadata = {
   title: 'Wedding Planner',
@@ -46,24 +51,26 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>
-        <ThemeProvider>
-          <LocaleProvider>
-            <IntlProvider locale="en" messages={messages}>
-              <PWAProvider>
-                {/* Skip link for accessibility */}
-                <a
-                  href="#main-content"
-                  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  Skip to main content
-                </a>
+        <ErrorBoundaryWrapper level="app">
+          <ThemeProvider>
+            <LocaleProvider>
+              <IntlProvider locale="en" messages={messages}>
+                <PWAProvider>
+                  {/* Skip link for accessibility */}
+                  <a
+                    href="#main-content"
+                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    Skip to main content
+                  </a>
 
-                <main id="main-content">{children}</main>
-                <Toaster />
-              </PWAProvider>
-            </IntlProvider>
-          </LocaleProvider>
-        </ThemeProvider>
+                  <main id="main-content">{children}</main>
+                  <Toaster />
+                </PWAProvider>
+              </IntlProvider>
+            </LocaleProvider>
+          </ThemeProvider>
+        </ErrorBoundaryWrapper>
       </body>
     </html>
   );

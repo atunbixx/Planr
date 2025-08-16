@@ -8,6 +8,7 @@ import { GuestsApiHandler } from '@/features/guests'
 
 const handler = new GuestsApiHandler()
 
-export async function PUT(request: NextRequest, { params }: { params: { invitationCode: string } }) {
-  return handler.updateRsvp(request, params)
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ invitationCode: string }> }) {
+  const resolvedParams = await params
+  return handler.updateRsvp(request, resolvedParams)
 }

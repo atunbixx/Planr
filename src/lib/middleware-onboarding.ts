@@ -9,6 +9,10 @@ export interface OnboardingStatus {
   redirectPath?: string
 }
 
+// Cache for onboarding status to reduce database queries
+const onboardingCache = new Map<string, { status: OnboardingStatus, timestamp: number }>()
+const ONBOARDING_CACHE_TTL = 60 * 1000 // 1 minute cache
+
 export async function checkOnboardingStatus(request: NextRequest, userId: string): Promise<OnboardingStatus> {
   try {
     // Quick check: if user has onboardingCompleted cookie, they're done
@@ -19,6 +23,12 @@ export async function checkOnboardingStatus(request: NextRequest, userId: string
         lastStep: 'success',
         needsRedirect: false
       }
+    }
+    
+    // Check cache first
+    const cached = onboardingCache.get(userId)
+    if (cached && Date.now() - cached.timestamp < ONBOARDING_CACHE_TTL) {
+      return cached.status
     }
 
     // First get couple_id for the user  
@@ -67,11 +77,19 @@ export async function checkOnboardingStatus(request: NextRequest, userId: string
 
     // Check if couple has marked onboarding as completed
     if (couple.onboardingCompleted) {
-      return {
+      const status: OnboardingStatus = {
         isComplete: true,
         lastStep: 'success',
         needsRedirect: false
       }
+      
+      // Cache the completed status
+      onboardingCache.set(userId, {
+        status,
+        timestamp: Date.now()
+      })
+      
+      return status
     }
 
     // Find the last completed step and current step  
@@ -89,22 +107,41 @@ export async function checkOnboardingStatus(request: NextRequest, userId: string
     
     const nextStep = stepOrder[nextStepIndex]
     
-    return {
+    const status: OnboardingStatus = {
       isComplete: false,
       lastStep: nextStep,
       needsRedirect: true,
       redirectPath: `/onboarding/${nextStep}`
     }
+    
+    // Cache the status
+    onboardingCache.set(userId, {
+      status,
+      timestamp: Date.now()
+    })
+    
+    return status
 
   } catch (error) {
-    console.error('Error checking onboarding status in middleware:', error)
-    // On error, assume they need to complete onboarding
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Onboarding] Error checking status:', error)
+    }
+    // On error, assume they need to complete onboarding but don't cache
     return {
       isComplete: false,
       lastStep: 'welcome',
       needsRedirect: true,
       redirectPath: '/onboarding/welcome'
     }
+  }
+}
+
+// Clear onboarding cache for a specific user
+export function clearOnboardingCache(userId?: string) {
+  if (userId) {
+    onboardingCache.delete(userId)
+  } else {
+    onboardingCache.clear()
   }
 }
 

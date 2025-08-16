@@ -38,12 +38,11 @@ export async function POST(request: NextRequest) {
     const event = await seatingPlannerService().getEventDetails(layout.eventId);
 
     // Initialize exporter
-    const exporter = new SeatingChartExporter();
+    const exporter = new SeatingChartExporter(layout);
 
     // Export based on format
     const result = await exporter.export({
       format,
-      layout,
       eventName: event.name,
       eventDate: event.date,
       venueName: event.venueName || 'Venue',

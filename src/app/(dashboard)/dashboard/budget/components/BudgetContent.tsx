@@ -50,6 +50,7 @@ interface BudgetContentProps {
   categories: BudgetCategory[]
   expenses: Expense[]
   locale: LocaleCode
+  currency?: string
 }
 
 export default function BudgetContent({ budgetData, categories, expenses, locale }: BudgetContentProps) {

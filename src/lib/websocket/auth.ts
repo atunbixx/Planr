@@ -10,7 +10,11 @@ interface WebSocketTokenPayload {
   expiresAt: number;
 }
 
-const JWT_SECRET = process.env.WEBSOCKET_JWT_SECRET || 'your-websocket-secret-key';
+const JWT_SECRET = process.env.WEBSOCKET_JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('WEBSOCKET_JWT_SECRET environment variable is required for WebSocket authentication');
+}
 
 export async function generateWebSocketToken(payload: Omit<WebSocketTokenPayload, 'issuedAt' | 'expiresAt'> & { metadata?: { issuedAt: number; expiresAt: number } }): Promise<string> {
   const tokenPayload: WebSocketTokenPayload = {

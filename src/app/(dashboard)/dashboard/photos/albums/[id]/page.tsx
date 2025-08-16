@@ -64,7 +64,7 @@ export default async function AlbumPage({ params }: Props) {
           coupleId: coupleId
         },
         include: {
-          photoAlbum: {
+          photoAlbums: {
             select: {
               id: true,
               name: true

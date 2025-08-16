@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     console.error("❌ Test auth error:", error)
     return NextResponse.json({
       error: "Test failed",
-      message: error.message
+      message: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 })
   }
 }

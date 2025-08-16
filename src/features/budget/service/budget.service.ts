@@ -377,7 +377,7 @@ export class BudgetService {
       throw new ApiError('Couple profile not found', 404)
     }
 
-    return await this.budgetRepo.getBudgetSummaryByCouple(couple.id)
+    return await this.budgetRepo.getBudgetSummary(couple.id)
   }
 
   /**

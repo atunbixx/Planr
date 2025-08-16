@@ -18,7 +18,7 @@ export async function getAuthContext(): Promise<AuthContext> {
 
   // Get user from database
   const user = await prisma.user.findUnique({
-    where: { supabase_user_id: supabaseUser.id }
+    where: { supabaseUserId: supabaseUser.id }
   })
 
   if (!user) {

@@ -10,14 +10,17 @@ import { VendorsApiHandler } from '@/features/vendors'
 
 const handler = new VendorsApiHandler()
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.getVendorById(request, params)
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.getVendorById(request, resolvedParams)
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.updateVendor(request, params)
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.updateVendor(request, resolvedParams)
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.deleteVendor(request, params)
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.deleteVendor(request, resolvedParams)
 }

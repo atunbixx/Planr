@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { withSuperAdmin, logAdminAction } from '@/lib/admin/roles'
-import { NextRequest } from 'next/server'
 
-export const GET = withSuperAdmin(async (req: NextRequest, userId: string) => {
+
+export const GET = withSuperAdmin(async (req: Request, userId: string) => {
   const supabase = await createClient()
   
   const { searchParams } = new URL(req.url)
@@ -94,13 +94,22 @@ export const GET = withSuperAdmin(async (req: NextRequest, userId: string) => {
     }
   }) || []
   
-  // Get usage stats for the page
-  const { data: pageStats } = await supabase
+  // Get usage stats for the page (simplified - aggregation done in JS)
+  const { data: usageData } = await supabase
     .from('usage_daily')
-    .select('user_id, SUM(storage_bytes) as total_storage, SUM(api_calls) as total_calls')
+    .select('user_id, storage_bytes, api_calls')
     .in('user_id', users?.map(u => u.id) || [])
     .gte('day', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-    .group('user_id')
+  
+  // Aggregate in JavaScript
+  const pageStats = (usageData || []).reduce((acc: any, item: any) => {
+    if (!acc[item.user_id]) {
+      acc[item.user_id] = { user_id: item.user_id, total_storage: 0, total_calls: 0 }
+    }
+    acc[item.user_id].total_storage += item.storage_bytes || 0
+    acc[item.user_id].total_calls += item.api_calls || 0
+    return acc
+  }, {})
   
   // Log the search
   await logAdminAction(userId, 'admin.users.search', {

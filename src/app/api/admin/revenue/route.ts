@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { withSuperAdmin } from '@/lib/admin/roles'
-import { NextRequest } from 'next/server'
 
-export const GET = withSuperAdmin(async (req: NextRequest, userId: string) => {
+
+export const GET = withSuperAdmin(async (req: Request, userId: string) => {
   const supabase = await createClient()
   
   const { searchParams } = new URL(req.url)
@@ -75,22 +75,36 @@ export const GET = withSuperAdmin(async (req: NextRequest, userId: string) => {
   // Get revenue by plan
   const revenueByPlan = await getRevenueByPlan(supabase)
   
-  // Get top paying customers
-  const { data: topCustomers } = await supabase
+  // Get top paying customers (simplified query - grouping done in JS)
+  const { data: paidInvoices } = await supabase
     .from('invoices')
     .select(`
       user_id,
+      amount_cents,
       users (
         email,
         first_name,
         last_name
-      ),
-      SUM(amount_cents) as total_spent
+      )
     `)
     .eq('status', 'paid')
-    .group('user_id')
-    .order('total_spent', { ascending: false })
-    .limit(10)
+  
+  // Group by user_id and calculate totals in JavaScript
+  const customerTotals = (paidInvoices || []).reduce((acc: any, invoice: any) => {
+    if (!acc[invoice.user_id]) {
+      acc[invoice.user_id] = {
+        user_id: invoice.user_id,
+        users: invoice.users,
+        total_spent: 0
+      }
+    }
+    acc[invoice.user_id].total_spent += invoice.amount_cents
+    return acc
+  }, {})
+  
+  const topCustomers = Object.values(customerTotals)
+    .sort((a: any, b: any) => b.total_spent - a.total_spent)
+    .slice(0, 10)
   
   return {
     success: true,
@@ -102,7 +116,7 @@ export const GET = withSuperAdmin(async (req: NextRequest, userId: string) => {
         total_refunds_cents: totalRefunds,
         net_revenue_cents: netRevenue,
         active_subscriptions: subscriptions?.length || 0,
-        arpu_cents: subscriptions?.length > 0 ? Math.round(mrr / subscriptions.length) : 0,
+        arpu_cents: (subscriptions?.length || 0) > 0 ? Math.round(mrr / (subscriptions?.length || 1)) : 0,
         ltv_cents: calculateSimpleLTV(mrr, subscriptions?.length || 0)
       },
       trends: {

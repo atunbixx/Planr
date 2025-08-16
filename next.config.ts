@@ -19,11 +19,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Temporarily disable ESLint during builds to get server running
+  // Temporarily disable ESLint during builds due to Next.js 15 compatibility issue
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Disable TypeScript build errors for now
+  // Temporarily disable TypeScript checking for development
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -28,42 +28,42 @@ export default function SignInPage() {
     setError('')
 
     try {
-      // Use Supabase client directly for sign in
-      const result = await signIn(email, password)
-      console.log('✅ Sign-in successful:', {
-        userId: result?.user?.id,
-        email: result?.user?.email,
-        hasSession: !!result?.session,
-        hasAccessToken: result?.session?.access_token ? 'yes' : 'no'
+      // Use server API directly for consistent session handling
+      console.log('🔑 Attempting sign-in via server API...')
+      
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include' // Important for cookie handling
       })
+
+      const data = await response.json()
       
-      // Wait a moment for session to fully establish and cookies to be set
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Call session refresh endpoint to ensure server-side session sync
-      try {
-        const refreshResponse = await fetch('/api/auth/refresh-session', {
-          method: 'POST',
-          credentials: 'include'
-        })
-        const refreshData = await refreshResponse.json()
-        console.log('🔄 Session refresh result:', refreshData)
-        
-        if (!refreshData.success || !refreshData.authenticated) {
-          console.warn('⚠️ Session refresh indicated authentication issue:', refreshData)
-          setError('Authentication sync failed. Please try signing in again.')
-          setLoading(false)
-          return
-        }
-      } catch (refreshError) {
-        console.warn('⚠️ Session refresh failed:', refreshError)
-        // Continue anyway, as the original sign-in might still work
+      if (!response.ok || !data.success) {
+        setError(data.error || 'Failed to sign in')
+        setLoading(false)
+        return
       }
       
-      // Force a hard navigation to ensure cookies are properly set
-      window.location.href = '/dashboard'
+      console.log('✅ Server sign-in successful:', {
+        userId: data.user?.id,
+        redirectTo: data.redirectTo,
+        hasSession: data.debug?.hasSession
+      })
+      
+      // Wait briefly for cookies to be processed by browser
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Redirect to the appropriate destination
+      const redirectTo = data.redirectTo || '/dashboard'
+      window.location.href = redirectTo
+      
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in')
+      console.error('❌ Sign-in error:', err)
+      setError('Network error. Please check your connection and try again.')
       setLoading(false)
     }
   }

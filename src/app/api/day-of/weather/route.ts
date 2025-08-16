@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const weatherService = getWeatherService();
     const forecast = await weatherService.getHourlyForecast(
       { latitude, longitude },
       days

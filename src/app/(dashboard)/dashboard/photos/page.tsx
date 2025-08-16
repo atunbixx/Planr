@@ -109,11 +109,11 @@ export default async function PhotosPage({ searchParams }: PhotosPageProps) {
                   id: album.id,
                   name: album.name,
                   description: album.description || undefined,
-                  photo_count: album._count?.photos || 0,
-                  cover_photo: album.coverPhoto ? {
-                    id: album.coverPhoto.id,
-                    cloudinarySecureUrl: album.coverPhoto.cloudinarySecureUrl || '',
-                    title: album.coverPhoto.title || undefined
+                  photo_count: (album as any)._count?.photos || 0,
+                  cover_photo: (album as any).coverPhoto ? {
+                    id: (album as any).coverPhoto.id,
+                    cloudinarySecureUrl: (album as any).coverPhoto.cloudinarySecureUrl || '',
+                    title: (album as any).coverPhoto.title || undefined
                   } : undefined,
                   isFeatured: album.isFeatured || false,
                   isPublic: album.isPublic || false
@@ -155,7 +155,9 @@ export default async function PhotosPage({ searchParams }: PhotosPageProps) {
               <PhotoGrid 
                 photos={photos.map(photo => ({
                   ...photo,
-                  isFavorite: photo.isFavorite ?? false // Convert null to false
+                  cloudinarySecureUrl: photo.cloudinarySecureUrl || photo.imageUrl || '',
+                  isFavorite: photo.isFavorite ?? false, // Convert null to false
+                  createdAt: photo.createdAt?.toISOString() || new Date().toISOString()
                 }))} 
                 albums={albums} 
                 onPhotosUpdated={async () => {

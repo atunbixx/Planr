@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CoupleRepository } from '@/lib/repositories/CoupleRepository'
 import { createClient } from '@supabase/supabase-js'
+import { prisma } from '@/lib/prisma'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,11 +31,11 @@ async function getCoupleId(): Promise<string> {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const coupleId = await getCoupleId()
-    const eventId = params.id
+    const { id: eventId } = await params
     
     if (!eventId) {
       return NextResponse.json({

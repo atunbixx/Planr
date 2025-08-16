@@ -13,7 +13,7 @@ export async function POST() {
 
     // Check if user has a completed couple profile
     const dbUser = await prisma.user.findUnique({
-      where: { supabase_user_id: user.id }
+      where: { supabaseUserId: user.id }
     })
 
     if (!dbUser) {
@@ -26,8 +26,8 @@ export async function POST() {
     const couple = await prisma.couple.findFirst({
       where: {
         OR: [
-          { partner1_user_id: dbUser.id },
-          { partner2_user_id: dbUser.id },
+          { partner1UserId: dbUser.id },
+          { partner2UserId: dbUser.id },
           { userId: dbUser.id }
         ]
       }

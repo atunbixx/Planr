@@ -110,6 +110,156 @@ const guest = await prisma.guest.create({ data: ... })
 - ✅ **API Routes**: Updated to use enterprise patterns
 - ✅ **Single Source of Truth**: No more data conflicts
 
+## 📝 **Canonical Naming Scheme**
+
+**CRITICAL RULE**: Use Prisma field names (camelCase) in ALL TypeScript code. Database field names (snake_case) are ONLY used in migrations and Prisma schema.
+
+### ✅ **Correct Field Names** (Use These in Code)
+```typescript
+// User model fields
+user.supabaseUserId  // ✅ Correct: camelCase from Prisma client
+user.firstName       // ✅ Correct: camelCase from Prisma client
+user.lastName        // ✅ Correct: camelCase from Prisma client
+user.createdAt       // ✅ Correct: camelCase from Prisma client
+user.updatedAt       // ✅ Correct: camelCase from Prisma client
+
+// Couple model fields  
+couple.userId        // ✅ Correct: camelCase from Prisma client
+couple.partnerName   // ✅ Correct: camelCase from Prisma client
+couple.weddingDate   // ✅ Correct: camelCase from Prisma client
+couple.createdAt     // ✅ Correct: camelCase from Prisma client
+couple.updatedAt     // ✅ Correct: camelCase from Prisma client
+
+// All other models follow same pattern
+guest.coupleId       // ✅ Correct: camelCase
+vendor.contactEmail  // ✅ Correct: camelCase
+photo.uploadedAt     // ✅ Correct: camelCase
+```
+
+### ❌ **Deprecated Field Names** (DO NOT USE)
+```typescript
+// These cause "Unknown argument" Prisma errors
+user.supabase_user_id  // ❌ Wrong: snake_case database field
+user.first_name        // ❌ Wrong: snake_case database field
+user.last_name         // ❌ Wrong: snake_case database field
+user.created_at        // ❌ Wrong: snake_case database field
+couple.user_id         // ❌ Wrong: snake_case database field
+couple.wedding_date    // ❌ Wrong: snake_case database field
+```
+
+### 🔧 **Field Mapping in Prisma Schema**
+```prisma
+model User {
+  id           String @id @default(cuid())
+  supabaseUserId String @unique @map("supabase_user_id")  // ← @map handles DB mapping
+  firstName    String? @map("first_name")                 // ← @map handles DB mapping
+  lastName     String? @map("last_name")                  // ← @map handles DB mapping
+  createdAt    DateTime @default(now()) @map("created_at") // ← @map handles DB mapping
+  
+  @@map("users")  // ← Table name mapping
+}
+```
+
+### 🚨 **Critical Protection Rules**
+1. **NEVER** use snake_case field names in TypeScript code
+2. **ALWAYS** use Prisma client field names (camelCase)
+3. **ONLY** use snake_case in database migrations and schema definitions
+4. **@map** decorators in Prisma schema handle database field mapping automatically
+
+## 🗺️ **Complete Field Mapping Reference**
+
+### **User Model**
+| TypeScript (USE) | Database (DON'T USE) | Type |
+|------------------|----------------------|------|
+| `user.id` | `id` | string |
+| `user.supabaseUserId` | `supabase_user_id` | string |
+| `user.email` | `email` | string |
+| `user.firstName` | `first_name` | string? |
+| `user.lastName` | `last_name` | string? |
+| `user.phone` | `phone` | string? |
+| `user.createdAt` | `created_at` | DateTime? |
+| `user.updatedAt` | `updated_at` | DateTime? |
+| `user.preferences` | `preferences` | Json? |
+| `user.hasOnboarded` | `has_onboarded` | boolean? |
+
+### **Couple Model**
+| TypeScript (USE) | Database (DON'T USE) | Type |
+|------------------|----------------------|------|
+| `couple.id` | `id` | string |
+| `couple.partner1UserId` | `partner1_user_id` | string? |
+| `couple.partner2UserId` | `partner2_user_id` | string? |
+| `couple.partner1Name` | `partner1_name` | string |
+| `couple.partner2Name` | `partner2_name` | string? |
+| `couple.weddingDate` | `wedding_date` | DateTime? |
+| `couple.venueName` | `venue_name` | string? |
+| `couple.venueLocation` | `venue_location` | string? |
+| `couple.guestCountEstimate` | `guest_count_estimate` | number? |
+| `couple.totalBudget` | `total_budget` | Decimal? |
+| `couple.currency` | `currency` | string? |
+| `couple.weddingStyle` | `wedding_style` | string? |
+| `couple.createdAt` | `created_at` | DateTime? |
+| `couple.updatedAt` | `updated_at` | DateTime? |
+| `couple.onboardingCompleted` | `onboarding_completed` | boolean? |
+| `couple.userId` | `user_id` | string? |
+
+### **Guest Model**
+| TypeScript (USE) | Database (DON'T USE) | Type |
+|------------------|----------------------|------|
+| `guest.id` | `id` | string |
+| `guest.coupleId` | `couple_id` | string |
+| `guest.firstName` | `first_name` | string |
+| `guest.lastName` | `last_name` | string |
+| `guest.email` | `email` | string? |
+| `guest.phone` | `phone` | string? |
+| `guest.address` | `address` | string? |
+| `guest.relationship` | `relationship` | string? |
+| `guest.side` | `side` | string? |
+| `guest.plusOneAllowed` | `plus_one_allowed` | boolean? |
+| `guest.plusOneName` | `plus_one_name` | string? |
+| `guest.dietaryRestrictions` | `dietary_restrictions` | string? |
+| `guest.notes` | `notes` | string? |
+| `guest.createdAt` | `created_at` | DateTime? |
+| `guest.updatedAt` | `updated_at` | DateTime? |
+| `guest.attendingCount` | `attending_count` | number |
+| `guest.invitationSentAt` | `invitation_sent_at` | DateTime? |
+| `guest.rsvpDeadline` | `rsvp_deadline` | DateTime? |
+
+### **Vendor Model**
+| TypeScript (USE) | Database (DON'T USE) | Type |
+|------------------|----------------------|------|
+| `vendor.id` | `id` | string |
+| `vendor.coupleId` | `couple_id` | string |
+| `vendor.name` | `name` | string |
+| `vendor.contactName` | `contact_name` | string? |
+| `vendor.phone` | `phone` | string? |
+| `vendor.email` | `email` | string? |
+| `vendor.website` | `website` | string? |
+| `vendor.address` | `address` | string? |
+| `vendor.categoryId` | `category_id` | string? |
+| `vendor.status` | `status` | string? |
+| `vendor.priority` | `priority` | string? |
+| `vendor.rating` | `rating` | number? |
+| `vendor.estimatedCost` | `estimated_cost` | Decimal? |
+| `vendor.actualCost` | `actual_cost` | Decimal? |
+| `vendor.notes` | `notes` | string? |
+| `vendor.meetingDate` | `meeting_date` | DateTime? |
+| `vendor.contractSigned` | `contract_signed` | boolean? |
+| `vendor.createdAt` | `created_at` | DateTime? |
+| `vendor.updatedAt` | `updated_at` | DateTime? |
+
+### **VendorCategory Model**
+| TypeScript (USE) | Database (DON'T USE) | Type |
+|------------------|----------------------|------|
+| `vendorCategory.id` | `id` | string |
+| `vendorCategory.name` | `name` | string |
+| `vendorCategory.icon` | `icon` | string? |
+| `vendorCategory.color` | `color` | string? |
+| `vendorCategory.description` | `description` | string? |
+| `vendorCategory.industryTypical` | `industry_typical` | boolean? |
+| `vendorCategory.displayOrder` | `display_order` | number? |
+| `vendorCategory.createdAt` | `created_at` | DateTime? |
+| `vendorCategory.updatedAt` | `updated_at` | DateTime? |
+
 ## Testing Strategy
 - **Unit Tests**: Service and repository logic
 - **Integration Tests**: API endpoint testing with repositories

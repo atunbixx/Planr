@@ -121,4 +121,4 @@ class NotificationStatsHandler extends BaseAPIHandler {
 }
 
 const handler = new NotificationStatsHandler()
-export { handler as GET }
+export const GET = (request: NextRequest) => handler.GET(request)

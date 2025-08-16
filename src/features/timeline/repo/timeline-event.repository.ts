@@ -3,6 +3,10 @@ import { Prisma } from '@prisma/client'
 import { BaseRepository } from '@/lib/repositories/BaseRepository'
 
 export class TimelineEventRepository extends BaseRepository<any> {
+  constructor() {
+    super('TimelineEvent')
+  }
+
   async findById(id: string): Promise<any | null> {
     return this.executeQuery(() =>
       prisma.timeline_events.findUnique({ 

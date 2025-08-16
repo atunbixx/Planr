@@ -22,8 +22,8 @@ export async function GET() {
         authenticated: true,
         userId: user.id,
         hasCouple: true,
-        onboardingCompleted: couple.onboardingCompleted || false,
-        coupleId: couple.id
+        onboardingCompleted: couple?.onboardingCompleted || false,
+        coupleId: couple?.id || null
       })
     } catch (error) {
       // User is authenticated but doesn't have a couple record yet

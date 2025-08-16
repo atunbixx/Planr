@@ -525,48 +525,51 @@ export class GuestService {
    * Map database entity to API response
    */
   private mapToResponse(guest: any): GuestResponse {
+    // Combine firstName and lastName into name
+    const name = `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || 'Guest'
+    
     return {
       id: guest.id,
-      name: guest.name,
-      email: guest.email,
-      phone: guest.phone,
-      relationship: guest.relationship,
-      side: guest.side,
-      type: guest.type,
-      ageGroup: guest.ageGroup,
-      address: guest.address,
-      rsvpStatus: guest.rsvpStatus,
-      rsvpDate: guest.rsvpDate,
-      rsvpNotes: guest.rsvpNotes,
-      dietaryRestrictions: guest.dietaryRestrictions || [],
-      mealChoice: guest.mealChoice,
-      allergies: guest.allergies,
-      ceremonyAttending: guest.ceremonyAttending,
-      receptionAttending: guest.receptionAttending,
-      hasPlusOne: guest.hasPlusOne,
-      plusOneName: guest.plusOneName,
-      plusOneEmail: guest.plusOneEmail,
-      needsAccommodation: guest.needsAccommodation,
-      accommodationNotes: guest.accommodationNotes,
-      needsTransportation: guest.needsTransportation,
-      transportationNotes: guest.transportationNotes,
-      tableNumber: guest.tableNumber,
-      seatNumber: guest.seatNumber,
-      giftReceived: guest.giftReceived,
-      giftDescription: guest.giftDescription,
-      thankYouSent: guest.thankYouSent,
+      name: name,
+      email: guest.email || null,
+      phone: guest.phone || null,
+      relationship: guest.relationship || null,
+      side: guest.side || 'both',
+      type: guest.type || 'adult',
+      ageGroup: guest.ageGroup || 'adult',
+      address: guest.address || null,
+      rsvpStatus: guest.rsvpStatus || 'pending',
+      rsvpDate: guest.rsvpDate || null,
+      rsvpNotes: guest.rsvpNotes || null,
+      dietaryRestrictions: guest.dietaryRestrictions ? [guest.dietaryRestrictions] : [],
+      mealChoice: guest.mealChoice || null,
+      allergies: guest.allergies || null,
+      ceremonyAttending: guest.ceremonyAttending || false,
+      receptionAttending: guest.receptionAttending || false,
+      hasPlusOne: guest.plusOneAllowed || false,
+      plusOneName: guest.plusOneName || null,
+      plusOneEmail: guest.plusOneEmail || null,
+      needsAccommodation: guest.needsAccommodation || false,
+      accommodationNotes: guest.accommodationNotes || null,
+      needsTransportation: guest.needsTransportation || false,
+      transportationNotes: guest.transportationNotes || null,
+      tableNumber: guest.tableNumber || null,
+      seatNumber: guest.seatNumber || null,
+      giftReceived: guest.giftReceived || false,
+      giftDescription: guest.giftDescription || null,
+      thankYouSent: guest.thankYouSent || false,
       tags: guest.tags || [],
-      notes: guest.notes,
-      isVip: guest.isVip,
-      priority: guest.priority,
-      invitationCode: guest.invitationCode,
-      invitationSent: guest.invitationSent || false,
-      invitationSentDate: guest.invitationSentDate,
-      importedFrom: guest.importedFrom,
-      externalId: guest.externalId,
-      coupleId: guest.coupleId,
-      createdAt: guest.createdAt.toISOString(),
-      updatedAt: guest.updatedAt.toISOString()
+      notes: guest.notes || null,
+      isVip: guest.isVip || false,
+      priority: guest.priority || 'normal',
+      invitationCode: guest.invitation?.invitationCode || null,
+      invitationSent: guest.invitationSentAt ? true : false,
+      invitationSentDate: guest.invitationSentAt || null,
+      importedFrom: guest.importedFrom || null,
+      externalId: guest.externalId || null,
+      coupleId: guest.coupleId || null,
+      createdAt: guest.createdAt ? guest.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: guest.updatedAt ? guest.updatedAt.toISOString() : new Date().toISOString()
     }
   }
 
@@ -574,22 +577,25 @@ export class GuestService {
    * Map database entity to summary response
    */
   private mapToSummaryResponse(guest: any): GuestSummaryResponse {
+    // Combine firstName and lastName into name
+    const name = `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || 'Guest'
+    
     return {
       id: guest.id,
-      name: guest.name,
-      email: guest.email,
-      relationship: guest.relationship,
-      side: guest.side,
-      type: guest.type,
-      rsvpStatus: guest.rsvpStatus,
-      ceremonyAttending: guest.ceremonyAttending,
-      receptionAttending: guest.receptionAttending,
-      hasPlusOne: guest.hasPlusOne,
-      tableNumber: guest.tableNumber,
-      isVip: guest.isVip,
-      invitationSent: guest.invitationSent || false,
-      giftReceived: guest.giftReceived,
-      thankYouSent: guest.thankYouSent
+      name: name,
+      email: guest.email || null,
+      relationship: guest.relationship || null,
+      side: guest.side || 'both',
+      type: guest.type || 'adult', // Default to adult
+      rsvpStatus: guest.rsvpStatus || 'pending',
+      ceremonyAttending: guest.ceremonyAttending || false,
+      receptionAttending: guest.receptionAttending || false,
+      hasPlusOne: guest.plusOneAllowed || false, // Map from plusOneAllowed
+      tableNumber: guest.tableNumber || null,
+      isVip: guest.isVip || false,
+      invitationSent: guest.invitationSentAt ? true : false, // Check if invitation was sent
+      giftReceived: guest.giftReceived || false,
+      thankYouSent: guest.thankYouSent || false
     }
   }
 }

@@ -10,14 +10,17 @@ import { CouplesApiHandler } from '@/features/couples'
 
 const handler = new CouplesApiHandler()
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.getCoupleById(request, params)
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.getCoupleById(request, resolvedParams)
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.updateCouple(request, params)
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.updateCouple(request, resolvedParams)
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.deleteCouple(request, params)
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.deleteCouple(request, resolvedParams)
 }

@@ -144,7 +144,7 @@ export class VendorRepository {
         prisma.vendor.findMany({
           where,
           include: {
-            vendorCategory: true
+            vendorCategories: true
           },
           orderBy: [
             { priority: 'desc' },
@@ -187,7 +187,7 @@ export class VendorRepository {
       const vendor = await prisma.vendor.findUnique({
         where: { id: vendorId },
         include: {
-          vendorCategory: true
+          vendorCategories: true
         }
       })
 
@@ -212,7 +212,7 @@ export class VendorRepository {
           }
         },
         include: {
-          vendorCategory: true
+          vendorCategories: true
         }
       })
 
@@ -251,7 +251,7 @@ export class VendorRepository {
           updatedAt: new Date()
         },
         include: {
-          vendorCategory: true
+          vendorCategories: true
         }
       })
 
@@ -279,7 +279,7 @@ export class VendorRepository {
         where: { id: vendorId },
         data: updateData,
         include: {
-          vendorCategory: true
+          vendorCategories: true
         }
       })
 
@@ -421,7 +421,7 @@ export class VendorRepository {
       const vendors = await prisma.vendor.findMany({
         where,
         include: {
-          vendorCategory: true
+          vendorCategories: true
         },
         orderBy: { [sortBy]: sortOrder },
         skip,
@@ -461,7 +461,7 @@ export class VendorRepository {
           ]
         },
         include: {
-          vendorCategory: true
+          vendorCategories: true
         },
         orderBy: { name: 'asc' }
       })
@@ -557,7 +557,7 @@ export class VendorRepository {
           categoryId
         },
         include: {
-          vendorCategory: true
+          vendorCategories: true
         },
         orderBy: { name: 'asc' }
       })
@@ -606,7 +606,7 @@ export class VendorRepository {
       notes: vendor.notes || null,
       createdAt: vendor.createdAt || null,
       updatedAt: vendor.updatedAt || null,
-      category: vendor.vendorCategory ? this.transformCategory(vendor.vendorCategory) : null
+      category: vendor.vendorCategories ? this.transformCategory(vendor.vendorCategories) : null
     }
   }
 

@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import { Guest } from '@prisma/client';
+import crypto from 'crypto';
 
 export interface CheckInData {
   guestId: string;
@@ -239,21 +240,22 @@ export class QRCodeService {
   }
 
   /**
-   * Generate unique check-in code
+   * Generate unique check-in code using secure cryptographic hash
    */
   private generateCheckInCode(guestId: string, eventId: string): string {
-    const secret = process.env.QR_CODE_SECRET || 'default-secret';
-    const data = `${guestId}-${eventId}-${secret}`;
-    
-    // Simple hash function for demo - use proper crypto in production
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
+    // Ensure we have a proper secret key
+    const secret = process.env.QR_CODE_SECRET;
+    if (!secret || secret === 'default-secret') {
+      throw new Error('QR_CODE_SECRET environment variable must be set to a secure value');
     }
     
-    return Math.abs(hash).toString(36);
+    // Create HMAC-SHA256 hash for secure check-in code generation
+    const data = `${guestId}-${eventId}`;
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(data);
+    
+    // Return first 16 characters of hex digest for manageable QR code size
+    return hmac.digest('hex').substring(0, 16);
   }
 
   /**

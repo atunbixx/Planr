@@ -33,13 +33,13 @@ export async function GET() {
     // Validation checks
     const checks = {
       snakeToCamelTransform: {
-        passed: snakeToCamel.partner1UserId === 'test-123' && 
-                snakeToCamel.weddingDate === '2024-06-15',
+        passed: (snakeToCamel as any).partner1UserId === 'test-123' && 
+                (snakeToCamel as any).weddingDate === '2024-06-15',
         result: snakeToCamel
       },
       camelToSnakeTransform: {
-        passed: camelToSnake.partner1_user_id === 'test-123' && 
-                camelToSnake.wedding_date === '2024-06-15',
+        passed: (camelToSnake as any).partner1_user_id === 'test-123' && 
+                (camelToSnake as any).wedding_date === '2024-06-15',
         result: camelToSnake
       },
       transformedClientAvailable: {

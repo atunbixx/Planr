@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { withSuperAdmin } from '@/lib/admin/roles'
-import { NextRequest } from 'next/server'
-
-export const GET = withSuperAdmin(async (req: NextRequest, userId: string) => {
+export const GET = withSuperAdmin(async (req: Request, userId: string) => {
   const supabase = await createClient()
   
   // Fetch all KPIs in parallel

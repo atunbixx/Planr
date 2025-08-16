@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'Invalid data provided',
-        details: error.errors
+        details: (error as z.ZodError).issues
       }, { status: 400 })
     }
     return NextResponse.json({
@@ -272,7 +272,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'Invalid data provided',
-        details: error.errors
+        details: (error as z.ZodError).issues
       }, { status: 400 })
     }
     return NextResponse.json({

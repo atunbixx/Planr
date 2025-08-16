@@ -190,7 +190,7 @@ export const GuestSearchRequestSchema = z.object({
   relationship: z.string().optional(),
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
-  sortBy: z.enum(['name', 'relationship', 'rsvpStatus', 'side', 'tableNumber', 'createdAt']).default('name'),
+  sortBy: z.enum(['firstName', 'relationship', 'rsvpStatus', 'side', 'tableNumber', 'createdAt']).default('firstName'),
   sortOrder: z.enum(['asc', 'desc']).default('asc')
 })
 

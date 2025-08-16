@@ -62,10 +62,10 @@ export interface PhotoWithAlbum extends Photo {
   }
 }
 
-export interface GuestWithRSVP extends Guest {
+export interface GuestWithRSVP extends Omit<Guest, 'plusOneName'> {
   rsvpStatus?: string
   dietaryRestrictions?: string[]
-  plusOneName?: string | null
+  plusOneName?: string | null | undefined
 }
 
 export interface BudgetCategoryWithExpenses extends BudgetCategory {

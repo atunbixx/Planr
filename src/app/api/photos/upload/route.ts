@@ -96,9 +96,10 @@ export async function POST(request: NextRequest) {
 
         // Save photo using repository
         const photo = await photoRepository.create({
-          coupleId: coupleId,
-          albumId: albumId || null,
+          couple: { connect: { id: coupleId } },
+          photoAlbums: albumId ? { connect: { id: albumId } } : undefined,
           title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+          imageUrl: cloudResult.secure_url, // This is required field
           cloudinaryPublicId: cloudResult.public_id,
           cloudinaryUrl: cloudResult.url,
           cloudinarySecureUrl: cloudResult.secure_url,
@@ -111,9 +112,7 @@ export async function POST(request: NextRequest) {
           location: location || null,
           photographer: photographer || null,
           eventType: eventType || 'general',
-          tags: [eventType, location, photographer].filter(Boolean),
-          url: cloudResult.secure_url, // This is required field
-          thumbnailUrl: cloudResult.secure_url // Use same URL for thumbnail for now
+          tags: [eventType, location, photographer].filter(Boolean)
         })
 
         if (!photo) {
@@ -231,7 +230,7 @@ export async function GET(request: NextRequest) {
     const paginatedPhotos = filteredPhotos.slice(offset, offset + limit)
     
     // Get photo statistics using repository
-    const photoStats = await photoRepository.getStatsByCouple(coupleId)
+    const photoStats = await photoRepository.getStatsByCoupleId(coupleId)
 
     return NextResponse.json({
       success: true,

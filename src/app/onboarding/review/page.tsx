@@ -21,22 +21,23 @@ export default function ReviewPage() {
   const [stepData, setStepData] = useState<StepData>({})
   const [isGenerating, setIsGenerating] = useState(false)
   
-  // Load all step data
+  // Load all step data from localStorage
   useEffect(() => {
-    const loadAllData = async () => {
+    const loadAllData = () => {
       try {
-        const steps = ['profile', 'event', 'invite', 'budget', 'vendors', 'guests']
-        const data: StepData = {}
-        
-        for (const step of steps) {
-          const response = await fetch(`/api/onboarding/${step}`)
-          if (response.ok) {
-            const result = await response.json()
-            data[step as keyof StepData] = result.stepData || {}
+        // Load from localStorage since that's where onboarding data is saved
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const stored = localStorage.getItem('onboarding-data')
+          if (stored) {
+            const parsedData = JSON.parse(stored)
+            // The data is stored by userId, so we need to get the first user's data
+            const userData = Object.values(parsedData)[0] as StepData || {}
+            console.log('Loaded onboarding data from localStorage:', userData)
+            setStepData(userData)
+          } else {
+            console.log('No onboarding data found in localStorage')
           }
         }
-        
-        setStepData(data)
       } catch (error) {
         console.error('Error loading review data:', error)
       }
@@ -99,12 +100,10 @@ export default function ReviewPage() {
             <div>
               <h3 className="font-medium text-gray-900 mb-2">Your Profile</h3>
               <div className="space-y-1 text-sm text-gray-600">
-                <p><strong>Name:</strong> {stepData.profile?.userName || 'Not provided'}</p>
-                {stepData.profile?.partnerName && (
-                  <p><strong>Partner:</strong> {stepData.profile.partnerName}</p>
-                )}
-                <p><strong>Role:</strong> {stepData.profile?.role || 'Not provided'}</p>
+                <p><strong>Partner 1:</strong> {stepData.profile?.partner1Name || 'Not provided'}</p>
+                <p><strong>Partner 2:</strong> {stepData.profile?.partner2Name || 'Not provided'}</p>
                 <p><strong>Location:</strong> {stepData.profile?.country || 'Not provided'}</p>
+                <p><strong>Currency:</strong> {stepData.profile?.currency || 'USD'}</p>
               </div>
             </div>
             <Button
@@ -131,8 +130,10 @@ export default function ReviewPage() {
                     ? formatDate(stepData.event.weddingDate)
                     : `${stepData.event?.estimatedMonth || ''}/${stepData.event?.estimatedYear || 'TBD'}`
                 }</p>
-                <p><strong>Location:</strong> {stepData.event?.city || 'Not provided'}</p>
-                <p><strong>Guest Count:</strong> {stepData.event?.estimatedGuests || 'Not provided'}</p>
+                <p><strong>Venue:</strong> {stepData.event?.venueName || 'Not specified'}</p>
+                <p><strong>Location:</strong> {stepData.event?.venueLocation || 'Not provided'}</p>
+                <p><strong>Style:</strong> {stepData.event?.weddingStyle || 'Not selected'}</p>
+                <p><strong>Guest Count:</strong> {stepData.event?.estimatedGuestCount || 'Not provided'}</p>
               </div>
             </div>
             <Button
@@ -154,8 +155,10 @@ export default function ReviewPage() {
                 Budget
               </h3>
               <div className="text-sm text-gray-600">
-                {stepData.budget?.budgetType === 'exact' && stepData.budget?.exactBudget ? (
-                  <p>{formatCurrency(stepData.budget.exactBudget, stepData.budget.currency || 'USD')}</p>
+                {stepData.budget?.totalBudget ? (
+                  <p>Total: {formatCurrency(stepData.budget.totalBudget, stepData.profile?.currency || 'USD')}</p>
+                ) : stepData.budget?.budgetType === 'exact' && stepData.budget?.exactBudget ? (
+                  <p>{formatCurrency(stepData.budget.exactBudget, stepData.profile?.currency || 'USD')}</p>
                 ) : stepData.budget?.budgetTier ? (
                   <p>{stepData.budget.budgetTier} tier selected</p>
                 ) : (

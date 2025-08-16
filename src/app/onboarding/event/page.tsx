@@ -13,8 +13,10 @@ export default function EventPage() {
     weddingDate: '',
     estimatedMonth: '',
     estimatedYear: new Date().getFullYear() + 1,
-    city: '',
-    estimatedGuests: ''
+    venueName: '',
+    venueLocation: '',
+    estimatedGuestCount: '',
+    weddingStyle: ''
   })
   const [errors, setErrors] = useState<any>({})
   
@@ -52,12 +54,16 @@ export default function EventPage() {
       newErrors.estimatedMonth = 'Please select an estimated month'
     }
     
-    if (!formData.city.trim()) {
-      newErrors.city = 'City is required'
+    if (!formData.venueLocation.trim()) {
+      newErrors.venueLocation = 'Location is required'
     }
     
-    if (!formData.estimatedGuests || parseInt(formData.estimatedGuests) < 1) {
-      newErrors.estimatedGuests = 'Please enter estimated number of guests'
+    if (!formData.estimatedGuestCount || parseInt(formData.estimatedGuestCount) < 1) {
+      newErrors.estimatedGuestCount = 'Please enter estimated number of guests'
+    }
+    
+    if (!formData.weddingStyle) {
+      newErrors.weddingStyle = 'Please select a wedding style'
     }
     
     setErrors(newErrors)
@@ -170,44 +176,84 @@ export default function EventPage() {
           </div>
         )}
         
-        <div>
-          <Label htmlFor="city">Wedding location (city) *</Label>
-          <Input
-            id="city"
-            value={formData.city}
-            onChange={(e) => handleInputChange('city', e.target.value)}
-            placeholder="e.g., New York, Lagos, London"
-            aria-invalid={!!errors.city}
-            aria-describedby={errors.city ? 'city-error' : undefined}
-          />
-          {errors.city && (
-            <p id="city-error" className="text-sm text-red-600 mt-1">
-              {errors.city}
-            </p>
-          )}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="venueName">Venue Name (optional)</Label>
+            <Input
+              id="venueName"
+              value={formData.venueName}
+              onChange={(e) => handleInputChange('venueName', e.target.value)}
+              placeholder="e.g., The Grand Ballroom"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="venueLocation">Location (City, State/Country) *</Label>
+            <Input
+              id="venueLocation"
+              value={formData.venueLocation}
+              onChange={(e) => handleInputChange('venueLocation', e.target.value)}
+              placeholder="e.g., New York, NY"
+              aria-invalid={!!errors.venueLocation}
+              aria-describedby={errors.venueLocation ? 'location-error' : undefined}
+            />
+            {errors.venueLocation && (
+              <p id="location-error" className="text-sm text-red-600 mt-1">
+                {errors.venueLocation}
+              </p>
+            )}
+          </div>
         </div>
         
-        <div>
-          <Label htmlFor="estimatedGuests">Estimated number of guests *</Label>
-          <Input
-            id="estimatedGuests"
-            type="number"
-            value={formData.estimatedGuests}
-            onChange={(e) => handleInputChange('estimatedGuests', e.target.value)}
-            placeholder="e.g., 150"
-            min="1"
-            aria-invalid={!!errors.estimatedGuests}
-            aria-describedby={errors.estimatedGuests ? 'guests-error' : undefined}
-          />
-          {errors.estimatedGuests && (
-            <p id="guests-error" className="text-sm text-red-600 mt-1">
-              {errors.estimatedGuests}
-            </p>
-          )}
-          <p className="text-sm text-gray-500 mt-1">
-            Don't worry about being exact, this helps with planning
-          </p>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="weddingStyle">Wedding Style *</Label>
+            <select
+              id="weddingStyle"
+              value={formData.weddingStyle}
+              onChange={(e) => handleInputChange('weddingStyle', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              aria-invalid={!!errors.weddingStyle}
+            >
+              <option value="">Select style</option>
+              <option value="traditional">Traditional</option>
+              <option value="modern">Modern</option>
+              <option value="rustic">Rustic</option>
+              <option value="vintage">Vintage</option>
+              <option value="destination">Destination</option>
+              <option value="casual">Casual</option>
+              <option value="formal">Formal</option>
+            </select>
+            {errors.weddingStyle && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.weddingStyle}
+              </p>
+            )}
+          </div>
+          
+          <div>
+            <Label htmlFor="estimatedGuestCount">Estimated number of guests *</Label>
+            <Input
+              id="estimatedGuestCount"
+              type="number"
+              value={formData.estimatedGuestCount}
+              onChange={(e) => handleInputChange('estimatedGuestCount', e.target.value)}
+              placeholder="e.g., 150"
+              min="1"
+              aria-invalid={!!errors.estimatedGuestCount}
+              aria-describedby={errors.estimatedGuestCount ? 'guests-error' : undefined}
+            />
+            {errors.estimatedGuestCount && (
+              <p id="guests-error" className="text-sm text-red-600 mt-1">
+                {errors.estimatedGuestCount}
+              </p>
+            )}
+          </div>
         </div>
+        
+        <p className="text-sm text-gray-500 mt-1">
+          Don't worry about being exact, this helps with planning
+        </p>
       </div>
     </StepWrapper>
   )

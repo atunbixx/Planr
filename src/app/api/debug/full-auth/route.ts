@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
   debugInfo.cookies = {
     all: allCookies.map(c => ({
       name: c.name,
-      value: c.value ? `${c.value.substring(0, 20)}...` : 'empty',
-      httpOnly: c.httpOnly,
-      secure: c.secure,
-      sameSite: c.sameSite
+      value: c.value ? `${c.value.substring(0, 20)}...` : 'empty'
     })),
     supabaseAuth: allCookies.filter(c => c.name.includes('sb-') || c.name.includes('supabase')),
     onboarding: cookieStore.get('onboardingCompleted')?.value
@@ -67,7 +64,7 @@ export async function GET(request: NextRequest) {
       sessionError: sessionError1?.message
     }
   } catch (e) {
-    debugInfo.supabase.method1 = { error: e.message }
+    debugInfo.supabase.method1 = { error: e instanceof Error ? e.message : String(e) }
   }
   
   // 3. Check request headers
@@ -100,7 +97,7 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (e) {
-      debugInfo.cookies.authTokenError = e.message
+      debugInfo.cookies.authTokenError = e instanceof Error ? e.message : String(e)
     }
   }
   

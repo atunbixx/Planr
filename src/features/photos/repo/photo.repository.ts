@@ -3,6 +3,10 @@ import { Photo, Prisma } from '@prisma/client'
 import { BaseRepository } from '@/lib/repositories/BaseRepository'
 
 export class PhotoRepository extends BaseRepository<Photo> {
+  constructor() {
+    super('Photo')
+  }
+
   async findById(id: string): Promise<Photo | null> {
     return this.executeQuery(() =>
       prisma.photo.findUnique({ 

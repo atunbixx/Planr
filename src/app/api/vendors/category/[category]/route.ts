@@ -8,6 +8,7 @@ import { VendorsApiHandler } from '@/features/vendors'
 
 const handler = new VendorsApiHandler()
 
-export async function GET(request: NextRequest, { params }: { params: { category: string } }) {
-  return handler.getVendorsByCategory(request, params)
+export async function GET(request: NextRequest, { params }: { params: Promise<{ category: string }> }) {
+  const resolvedParams = await params
+  return handler.getVendorsByCategory(request, resolvedParams)
 }

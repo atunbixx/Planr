@@ -86,7 +86,7 @@ export class GuestsApiHandler {
         relationship: searchParams.get('relationship') || undefined,
         page: parseInt(searchParams.get('page') || '1'),
         pageSize: parseInt(searchParams.get('pageSize') || '20'),
-        sortBy: searchParams.get('sortBy') || 'name',
+        sortBy: searchParams.get('sortBy') || 'firstName',
         sortOrder: searchParams.get('sortOrder') || 'asc'
       }
       

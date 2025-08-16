@@ -46,7 +46,10 @@ export default function AlbumCreateDialog({ onAlbumCreated, trigger }: AlbumCrea
       })
 
       if (response.success && response.data) {
-        onAlbumCreated(response.data)
+        onAlbumCreated({
+          ...response.data,
+          description: response.data.description ?? null
+        })
         setIsOpen(false)
         setFormData({ name: '', description: '' })
         toast.success('Album created successfully')

@@ -36,11 +36,15 @@ const currencies = [
 
 export default function ProfilePage() {
   const [formData, setFormData] = useState({
-    userName: '',
-    partnerName: '',
+    partner1Name: '',
+    partner2Name: '',
+    firstName: '',
+    lastName: '',
     role: '',
     country: '',
-    currency: 'USD'
+    currency: 'USD',
+    timezone: 'America/New_York',
+    language: 'en'
   })
   const [errors, setErrors] = useState<any>({})
   const [autosave, setAutosave] = useState<((data: any) => void) | null>(null)
@@ -79,12 +83,12 @@ export default function ProfilePage() {
   const validateForm = () => {
     const newErrors: any = {}
     
-    if (!formData.userName.trim()) {
-      newErrors.userName = 'Your name is required'
+    if (!formData.partner1Name.trim()) {
+      newErrors.partner1Name = 'Partner 1 name is required'
     }
     
-    if (!formData.role) {
-      newErrors.role = 'Please select your role'
+    if (!formData.partner2Name.trim()) {
+      newErrors.partner2Name = 'Partner 2 name is required'
     }
     
     if (!formData.country) {
@@ -124,51 +128,43 @@ export default function ProfilePage() {
       onAutosave={setAutosave}
     >
       <div className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <Label htmlFor="userName">Your name *</Label>
-            <Input
-              id="userName"
-              value={formData.userName}
-              onChange={(e) => handleInputChange('userName', e.target.value)}
-              placeholder="Enter your name"
-              aria-invalid={!!errors.userName}
-              aria-describedby={errors.userName ? 'userName-error' : undefined}
-            />
-            {errors.userName && (
-              <p id="userName-error" className="text-sm text-red-600 mt-1">
-                {errors.userName}
-              </p>
-            )}
-          </div>
-          
-          <div>
-            <Label htmlFor="partnerName">Partner's name (optional)</Label>
-            <Input
-              id="partnerName"
-              value={formData.partnerName}
-              onChange={(e) => handleInputChange('partnerName', e.target.value)}
-              placeholder="Enter partner's name"
-            />
-          </div>
-        </div>
-        
         <div>
-          <Label htmlFor="role">Your role *</Label>
-          <SimpleSelect
-            id="role"
-            value={formData.role}
-            onChange={(value) => handleInputChange('role', value)}
-            options={roles}
-            placeholder="Select your role"
-            aria-invalid={!!errors.role}
-            aria-describedby={errors.role ? 'role-error' : undefined}
-          />
-          {errors.role && (
-            <p id="role-error" className="text-sm text-red-600 mt-1">
-              {errors.role}
-            </p>
-          )}
+          <h3 className="font-semibold text-gray-900 mb-4">Partner Information</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="partner1Name">Partner 1 Name *</Label>
+              <Input
+                id="partner1Name"
+                value={formData.partner1Name}
+                onChange={(e) => handleInputChange('partner1Name', e.target.value)}
+                placeholder="First partner's full name"
+                aria-invalid={!!errors.partner1Name}
+                aria-describedby={errors.partner1Name ? 'partner1Name-error' : undefined}
+              />
+              {errors.partner1Name && (
+                <p id="partner1Name-error" className="text-sm text-red-600 mt-1">
+                  {errors.partner1Name}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="partner2Name">Partner 2 Name *</Label>
+              <Input
+                id="partner2Name"
+                value={formData.partner2Name}
+                onChange={(e) => handleInputChange('partner2Name', e.target.value)}
+                placeholder="Second partner's full name"
+                aria-invalid={!!errors.partner2Name}
+                aria-describedby={errors.partner2Name ? 'partner2Name-error' : undefined}
+              />
+              {errors.partner2Name && (
+                <p id="partner2Name-error" className="text-sm text-red-600 mt-1">
+                  {errors.partner2Name}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
         
         <div className="grid md:grid-cols-2 gap-6">

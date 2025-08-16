@@ -17,10 +17,7 @@ export async function GET() {
     const debugInfo = {
       cookies: allCookies.map(c => ({
         name: c.name,
-        value: c.value.substring(0, 20) + '...',
-        httpOnly: c.httpOnly,
-        secure: c.secure,
-        sameSite: c.sameSite
+        value: c.value.substring(0, 20) + '...'
       })),
       supabaseCookies: allCookies.filter(c => c.name.includes('supabase') || c.name.includes('sb-')),
       auth: {

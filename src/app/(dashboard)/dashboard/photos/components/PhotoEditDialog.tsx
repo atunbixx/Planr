@@ -100,7 +100,17 @@ export default function PhotoEditDialog({ photo, albums, onPhotoUpdated, trigger
       const response = await api.photos.update(photo.id, updateData)
       
       if (response.success && response.data) {
-        onPhotoUpdated(response.data)
+        const updatedPhoto: Photo = {
+          ...photo,
+          title: formData.title || null,
+          description: formData.description || null,
+          altText: formData.altText || null,
+          isFavorite: formData.isFavorite,
+          albumId: formData.albumId === 'none' ? null : formData.albumId,
+          tags: formData.tags,
+          cloudinarySecureUrl: (response.data as any).cloudinarySecureUrl || (response.data as any).url || photo.cloudinarySecureUrl
+        }
+        onPhotoUpdated(updatedPhoto)
         setIsOpen(false)
         toast.success('Photo updated successfully')
       } else {

@@ -9,10 +9,12 @@ import { BudgetApiHandler } from '@/features/budget'
 
 const handler = new BudgetApiHandler()
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.updateBudgetCategory(request, params)
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.updateBudgetCategory(request, resolvedParams)
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return handler.deleteBudgetCategory(request, params)
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  return handler.deleteBudgetCategory(request, resolvedParams)
 }

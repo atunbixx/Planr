@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { withSuperAdmin, logAdminAction } from '@/lib/admin/roles'
-import { NextRequest } from 'next/server'
 
-export const GET = withSuperAdmin(async (req: NextRequest, adminId: string) => {
+
+export const GET = withSuperAdmin(async (req: Request, adminId: string) => {
   const supabase = await createClient()
   const id = req.url.split('/').pop()
   
@@ -100,11 +100,11 @@ export const GET = withSuperAdmin(async (req: NextRequest, adminId: string) => {
       invoices: user.invoices || [],
       tickets: user.support_tickets || [],
       usage: {
-        storage_mb: Math.round((usageSummary?.sum || 0) / 1024 / 1024),
-        api_calls: usageSummary?.sum_2 || 0,
-        files_uploaded: usageSummary?.sum_3 || 0,
-        guests_added: usageSummary?.sum_4 || 0,
-        invites_sent: usageSummary?.sum_5 || 0
+        storage_mb: Math.round((usageSummary?.SUM?.[0]?.storage_bytes || 0) / 1024 / 1024),
+        api_calls: usageSummary?.SUM?.[0]?.api_calls || 0,
+        files_uploaded: usageSummary?.SUM?.[0]?.files_uploaded || 0,
+        guests_added: usageSummary?.SUM?.[0]?.guests_added || 0,
+        invites_sent: usageSummary?.SUM?.[0]?.invites_sent || 0
       },
       activity: recentActivity || [],
       errors: recentErrors
@@ -112,7 +112,7 @@ export const GET = withSuperAdmin(async (req: NextRequest, adminId: string) => {
   }
 })
 
-export const PUT = withSuperAdmin(async (req: NextRequest, adminId: string) => {
+export const PUT = withSuperAdmin(async (req: Request, adminId: string) => {
   const supabase = await createClient()
   const id = req.url.split('/').pop()
   const body = await req.json()

@@ -702,4 +702,227 @@ export class BudgetRepository {
       } : null
     }
   }
+
+  /**
+   * Find category by ID
+   */
+  async findCategoryById(categoryId: string): Promise<BudgetCategoryData | null> {
+    try {
+      const category = await prisma.budgetCategory.findUnique({
+        where: { id: categoryId }
+      })
+      
+      return category ? this.transformCategory(category) : null
+    } catch (error) {
+      console.error('Error finding category by ID:', error)
+      throw new Error('Failed to find category')
+    }
+  }
+
+  /**
+   * Find category by couple ID and name
+   */
+  async findCategoryByCoupleAndName(coupleId: string, name: string): Promise<BudgetCategoryData | null> {
+    try {
+      const category = await prisma.budgetCategory.findFirst({
+        where: { 
+          coupleId,
+          name: {
+            equals: name,
+            mode: 'insensitive'
+          }
+        }
+      })
+      
+      return category ? this.transformCategory(category) : null
+    } catch (error) {
+      console.error('Error finding category by name:', error)
+      throw new Error('Failed to find category')
+    }
+  }
+
+  /**
+   * Find expense by ID
+   */
+  async findExpenseById(expenseId: string): Promise<BudgetExpenseData | null> {
+    try {
+      const expense = await prisma.budgetExpense.findUnique({
+        where: { id: expenseId }
+      })
+      
+      return expense ? this.transformExpense(expense) : null
+    } catch (error) {
+      console.error('Error finding expense by ID:', error)
+      throw new Error('Failed to find expense')
+    }
+  }
+
+  /**
+   * Update category totals
+   */
+  async updateCategoryTotals(categoryId: string, tx: any = null): Promise<void> {
+    try {
+      const client = tx || prisma
+      
+      // Calculate total spent from expenses
+      const expenses = await client.budgetExpense.findMany({
+        where: { 
+          categoryId,
+          paymentStatus: 'paid'
+        }
+      })
+      
+      const spentAmount = expenses.reduce((sum: number, exp: any) => sum + Number(exp.amount), 0)
+      
+      await client.budgetCategory.update({
+        where: { id: categoryId },
+        data: { 
+          spentAmount,
+          updatedAt: new Date()
+        }
+      })
+    } catch (error) {
+      console.error('Error updating category totals:', error)
+      throw new Error('Failed to update category totals')
+    }
+  }
+
+  /**
+   * Get expense count by category
+   */
+  async getExpenseCountByCategory(categoryId: string): Promise<number> {
+    try {
+      return await prisma.budgetExpense.count({
+        where: { categoryId }
+      })
+    } catch (error) {
+      console.error('Error getting expense count:', error)
+      throw new Error('Failed to get expense count')
+    }
+  }
+
+  /**
+   * Get budget analytics by couple
+   */
+  async getBudgetAnalyticsByCouple(coupleId: string): Promise<any> {
+    try {
+      const couple = await prisma.couple.findUnique({
+        where: { id: coupleId },
+        select: { totalBudget: true }
+      })
+
+      if (!couple) {
+        throw new Error('Couple not found')
+      }
+
+      const categories = await prisma.budgetCategory.findMany({
+        where: { coupleId },
+        include: {
+          budgetExpenses: true
+        }
+      })
+
+      const totalBudget = Number(couple.totalBudget || 0)
+      const totalSpent = categories.reduce((sum, cat) => sum + Number(cat.spentAmount || 0), 0)
+      const totalAllocated = categories.reduce((sum, cat) => sum + Number(cat.allocatedAmount || 0), 0)
+
+      // Calculate spending by month
+      const expenses = await prisma.budgetExpense.findMany({
+        where: { coupleId },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      const spendingByMonth = expenses.reduce((acc: any, exp: any) => {
+        const month = new Date(exp.createdAt).toISOString().substring(0, 7)
+        if (!acc[month]) acc[month] = 0
+        acc[month] += Number(exp.amount)
+        return acc
+      }, {})
+
+      // Calculate category breakdown
+      const categoryBreakdown = categories.map(cat => ({
+        name: cat.name,
+        allocated: Number(cat.allocatedAmount || 0),
+        spent: Number(cat.spentAmount || 0),
+        percentage: totalAllocated > 0 ? (Number(cat.allocatedAmount || 0) / totalAllocated) * 100 : 0
+      }))
+
+      return {
+        overview: {
+          totalBudget,
+          totalAllocated,
+          totalSpent,
+          totalRemaining: totalBudget - totalSpent,
+          spentPercentage: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
+          allocatedPercentage: totalBudget > 0 ? (totalAllocated / totalBudget) * 100 : 0
+        },
+        spendingByMonth,
+        categoryBreakdown,
+        topExpenses: expenses
+          .sort((a: any, b: any) => Number(b.amount) - Number(a.amount))
+          .slice(0, 5)
+          .map((exp: any) => ({
+            description: exp.description,
+            amount: Number(exp.amount),
+            date: exp.createdAt
+          }))
+      }
+    } catch (error) {
+      console.error('Error getting budget analytics:', error)
+      throw new Error('Failed to get budget analytics')
+    }
+  }
+
+  /**
+   * Search categories
+   */
+  async searchCategories(params: any): Promise<any> {
+    try {
+      const {
+        search,
+        coupleId,
+        priority,
+        page = 1,
+        pageSize = 20,
+        sortBy = 'name',
+        sortOrder = 'asc'
+      } = params
+
+      const where: any = {}
+      
+      if (coupleId) where.coupleId = coupleId
+      if (priority) where.priority = priority
+
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } }
+        ]
+      }
+
+      const total = await prisma.budgetCategory.count({ where })
+      const totalPages = Math.ceil(total / pageSize)
+      const skip = (page - 1) * pageSize
+
+      const categories = await prisma.budgetCategory.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: pageSize
+      })
+
+      return {
+        data: categories.map((cat: any) => this.transformCategory(cat)),
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasMore: page < totalPages
+        }
+      }
+    } catch (error) {
+      console.error('Error searching categories:', error)
+      throw new Error('Failed to search categories')
+    }
+  }
 }

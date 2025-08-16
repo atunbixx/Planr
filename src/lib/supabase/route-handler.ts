@@ -11,24 +11,55 @@ export const createRouteHandlerClient = (request: NextRequest, response: NextRes
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          // Set cookie on the response
+          const cookieOptions = {
+            ...options,
+            path: options.path || '/',
+            sameSite: (options.sameSite as 'lax' | 'strict' | 'none') || 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: options.httpOnly !== false, // Default to true unless explicitly false
+            maxAge: options.maxAge || 60 * 60 * 24 * 7, // 1 week default
+          }
+          
+          // Don't set domain in development to avoid issues
+          if (process.env.NODE_ENV === 'production' && options.domain) {
+            cookieOptions.domain = options.domain
+          }
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Route Handler] Setting cookie:', name, 'with options:', cookieOptions)
+          }
+          
+          // Set cookie on the response with proper auth settings
           response.cookies.set({
             name,
             value,
-            ...options,
-            // Ensure proper cookie settings for auth
-            sameSite: 'lax' as const,
-            path: '/',
-            secure: process.env.NODE_ENV === 'production',
+            ...cookieOptions,
           })
         },
         remove(name: string, options: CookieOptions) {
+          const removeOptions = {
+            ...options,
+            path: options.path || '/',
+            sameSite: (options.sameSite as 'lax' | 'strict' | 'none') || 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 0,
+            expires: new Date(0),
+          }
+          
+          // Don't set domain in development to avoid issues
+          if (process.env.NODE_ENV === 'production' && options.domain) {
+            removeOptions.domain = options.domain
+          }
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Route Handler] Removing cookie:', name)
+          }
+          
           // Remove cookie on the response
           response.cookies.set({
             name,
             value: '',
-            ...options,
-            maxAge: 0,
+            ...removeOptions,
           })
         },
       },
