@@ -53,9 +53,24 @@ export class GuestHandler {
         }, { status: result.error?.statusCode || 500 })
       }
 
+      // Transform response to legacy format for frontend compatibility
+      const legacyGuests = result.data!.guests.map(guest => ({
+        id: guest.id,
+        name: `${guest.firstName} ${guest.lastName}`.trim(),
+        rsvpStatus: 'pending' as const, // Default for legacy compatibility
+        mealPreference: guest.dietaryRestrictions,
+        side: guest.side,
+        invitationSent: Boolean(guest.invitationSentAt),
+        rsvp: {
+          id: `rsvp_${guest.id}`,
+          status: 'pending',
+          dateResponded: null
+        }
+      }))
+
       return NextResponse.json({
         success: true,
-        data: result.data
+        data: legacyGuests // Return array directly for legacy compatibility
       })
     } catch (error) {
       console.error('Error in getGuests handler:', error)
@@ -106,8 +121,24 @@ export class GuestHandler {
     try {
       const body = await request.json()
 
+      // Handle legacy format from frontend (name field) 
+      let processedBody = body
+      if (body.name && !body.firstName && !body.lastName) {
+        const nameParts = body.name.trim().split(' ')
+        processedBody = {
+          ...body,
+          firstName: nameParts[0] || body.name,
+          lastName: nameParts.slice(1).join(' ') || '',
+          dietaryRestrictions: body.mealPreference // Map legacy field
+        }
+        delete processedBody.name
+        delete processedBody.mealPreference
+        delete processedBody.rsvpStatus // Remove legacy RSVP field
+        delete processedBody.invitationSent // Remove legacy field for now
+      }
+
       // Validate input
-      const validation = CreateGuestDto.safeParse(body)
+      const validation = CreateGuestDto.safeParse(processedBody)
       if (!validation.success) {
         return NextResponse.json({
           success: false,
@@ -131,9 +162,24 @@ export class GuestHandler {
         }, { status: result.error?.statusCode || 500 })
       }
 
+      // Transform response to legacy format for frontend compatibility
+      const legacyResponse = {
+        id: result.data!.id,
+        name: `${result.data!.firstName} ${result.data!.lastName}`.trim(),
+        rsvpStatus: 'pending', // Default for legacy compatibility
+        mealPreference: result.data!.dietaryRestrictions,
+        side: result.data!.side,
+        invitationSent: Boolean(result.data!.invitationSentAt),
+        rsvp: {
+          id: `rsvp_${result.data!.id}`,
+          status: 'pending',
+          dateResponded: null
+        }
+      }
+
       return NextResponse.json({
         success: true,
-        data: result.data
+        data: legacyResponse
       }, { status: 201 })
     } catch (error) {
       console.error('Error in createGuest handler:', error)
