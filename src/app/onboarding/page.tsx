@@ -17,6 +17,7 @@ export default function OnboardingPage() {
     guestCount: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSkipping, setIsSkipping] = useState(false)
 
   // Redirect if not authenticated or already onboarded
   useEffect(() => {
@@ -87,8 +88,22 @@ export default function OnboardingPage() {
     }
   }
 
-  const handleSkip = () => {
-    router.push('/dashboard')
+  const handleSkip = async () => {
+    try {
+      setIsSkipping(true)
+      // Complete onboarding with empty values
+      const result = await completeOnboarding({})
+      
+      if (result.success) {
+        router.push('/dashboard')
+      } else {
+        setErrors({ submit: result.error?.message || 'Failed to skip onboarding' })
+        setIsSkipping(false)
+      }
+    } catch (error) {
+      setErrors({ submit: 'An unexpected error occurred' })
+      setIsSkipping(false)
+    }
   }
 
   // Show loading state while checking authentication
@@ -183,9 +198,10 @@ export default function OnboardingPage() {
                   variant="outline"
                   className="w-full"
                   onClick={handleSkip}
-                  disabled={isLoading}
+                  disabled={isLoading || isSkipping}
+                  isLoading={isSkipping}
                 >
-                  Skip for now
+                  {isSkipping ? 'Skipping...' : 'Skip for now'}
                 </Button>
               </div>
             </form>

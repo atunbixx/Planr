@@ -1,252 +1,1163 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  LinearProgress,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Chip,
+  Button,
+  IconButton,
+  Avatar,
+  Divider,
+  Alert,
+  CircularProgress,
+  CardActionArea,
+} from '@mui/material';
+import {
+  People as PeopleIcon,
+  AttachMoney as MoneyIcon,
+  CheckCircle as CheckIcon,
+  Store as VendorIcon,
+  CalendarToday as CalendarIcon,
+  Favorite as HeartIcon,
+  PhotoLibrary as PhotoIcon,
+  Message as MessageIcon,
+  Timeline as TimelineIcon,
+  CheckBox as CheckBoxIcon,
+  Schedule as ScheduleIcon,
+  EmojiEvents as TrophyIcon,
+  TrendingUp as TrendingUpIcon,
+  AccessTime as ClockIcon,
+  EventNote as EventIcon,
+} from '@mui/icons-material';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useAuth } from '@/hooks/useAuth';
 
-interface DashboardStats {
-  vendors: number
-  guests: number
-  budgetItems: number
-  totalBudget: number
+interface FeatureCard {
+  title: string;
+  description: string;
+  icon: React.ReactElement;
+  color: string;
+  path: string;
+  stats?: string;
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const { user, signout, isLoading } = useAuth()
-  const [stats, setStats] = useState<DashboardStats>({
-    vendors: 0,
-    guests: 0,
-    budgetItems: 0,
-    totalBudget: 0
-  })
+  const router = useRouter();
+  const { user, signout, isLoading } = useAuth();
+  const [topCards, setTopCards] = useState<FeatureCard[]>([]);
+  const [middleCards, setMiddleCards] = useState<FeatureCard[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [budgetBreakdown, setBudgetBreakdown] = useState<any[]>([]);
+  const [completedTasks, setCompletedTasks] = useState(2);
+  const [totalTasks, setTotalTasks] = useState(12);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/signin')
-      return
+      router.push('/signin');
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router]);
 
-  // Show loading state while checking authentication
-  if (isLoading || !user) {
+  useEffect(() => {
+    // Set up the feature cards
+    setTopCards([
+      {
+        title: 'Guest Management',
+        description: 'Manage your guest list and RSVPs',
+        icon: <PeopleIcon sx={{ fontSize: 28 }} />,
+        color: '#000000',
+        path: '/dashboard/guests',
+        stats: '0 guests',
+      },
+      {
+        title: 'Budget Tracker',
+        description: 'Track expenses and stay on budget',
+        icon: <MoneyIcon sx={{ fontSize: 28 }} />,
+        color: '#000000',
+        path: '/dashboard/budget',
+        stats: '$0 spent',
+      },
+      {
+        title: 'Vendor Directory',
+        description: 'Find and manage wedding vendors',
+        icon: <VendorIcon sx={{ fontSize: 28 }} />,
+        color: '#000000',
+        path: '/dashboard/vendors',
+        stats: '0 vendors',
+      },
+    ]);
+
+    setMiddleCards([
+      {
+        title: 'Timeline',
+        description: 'Plan your wedding day schedule',
+        icon: <TimelineIcon sx={{ fontSize: 28 }} />,
+        color: '#000000',
+        path: '/dashboard/timeline',
+        stats: 'Not started',
+      },
+      {
+        title: 'Photo Gallery',
+        description: 'Collect and share wedding photos',
+        icon: <PhotoIcon sx={{ fontSize: 28 }} />,
+        color: '#000000',
+        path: '/dashboard/photos',
+        stats: '0 photos',
+      },
+      {
+        title: 'Messages',
+        description: 'Communicate with guests and vendors',
+        icon: <MessageIcon sx={{ fontSize: 28 }} />,
+        color: '#000000',
+        path: '/dashboard/messages',
+        stats: '0 messages',
+      },
+    ]);
+
+    setTasks([
+      { id: 1, title: 'Set wedding date', completed: false },
+      { id: 2, title: 'Choose venue', completed: false },
+      { id: 3, title: 'Create guest list', completed: false },
+      { id: 4, title: 'Set budget', completed: false },
+      { id: 5, title: 'Book photographer', completed: false },
+    ]);
+
+    setRecentActivity([
+      { id: 1, text: 'Welcome to Wedding Planner!', time: '2 min ago', icon: <HeartIcon /> },
+      { id: 2, text: 'Complete your profile', time: '5 min ago', icon: <CheckIcon /> },
+      { id: 3, text: 'Start adding guests', time: '10 min ago', icon: <PeopleIcon /> },
+    ]);
+
+    setBudgetBreakdown([
+      { category: 'Venue', amount: 0, percentage: 0, color: '#000000' },
+      { category: 'Catering', amount: 0, percentage: 0, color: '#333333' },
+      { category: 'Photography', amount: 0, percentage: 0, color: '#666666' },
+      { category: 'Other', amount: 0, percentage: 0, color: '#999999' },
+    ]);
+  }, []);
+
+  const getDaysUntilWedding = () => {
+    const weddingDate = new Date('2025-06-15'); // Mock date
+    const today = new Date();
+    const diffTime = Math.abs(weddingDate.getTime() - today.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+      <DashboardLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      </DashboardLayout>
+    );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Wedding Planner</h1>
-              <p className="text-sm text-gray-600">
-                Welcome back, {user.email} ({user.role})
-              </p>
-            </div>
-            <Button onClick={signout} variant="outline">
-              Sign out
-            </Button>
-          </div>
-        </div>
-      </div>
+    <DashboardLayout>
+      <Box sx={{ px: 0, py: 3 }}>
+        {/* Hero Section - Countdown Focus */}
+        <Grid container spacing={3} sx={{ mb: 4, px: 3 }}>
+          <Grid item xs={12} lg={4} md={5}>
+            <Paper
+              sx={{
+                p: 6,
+                background: 'linear-gradient(135deg, #000000 0%, #333333 100%)',
+                color: '#FFFFFF',
+                borderRadius: 0,
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                position: 'relative',
+                overflow: 'hidden',
+                minHeight: 320,
+              }}
+            >
+              <Box sx={{ position: 'relative', zIndex: 1 }}>
+                <Typography 
+                  variant="overline" 
+                  sx={{ 
+                    fontSize: '0.625rem', 
+                    letterSpacing: '0.2em',
+                    opacity: 0.8,
+                    fontWeight: 600,
+                    fontFamily: '"Bodoni Moda", serif',
+                  }}
+                >
+                  YOUR WEDDING DAY
+                </Typography>
+                <Typography 
+                  variant="h1" 
+                  sx={{ 
+                    fontFamily: '"Bodoni Moda", "Playfair Display", serif',
+                    fontSize: '5rem',
+                    fontWeight: 300,
+                    letterSpacing: '-0.05em',
+                    lineHeight: 1,
+                    mt: 2,
+                    mb: 1,
+                  }}
+                >
+                  {getDaysUntilWedding()}
+                </Typography>
+                <Typography 
+                  variant="h4" 
+                  sx={{ 
+                    fontFamily: '"Bodoni Moda", serif',
+                    fontWeight: 300,
+                    letterSpacing: '0.05em',
+                    mb: 4,
+                  }}
+                >
+                  DAYS TO GO
+                </Typography>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    fontSize: '1.125rem',
+                    opacity: 0.9,
+                    mb: 3,
+                    fontStyle: 'italic',
+                  }}
+                >
+                  June 15, 2025 • Garden Wedding Venue
+                </Typography>
+                <Button
+                  variant="outlined"
+                  sx={{
+                    color: '#FFFFFF',
+                    borderColor: '#FFFFFF',
+                    px: 4,
+                    py: 1.5,
+                    '&:hover': {
+                      bgcolor: '#FFFFFF',
+                      color: '#000000',
+                    },
+                  }}
+                  onClick={() => router.push('/dashboard/timeline')}
+                >
+                  VIEW TIMELINE
+                </Button>
+              </Box>
+              {/* Decorative element */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -50,
+                  right: -50,
+                  width: 200,
+                  height: 200,
+                  borderRadius: '50%',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              />
+            </Paper>
+          </Grid>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Onboarding Banner for Couples */}
-        {user.role === 'couple' && !user.onboardingCompleted && (
-          <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-blue-900">Complete your wedding setup</h3>
-                <p className="text-blue-700">
-                  Add your wedding details to get the most out of your planning experience.
-                </p>
-              </div>
-              <Button onClick={() => router.push('/onboarding')}>
-                Complete setup
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Vendors</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.vendors}</p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Guests</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.guests}</p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Budget Items</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.budgetItems}</p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Total Budget</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${stats.totalBudget.toLocaleString()}
-                  </p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.51-1.31c-.562-.649-1.413-1.076-2.353-1.253V5z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button 
-                className="h-20 flex flex-col items-center justify-center space-y-2"
-                onClick={() => router.push('/dashboard/guests')}
+          {/* Planning Progress */}
+          <Grid item xs={12} lg={3} md={4}>
+            <Paper
+              sx={{
+                p: 4,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 0,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                height: '100%',
+                minHeight: 320,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  fontSize: '0.625rem',
+                  letterSpacing: '0.2em',
+                  fontWeight: 600,
+                  fontFamily: '"Bodoni Moda", serif',
+                  mb: 3,
+                }}
               >
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-                </svg>
-                <span>Manage Guests</span>
-              </Button>
+                PLANNING PROGRESS
+              </Typography>
               
-              <Button 
-                className="h-20 flex flex-col items-center justify-center space-y-2" 
-                variant="outline"
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Box sx={{ position: 'relative', mb: 4 }}>
+                  <CircularProgress
+                    variant="determinate"
+                    value={75}
+                    size={120}
+                    thickness={2}
+                    sx={{
+                      color: '#000000',
+                      position: 'absolute',
+                      left: '50%',
+                      marginLeft: '-60px',
+                    }}
+                  />
+                  <CircularProgress
+                    variant="determinate"
+                    value={100}
+                    size={120}
+                    thickness={2}
+                    sx={{
+                      color: '#F5F5F5',
+                      position: 'absolute',
+                      left: '50%',
+                      marginLeft: '-60px',
+                      zIndex: 0,
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: 120,
+                    }}
+                  >
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        fontFamily: '"Bodoni Moda", serif',
+                        fontWeight: 400,
+                      }}
+                    >
+                      75%
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', mb: 1 }}>
+                    Almost There!
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {completedTasks} of {totalTasks} tasks completed
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{ mt: 3 }}
+                onClick={() => router.push('/dashboard/checklist')}
+              >
+                VIEW CHECKLIST
+              </Button>
+            </Paper>
+          </Grid>
+
+          {/* Your Wedding Team - Compact Version */}
+          <Grid item xs={12} lg={5} md={3}>
+            <Paper
+              sx={{
+                p: 4,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 0,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                height: '100%',
+                minHeight: 320,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  fontSize: '0.625rem',
+                  letterSpacing: '0.2em',
+                  fontWeight: 600,
+                  fontFamily: '"Bodoni Moda", serif',
+                  mb: 2,
+                }}
+              >
+                YOUR WEDDING TEAM
+              </Typography>
+              
+              <Box sx={{ flex: 1 }}>
+                <Grid container spacing={1.5}>
+                  {[
+                    { role: 'Planner', icon: <EventIcon />, status: 'needed' },
+                    { role: 'Photographer', icon: <PhotoIcon />, status: 'needed' },
+                    { role: 'Florist', icon: <HeartIcon />, status: 'needed' },
+                    { role: 'Caterer', icon: <VendorIcon />, status: 'needed' },
+                    { role: 'Music/DJ', icon: <MessageIcon />, status: 'needed' },
+                    { role: 'Makeup', icon: <HeartIcon />, status: 'needed' },
+                  ].map((vendor) => (
+                    <Grid item xs={4} key={vendor.role}>
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          border: '1px solid #F0F0F0',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#000000',
+                            bgcolor: '#FAFAFA',
+                          },
+                        }}
+                        onClick={() => router.push('/dashboard/vendors')}
+                      >
+                        <Avatar
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            bgcolor: '#FAFAFA',
+                            color: '#999999',
+                            mx: 'auto',
+                            mb: 0.5,
+                          }}
+                        >
+                          {React.cloneElement(vendor.icon, { sx: { fontSize: 16 } })}
+                        </Avatar>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: '0.625rem',
+                            mb: 0.5,
+                            lineHeight: 1.2,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {vendor.role}
+                        </Typography>
+                        <Chip
+                          label={vendor.status === 'needed' ? 'HIRE' : '✓'}
+                          size="small"
+                          sx={{
+                            fontSize: '0.5rem',
+                            height: 16,
+                            fontWeight: 600,
+                            bgcolor: vendor.status === 'needed' ? '#FFF' : '#000',
+                            color: vendor.status === 'needed' ? '#000' : '#FFF',
+                            border: '1px solid #000',
+                            minWidth: 35,
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+              
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{ mt: 3 }}
                 onClick={() => router.push('/dashboard/vendors')}
               >
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Manage Vendors</span>
+                FIND VENDORS
               </Button>
-              
-              <Button 
-                className="h-20 flex flex-col items-center justify-center space-y-2" 
-                variant="outline"
-                onClick={() => router.push('/dashboard/budget')}
-              >
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-                <span>Manage Budget</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </Paper>
+          </Grid>
+        </Grid>
 
-        {/* Getting Started */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">1</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Set up your guest list</h4>
-                  <p className="text-sm text-gray-600">Add guests and manage RSVPs for your wedding day.</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">2</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Find and book vendors</h4>
-                  <p className="text-sm text-gray-600">Track potential vendors and manage your vendor contracts.</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">3</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Manage your budget</h4>
-                  <p className="text-sm text-gray-600">Keep track of expenses and stay within your wedding budget.</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+        {/* Priority Actions - What Matters Most */}
+        <Box sx={{ mb: 4, px: 3 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              fontSize: '0.625rem',
+              letterSpacing: '0.2em',
+              fontWeight: 600,
+              fontFamily: '"Bodoni Moda", serif',
+              mb: 2,
+              display: 'block',
+            }}
+          >
+            PRIORITY ACTIONS
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {/* Guest Management - Most Important */}
+            <Grid item xs={12} md={6}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  transition: 'box-shadow 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.10)',
+                  },
+                }}
+              >
+                <CardActionArea onClick={() => router.push('/dashboard/guests')}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Grid container spacing={3} alignItems="center">
+                      <Grid item xs={8}>
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontFamily: '"Bodoni Moda", serif',
+                            fontWeight: 400,
+                            mb: 1,
+                          }}
+                        >
+                          Guest List
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                          Manage RSVPs and seating arrangements
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 3 }}>
+                          <Box>
+                            <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
+                              0
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              CONFIRMED
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
+                              150
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              INVITED
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={4} sx={{ textAlign: 'center' }}>
+                        <PeopleIcon sx={{ fontSize: 64, color: '#F5F5F5' }} />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+
+            {/* Budget Tracker */}
+            <Grid item xs={12} md={6}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  transition: 'box-shadow 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.10)',
+                  },
+                }}
+              >
+                <CardActionArea onClick={() => router.push('/dashboard/budget')}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Grid container spacing={3} alignItems="center">
+                      <Grid item xs={8}>
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontFamily: '"Bodoni Moda", serif',
+                            fontWeight: 400,
+                            mb: 1,
+                          }}
+                        >
+                          Budget
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                          Track expenses and payments
+                        </Typography>
+                        <Box>
+                          <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
+                            $25,000
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={30}
+                            sx={{
+                              height: 4,
+                              mt: 1,
+                              bgcolor: '#F5F5F5',
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: '#000000',
+                              },
+                            }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            $7,500 SPENT
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={4} sx={{ textAlign: 'center' }}>
+                        <MoneyIcon sx={{ fontSize: 64, color: '#F5F5F5' }} />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Your Wedding Journey - Visual Cards */}
+        <Box sx={{ mb: 4, px: 3 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              fontSize: '0.625rem',
+              letterSpacing: '0.2em',
+              fontWeight: 600,
+              fontFamily: '"Bodoni Moda", serif',
+              mb: 2,
+              display: 'block',
+            }}
+          >
+            YOUR WEDDING JOURNEY
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {/* Vendors - Visual Focus */}
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                    transform: 'translateY(-2px)',
+                  },
+                }}
+              >
+                <CardActionArea onClick={() => router.push('/dashboard/vendors')}>
+                  <Box
+                    sx={{
+                      height: 180,
+                      background: 'linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    <VendorIcon sx={{ fontSize: 72, color: '#E0E0E0' }} />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        bgcolor: '#000000',
+                        color: '#FFFFFF',
+                        px: 2,
+                        py: 0.5,
+                        fontSize: '0.625rem',
+                        letterSpacing: '0.1em',
+                        fontWeight: 600,
+                      }}
+                    >
+                      0 BOOKED
+                    </Box>
+                  </Box>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontFamily: '"Bodoni Moda", serif',
+                        fontWeight: 400,
+                        mb: 1,
+                      }}
+                    >
+                      Vendor Directory
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Find and manage your dream team
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Chip label="Photographer" size="small" variant="outlined" />
+                      <Chip label="Florist" size="small" variant="outlined" />
+                      <Chip label="+5 more" size="small" variant="outlined" />
+                    </Box>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+
+            {/* Timeline - Day Schedule */}
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                    transform: 'translateY(-2px)',
+                  },
+                }}
+              >
+                <CardActionArea onClick={() => router.push('/dashboard/timeline')}>
+                  <Box
+                    sx={{
+                      height: 180,
+                      background: 'linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    <TimelineIcon sx={{ fontSize: 72, color: '#E0E0E0' }} />
+                    <Typography
+                      sx={{
+                        position: 'absolute',
+                        bottom: 16,
+                        fontSize: '0.625rem',
+                        letterSpacing: '0.1em',
+                        fontWeight: 600,
+                        color: '#666666',
+                      }}
+                    >
+                      CEREMONY AT 4:00 PM
+                    </Typography>
+                  </Box>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontFamily: '"Bodoni Moda", serif',
+                        fontWeight: 400,
+                        mb: 1,
+                      }}
+                    >
+                      Day Timeline
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Plan every magical moment
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={25}
+                      sx={{
+                        height: 4,
+                        bgcolor: '#F5F5F5',
+                        '& .MuiLinearProgress-bar': {
+                          bgcolor: '#000000',
+                        },
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      3 of 12 events planned
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+
+            {/* Photo Gallery */}
+            <Grid item xs={12} md={4}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                    transform: 'translateY(-2px)',
+                  },
+                }}
+              >
+                <CardActionArea onClick={() => router.push('/dashboard/photos')}>
+                  <Box
+                    sx={{
+                      height: 180,
+                      background: 'linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%)',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gridTemplateRows: 'repeat(2, 1fr)',
+                      gap: 0.5,
+                      p: 2,
+                    }}
+                  >
+                    {[...Array(6)].map((_, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          bgcolor: '#FFFFFF',
+                          border: '1px solid #F0F0F0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <PhotoIcon sx={{ fontSize: 20, color: '#E0E0E0' }} />
+                      </Box>
+                    ))}
+                  </Box>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontFamily: '"Bodoni Moda", serif',
+                        fontWeight: 400,
+                        mb: 1,
+                      }}
+                    >
+                      Photo Gallery
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Collect and share memories
+                    </Typography>
+                    <Button
+                      size="small"
+                      sx={{
+                        color: '#000000',
+                        textTransform: 'uppercase',
+                        fontSize: '0.625rem',
+                        letterSpacing: '0.1em',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Upload Photos →
+                    </Button>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Wedding Inspiration Section */}
+        <Box sx={{ mb: 4, px: 3 }}>
+          <Typography
+            variant="overline"
+            sx={{
+              fontSize: '0.625rem',
+              letterSpacing: '0.2em',
+              fontWeight: 600,
+              fontFamily: '"Bodoni Moda", serif',
+              mb: 2,
+              display: 'block',
+            }}
+          >
+            WEDDING INSPIRATION
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {/* Your Love Story */}
+            <Grid item xs={12} md={6}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <HeartIcon sx={{ fontSize: 32, color: '#F5F5F5', mr: 2 }} />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontFamily: '"Bodoni Moda", serif',
+                          fontWeight: 400,
+                        }}
+                      >
+                        Your Love Story
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Share your journey together
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body1" sx={{ mb: 3, fontStyle: 'italic', color: 'text.secondary' }}>
+                    "We met on a rainy Tuesday in October, and from that moment, everything changed..."
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => router.push('/dashboard/story')}
+                  >
+                    Write Your Story
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Wedding Vision Board */}
+            <Grid item xs={12} md={6}>
+              <Card
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                  borderRadius: 0,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <TrophyIcon sx={{ fontSize: 32, color: '#F5F5F5', mr: 2 }} />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontFamily: '"Bodoni Moda", serif',
+                          fontWeight: 400,
+                        }}
+                      >
+                        Vision Board
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Visualize your perfect day
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Grid container spacing={1}>
+                    {['Garden Romance', 'Elegant Classic', 'Modern Minimal', 'Bohemian'].map((style) => (
+                      <Grid item xs={6} key={style}>
+                        <Chip
+                          label={style}
+                          variant="outlined"
+                          sx={{
+                            width: '100%',
+                            justifyContent: 'flex-start',
+                            py: 2,
+                            borderColor: '#F0F0F0',
+                            '&:hover': {
+                              bgcolor: '#FAFAFA',
+                            },
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Activity Dashboard - Refined */}
+        <Grid container spacing={3} sx={{ mb: 3, px: 3 }}>
+          {/* Budget Overview - Enhanced */}
+          <Grid item xs={12} md={4}>
+            <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    Budget Overview
+                  </Typography>
+                  <Typography variant="body2" color="primary">
+                    $7.5K / $25K
+                  </Typography>
+                </Box>
+                
+                <List dense sx={{ py: 0 }}>
+                  {budgetBreakdown.map((item, index) => (
+                    <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
+                      <ListItemIcon sx={{ minWidth: 32 }}>
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            bgcolor: item.color,
+                          }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2">{item.category}</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              ${item.amount}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <LinearProgress
+                            variant="determinate"
+                            value={item.percentage}
+                            sx={{
+                              mt: 0.5,
+                              height: 4,
+                              borderRadius: 2,
+                              bgcolor: item.color + '20',
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: item.color,
+                                borderRadius: 2,
+                              },
+                            }}
+                          />
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+                
+                <Button
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  onClick={() => router.push('/dashboard/budget')}
+                >
+                  Manage Budget
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Next Steps - Middle */}
+          <Grid item xs={12} md={4}>
+            <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    Next Steps
+                  </Typography>
+                  <Chip
+                    label="5 URGENT"
+                    size="small"
+                    sx={{ 
+                      bgcolor: '#000000',
+                      color: '#FFFFFF',
+                      height: 24,
+                      fontWeight: 600,
+                    }}
+                  />
+                </Box>
+                
+                <List dense sx={{ maxHeight: 250, overflow: 'auto' }}>
+                  {[
+                    { id: 1, title: 'Book venue visit', priority: 'high', date: 'This week' },
+                    { id: 2, title: 'Finalize guest list', priority: 'high', date: 'Next week' },
+                    { id: 3, title: 'Choose photographer', priority: 'medium', date: '2 weeks' },
+                    { id: 4, title: 'Send save the dates', priority: 'medium', date: '1 month' },
+                    { id: 5, title: 'Book catering tasting', priority: 'low', date: '6 weeks' },
+                  ].map((task) => (
+                    <ListItem key={task.id} sx={{ px: 0, py: 1.5, borderBottom: '1px solid #F5F5F5' }}>
+                      <ListItemIcon sx={{ minWidth: 32 }}>
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor: task.priority === 'high' ? '#000000' : task.priority === 'medium' ? '#666666' : '#CCCCCC',
+                          }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={task.title}
+                        secondary={task.date}
+                        primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }}
+                        secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+                
+                <Button
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  onClick={() => router.push('/dashboard/checklist')}
+                >
+                  View All Tasks
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Messages & Communication - Right */}
+          <Grid item xs={12} md={4}>
+            <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', mb: 2, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Messages
+                </Typography>
+                
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', p: 2, bgcolor: '#FAFAFA', mb: 1 }}>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#000000', color: '#FFFFFF', mr: 2 }}>
+                      <MessageIcon sx={{ fontSize: 16 }} />
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Venue Coordinator
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        "Your venue is confirmed for June 15th!"
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      2h ago
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', p: 2, bgcolor: '#FAFAFA', mb: 1 }}>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#666666', color: '#FFFFFF', mr: 2 }}>
+                      <MessageIcon sx={{ fontSize: 16 }} />
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Wedding Planner
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        "Let's schedule a call this week"
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      1d ago
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Box>
+                  <Typography 
+                    variant="overline" 
+                    sx={{ 
+                      fontSize: '0.625rem', 
+                      letterSpacing: '0.1em',
+                      fontFamily: '"Bodoni Moda", serif',
+                    }}
+                  >
+                    Quick Actions
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <Button size="small" variant="outlined" fullWidth>
+                      Send Update
+                    </Button>
+                    <Button size="small" variant="outlined" fullWidth>
+                      View All
+                    </Button>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+      </Box>
+    </DashboardLayout>
+  );
 }

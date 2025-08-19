@@ -35,7 +35,7 @@ async function postHandler(request: AuthenticatedRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         createErrorResponse(
-          `Validation error: ${validationResult.error.errors.map(e => e.message).join(', ')}`
+          `Validation error: ${validationResult.error.issues.map(e => e.message).join(', ')}`
         ),
         { status: 400 }
       )

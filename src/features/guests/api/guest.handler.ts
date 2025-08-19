@@ -16,8 +16,9 @@ export class GuestHandler {
     try {
       // Parse query parameters for filtering
       const url = new URL(request.url)
+      const sideParam = url.searchParams.get('side')
       const filters = {
-        side: url.searchParams.get('side') as 'bride' | 'groom' | undefined,
+        side: sideParam === 'bride' || sideParam === 'groom' ? sideParam : undefined,
         plusOneAllowed: url.searchParams.get('plusOneAllowed') === 'true' ? true : 
                         url.searchParams.get('plusOneAllowed') === 'false' ? false : undefined,
         hasEmail: url.searchParams.get('hasEmail') === 'true' ? true :
@@ -200,8 +201,24 @@ export class GuestHandler {
     try {
       const body = await request.json()
 
+      // Handle legacy format from frontend (name field)
+      let processedBody = body
+      if (body.name && !body.firstName && !body.lastName) {
+        const nameParts = body.name.trim().split(' ')
+        processedBody = {
+          ...body,
+          firstName: nameParts[0] || body.name,
+          lastName: nameParts.slice(1).join(' ') || '',
+          dietaryRestrictions: body.mealPreference // Map legacy field
+        }
+        delete processedBody.name
+        delete processedBody.mealPreference
+        delete processedBody.rsvpStatus // Remove legacy RSVP field
+        delete processedBody.invitationSent // Remove legacy field for now
+      }
+
       // Validate input
-      const validation = UpdateGuestDto.safeParse(body)
+      const validation = UpdateGuestDto.safeParse(processedBody)
       if (!validation.success) {
         return NextResponse.json({
           success: false,
@@ -225,9 +242,24 @@ export class GuestHandler {
         }, { status: result.error?.statusCode || 500 })
       }
 
+      // Transform response to legacy format for frontend compatibility
+      const legacyResponse = result.data ? {
+        id: result.data.id,
+        name: `${result.data.firstName} ${result.data.lastName}`.trim(),
+        rsvpStatus: 'pending', // Default for legacy compatibility
+        mealPreference: result.data.dietaryRestrictions,
+        side: result.data.side,
+        invitationSent: Boolean(result.data.invitationSentAt),
+        rsvp: {
+          id: `rsvp_${result.data.id}`,
+          status: 'pending',
+          dateResponded: null
+        }
+      } : null
+
       return NextResponse.json({
         success: true,
-        data: result.data
+        data: legacyResponse
       })
     } catch (error) {
       console.error('Error in updateGuest handler:', error)

@@ -48,7 +48,7 @@ async function putHandler(request: AuthenticatedRequest, { params }: RouteParams
     if (!validationResult.success) {
       return NextResponse.json(
         createErrorResponse(
-          `Validation error: ${validationResult.error.errors.map(e => e.message).join(', ')}`
+          `Validation error: ${validationResult.error.issues.map(e => e.message).join(', ')}`
         ),
         { status: 400 }
       )
@@ -122,6 +122,17 @@ async function deleteHandler(request: AuthenticatedRequest, { params }: RoutePar
   }
 }
 
-export const GET = requireOnboarding(getHandler)
-export const PUT = requireOnboarding(putHandler)
-export const DELETE = requireOnboarding(deleteHandler)
+export const GET = requireOnboarding(async (request: AuthenticatedRequest) => {
+  const params = { id: request.url.split('/').pop()! }
+  return getHandler(request, { params })
+})
+
+export const PUT = requireOnboarding(async (request: AuthenticatedRequest) => {
+  const params = { id: request.url.split('/').pop()! }
+  return putHandler(request, { params })
+})
+
+export const DELETE = requireOnboarding(async (request: AuthenticatedRequest) => {
+  const params = { id: request.url.split('/').pop()! }
+  return deleteHandler(request, { params })
+})

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         createErrorResponse(
-          `Validation error: ${validationResult.error.errors?.map(e => e.message).join(', ') || 'Invalid input'}`
+          `Validation error: ${validationResult.error.issues?.map(e => e.message).join(', ') || 'Invalid input'}`
         ),
         { status: 400 }
       )
@@ -31,7 +31,16 @@ export async function POST(request: NextRequest) {
       })
     } catch (dbError) {
       console.log('Database not available, using temp storage')
-      user = await tempStorage.findUserByEmail(email)
+      const tempUser = await tempStorage.findUserByEmail(email)
+      if (tempUser) {
+        // Cast temp storage user to match Prisma User type
+        user = {
+          ...tempUser,
+          role: tempUser.role as any, // Cast string role to UserRole enum
+          createdAt: new Date(tempUser.createdAt),
+          updatedAt: new Date(tempUser.updatedAt)
+        }
+      }
     }
 
     if (!user) {

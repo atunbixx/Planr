@@ -7,5 +7,23 @@
     "onboardingCompleted": true,
     "createdAt": "2025-08-16T16:02:42.220Z",
     "updatedAt": "2025-08-16T16:16:12.773Z"
+  },
+  {
+    "id": "user_1755364689957_t4g12yz9z",
+    "email": "test@example.com",
+    "password": "$2b$12$kQaJOPp7nCu3Tn6lxSSM4.ZOpt59MnNkcUcvGtMIo//D.EsFKs6lm",
+    "role": "couple",
+    "onboardingCompleted": true,
+    "createdAt": "2025-08-16T17:18:09.957Z",
+    "updatedAt": "2025-08-16T17:19:11.784Z"
+  },
+  {
+    "id": "user_1755366687167_yxvivql5a",
+    "email": "hello@atunbi.net",
+    "password": "$2b$12$NO5nrhcKMaR21jN5O2Kn4evTs4QnFEQFcSaUpReyrIWv2EFYrrbwC",
+    "role": "couple",
+    "onboardingCompleted": true,
+    "createdAt": "2025-08-16T17:51:27.167Z",
+    "updatedAt": "2025-08-16T18:00:40.730Z"
   }
 ]

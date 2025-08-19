@@ -13,9 +13,11 @@ export abstract class BaseRepository {
    * Automatically rolls back on error
    */
   async withTransaction<T>(
-    operation: (tx: PrismaClient) => Promise<T>
+    operation: (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>) => Promise<T>
   ): Promise<T> {
-    return await this.db.$transaction(operation)
+    return await this.db.$transaction(async (tx) => {
+      return await operation(tx)
+    })
   }
 
   /**

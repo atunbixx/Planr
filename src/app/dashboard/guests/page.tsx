@@ -28,6 +28,8 @@ export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     rsvpStatus: 'pending' as const,
@@ -114,8 +116,12 @@ export default function GuestsPage() {
         return
       }
       
-      const response = await fetch('/api/guests', {
-        method: 'POST',
+      const isEditing = showEditForm && editingGuest
+      const url = isEditing ? `/api/guests/${editingGuest.id}` : '/api/guests'
+      const method = isEditing ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -132,8 +138,18 @@ export default function GuestsPage() {
       const result = await response.json()
       
       if (result.success) {
-        // Add new guest to list
-        setGuests(prev => [result.data, ...prev])
+        if (isEditing) {
+          // Update existing guest in list
+          setGuests(prev => prev.map(guest => 
+            guest.id === editingGuest.id ? result.data : guest
+          ))
+          setShowEditForm(false)
+          setEditingGuest(null)
+        } else {
+          // Add new guest to list
+          setGuests(prev => [result.data, ...prev])
+          setShowAddForm(false)
+        }
         
         // Reset form
         setFormData({
@@ -143,19 +159,81 @@ export default function GuestsPage() {
           side: '',
           invitationSent: false
         })
-        setShowAddForm(false)
         setErrors({})
       } else {
-        setErrors({ submit: result.error?.message || 'Failed to add guest' })
+        setErrors({ submit: result.error?.message || `Failed to ${isEditing ? 'update' : 'add'} guest` })
         // Handle auth errors
         if (response.status === 401) {
-          console.log('Token expired during guest creation, redirecting to signin')
+          console.log('Token expired during guest operation, redirecting to signin')
           AuthClient.signout()
         }
       }
     } catch (error) {
       setErrors({ submit: 'An unexpected error occurred' })
     }
+  }
+
+  const handleEdit = (guest: Guest) => {
+    setEditingGuest(guest)
+    setFormData({
+      name: guest.name,
+      rsvpStatus: 'pending' as const, // Always set to pending for editing
+      mealPreference: guest.mealPreference || '',
+      side: guest.side || '',
+      invitationSent: guest.invitationSent
+    })
+    setShowEditForm(true)
+    setShowAddForm(false)
+    setErrors({})
+  }
+
+  const handleDelete = async (guest: Guest) => {
+    if (!confirm(`Are you sure you want to delete ${guest.name}?`)) {
+      return
+    }
+
+    try {
+      const token = AuthClient.getToken()
+      if (!token) {
+        console.error('No auth token available')
+        return
+      }
+      
+      const response = await fetch(`/api/guests/${guest.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        // Remove guest from list
+        setGuests(prev => prev.filter(g => g.id !== guest.id))
+      } else {
+        console.error('Failed to delete guest:', result.error)
+        // Handle auth errors
+        if (response.status === 401) {
+          console.log('Token expired during guest deletion, redirecting to signin')
+          AuthClient.signout()
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting guest:', error)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setShowEditForm(false)
+    setEditingGuest(null)
+    setFormData({
+      name: '',
+      rsvpStatus: 'pending',
+      mealPreference: '',
+      side: '',
+      invitationSent: false
+    })
+    setErrors({})
   }
 
   const getRsvpStatusColor = (status: string) => {
@@ -207,7 +285,12 @@ export default function GuestsPage() {
               <Button onClick={() => router.push('/dashboard')} variant="outline">
                 Back to Dashboard
               </Button>
-              <Button onClick={() => setShowAddForm(!showAddForm)}>
+              <Button onClick={() => {
+                setShowAddForm(!showAddForm)
+                if (showEditForm) {
+                  handleCancelEdit()
+                }
+              }}>
                 {showAddForm ? 'Cancel' : 'Add Guest'}
               </Button>
             </div>
@@ -217,11 +300,11 @@ export default function GuestsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Add Guest Form */}
-        {showAddForm && (
+        {/* Add/Edit Guest Form */}
+        {(showAddForm || showEditForm) && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Add New Guest</CardTitle>
+              <CardTitle>{showEditForm ? 'Edit Guest' : 'Add New Guest'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -303,12 +386,18 @@ export default function GuestsPage() {
 
                 <div className="flex space-x-4">
                   <Button type="submit" className="flex-1">
-                    Add Guest
+                    {showEditForm ? 'Update Guest' : 'Add Guest'}
                   </Button>
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => setShowAddForm(false)}
+                    onClick={() => {
+                      if (showEditForm) {
+                        handleCancelEdit()
+                      } else {
+                        setShowAddForm(false)
+                      }
+                    }}
                     className="flex-1"
                   >
                     Cancel
@@ -369,6 +458,9 @@ export default function GuestsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Invitation
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -402,6 +494,26 @@ export default function GuestsPage() {
                           }`}>
                             {guest.invitationSent ? 'Sent' : 'Not sent'}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(guest)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(guest)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}

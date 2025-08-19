@@ -70,12 +70,19 @@ export async function POST(request: NextRequest) {
       const hashedPassword = await PasswordService.hashPassword(password)
 
       // Create user in temp storage
-      user = await tempStorage.createUser({
+      const tempUser = await tempStorage.createUser({
         email,
         password: hashedPassword,
         role,
         onboardingCompleted: false
       })
+      // Cast temp storage user to match Prisma User type
+      user = {
+        ...tempUser,
+        role: tempUser.role as any, // Cast string role to UserRole enum
+        createdAt: new Date(tempUser.createdAt),
+        updatedAt: new Date(tempUser.updatedAt)
+      }
     }
 
     // Generate JWT token

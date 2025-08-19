@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Input DTOs for guest operations
 export const CreateGuestDto = z.object({
   firstName: z.string().min(1, 'First name is required').trim(),
-  lastName: z.string().min(1, 'Last name is required').trim(),
+  lastName: z.string().trim().optional(), // Last name is now optional
   email: z.string().email('Valid email is required').optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
@@ -19,7 +19,7 @@ export const CreateGuestDto = z.object({
 
 export const UpdateGuestDto = z.object({
   firstName: z.string().min(1, 'First name is required').trim().optional(),
-  lastName: z.string().min(1, 'Last name is required').trim().optional(),
+  lastName: z.string().trim().optional(), // Last name is optional
   email: z.string().email('Valid email is required').optional(),
   phone: z.string().optional(),
   address: z.string().optional(),

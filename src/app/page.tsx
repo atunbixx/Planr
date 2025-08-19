@@ -1,15 +1,20 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function HomePage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    if (!isLoading) {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isClient && !isLoading) {
       if (!user) {
         // Not authenticated, redirect to signup
         router.push('/signup')
@@ -21,7 +26,12 @@ export default function HomePage() {
         router.push('/dashboard')
       }
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, isClient])
+
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!isClient) {
+    return null
+  }
 
   // Show loading state
   return (

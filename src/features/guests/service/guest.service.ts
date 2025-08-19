@@ -173,19 +173,20 @@ export class GuestService {
         }
       }
 
-      // Check for duplicate guests (by email if provided)
-      if (data.email) {
-        const existingGuests = await this.guestRepository.findByCoupleId(coupleId)
-        if (existingGuests.success && existingGuests.data) {
-          const duplicate = existingGuests.data.find(g => g.email === data.email)
-          if (duplicate) {
-            return {
-              success: false,
-              error: {
-                message: 'Guest with this email already exists',
-                code: 'DUPLICATE_EMAIL',
-                statusCode: 409
-              }
+      // Note: Email field not in current schema - duplicate check disabled
+      // TODO: Re-enable when schema includes email field
+      // Check for duplicate guests (by name for now)
+      const existingGuests = await this.guestRepository.findByCoupleId(coupleId)
+      if (existingGuests.success && existingGuests.data) {
+        const fullName = `${data.firstName} ${data.lastName || ''}`.trim()
+        const duplicate = existingGuests.data.find(g => g.name === fullName)
+        if (duplicate) {
+          return {
+            success: false,
+            error: {
+              message: 'Guest with this name already exists',
+              code: 'DUPLICATE_NAME',
+              statusCode: 409
             }
           }
         }
@@ -389,10 +390,10 @@ export class GuestService {
         total: guests.length,
         bridesSide: guests.filter(g => g.side === 'bride').length,
         groomsSide: guests.filter(g => g.side === 'groom').length,
-        withEmail: guests.filter(g => g.email).length,
-        withPhone: guests.filter(g => g.phone).length,
-        plusOnesAllowed: guests.filter(g => g.plusOneAllowed).length,
-        totalAttending: guests.reduce((sum, g) => sum + g.attendingCount, 0)
+        withEmail: 0, // Email field not in current schema
+        withPhone: 0, // Phone field not in current schema
+        plusOnesAllowed: 0, // plusOneAllowed field not in current schema
+        totalAttending: guests.length // Assume 1 per guest since attendingCount not in schema
       }
 
       return {
@@ -416,23 +417,28 @@ export class GuestService {
    * Transform Guest model to response DTO
    */
   private transformToResponse(guest: Guest): GuestResponse {
+    // Parse name field to extract firstName and lastName
+    const nameParts = guest.name ? guest.name.trim().split(' ') : ['', '']
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || ''
+    
     return {
       id: guest.id,
-      coupleId: guest.coupleId,
-      firstName: guest.firstName,
-      lastName: guest.lastName,
-      email: guest.email || undefined,
-      phone: guest.phone || undefined,
-      address: guest.address || undefined,
-      relationship: guest.relationship || undefined,
+      coupleId: guest.userId, // Map userId to coupleId for enterprise response
+      firstName: firstName,
+      lastName: lastName,
+      email: undefined, // Not in current schema
+      phone: undefined, // Not in current schema
+      address: undefined, // Not in current schema
+      relationship: undefined, // Not in current schema
       side: guest.side as 'bride' | 'groom' | undefined,
-      plusOneAllowed: guest.plusOneAllowed,
-      plusOneName: guest.plusOneName || undefined,
-      dietaryRestrictions: guest.dietaryRestrictions || undefined,
-      notes: guest.notes || undefined,
-      attendingCount: guest.attendingCount,
-      invitationSentAt: guest.invitationSentAt || undefined,
-      rsvpDeadline: guest.rsvpDeadline || undefined,
+      plusOneAllowed: false, // Not in current schema, default false
+      plusOneName: undefined, // Not in current schema
+      dietaryRestrictions: guest.mealPreference || undefined,
+      notes: undefined, // Not in current schema
+      attendingCount: 1, // Not in current schema, default 1
+      invitationSentAt: guest.invitationSent ? guest.createdAt : undefined, // Use createdAt if sent
+      rsvpDeadline: undefined, // Not in current schema
       createdAt: guest.createdAt,
       updatedAt: guest.updatedAt
     }

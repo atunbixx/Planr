@@ -15,5 +15,75 @@
       "createdAt": "2025-08-16T16:34:05.636Z",
       "updatedAt": "2025-08-16T16:34:05.636Z"
     }
+  },
+  {
+    "id": "guest_1755365001501_xq2hym32s",
+    "userId": "user_1755364689957_t4g12yz9z",
+    "name": "John Doe",
+    "rsvpStatus": "pending",
+    "mealPreference": "vegetarian",
+    "side": "groom",
+    "invitationSent": false,
+    "createdAt": "2025-08-16T17:23:21.501Z",
+    "updatedAt": "2025-08-16T17:23:21.501Z",
+    "rsvp": {
+      "id": "rsvp_1755365001501_zda8iz0wu",
+      "guestId": "guest_1755365001501_xq2hym32s",
+      "status": "pending",
+      "createdAt": "2025-08-16T17:23:21.501Z",
+      "updatedAt": "2025-08-16T17:23:21.501Z"
+    }
+  },
+  {
+    "id": "guest_1755365369025_o2yxwwoea",
+    "userId": "user_1755364689957_t4g12yz9z",
+    "name": "Jane Smith Updated",
+    "rsvpStatus": "pending",
+    "mealPreference": "vegetarian",
+    "side": "bride",
+    "invitationSent": false,
+    "createdAt": "2025-08-16T17:29:29.025Z",
+    "updatedAt": "2025-08-16T17:36:45.750Z",
+    "rsvp": {
+      "id": "rsvp_1755365369025_5pcawdcxl",
+      "guestId": "guest_1755365369025_o2yxwwoea",
+      "status": "pending",
+      "createdAt": "2025-08-16T17:29:29.025Z",
+      "updatedAt": "2025-08-16T17:29:29.025Z"
+    }
+  },
+  {
+    "id": "guest_1755367260298_1i7hzszqg",
+    "userId": "user_1755366687167_yxvivql5a",
+    "name": "Jolayemi Ayinde",
+    "rsvpStatus": "pending",
+    "side": "bride",
+    "invitationSent": false,
+    "createdAt": "2025-08-16T18:01:00.298Z",
+    "updatedAt": "2025-08-16T18:01:00.298Z",
+    "rsvp": {
+      "id": "rsvp_1755367260298_rt6uwgz0j",
+      "guestId": "guest_1755367260298_1i7hzszqg",
+      "status": "pending",
+      "createdAt": "2025-08-16T18:01:00.298Z",
+      "updatedAt": "2025-08-16T18:01:00.298Z"
+    }
+  },
+  {
+    "id": "guest_1755440718458_p826dv7pz",
+    "userId": "user_1755366687167_yxvivql5a",
+    "name": "david ayoola",
+    "rsvpStatus": "pending",
+    "side": "bride",
+    "invitationSent": false,
+    "createdAt": "2025-08-17T14:25:18.458Z",
+    "updatedAt": "2025-08-17T14:25:18.458Z",
+    "rsvp": {
+      "id": "rsvp_1755440718458_crmjlb0og",
+      "guestId": "guest_1755440718458_p826dv7pz",
+      "status": "pending",
+      "createdAt": "2025-08-17T14:25:18.458Z",
+      "updatedAt": "2025-08-17T14:25:18.458Z"
+    }
   }
 ]

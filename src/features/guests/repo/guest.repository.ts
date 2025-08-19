@@ -19,23 +19,15 @@ export class GuestRepository extends BaseRepository {
     try {
       const { limit = 50, offset = 0, side, plusOneAllowed, hasEmail, hasPhone } = filters || {}
 
-      const where: any = { userId: coupleId } // Using userId field from current schema
+      const where: any = { userId: coupleId }
       
       if (side) where.side = side
-      if (plusOneAllowed !== undefined) where.plusOneAllowed = plusOneAllowed
-      if (hasEmail !== undefined) {
-        where.email = hasEmail ? { not: null } : null
-      }
-      if (hasPhone !== undefined) {
-        where.phone = hasPhone ? { not: null } : null
-      }
+      // Note: Current schema doesn't have plusOneAllowed, email, phone fields
+      // These filters will be implemented when schema is updated
 
       const guests = await this.db.guest.findMany({
         where,
-        orderBy: [
-          { lastName: 'asc' },
-          { firstName: 'asc' }
-        ],
+        orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset
       })
@@ -89,23 +81,14 @@ export class GuestRepository extends BaseRepository {
 
         const transformedGuest = {
           id: guest.id,
-          coupleId: guest.userId,
-          firstName: guest.name.split(' ')[0] || guest.name,
-          lastName: guest.name.split(' ').slice(1).join(' ') || '',
-          email: null,
-          phone: null,
-          address: null,
-          relationship: null,
-          side: guest.side || null,
-          plusOneAllowed: false,
-          plusOneName: null,
-          dietaryRestrictions: guest.mealPreference || null,
-          notes: null,
+          userId: guest.userId, // Keep original field name for schema compatibility
+          name: guest.name,
+          rsvpStatus: guest.rsvpStatus,
+          mealPreference: guest.mealPreference,
+          side: guest.side,
+          invitationSent: guest.invitationSent,
           createdAt: new Date(guest.createdAt),
-          updatedAt: new Date(guest.updatedAt),
-          attendingCount: 1,
-          invitationSentAt: guest.invitationSent ? new Date() : null,
-          rsvpDeadline: null
+          updatedAt: new Date(guest.updatedAt)
         } as Guest
 
         return createSuccessResult(transformedGuest)
@@ -125,7 +108,7 @@ export class GuestRepository extends BaseRepository {
         return await tx.guest.create({
           data: {
             userId: coupleId, // Using userId field from current schema
-            name: `${data.firstName} ${data.lastName}`, // Combine names for current schema
+            name: `${data.firstName} ${data.lastName || ''}`.trim(), // Combine names, lastName optional
             rsvpStatus: 'pending', // Default for current schema
             mealPreference: data.dietaryRestrictions || undefined, // Map to current schema field
             side: data.side,
@@ -142,32 +125,24 @@ export class GuestRepository extends BaseRepository {
         // Fallback to temp storage
         const tempGuest = await tempStorage.createGuest({
           userId: coupleId, // Using coupleId as userId in temp storage
-          name: `${data.firstName} ${data.lastName}`,
+          name: `${data.firstName} ${data.lastName || ''}`.trim(),
           rsvpStatus: 'pending',
           mealPreference: data.dietaryRestrictions,
           side: data.side,
           invitationSent: false
         })
 
+        // Transform temp storage format to match current Prisma Guest model
         const transformedGuest = {
           id: tempGuest.id,
-          coupleId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email || null,
-          phone: data.phone || null,
-          address: data.address || null,
-          relationship: data.relationship || null,
-          side: data.side || null,
-          plusOneAllowed: data.plusOneAllowed,
-          plusOneName: data.plusOneName || null,
-          dietaryRestrictions: data.dietaryRestrictions || null,
-          notes: data.notes || null,
+          userId: coupleId, // Use userId field for schema compatibility
+          name: tempGuest.name,
+          rsvpStatus: tempGuest.rsvpStatus,
+          mealPreference: tempGuest.mealPreference,
+          side: tempGuest.side,
+          invitationSent: tempGuest.invitationSent,
           createdAt: new Date(tempGuest.createdAt),
-          updatedAt: new Date(tempGuest.updatedAt),
-          attendingCount: data.attendingCount,
-          invitationSentAt: null,
-          rsvpDeadline: data.rsvpDeadline ? new Date(data.rsvpDeadline) : null
+          updatedAt: new Date(tempGuest.updatedAt)
         } as Guest
 
         return createSuccessResult(transformedGuest)
@@ -184,23 +159,29 @@ export class GuestRepository extends BaseRepository {
   async update(id: string, data: UpdateGuestInput): Promise<RepositoryResult<Guest | null>> {
     try {
       const guest = await this.withTransaction(async (tx) => {
+        // Map enterprise fields to current schema fields
+        const updateData: any = {}
+        
+        // Combine firstName/lastName into name field for current schema
+        if (data.firstName || data.lastName) {
+          const firstName = data.firstName || ''
+          const lastName = data.lastName || ''
+          updateData.name = `${firstName} ${lastName}`.trim()
+        }
+        
+        // Map dietary restrictions to meal preference
+        if (data.dietaryRestrictions !== undefined) {
+          updateData.mealPreference = data.dietaryRestrictions
+        }
+        
+        // Only update fields that exist in current schema
+        if (data.side !== undefined) {
+          updateData.side = data.side
+        }
+        
         return await tx.guest.update({
           where: { id },
-          data: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone,
-            address: data.address,
-            relationship: data.relationship,
-            side: data.side,
-            plusOneAllowed: data.plusOneAllowed,
-            plusOneName: data.plusOneName,
-            dietaryRestrictions: data.dietaryRestrictions,
-            notes: data.notes,
-            attendingCount: data.attendingCount,
-            rsvpDeadline: data.rsvpDeadline ? new Date(data.rsvpDeadline) : undefined
-          }
+          data: updateData
         })
       })
 
@@ -210,8 +191,10 @@ export class GuestRepository extends BaseRepository {
       
       try {
         const updateData: any = {}
-        if (data.firstName && data.lastName) {
-          updateData.name = `${data.firstName} ${data.lastName}`
+        if (data.firstName || data.lastName) {
+          const firstName = data.firstName || ''
+          const lastName = data.lastName || ''
+          updateData.name = `${firstName} ${lastName}`.trim()
         }
         if (data.dietaryRestrictions !== undefined) {
           updateData.mealPreference = data.dietaryRestrictions
@@ -225,25 +208,17 @@ export class GuestRepository extends BaseRepository {
           return createSuccessResult(null)
         }
 
+        // Transform temp storage format to match current Prisma Guest model
         const transformedGuest = {
           id: updatedTempGuest.id,
-          coupleId: updatedTempGuest.userId,
-          firstName: data.firstName || updatedTempGuest.name.split(' ')[0],
-          lastName: data.lastName || updatedTempGuest.name.split(' ').slice(1).join(' '),
-          email: data.email || null,
-          phone: data.phone || null,
-          address: data.address || null,
-          relationship: data.relationship || null,
-          side: data.side || updatedTempGuest.side || null,
-          plusOneAllowed: data.plusOneAllowed || false,
-          plusOneName: data.plusOneName || null,
-          dietaryRestrictions: data.dietaryRestrictions || updatedTempGuest.mealPreference || null,
-          notes: data.notes || null,
+          userId: updatedTempGuest.userId, // Use userId field for schema compatibility
+          name: updatedTempGuest.name,
+          rsvpStatus: updatedTempGuest.rsvpStatus,
+          mealPreference: updatedTempGuest.mealPreference,
+          side: updatedTempGuest.side,
+          invitationSent: updatedTempGuest.invitationSent,
           createdAt: new Date(updatedTempGuest.createdAt),
-          updatedAt: new Date(updatedTempGuest.updatedAt),
-          attendingCount: data.attendingCount || 1,
-          invitationSentAt: updatedTempGuest.invitationSent ? new Date() : null,
-          rsvpDeadline: data.rsvpDeadline ? new Date(data.rsvpDeadline) : null
+          updatedAt: new Date(updatedTempGuest.updatedAt)
         } as Guest
 
         return createSuccessResult(transformedGuest)
@@ -285,7 +260,7 @@ export class GuestRepository extends BaseRepository {
   async countByCoupleId(coupleId: string): Promise<RepositoryResult<number>> {
     try {
       const count = await this.db.guest.count({
-        where: { coupleId }
+        where: { userId: coupleId } // Use userId field from current schema
       })
 
       return createSuccessResult(count)

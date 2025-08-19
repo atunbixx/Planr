@@ -7,5 +7,23 @@
     "guestCount": 200,
     "createdAt": "2025-08-16T16:16:12.771Z",
     "updatedAt": "2025-08-16T16:16:12.771Z"
+  },
+  {
+    "userId": "user_1755364689957_t4g12yz9z",
+    "venue": "Test Venue",
+    "weddingDate": "2025-06-15",
+    "budget": 25000,
+    "guestCount": 100,
+    "createdAt": "2025-08-16T17:19:11.784Z",
+    "updatedAt": "2025-08-16T17:19:11.784Z"
+  },
+  {
+    "userId": "user_1755366687167_yxvivql5a",
+    "venue": "Lagos",
+    "weddingDate": "2025-08-31",
+    "budget": 50000,
+    "guestCount": 250,
+    "createdAt": "2025-08-16T18:00:40.729Z",
+    "updatedAt": "2025-08-16T18:00:40.729Z"
   }
 ]
