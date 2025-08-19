@@ -49,7 +49,9 @@ export class GuestService {
       }
 
       const guests = result.data || []
-      const total = guests.length // In real implementation, get actual count
+      // Accurate total with filters
+      const totalRes = await this.guestRepository.countByCoupleIdWithFilters(coupleId, filters)
+      const total = totalRes.success && typeof totalRes.data === 'number' ? totalRes.data : guests.length
       const { limit = 50, offset = 0 } = filters || {}
 
       const response: GuestListResponse = {
@@ -431,6 +433,7 @@ export class GuestService {
       phone: undefined, // Not in current schema
       address: undefined, // Not in current schema
       relationship: undefined, // Not in current schema
+      relationshipCategory: (guest as any).relationshipCategory || undefined,
       side: guest.side as 'bride' | 'groom' | undefined,
       plusOneAllowed: false, // Not in current schema, default false
       plusOneName: undefined, // Not in current schema

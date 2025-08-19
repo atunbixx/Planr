@@ -83,7 +83,7 @@ export default function OnboardingPage() {
       } else {
         setErrors({ submit: result.error?.message || 'Onboarding failed' })
       }
-    } catch (error) {
+    } catch (_) {
       setErrors({ submit: 'An unexpected error occurred' })
     }
   }
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
         setErrors({ submit: result.error?.message || 'Failed to skip onboarding' })
         setIsSkipping(false)
       }
-    } catch (error) {
+    } catch (_) {
       setErrors({ submit: 'An unexpected error occurred' })
       setIsSkipping(false)
     }

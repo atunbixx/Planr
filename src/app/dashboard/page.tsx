@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -42,6 +42,7 @@ import {
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
+import AuthClient from '@/lib/auth/client';
 
 interface FeatureCard {
   title: string;
@@ -60,8 +61,19 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [budgetBreakdown, setBudgetBreakdown] = useState<any[]>([]);
-  const [completedTasks, setCompletedTasks] = useState(2);
-  const [totalTasks, setTotalTasks] = useState(12);
+  const [completedTasks, setCompletedTasks] = useState(0);
+  const [totalTasks, setTotalTasks] = useState(0);
+  const [guestTotal, setGuestTotal] = useState<number | null>(null);
+  const [vendorTotal, setVendorTotal] = useState<number | null>(null);
+  const [vendorBookedTotal, setVendorBookedTotal] = useState<number | null>(null);
+  const [guestAccepted, setGuestAccepted] = useState<number | null>(null);
+  const [vendorCritical, setVendorCritical] = useState<{ venue: boolean; photographer: boolean; caterer: boolean; music: boolean; florist: boolean } | null>(null);
+  const [budgetSummary, setBudgetSummary] = useState<{ totalAmount: number; totalAllocated: number; totalActual: number; percentSpent?: number } | null>(null);
+  const [weddingDate, setWeddingDate] = useState<Date | null>(null);
+  const [venue, setVenue] = useState<string | null>(null);
+  const [teamRoles, setTeamRoles] = useState<Array<{ key: string; role: string; status: 'needed' | 'hired' }>>([]);
+  const [nextEventLabel, setNextEventLabel] = useState<string | null>(null);
+  const [timelineCount, setTimelineCount] = useState<number>(0);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -78,7 +90,7 @@ export default function DashboardPage() {
         icon: <PeopleIcon sx={{ fontSize: 28 }} />,
         color: '#000000',
         path: '/dashboard/guests',
-        stats: '0 guests',
+        stats: guestTotal === null ? '—' : `${guestTotal} ${guestTotal === 1 ? 'guest' : 'guests'}`,
       },
       {
         title: 'Budget Tracker',
@@ -86,7 +98,7 @@ export default function DashboardPage() {
         icon: <MoneyIcon sx={{ fontSize: 28 }} />,
         color: '#000000',
         path: '/dashboard/budget',
-        stats: '$0 spent',
+        stats: budgetSummary ? `$${Number(budgetSummary.totalActual).toLocaleString()} spent` : '—',
       },
       {
         title: 'Vendor Directory',
@@ -94,7 +106,7 @@ export default function DashboardPage() {
         icon: <VendorIcon sx={{ fontSize: 28 }} />,
         color: '#000000',
         path: '/dashboard/vendors',
-        stats: '0 vendors',
+        stats: vendorTotal === null ? '—' : `${vendorTotal} ${vendorTotal === 1 ? 'vendor' : 'vendors'}`,
       },
     ]);
 
@@ -125,32 +137,100 @@ export default function DashboardPage() {
       },
     ]);
 
-    setTasks([
-      { id: 1, title: 'Set wedding date', completed: false },
-      { id: 2, title: 'Choose venue', completed: false },
-      { id: 3, title: 'Create guest list', completed: false },
-      { id: 4, title: 'Set budget', completed: false },
-      { id: 5, title: 'Book photographer', completed: false },
-    ]);
+    // Tasks, recent activity, and budget breakdown are loaded dynamically below
+  }, [guestTotal, vendorTotal, budgetSummary]);
 
-    setRecentActivity([
-      { id: 1, text: 'Welcome to Wedding Planner!', time: '2 min ago', icon: <HeartIcon /> },
-      { id: 2, text: 'Complete your profile', time: '5 min ago', icon: <CheckIcon /> },
-      { id: 3, text: 'Start adding guests', time: '10 min ago', icon: <PeopleIcon /> },
-    ]);
+  // Fetch live stats via consolidated overview endpoint to minimize DB calls
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = AuthClient.getToken();
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch('/api/dashboard/overview', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          const d = data?.data;
+          if (d) {
+            if (typeof d.guestTotal === 'number') setGuestTotal(d.guestTotal);
+            if (typeof d?.guests?.accepted === 'number') setGuestAccepted(d.guests.accepted);
+            if (typeof d.vendorTotal === 'number') setVendorTotal(d.vendorTotal);
+            if (typeof d.vendorBookedTotal === 'number') setVendorBookedTotal(d.vendorBookedTotal);
+            if (d.vendorCritical) setVendorCritical(d.vendorCritical);
+            if (d.budget) {
+              setBudgetSummary({
+                totalAmount: d.budget.totalAmount,
+                totalAllocated: d.budget.totalAllocated,
+                totalActual: d.budget.totalActual,
+                percentSpent: d.budget.percentSpent,
+              });
+            }
+          }
+        }
 
-    setBudgetBreakdown([
-      { category: 'Venue', amount: 0, percentage: 0, color: '#000000' },
-      { category: 'Catering', amount: 0, percentage: 0, color: '#333333' },
-      { category: 'Photography', amount: 0, percentage: 0, color: '#666666' },
-      { category: 'Other', amount: 0, percentage: 0, color: '#999999' },
-    ]);
+        // Wedding details (date & venue)
+        const wd = await fetch('/api/wedding-details', { headers })
+        if (wd.ok) {
+          const wj = await wd.json()
+          const w = wj?.data
+          if (w?.weddingDate) setWeddingDate(new Date(w.weddingDate))
+          if (w?.venue) setVenue(w.venue)
+        }
+
+        // Checklist
+        const cl = await fetch('/api/dashboard/checklist', { headers })
+        if (cl.ok) {
+          const cj = await cl.json()
+          setTasks((cj?.data?.items || []).map((i: any, idx: number) => ({ id: idx+1, title: i.title, completed: i.completed })))
+          setCompletedTasks(cj?.data?.completed || 0)
+          setTotalTasks(cj?.data?.total || 0)
+        }
+
+        // Team roles
+        const tr = await fetch('/api/dashboard/team', { headers })
+        if (tr.ok) {
+          const tj = await tr.json()
+          setTeamRoles(tj?.data || [])
+        }
+
+        // Timeline next event label
+        const tl = await fetch('/api/dashboard/timeline', { headers })
+        if (tl.ok) {
+          const tj = await tl.json()
+          const events: Array<{ time: string; title: string }> = tj?.data?.events || []
+          setTimelineCount(events.length)
+          const now = new Date()
+          const upcoming = events
+            .map(e => ({ ...e, date: new Date(e.time) }))
+            .filter(e => !isNaN(e.date.getTime()))
+            .sort((a, b) => a.date.getTime() - b.date.getTime())
+            .find(e => e.date.getTime() >= now.getTime())
+          if (upcoming) {
+            const t = upcoming.date
+            const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            setNextEventLabel(`${upcoming.title.toUpperCase()} AT ${timeStr}`)
+          } else {
+            setNextEventLabel(null)
+          }
+        }
+        // Recent activity
+        const ra = await fetch('/api/dashboard/activity', { headers })
+        if (ra.ok) {
+          const rj = await ra.json()
+          setRecentActivity(rj?.data?.items || [])
+        }
+      } catch (e) {
+        // Silently ignore; UI will keep placeholders
+        console.error('Failed to load dashboard stats', e);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   const getDaysUntilWedding = () => {
-    const weddingDate = new Date('2025-06-15'); // Mock date
+    const date = weddingDate || new Date();
     const today = new Date();
-    const diffTime = Math.abs(weddingDate.getTime() - today.getTime());
+    const diffTime = Math.abs(date.getTime() - today.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
@@ -234,7 +314,7 @@ export default function DashboardPage() {
                     fontStyle: 'italic',
                   }}
                 >
-                  June 15, 2025 • Garden Wedding Venue
+                  {weddingDate ? weddingDate.toLocaleDateString() : '—'}{venue ? ` • ${venue}` : ''}
                 </Typography>
                 <Button
                   variant="outlined"
@@ -299,7 +379,7 @@ export default function DashboardPage() {
                 <Box sx={{ position: 'relative', mb: 4 }}>
                   <CircularProgress
                     variant="determinate"
-                    value={75}
+                    value={totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}
                     size={120}
                     thickness={2}
                     sx={{
@@ -338,7 +418,7 @@ export default function DashboardPage() {
                         fontWeight: 400,
                       }}
                     >
-                      75%
+                      {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
                     </Typography>
                   </Box>
                 </Box>
@@ -393,15 +473,8 @@ export default function DashboardPage() {
               
               <Box sx={{ flex: 1 }}>
                 <Grid container spacing={1.5}>
-                  {[
-                    { role: 'Planner', icon: <EventIcon />, status: 'needed' },
-                    { role: 'Photographer', icon: <PhotoIcon />, status: 'needed' },
-                    { role: 'Florist', icon: <HeartIcon />, status: 'needed' },
-                    { role: 'Caterer', icon: <VendorIcon />, status: 'needed' },
-                    { role: 'Music/DJ', icon: <MessageIcon />, status: 'needed' },
-                    { role: 'Makeup', icon: <HeartIcon />, status: 'needed' },
-                  ].map((vendor) => (
-                    <Grid item xs={4} key={vendor.role}>
+                  {teamRoles.map((vendor) => (
+                    <Grid item xs={4} key={vendor.key}>
                       <Box
                         sx={{
                           p: 1.5,
@@ -426,7 +499,7 @@ export default function DashboardPage() {
                             mb: 0.5,
                           }}
                         >
-                          {React.cloneElement(vendor.icon, { sx: { fontSize: 16 } })}
+                          <VendorIcon sx={{ fontSize: 16 }} />
                         </Avatar>
                         <Typography
                           variant="body2"
@@ -487,6 +560,25 @@ export default function DashboardPage() {
           </Typography>
           
           <Grid container spacing={3}>
+            {/* Recent Activity */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>RECENT ACTIVITY</Typography>
+                  {recentActivity && recentActivity.length > 0 ? (
+                    <List dense>
+                      {recentActivity.slice(0,6).map((a:any, idx:number) => (
+                        <ListItem key={idx} sx={{ px: 0 }}>
+                          <ListItemText primary={a.title} secondary={new Date(a.when).toLocaleString()} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">No recent changes.</Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
             {/* Guest Management - Most Important */}
             <Grid item xs={12} md={6}>
               <Card
@@ -520,7 +612,7 @@ export default function DashboardPage() {
                         <Box sx={{ display: 'flex', gap: 3 }}>
                           <Box>
                             <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                              0
+                              {guestAccepted ?? 0}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               CONFIRMED
@@ -528,7 +620,7 @@ export default function DashboardPage() {
                           </Box>
                           <Box>
                             <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                              150
+                              {guestTotal ?? 0}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               INVITED
@@ -577,11 +669,11 @@ export default function DashboardPage() {
                         </Typography>
                         <Box>
                           <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                            $25,000
+                            {budgetSummary ? `$${Number(budgetSummary.totalAmount).toLocaleString()}` : '—'}
                           </Typography>
                           <LinearProgress
                             variant="determinate"
-                            value={30}
+                            value={Math.min(100, Math.max(0, Number(budgetSummary?.percentSpent ?? 0)))}
                             sx={{
                               height: 4,
                               mt: 1,
@@ -591,8 +683,10 @@ export default function DashboardPage() {
                               },
                             }}
                           />
-                          <Typography variant="caption" color="text.secondary">
-                            $7,500 SPENT
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            {budgetSummary
+                              ? `${Math.round(Number((budgetSummary.percentSpent ?? ((Number(budgetSummary.totalAmount)||0) > 0 ? (Number(budgetSummary.totalActual)/Number(budgetSummary.totalAmount))*100 : 0))))}% spent ($${Number(budgetSummary.totalActual).toLocaleString()} of $${Number(budgetSummary.totalAmount).toLocaleString()})`
+                              : '—'}
                           </Typography>
                         </Box>
                       </Grid>
@@ -602,6 +696,51 @@ export default function DashboardPage() {
                     </Grid>
                   </CardContent>
                 </CardActionArea>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Immediate Actions & Vendor Status */}
+        <Box sx={{ mb: 4, px: 3 }}>
+          <Grid container spacing={3}>
+            {/* Immediate Actions */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>IMMEDIATE ACTIONS</Typography>
+                  {tasks && tasks.length > 0 ? (
+                    <List dense>
+                      {tasks.filter((t:any)=>!t.completed).slice(0,5).map((t:any, idx:number) => (
+                        <ListItem key={idx} sx={{ px: 0 }}>
+                          <ListItemIcon><CheckIcon color={t.completed ? 'success' : 'disabled'} /></ListItemIcon>
+                          <ListItemText primary={t.title} secondary={t.hint || ''} />
+                        </ListItem>
+                      ))}
+                      {tasks.filter((t:any)=>!t.completed).length === 0 && (
+                        <ListItem sx={{ px: 0 }}><ListItemText primary="You're all caught up!" /></ListItem>
+                      )}
+                    </List>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">No urgent tasks right now.</Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+            {/* Key Vendor Status */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>KEY VENDOR STATUS</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {/* These chips will be updated by overview vendorCritical if present */}
+                    <Chip label={`Venue`} variant='outlined' />
+                    <Chip label={`Photographer`} variant='outlined' />
+                    <Chip label={`Caterer`} variant='outlined' />
+                    <Chip label={`Music/DJ`} variant='outlined' />
+                    <Chip label={`Florist`} variant='outlined' />
+                  </Box>
+                </CardContent>
               </Card>
             </Grid>
           </Grid>
@@ -665,7 +804,7 @@ export default function DashboardPage() {
                         fontWeight: 600,
                       }}
                     >
-                      0 BOOKED
+                      {vendorBookedTotal === null ? '—' : `${vendorBookedTotal} BOOKED`}
                     </Box>
                   </Box>
                   <CardContent sx={{ p: 3 }}>
@@ -730,7 +869,7 @@ export default function DashboardPage() {
                         color: '#666666',
                       }}
                     >
-                      CEREMONY AT 4:00 PM
+                      {nextEventLabel || 'SET YOUR TIMELINE'}
                     </Typography>
                   </Box>
                   <CardContent sx={{ p: 3 }}>
@@ -749,7 +888,7 @@ export default function DashboardPage() {
                     </Typography>
                     <LinearProgress
                       variant="determinate"
-                      value={25}
+                      value={timelineCount > 0 ? Math.min(100, (timelineCount / 12) * 100) : 0}
                       sx={{
                         height: 4,
                         bgcolor: '#F5F5F5',
@@ -759,7 +898,7 @@ export default function DashboardPage() {
                       }}
                     />
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      3 of 12 events planned
+                      {timelineCount} of 12 events planned
                     </Typography>
                   </CardContent>
                 </CardActionArea>

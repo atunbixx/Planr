@@ -7,12 +7,6 @@ interface User {
   onboardingCompleted: boolean
 }
 
-interface AuthState {
-  user: User | null
-  token: string | null
-  isLoading: boolean
-}
-
 class AuthClient {
   private static readonly TOKEN_KEY = 'wedding_planner_token'
   private static readonly USER_KEY = 'wedding_planner_user'
@@ -36,7 +30,7 @@ class AuthClient {
   static getUser(): User | null {
     if (typeof window === 'undefined') return null
     const userStr = localStorage.getItem(this.USER_KEY)
-    return userStr ? JSON.parse(userStr) : null
+    return userStr ? JSON.parse(userStr) as User : null
   }
 
   static setUser(user: User): void {
@@ -44,7 +38,7 @@ class AuthClient {
     localStorage.setItem(this.USER_KEY, JSON.stringify(user))
   }
 
-  static async signup(email: string, password: string, role: string = 'couple') {
+  static async signup(email: string, password: string, role: string = 'couple'): Promise<{ success: boolean; data?: { user: User; token: string }; error?: { message: string } }> {
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: {
@@ -63,7 +57,7 @@ class AuthClient {
     return data
   }
 
-  static async signin(email: string, password: string) {
+  static async signin(email: string, password: string): Promise<{ success: boolean; data?: { user: User; token: string }; error?: { message: string } }> {
     const response = await fetch('/api/auth/signin', {
       method: 'POST',
       headers: {
@@ -82,7 +76,7 @@ class AuthClient {
     return data
   }
 
-  static async getProfile() {
+  static async getProfile(): Promise<User | null> {
     const token = this.getToken()
     if (!token) {
       console.log('No token found in getProfile')
@@ -101,7 +95,7 @@ class AuthClient {
     
     if (data.success) {
       this.setUser(data.data.user)
-      return data.data.user
+      return data.data.user as User
     }
 
     console.log('API response was not successful:', data)
@@ -113,7 +107,7 @@ class AuthClient {
     weddingDate?: string
     budget?: number
     guestCount?: number
-  }) {
+  }): Promise<{ success: boolean; data?: { user: User }; error?: { message: string } }> {
     const token = this.getToken()
     if (!token) throw new Error('No authentication token')
 

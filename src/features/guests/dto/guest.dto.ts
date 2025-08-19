@@ -12,9 +12,11 @@ export const CreateGuestDto = z.object({
   plusOneAllowed: z.boolean().default(false),
   plusOneName: z.string().optional(),
   dietaryRestrictions: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   notes: z.string().optional(),
   attendingCount: z.number().int().min(0).default(1),
-  rsvpDeadline: z.string().datetime().optional()
+  rsvpDeadline: z.string().datetime().optional(),
+  relationshipCategory: z.enum(['sibling','parent','relative','friend','neighbour','colleague','vendor','other']).optional()
 })
 
 export const UpdateGuestDto = z.object({
@@ -28,13 +30,18 @@ export const UpdateGuestDto = z.object({
   plusOneAllowed: z.boolean().optional(),
   plusOneName: z.string().optional(),
   dietaryRestrictions: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   notes: z.string().optional(),
   attendingCount: z.number().int().min(0).optional(),
-  rsvpDeadline: z.string().datetime().optional()
+  rsvpDeadline: z.string().datetime().optional(),
+  relationshipCategory: z.enum(['sibling','parent','relative','friend','neighbour','colleague','vendor','other']).optional()
 })
 
 export const GuestFilterDto = z.object({
   side: z.enum(['bride', 'groom']).optional(),
+  rsvpStatus: z.enum(['pending', 'accepted', 'declined']).optional(),
+  dietary: z.string().optional(),
+  category: z.enum(['sibling','parent','relative','friend','neighbour','colleague','vendor','other']).optional(),
   plusOneAllowed: z.boolean().optional(),
   hasEmail: z.boolean().optional(),
   hasPhone: z.boolean().optional(),
@@ -52,6 +59,7 @@ export const GuestResponseDto = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   relationship: z.string().optional(),
+  relationshipCategory: z.enum(['sibling','parent','relative','friend','neighbour','colleague','vendor','other']).optional(),
   side: z.enum(['bride', 'groom']).optional(),
   plusOneAllowed: z.boolean(),
   plusOneName: z.string().optional(),

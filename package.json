@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "prisma db seed"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -39,5 +40,8 @@
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

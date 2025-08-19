@@ -76,13 +76,12 @@ export async function POST(request: NextRequest) {
         role,
         onboardingCompleted: false
       })
-      // Cast temp storage user to match Prisma User type
+      // Map temp storage user to Prisma-like shape
       user = {
         ...tempUser,
-        role: tempUser.role as any, // Cast string role to UserRole enum
         createdAt: new Date(tempUser.createdAt),
         updatedAt: new Date(tempUser.updatedAt)
-      }
+      } as typeof user
     }
 
     // Generate JWT token

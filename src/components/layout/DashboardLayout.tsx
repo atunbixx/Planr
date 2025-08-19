@@ -33,7 +33,7 @@ import {
   PhotoLibrary as PhotosIcon,
   Message as MessagesIcon,
   Timeline as TimelineIcon,
-  CalendarToday as CalendarIcon,
+  TableRestaurant as TableRestaurantIcon,
   Favorite as FavoriteIcon,
   Notifications as NotificationsIcon,
   AccountCircle,
@@ -55,6 +55,7 @@ const menuItems: MenuItem[] = [
   { text: 'Guest Management', icon: <PeopleIcon />, path: '/dashboard/guests' },
   { text: 'Budget Tracker', icon: <BudgetIcon />, path: '/dashboard/budget' },
   { text: 'Checklist', icon: <ChecklistIcon />, path: '/dashboard/checklist' },
+  { text: 'Table Seating', icon: <TableRestaurantIcon />, path: '/dashboard/seating' },
   { text: 'Vendors', icon: <VendorsIcon />, path: '/dashboard/vendors' },
   { text: 'Photos', icon: <PhotosIcon />, path: '/dashboard/photos' },
   { text: 'Messages', icon: <MessagesIcon />, path: '/dashboard/messages', badge: 3 },
@@ -196,7 +197,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 500 }}>
-            {menuItems.find(item => item.path === pathname)?.text || 'Dashboard'}
+            {menuItems.find(item => item.path === pathname)?.text 
+              || (pathname?.startsWith('/dashboard/settings') ? 'Settings' : 'Dashboard')}
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

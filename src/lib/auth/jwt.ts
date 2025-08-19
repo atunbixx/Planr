@@ -40,7 +40,7 @@ export class JWTService {
     try {
       const decoded = jwt.verify(token, this.secret) as JWTPayload
       return decoded
-    } catch (error) {
+    } catch (_) {
       throw new Error('Invalid or expired token')
     }
   }

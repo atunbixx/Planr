@@ -7,7 +7,7 @@ export class PasswordService {
     try {
       const salt = await bcrypt.genSalt(this.saltRounds)
       return await bcrypt.hash(password, salt)
-    } catch (error) {
+    } catch (_) {
       throw new Error('Failed to hash password')
     }
   }
@@ -15,7 +15,7 @@ export class PasswordService {
   static async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     try {
       return await bcrypt.compare(password, hashedPassword)
-    } catch (error) {
+    } catch (_) {
       throw new Error('Failed to verify password')
     }
   }

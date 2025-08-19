@@ -1,8 +1,8 @@
 # Wedding Planner MVP - Claude Code Configuration
 
 ## Development Server
-- **Port**: 4000 (preferred for this project)
-- **Command**: `npm run dev -- --port 4000`
+- **Port**: 3000 (default)
+- **Command**: `npm run dev`
 
 ## Core Build Commands
 - `npm run build` - Build project
@@ -14,8 +14,8 @@
 ## Project Architecture
 Next.js 14 wedding planning application with **Enterprise Architecture**:
 - **Frontend**: React, TypeScript, Tailwind CSS
-- **Database**: Prisma with Supabase PostgreSQL
-- **Authentication**: Supabase Auth (migrated from Clerk)
+- **Database**: Prisma with Supabase PostgreSQL (custom schema: `my_new_schema`)
+- **Authentication**: NextAuth.js with JWT tokens
 - **UI Components**: shadcn/ui
 - **Testing**: Jest, Playwright
 - **Architecture Pattern**: Feature-Modular Monolith with Repository Pattern
@@ -61,15 +61,19 @@ src/features/
 ```typescript
 // Guest Model - ACTUAL fields only
 model Guest {
-  id              String    @id @default(uuid()) @db.Uuid
-  userId          String    @db.Uuid           // ← Use THIS field
-  name            String                       // ← Single name field
-  rsvpStatus      RsvpStatus @default(pending)
-  mealPreference  String?
-  side            Side?
-  invitationSent  Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @db.Uuid           // ← Use THIS field
+  name                String                       // ← Single name field
+  rsvpStatus          RsvpStatus @default(pending)
+  mealPreference      String?
+  side                Side?
+  invitationSent      Boolean   @default(false)
+  plusOne             Boolean   @default(false)    // ← New: plus-one support
+  householdId         String?   @db.Uuid          // ← New: household grouping
+  tags                String[]  @default([])     // ← New: guest categorization
+  relationshipCategory String?                    // ← New: relationship type
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 ```
 
@@ -119,13 +123,32 @@ const guest = await prisma.guest.create({ data: ... })
 - `src/app/` - Next.js app router pages
 - `src/components/` - Reusable React components
 
+## Supabase Configuration
+The project is now fully configured with Supabase PostgreSQL using a custom schema:
+
+### 🗄️ **Database Setup**
+- **Schema**: `my_new_schema` (custom schema, not default `postgres`)
+- **Connection**: Configured via `.env` with Prisma
+- **Migration**: All migrations applied to custom schema
+
+### 🔑 **Environment Variables**
+```bash
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres?schema=my_new_schema"
+DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres?schema=my_new_schema"
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT_REF].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="[ANON_KEY]"
+SUPABASE_SERVICE_ROLE_KEY="[SERVICE_ROLE_KEY]"
+```
+
 ## Enterprise Migration Status
-- ✅ **Database Schema**: Unified and migrated
+- ✅ **Database Schema**: Unified and migrated with guest enhancements
 - ✅ **Repository Pattern**: Implemented across all features
 - ✅ **Service Layer**: Business logic extracted and organized
 - ✅ **Transaction Support**: Automatic rollback on failures
 - ✅ **API Routes**: Updated to use enterprise patterns
 - ✅ **Schema Compliance**: Repository fixed to use correct field names
+- ✅ **Supabase Integration**: Custom schema configured and working
+- ✅ **Guest Enhancements**: Plus-one, household, tags, and relationship categories added
 
 ## Testing Strategy
 - **Unit Tests**: Service and repository logic

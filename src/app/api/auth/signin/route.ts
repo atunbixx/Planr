@@ -33,13 +33,13 @@ export async function POST(request: NextRequest) {
       console.log('Database not available, using temp storage')
       const tempUser = await tempStorage.findUserByEmail(email)
       if (tempUser) {
-        // Cast temp storage user to match Prisma User type
+        // Map temp storage user to Prisma-like shape
         user = {
           ...tempUser,
-          role: tempUser.role as any, // Cast string role to UserRole enum
+          // keep role as string since our app treats it as string elsewhere
           createdAt: new Date(tempUser.createdAt),
           updatedAt: new Date(tempUser.updatedAt)
-        }
+        } as typeof user
       }
     }
 

@@ -40,16 +40,18 @@ import {
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
+import { BudgetClient, type BudgetSummary } from '@/lib/api/budget.client';
 
-interface BudgetItem {
+type BudgetItem = {
   id: string;
   category: string;
-  description: string;
-  estimatedCost: number;
-  actualCost: number;
-  status: 'pending' | 'paid' | 'overdue';
-  dueDate?: string;
+  amount: number;
+  allocated: number;
+  actual: number;
+  status: 'planned' | 'quoted' | 'booked' | 'paid';
 }
+
+type ChipColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
 
 const categories = [
   'Venue',
@@ -70,14 +72,13 @@ export default function BudgetPage() {
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
-  const [totalBudget, setTotalBudget] = useState(25000);
+  const [summary, setSummary] = useState<BudgetSummary | null>(null);
   const [formData, setFormData] = useState({
     category: '',
-    description: '',
-    estimatedCost: '',
-    actualCost: '',
-    status: 'pending',
-    dueDate: '',
+    amount: '',
+    allocated: '',
+    actual: '',
+    status: 'planned',
   });
 
   useEffect(() => {
@@ -87,61 +88,48 @@ export default function BudgetPage() {
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    // Mock data - replace with API call
-    setBudgetItems([
-      {
-        id: '1',
-        category: 'Venue',
-        description: 'Garden Wedding Venue',
-        estimatedCost: 5000,
-        actualCost: 0,
-        status: 'pending',
-        dueDate: '2025-03-01',
-      },
-      {
-        id: '2',
-        category: 'Catering',
-        description: 'Food and Beverages for 150 guests',
-        estimatedCost: 8000,
-        actualCost: 0,
-        status: 'pending',
-        dueDate: '2025-05-01',
-      },
-    ]);
-  }, []);
+    async function load() {
+      try {
+        const { items, summary } = await BudgetClient.list()
+        const rows: BudgetItem[] = (items || []).map((it: any) => ({
+          id: it.id,
+          category: it.category,
+          amount: Number(it.amount as any) || 0,
+          allocated: Number(it.allocated as any) || 0,
+          actual: Number(it.actual as any) || 0,
+          status: it.status,
+        }))
+        setBudgetItems(rows)
+        setSummary(summary)
+      } catch (e) {
+        console.error('Failed to load budget', e)
+      }
+    }
+    if (!isLoading && user) load()
+  }, [isLoading, user])
 
-  const getTotalEstimated = () => {
-    return budgetItems.reduce((sum, item) => sum + item.estimatedCost, 0);
-  };
-
-  const getTotalActual = () => {
-    return budgetItems.reduce((sum, item) => sum + item.actualCost, 0);
-  };
-
-  const getBudgetProgress = () => {
-    return (getTotalActual() / totalBudget) * 100;
-  };
+  const getTotalEstimated = () => summary?.totalAmount || 0;
+  const getTotalActual = () => summary?.totalActual || 0;
+  const getBudgetProgress = () => summary?.percentSpent || 0;
 
   const handleOpenDialog = (item?: BudgetItem) => {
     if (item) {
       setEditingItem(item);
       setFormData({
         category: item.category,
-        description: item.description,
-        estimatedCost: item.estimatedCost.toString(),
-        actualCost: item.actualCost.toString(),
+        amount: String(item.amount),
+        allocated: String(item.allocated),
+        actual: String(item.actual),
         status: item.status,
-        dueDate: item.dueDate || '',
       });
     } else {
       setEditingItem(null);
       setFormData({
         category: '',
-        description: '',
-        estimatedCost: '',
-        actualCost: '',
-        status: 'pending',
-        dueDate: '',
+        amount: '',
+        allocated: '',
+        actual: '',
+        status: 'planned',
       });
     }
     setOpenDialog(true);
@@ -152,24 +140,69 @@ export default function BudgetPage() {
     setEditingItem(null);
   };
 
-  const handleSave = () => {
-    // TODO: Save to API
-    handleCloseDialog();
+  const handleSave = async () => {
+    const payload: any = {
+      category: formData.category,
+      amount: Number(formData.amount || 0),
+      allocated: Number(formData.allocated || 0),
+      actual: Number(formData.actual || 0),
+      status: formData.status,
+    }
+    try {
+      if (editingItem) {
+        await BudgetClient.update(editingItem.id, payload)
+      } else {
+        await BudgetClient.create(payload)
+      }
+      setOpenDialog(false)
+      const { items, summary } = await BudgetClient.list()
+      const rows: BudgetItem[] = (items || []).map((it: any) => ({
+        id: it.id,
+        category: it.category,
+        amount: Number(it.amount as any) || 0,
+        allocated: Number(it.allocated as any) || 0,
+        actual: Number(it.actual as any) || 0,
+        status: it.status,
+      }))
+      setBudgetItems(rows)
+      setSummary(summary)
+    } catch (e) {
+      console.error('Save budget error', e)
+      alert('Error saving budget item')
+    }
   };
 
-  const handleDelete = (id: string) => {
-    // TODO: Delete via API
-    setBudgetItems(budgetItems.filter(item => item.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await BudgetClient.remove(id)
+      const { items, summary } = await BudgetClient.list()
+      const rows: BudgetItem[] = (items || []).map((it: any) => ({
+        id: it.id,
+        category: it.category,
+        amount: Number(it.amount as any) || 0,
+        allocated: Number(it.allocated as any) || 0,
+        actual: Number(it.actual as any) || 0,
+        status: it.status,
+      }))
+      setBudgetItems(rows)
+      setSummary(summary)
+    } catch (e) {
+      console.error('Delete budget error', e)
+      alert('Error deleting budget item')
+    }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: BudgetItem['status']): ChipColor => {
     switch (status) {
       case 'paid':
         return 'success';
-      case 'overdue':
-        return 'error';
-      default:
+      case 'booked':
+        return 'info';
+      case 'quoted':
         return 'warning';
+      case 'planned':
+      default:
+        return 'default';
     }
   };
 
@@ -177,8 +210,10 @@ export default function BudgetPage() {
     switch (status) {
       case 'paid':
         return <CheckCircleIcon sx={{ fontSize: 16 }} />;
-      case 'overdue':
+      case 'quoted':
         return <WarningIcon sx={{ fontSize: 16 }} />;
+      case 'booked':
+        return <TrendingUpIcon sx={{ fontSize: 16 }} />;
       default:
         return <MoneyIcon sx={{ fontSize: 16 }} />;
     }
@@ -198,124 +233,72 @@ export default function BudgetPage() {
               Budget Tracker
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Manage your wedding expenses and stay on budget
+              Track your wedding expenses and stay within budget
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Add Budget Item
-          </Button>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography variant="body2" color="text.secondary">Total Amount</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>${getTotalEstimated().toLocaleString()}</Typography>
+          </Box>
         </Box>
 
-        {/* Budget Overview Cards */}
+        {/* Stats */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={4}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'transparent', color: '#4A5D3A', border: '1px solid rgba(74, 93, 58, 0.2)', mr: 2 }}>
-                    <MoneyIcon />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Budget
-                    </Typography>
-                    <Typography variant="h5" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400 }}>
-                      ${totalBudget.toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={getBudgetProgress()}
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  {getBudgetProgress().toFixed(1)}% used
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'transparent', color: '#4A5D3A', border: '1px solid rgba(74, 93, 58, 0.2)', mr: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: '#4A5D3A' }}>
                     <TrendingUpIcon />
                   </Avatar>
                   <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Estimated Total
-                    </Typography>
-                    <Typography variant="h5" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400 }}>
-                      ${getTotalEstimated().toLocaleString()}
-                    </Typography>
+                    <Typography variant="subtitle2" color="text.secondary">Total Amount</Typography>
+                    <Typography variant="h6">${getTotalEstimated().toLocaleString()}</Typography>
                   </Box>
                 </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {budgetItems.length} items planned
-                </Typography>
               </CardContent>
             </Card>
           </Grid>
-
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={4}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'transparent', color: '#4A5D3A', border: '1px solid rgba(74, 93, 58, 0.2)', mr: 2 }}>
-                    <CheckCircleIcon />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Actual Spent
-                    </Typography>
-                    <Typography variant="h5" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400 }}>
-                      ${getTotalActual().toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {budgetItems.filter(item => item.status === 'paid').length} items paid
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'transparent', color: '#4A5D3A', border: '1px solid rgba(74, 93, 58, 0.2)', mr: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: '#4A5D3A' }}>
                     <PieChartIcon />
                   </Avatar>
                   <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Remaining
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Total Actual
                     </Typography>
-                    <Typography variant="h5" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400 }}>
-                      ${(totalBudget - getTotalActual()).toLocaleString()}
-                    </Typography>
+                    <Typography variant="h6">${getTotalActual().toLocaleString()}</Typography>
                   </Box>
                 </Box>
-                <Typography variant="body2" color="text.secondary">
-                  Available to spend
-                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: '#4A5D3A' }}>
+                    <MoneyIcon />
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Budget Used
+                    </Typography>
+                    <LinearProgress variant="determinate" value={Math.min(getBudgetProgress(), 100)} sx={{ height: 8, borderRadius: 5 }} />
+                    <Typography variant="caption" color="text.secondary">${getTotalActual().toLocaleString()} of ${getTotalEstimated().toLocaleString()}</Typography>
+                  </Box>
+                </Box>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
 
-        {/* Budget Items Table */}
+        {/* Budget List */}
         <Card>
           <CardContent>
-            <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400, mb: 2 }}>
-              Budget Items
-            </Typography>
             {budgetItems.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <MoneyIcon sx={{ fontSize: 48, color: '#4A5D3A', mb: 2 }} />
@@ -339,11 +322,10 @@ export default function BudgetPage() {
                   <TableHead>
                     <TableRow>
                       <TableCell>Category</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell align="right">Estimated</TableCell>
+                      <TableCell align="right">Amount</TableCell>
+                      <TableCell align="right">Allocated</TableCell>
                       <TableCell align="right">Actual</TableCell>
                       <TableCell>Status</TableCell>
-                      <TableCell>Due Date</TableCell>
                       <TableCell align="center">Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -353,18 +335,17 @@ export default function BudgetPage() {
                         <TableCell>
                           <Chip label={item.category} size="small" />
                         </TableCell>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell align="right">${item.estimatedCost.toLocaleString()}</TableCell>
-                        <TableCell align="right">${item.actualCost.toLocaleString()}</TableCell>
+                        <TableCell align="right">${item.amount.toLocaleString()}</TableCell>
+                        <TableCell align="right">${item.allocated.toLocaleString()}</TableCell>
+                        <TableCell align="right">${item.actual.toLocaleString()}</TableCell>
                         <TableCell>
                           <Chip
                             label={item.status}
                             size="small"
-                            color={getStatusColor(item.status) as any}
+                            color={getStatusColor(item.status)}
                             icon={getStatusIcon(item.status)}
                           />
                         </TableCell>
-                        <TableCell>{item.dueDate || '-'}</TableCell>
                         <TableCell align="center">
                           <IconButton size="small" onClick={() => handleOpenDialog(item)}>
                             <EditIcon />
@@ -402,76 +383,47 @@ export default function BudgetPage() {
                   </MenuItem>
                 ))}
               </TextField>
+              <Grid container spacing={2}>
+                <Grid xs={4}>
+                  <TextField label="Amount" type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} fullWidth />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField label="Allocated" type="number" value={formData.allocated} onChange={(e) => setFormData({ ...formData, allocated: e.target.value })} fullWidth />
+                </Grid>
+                <Grid xs={4}>
+                  <TextField label="Actual" type="number" value={formData.actual} onChange={(e) => setFormData({ ...formData, actual: e.target.value })} fullWidth />
+                </Grid>
+              </Grid>
               <TextField
-                label="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                select
+                label="Status"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 fullWidth
-                multiline
-                rows={2}
-              />
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    label="Estimated Cost"
-                    type="number"
-                    value={formData.estimatedCost}
-                    onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: '$',
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    label="Actual Cost"
-                    type="number"
-                    value={formData.actualCost}
-                    onChange={(e) => setFormData({ ...formData, actualCost: e.target.value })}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: '$',
-                    }}
-                  />
-                </Grid>
-              </Grid>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    select
-                    label="Status"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    fullWidth
-                  >
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="paid">Paid</MenuItem>
-                    <MenuItem value="overdue">Overdue</MenuItem>
-                  </TextField>
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    label="Due Date"
-                    type="date"
-                    value={formData.dueDate}
-                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                    fullWidth
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                  />
-                </Grid>
-              </Grid>
+              >
+                <MenuItem value="planned">Planned</MenuItem>
+                <MenuItem value="quoted">Quoted</MenuItem>
+                <MenuItem value="booked">Booked</MenuItem>
+                <MenuItem value="paid">Paid</MenuItem>
+              </TextField>
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleSave} variant="contained">
-              {editingItem ? 'Save Changes' : 'Add Item'}
+            <Button variant="contained" onClick={handleSave}>
+              Save
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={() => handleOpenDialog()}
+          sx={{ position: 'fixed', bottom: 24, right: 24 }}
+        >
+          <AddIcon />
+        </Fab>
       </Box>
     </DashboardLayout>
   );

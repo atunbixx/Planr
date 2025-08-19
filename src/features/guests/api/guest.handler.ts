@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GuestService } from '../service/guest.service'
+import { tempStorage } from '@/lib/db/temp-storage'
 import { CreateGuestDto, UpdateGuestDto, GuestFilterDto } from '../dto/guest.dto'
 
 export class GuestHandler {
@@ -10,6 +11,48 @@ export class GuestHandler {
   }
 
   /**
+   * POST /api/guests/bulk - Bulk updates for RSVP, invitation, household
+   */
+  async bulkUpdate(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    try {
+      const body = await request.json().catch(() => ({}))
+      const action = String(body?.action || '')
+      const ids: string[] = Array.isArray(body?.ids) ? body.ids : []
+      if (!ids.length) {
+        return NextResponse.json({ success: false, error: { message: 'ids required' } }, { status: 400 })
+      }
+      if (action === 'setRsvpStatus') {
+        const status = body?.status
+        if (!['pending','accepted','declined'].includes(status)) {
+          return NextResponse.json({ success: false, error: { message: 'invalid status' } }, { status: 400 })
+        }
+        for (const id of ids) {
+          await this.guestService.updateGuest(id, { rsvpStatus: status } as any)
+        }
+        return NextResponse.json({ success: true, data: { updated: ids.length } })
+      }
+      if (action === 'setInvitationSent') {
+        const invited = Boolean(body?.invitationSent)
+        for (const id of ids) {
+          await this.guestService.updateGuest(id, { invitationSent: invited } as any)
+        }
+        return NextResponse.json({ success: true, data: { updated: ids.length } })
+      }
+      if (action === 'setHousehold') {
+        const householdId = typeof body?.householdId === 'string' ? body.householdId : null
+        for (const id of ids) {
+          await this.guestService.updateGuest(id, { householdId } as any)
+        }
+        return NextResponse.json({ success: true, data: { updated: ids.length } })
+      }
+      return NextResponse.json({ success: false, error: { message: 'Invalid action' } }, { status: 400 })
+    } catch (error) {
+      console.error('Error in bulkUpdate handler:', error)
+      return NextResponse.json({ success: false, error: { message: 'Internal server error', statusCode: 500 } }, { status: 500 })
+    }
+  }
+
+  /**
    * GET /api/guests - List all guests for the authenticated couple
    */
   async getGuests(request: NextRequest, coupleId: string): Promise<NextResponse> {
@@ -17,8 +60,12 @@ export class GuestHandler {
       // Parse query parameters for filtering
       const url = new URL(request.url)
       const sideParam = url.searchParams.get('side')
+      const statusParam = url.searchParams.get('status')
       const filters = {
         side: sideParam === 'bride' || sideParam === 'groom' ? sideParam : undefined,
+        rsvpStatus: statusParam === 'pending' || statusParam === 'accepted' || statusParam === 'declined' ? statusParam : undefined,
+        dietary: url.searchParams.get('dietary') || undefined,
+        category: url.searchParams.get('category') || undefined,
         plusOneAllowed: url.searchParams.get('plusOneAllowed') === 'true' ? true : 
                         url.searchParams.get('plusOneAllowed') === 'false' ? false : undefined,
         hasEmail: url.searchParams.get('hasEmail') === 'true' ? true :
@@ -48,10 +95,25 @@ export class GuestHandler {
       const result = await this.guestService.getGuestsByCoupleId(coupleId, filterValidation.data)
 
       if (!result.success) {
-        return NextResponse.json({
-          success: false,
-          error: result.error
-        }, { status: result.error?.statusCode || 500 })
+        try {
+          const raw = await tempStorage.findGuestsByUserId(coupleId)
+          const legacyGuests = raw.map((guest: any) => ({
+            id: guest.id,
+            name: String(guest.name || '').trim(),
+            rsvpStatus: guest.rsvpStatus || 'pending',
+            mealPreference: guest.mealPreference,
+            side: guest.side,
+            invitationSent: Boolean(guest.invitationSent),
+            relationshipCategory: guest.relationshipCategory,
+            rsvp: { id: `rsvp_${guest.id}`, status: 'pending', dateResponded: null },
+          }))
+          return NextResponse.json({ success: true, data: legacyGuests, total: legacyGuests.length, limit: filterValidation.data.limit, offset: filterValidation.data.offset })
+        } catch (e) {
+          return NextResponse.json({
+            success: false,
+            error: result.error
+          }, { status: result.error?.statusCode || 500 })
+        }
       }
 
       // Transform response to legacy format for frontend compatibility
@@ -62,6 +124,7 @@ export class GuestHandler {
         mealPreference: guest.dietaryRestrictions,
         side: guest.side,
         invitationSent: Boolean(guest.invitationSentAt),
+        relationshipCategory: (guest as any).relationshipCategory,
         rsvp: {
           id: `rsvp_${guest.id}`,
           status: 'pending',
@@ -71,17 +134,31 @@ export class GuestHandler {
 
       return NextResponse.json({
         success: true,
-        data: legacyGuests // Return array directly for legacy compatibility
+        data: legacyGuests, // Keep legacy array shape
+        total: result.data!.total,
+        limit: result.data!.limit,
+        offset: result.data!.offset,
       })
     } catch (error) {
       console.error('Error in getGuests handler:', error)
-      return NextResponse.json({
-        success: false,
-        error: {
-          message: 'Internal server error',
-          statusCode: 500
-        }
-      }, { status: 500 })
+      // Final fallback: try temp storage directly
+      try {
+        const raw = await tempStorage.findGuestsByUserId(coupleId)
+        const legacyGuests = raw.map((guest: any) => ({
+          id: guest.id,
+          name: String(guest.name || '').trim(),
+          rsvpStatus: guest.rsvpStatus || 'pending',
+          mealPreference: guest.mealPreference,
+          side: guest.side,
+          invitationSent: Boolean(guest.invitationSent),
+          relationshipCategory: guest.relationshipCategory,
+          rsvp: { id: `rsvp_${guest.id}`, status: 'pending', dateResponded: null },
+        }))
+        return NextResponse.json({ success: true, data: legacyGuests, total: legacyGuests.length, limit: 50, offset: 0 })
+      } catch (e) {
+        // Last-resort: return empty list to avoid client crash
+        return NextResponse.json({ success: true, data: [], total: 0, limit: 50, offset: 0 })
+      }
     }
   }
 
@@ -171,6 +248,7 @@ export class GuestHandler {
         mealPreference: result.data!.dietaryRestrictions,
         side: result.data!.side,
         invitationSent: Boolean(result.data!.invitationSentAt),
+        relationshipCategory: (result.data as any).relationshipCategory,
         rsvp: {
           id: `rsvp_${result.data!.id}`,
           status: 'pending',
@@ -233,7 +311,13 @@ export class GuestHandler {
         }, { status: 400 })
       }
 
-      const result = await this.guestService.updateGuest(guestId, validation.data)
+      // Merge legacy fields back in (RSVP + invitation flags) for current schema
+      const legacy: any = {}
+      if (typeof (processedBody as any).rsvpStatus !== 'undefined') legacy.rsvpStatus = (processedBody as any).rsvpStatus
+      if (typeof (processedBody as any).invitationSent !== 'undefined') legacy.invitationSent = (processedBody as any).invitationSent
+      if (typeof (processedBody as any).householdId !== 'undefined') legacy.householdId = (processedBody as any).householdId
+
+      const result = await this.guestService.updateGuest(guestId, { ...(validation as any).data, ...legacy } as any)
 
       if (!result.success) {
         return NextResponse.json({
@@ -250,6 +334,7 @@ export class GuestHandler {
         mealPreference: result.data.dietaryRestrictions,
         side: result.data.side,
         invitationSent: Boolean(result.data.invitationSentAt),
+        relationshipCategory: (result.data as any).relationshipCategory,
         rsvp: {
           id: `rsvp_${result.data.id}`,
           status: 'pending',

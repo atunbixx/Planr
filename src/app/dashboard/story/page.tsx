@@ -14,9 +14,7 @@ import {
   Avatar,
   Chip,
   IconButton,
-  Divider,
   CircularProgress,
-  Fab,
   CardActionArea,
 } from '@mui/material';
 import {
@@ -27,7 +25,6 @@ import {
   Photo as PhotoIcon,
   CalendarToday as DateIcon,
   LocationOn as LocationIcon,
-  People as PeopleIcon,
   AutoStories as StoryIcon,
   Preview as PreviewIcon,
   Public as PublicIcon,

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function SigninPage() {
   const router = useRouter()
@@ -51,7 +51,7 @@ export default function SigninPage() {
     try {
       const result = await signin(formData.email, formData.password)
       
-      if (result.success) {
+      if (result.success && result.data) {
         const user = result.data.user
         
         // Redirect based on user state
@@ -124,7 +124,7 @@ export default function SigninPage() {
             <div className="mt-6">
               <div className="text-center">
                 <span className="text-sm text-gray-600">
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
                     Sign up
                   </Link>

@@ -1,0 +1,13 @@
+[
+  {
+    "id": "budget_1755644621642_2thy41",
+    "userId": "user_1755366687167_yxvivql5a",
+    "category": "Photography",
+    "amount": 10000,
+    "allocated": 0,
+    "actual": 0,
+    "status": "paid",
+    "createdAt": "2025-08-19T23:03:41.642Z",
+    "updatedAt": "2025-08-19T23:03:41.642Z"
+  }
+]

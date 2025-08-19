@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
-  Grid,
+  // Grid2 as Grid,
   Card,
   CardContent,
   Typography,
@@ -17,15 +17,14 @@ import {
   IconButton,
   Chip,
   Avatar,
-  Paper,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
   ListItemSecondaryAction,
-  Fab,
   CircularProgress,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -35,12 +34,11 @@ import {
   People as PeopleIcon,
   Restaurant as FoodIcon,
   PhotoCamera as PhotoIcon,
-  MusicNote as MusicIcon,
   LocalFlorist as FlowerIcon,
   AccessTime as TimeIcon,
-  DateRange as DateIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import AuthClient from '@/lib/auth/client';
 import { useAuth } from '@/hooks/useAuth';
 
 interface TimelineEvent {
@@ -75,6 +73,10 @@ export default function TimelinePage() {
     duration: '60',
     location: '',
   });
+  const [touched, setTouched] = useState<{ title: boolean; time: boolean }>({ title: false, time: false })
+  const canSave = (formData.title || '').trim().length > 0 && (formData.time || '').trim().length > 0
+  const titleError = touched.title && !(formData.title || '').trim().length
+  const timeError = touched.time && !(formData.time || '').trim().length
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -82,47 +84,28 @@ export default function TimelinePage() {
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    // Mock timeline events
-    setEvents([
-      {
-        id: '1',
-        title: 'Bridal Party Preparation',
-        time: '12:00',
-        description: 'Hair and makeup for bridal party',
-        category: 'personal',
-        duration: 180,
-        location: 'Bridal Suite',
-      },
-      {
-        id: '2',
-        title: 'Wedding Ceremony',
-        time: '16:00',
-        description: 'Exchange of vows and rings',
-        category: 'ceremony',
-        duration: 45,
-        location: 'Garden Pavilion',
-      },
-      {
-        id: '3',
-        title: 'Cocktail Hour',
-        time: '16:45',
-        description: 'Drinks and appetizers while photos are taken',
-        category: 'reception',
-        duration: 75,
-        location: 'Terrace',
-      },
-      {
-        id: '4',
-        title: 'Reception Dinner',
-        time: '18:00',
-        description: 'Dinner service and speeches',
-        category: 'reception',
-        duration: 120,
-        location: 'Main Hall',
-      },
-    ]);
-  }, []);
+  async function loadEvents() {
+    try {
+      const token = AuthClient.getToken()
+      const headers: Record<string,string> = token ? { Authorization: `Bearer ${token}` } : {}
+      const res = await fetch('/api/dashboard/timeline', { headers })
+      const json = await res.json()
+      const ev = (json?.data?.events || []).map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        time: e.time,
+        description: e.description || '',
+        category: (e.category as any) || 'personal',
+        duration: typeof e.duration === 'number' ? e.duration : 60,
+        location: e.location || '',
+      })) as TimelineEvent[]
+      setEvents(ev)
+    } catch (e) {
+      setEvents([])
+    }
+  }
+
+  useEffect(() => { if (!isLoading && user) loadEvents() }, [isLoading, user])
 
   const handleOpenDialog = (event?: TimelineEvent) => {
     if (event) {
@@ -146,6 +129,7 @@ export default function TimelinePage() {
         location: '',
       });
     }
+    setTouched({ title: false, time: false })
     setOpenDialog(true);
   };
 
@@ -154,14 +138,50 @@ export default function TimelinePage() {
     setEditingEvent(null);
   };
 
-  const handleSave = () => {
-    // TODO: Save to API
-    handleCloseDialog();
+  const handleSave = async () => {
+    try {
+      const token = AuthClient.getToken()
+      const headers: Record<string,string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      if (editingEvent) {
+        await fetch(`/api/dashboard/timeline/${editingEvent.id}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            title: formData.title,
+            time: formData.time,
+            description: formData.description,
+            category: formData.category,
+            duration: Number(formData.duration || 0),
+            location: formData.location,
+          })
+        })
+      } else {
+        await fetch(`/api/dashboard/timeline`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            title: formData.title,
+            time: formData.time,
+            description: formData.description,
+            category: formData.category,
+            duration: Number(formData.duration || 0),
+            location: formData.location,
+          })
+        })
+      }
+      await loadEvents()
+    } finally {
+      handleCloseDialog();
+    }
   };
 
-  const handleDelete = (id: string) => {
-    // TODO: Delete via API
-    setEvents(events.filter(event => event.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const token = AuthClient.getToken()
+      const headers: Record<string,string> = token ? { Authorization: `Bearer ${token}` } : {}
+      await fetch(`/api/dashboard/timeline/${id}`, { method: 'DELETE', headers })
+      await loadEvents()
+    } catch {}
   };
 
   const getCategoryInfo = (category: string) => {
@@ -241,7 +261,7 @@ export default function TimelinePage() {
                     </Box>
                   ) : (
                     <List>
-                      {sortedEvents.map((event, index) => {
+                      {sortedEvents.map((event) => {
                         const categoryInfo = getCategoryInfo(event.category);
                         return (
                           <ListItem
@@ -379,20 +399,28 @@ export default function TimelinePage() {
           <DialogContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
               <TextField
+                required
                 label="Event Title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onBlur={() => setTouched((t) => ({ ...t, title: true }))}
                 fullWidth
+                error={titleError}
+                helperText={titleError ? 'Title is required' : ' '}
               />
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <TextField
+                    required
                     label="Time"
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    onBlur={() => setTouched((t) => ({ ...t, time: true }))}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
+                    error={timeError}
+                    helperText={timeError ? 'Time is required' : ' '}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -437,7 +465,7 @@ export default function TimelinePage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleSave} variant="contained">
+            <Button onClick={handleSave} variant="contained" disabled={!canSave}>
               {editingEvent ? 'Save Changes' : 'Add Event'}
             </Button>
           </DialogActions>

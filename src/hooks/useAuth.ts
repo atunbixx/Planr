@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import AuthClient from '@/lib/auth/client'
+import { WeddingDetailsInput } from '@/lib/validation/auth'
 
 interface User {
   id: string
@@ -10,14 +11,26 @@ interface User {
   onboardingCompleted: boolean
 }
 
+interface AuthResponse {
+  success: boolean
+  data?: {
+    user: User
+    token: string
+  }
+  error?: {
+    message: string
+    statusCode?: number
+  }
+}
+
 interface UseAuthReturn {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  signin: (email: string, password: string) => Promise<any>
-  signup: (email: string, password: string, role?: string) => Promise<any>
+  signin: (email: string, password: string) => Promise<AuthResponse>
+  signup: (email: string, password: string, role?: string) => Promise<AuthResponse>
   signout: () => void
-  completeOnboarding: (details: any) => Promise<any>
+  completeOnboarding: (details: WeddingDetailsInput) => Promise<AuthResponse>
   refreshUser: () => Promise<void>
 }
 
@@ -61,7 +74,7 @@ export function useAuth(): UseAuthReturn {
     initializeAuth()
   }, [])
 
-  const signin = async (email: string, password: string) => {
+  const signin = async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true)
     try {
       const result = await AuthClient.signin(email, password)
@@ -74,7 +87,7 @@ export function useAuth(): UseAuthReturn {
     }
   }
 
-  const signup = async (email: string, password: string, role: string = 'couple') => {
+  const signup = async (email: string, password: string, role: string = 'couple'): Promise<AuthResponse> => {
     setIsLoading(true)
     try {
       const result = await AuthClient.signup(email, password, role)
@@ -92,7 +105,7 @@ export function useAuth(): UseAuthReturn {
     AuthClient.signout()
   }
 
-  const completeOnboarding = async (details: any) => {
+  const completeOnboarding = async (details: WeddingDetailsInput): Promise<AuthResponse> => {
     setIsLoading(true)
     try {
       const result = await AuthClient.completeOnboarding(details)

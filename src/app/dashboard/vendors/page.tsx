@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
@@ -22,7 +21,9 @@ import {
   LinearProgress,
   CircularProgress,
   Link,
+  Pagination,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -32,6 +33,8 @@ import {
   Language as WebsiteIcon,
   AttachMoney as MoneyIcon,
   Search as SearchIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
   PhotoCamera as PhotoIcon,
   Restaurant as RestaurantIcon,
   Cake as CakeIcon,
@@ -44,14 +47,17 @@ import {
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
 import AuthClient from '@/lib/auth/client';
+import { VendorsClient } from '@/lib/api/vendors.client';
 
 interface Vendor {
   id: string;
   name: string;
   category: string;
+  status?: 'inquiry' | 'shortlisted' | 'quoted' | 'booked' | 'contracted' | 'paid' | null;
   priceRange?: string;
   contact?: string;
   website?: string;
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,23 +76,46 @@ const vendorCategories = [
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
 
+const vendorStatuses = [
+  { id: 'all', name: 'All Statuses', color: '#9E9E9E' },
+  { id: 'inquiry', name: 'Inquiry', color: '#9E9E9E' },
+  { id: 'shortlisted', name: 'Shortlisted', color: '#607D8B' },
+  { id: 'quoted', name: 'Quoted', color: '#FF9800' },
+  { id: 'booked', name: 'Booked', color: '#4CAF50' },
+  { id: 'contracted', name: 'Contracted', color: '#9C27B0' },
+  { id: 'paid', name: 'Paid', color: '#009688' },
+];
+
 export default function VendorsPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(12);
   const [formData, setFormData] = useState({
     name: '',
     category: 'photography',
+    status: '',
     priceRange: '',
     contact: '',
     website: '',
+    email: '',
+    phone: '',
+    quoteAmount: '',
+    notes: '',
+    rating: '',
+    tags: '',
+    isFavorite: false,
   });
+  const [formErrors, setFormErrors] = useState<{ quoteAmount?: string; rating?: string }>({});
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -94,74 +123,74 @@ export default function VendorsPage() {
     }
   }, [user, isLoading, router]);
 
+  // (moved) Effects that depend on callbacks are defined after callbacks
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedStatus, searchTerm]);
+
+  const getAuthHeaders = useCallback(() => {
+     const token = AuthClient.getToken();
+     return {
+       'Content-Type': 'application/json',
+       ...(token && { 'Authorization': `Bearer ${token}` })
+     };
+  }, []);
+
+  const fetchVendors = useCallback(async () => {
+    try {
+      const { vendors, total } = await VendorsClient.listVendors({
+        category: selectedCategory,
+        status: selectedStatus,
+        q: searchTerm,
+        page: currentPage,
+        pageSize,
+      })
+      setVendors(vendors)
+      setFilteredVendors(vendors)
+      if (typeof total === 'number') setTotal(total)
+    } catch (error) {
+      console.error('Error fetching vendors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedCategory, selectedStatus, searchTerm, currentPage, pageSize]);
+
+  const filterVendors = useCallback(() => {
+     let filtered = vendors;
+
+     if (selectedCategory !== 'all') {
+       filtered = filtered.filter(vendor => 
+         vendor.category.toLowerCase() === selectedCategory.toLowerCase()
+       );
+     }
+
+      if (searchTerm) {
+        filtered = filtered.filter(vendor =>
+          vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          vendor.category.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      if (selectedStatus !== 'all') {
+        filtered = filtered.filter(v => (v.status ?? '').toLowerCase() === selectedStatus.toLowerCase());
+      }
+
+      setFilteredVendors(filtered);
+  }, [vendors, selectedCategory, searchTerm, selectedStatus]);
+
   // Fetch vendors once auth is ready to ensure token is sent in headers
   useEffect(() => {
     if (!isLoading && user) {
       fetchVendors();
     }
-  }, [isLoading, user]);
+  }, [isLoading, user, fetchVendors]);
 
+  // Recompute client-side filters when inputs change
   useEffect(() => {
     filterVendors();
-  }, [vendors, selectedCategory, searchTerm]);
-
-  const getAuthHeaders = () => {
-    const token = AuthClient.getToken();
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    };
-  };
-
-  const fetchVendors = async () => {
-    try {
-      const response = await fetch('/api/vendors', {
-        headers: getAuthHeaders()
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setVendors(data.data || []);
-      } else {
-        if (response.status === 403) {
-          const data = await response.json();
-          if (data?.error?.requiresOnboarding) {
-            alert('Please complete onboarding to manage vendors. Redirecting...');
-            router.push('/onboarding');
-            return;
-          }
-        }
-        if (response.status === 401) {
-          alert('Your session has expired. Please sign in again.');
-          router.push('/signin');
-          return;
-        }
-        console.error('Error fetching vendors:', await response.text());
-      }
-    } catch (error) {
-      console.error('Error fetching vendors:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterVendors = () => {
-    let filtered = vendors;
-
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(vendor => 
-        vendor.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(vendor =>
-        vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vendor.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredVendors(filtered);
-  };
+  }, [vendors, selectedCategory, searchTerm, selectedStatus, filterVendors]);
 
   const handleOpenDialog = (vendor?: Vendor) => {
     if (vendor) {
@@ -169,18 +198,34 @@ export default function VendorsPage() {
       setFormData({
         name: vendor.name,
         category: vendor.category,
+        status: vendor.status || '',
         priceRange: vendor.priceRange || '',
         contact: vendor.contact || '',
         website: vendor.website || '',
+        email: (vendor as any).email || '',
+        phone: (vendor as any).phone || '',
+        quoteAmount: (vendor as any).quoteAmount ? String((vendor as any).quoteAmount) : '',
+        notes: (vendor as any).notes || '',
+        rating: (vendor as any).rating ? String((vendor as any).rating) : '',
+        tags: Array.isArray((vendor as any).tags) ? ((vendor as any).tags as string[]).join(', ') : '',
+        isFavorite: !!vendor.isFavorite,
       });
     } else {
       setEditingVendor(null);
       setFormData({
         name: '',
         category: 'photography',
+        status: '',
         priceRange: '',
         contact: '',
         website: '',
+        email: '',
+        phone: '',
+        quoteAmount: '',
+        notes: '',
+        rating: '',
+        tags: '',
+        isFavorite: false,
       });
     }
     setOpenDialog(true);
@@ -192,40 +237,42 @@ export default function VendorsPage() {
   };
 
   const handleSave = async () => {
-    try {
-      const url = editingVendor 
-        ? `/api/vendors/${editingVendor.id}`
-        : '/api/vendors';
-      
-      const method = editingVendor ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: getAuthHeaders(),
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        await fetchVendors();
-        handleCloseDialog();
-      } else {
-        if (response.status === 403) {
-          const data = await response.json();
-          if (data?.error?.requiresOnboarding) {
-            alert('Please complete onboarding to add vendors. Redirecting...');
-            router.push('/onboarding');
-            return;
-          }
-        }
-        if (response.status === 401) {
-          alert('Your session has expired. Please sign in again.');
-          router.push('/signin');
-          return;
-        }
-        const errorData = await response.json();
-        console.error('Error saving vendor:', errorData);
-        alert(errorData.error?.message || 'Error saving vendor');
+    // Final client-side validation guard
+    const nextErrors: typeof formErrors = {};
+    if (formData.rating) {
+      const r = Number(formData.rating);
+      if (!Number.isInteger(r) || r < 1 || r > 5) {
+        nextErrors.rating = 'Rating must be an integer between 1 and 5';
       }
+    }
+    if (formData.quoteAmount) {
+      const n = Number(String(formData.quoteAmount).replace(/,/g, ''));
+      if (Number.isNaN(n)) {
+        nextErrors.quoteAmount = 'Enter a valid amount';
+      }
+    }
+    setFormErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+    try {
+      const payload = {
+        ...formData,
+        status: formData.status || undefined,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        quoteAmount: formData.quoteAmount ? Number(formData.quoteAmount) : undefined,
+        notes: formData.notes || undefined,
+        rating: formData.rating ? Number(formData.rating) : undefined,
+        tags: formData.tags
+          ? formData.tags.split(',').map(t => t.trim()).filter(Boolean)
+          : undefined,
+      } as any;
+      if (editingVendor) {
+        await VendorsClient.updateVendor(editingVendor.id, payload)
+      } else {
+        await VendorsClient.createVendor(payload)
+      }
+      await fetchVendors()
+      handleCloseDialog()
     } catch (error) {
       console.error('Error saving vendor:', error);
       alert('Error saving vendor');
@@ -236,42 +283,34 @@ export default function VendorsPage() {
     if (!confirm('Are you sure you want to delete this vendor?')) return;
 
     try {
-      const response = await fetch(`/api/vendors/${vendorId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
-
-      if (response.ok) {
-        await fetchVendors();
-      } else {
-        if (response.status === 403) {
-          const data = await response.json();
-          if (data?.error?.requiresOnboarding) {
-            alert('Please complete onboarding to manage vendors. Redirecting...');
-            router.push('/onboarding');
-            return;
-          }
-        }
-        if (response.status === 401) {
-          alert('Your session has expired. Please sign in again.');
-          router.push('/signin');
-          return;
-        }
-        const errorData = await response.json();
-        console.error('Error deleting vendor:', errorData);
-        alert(errorData.error?.message || 'Error deleting vendor');
-      }
+      await VendorsClient.deleteVendor(vendorId)
+      await fetchVendors()
     } catch (error) {
       console.error('Error deleting vendor:', error);
       alert('Error deleting vendor');
     }
   };
 
+  const handleToggleFavorite = async (vendor: Vendor) => {
+    try {
+      await VendorsClient.updateVendor(vendor.id, { isFavorite: !vendor.isFavorite })
+      await fetchVendors()
+    } catch (e) {
+      console.error('Error toggling favorite:', e);
+    }
+  }
+
   const getCategoryInfo = (categoryName: string) => {
     return vendorCategories.find(cat => 
       cat.id === categoryName.toLowerCase() || 
       cat.name.toLowerCase() === categoryName.toLowerCase()
     ) || vendorCategories[0];
+  };
+
+  const getStatusInfo = (status?: Vendor['status']) => {
+    if (!status) return { name: 'No Status', color: '#BDBDBD' };
+    const s = vendorStatuses.find(s => s.id === status);
+    return s ? { name: s.name, color: s.color } : { name: status, color: '#BDBDBD' };
   };
 
   const getVendorsByCategory = () => {
@@ -475,6 +514,25 @@ export default function VendorsPage() {
               </Tabs>
             </Grid>
           </Grid>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Tabs
+                value={selectedStatus}
+                onChange={(e, v) => setSelectedStatus(v)}
+                variant="scrollable"
+                scrollButtons="auto"
+              >
+                {vendorStatuses.map((s) => (
+                  <Tab
+                    key={s.id}
+                    value={s.id}
+                    label={s.name}
+                    sx={{ minHeight: 42 }}
+                  />
+                ))}
+              </Tabs>
+            </Grid>
+          </Grid>
         </Box>
 
         {/* Vendors Grid */}
@@ -533,8 +591,8 @@ export default function VendorsPage() {
                             {categoryInfo.icon}
                           </Avatar>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography
-                              variant="h6"
+                            <Link
+                              href={`/dashboard/vendors/${vendor.id}`}
                               sx={{
                                 fontFamily: '"Bodoni Moda", serif',
                                 fontWeight: 400,
@@ -542,19 +600,40 @@ export default function VendorsPage() {
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
+                                display: 'inline-block',
+                                color: 'inherit',
+                                ':hover': { textDecoration: 'underline' },
                               }}
                             >
                               {vendor.name}
-                            </Typography>
-                            <Chip
-                              label={vendor.category}
-                              size="small"
-                              sx={{
-                                bgcolor: categoryInfo.color + '20',
-                                color: categoryInfo.color,
-                                fontSize: '0.625rem',
-                              }}
-                            />
+                            </Link>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                              <Chip
+                                label={vendor.category}
+                                size="small"
+                                sx={{
+                                  bgcolor: categoryInfo.color + '20',
+                                  color: categoryInfo.color,
+                                  fontSize: '0.625rem',
+                                }}
+                              />
+                              {vendor.status && (
+                                (() => {
+                                  const s = getStatusInfo(vendor.status);
+                                  return (
+                                    <Chip
+                                      label={s.name}
+                                      size="small"
+                                      sx={{
+                                        bgcolor: s.color + '20',
+                                        color: s.color,
+                                        fontSize: '0.625rem',
+                                      }}
+                                    />
+                                  );
+                                })()
+                              )}
+                            </Box>
                           </Box>
                         </Box>
 
@@ -596,6 +675,13 @@ export default function VendorsPage() {
                             Added {new Date(vendor.createdAt).toLocaleDateString()}
                           </Typography>
                           <Box>
+                            <IconButton size="small" onClick={() => handleToggleFavorite(vendor)}>
+                              {vendor.isFavorite ? (
+                                <StarIcon sx={{ fontSize: 16, color: '#FFC107' }} />
+                              ) : (
+                                <StarBorderIcon sx={{ fontSize: 16, color: '#BDBDBD' }} />
+                              )}
+                            </IconButton>
                             <IconButton
                               size="small"
                               onClick={() => handleOpenDialog(vendor)}
@@ -618,6 +704,18 @@ export default function VendorsPage() {
             </Grid>
           )}
         </Box>
+
+        {/* Pagination */}
+        {total > pageSize && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+            <Pagination
+              count={Math.ceil(total / pageSize)}
+              page={currentPage}
+              onChange={(e, page) => setCurrentPage(page)}
+              color="primary"
+            />
+          </Box>
+        )}
 
         {/* Add/Edit Dialog */}
         <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -650,6 +748,21 @@ export default function VendorsPage() {
               </TextField>
               <TextField
                 select
+                label="Status"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                fullWidth
+                SelectProps={{ native: true }}
+              >
+                <option value="">No status</option>
+                {vendorStatuses.slice(1).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </TextField>
+              <TextField
+                select
                 label="Price Range"
                 value={formData.priceRange}
                 onChange={(e) => setFormData({ ...formData, priceRange: e.target.value })}
@@ -677,11 +790,91 @@ export default function VendorsPage() {
                 fullWidth
                 placeholder="https://vendorwebsite.com"
               />
+              <TextField
+                label="Email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                fullWidth
+                placeholder="vendor@example.com"
+              />
+              <TextField
+                label="Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                fullWidth
+                placeholder="+1 555 123 4567"
+              />
+              <TextField
+                label="Quote Amount"
+                type="number"
+                value={formData.quoteAmount}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const cleaned = raw.replace(/[^0-9.,]/g, '').replace(/(\..*)\./g, '$1');
+                  const n = Number(cleaned.replace(/,/g, ''));
+                  setFormErrors((prev) => ({
+                    ...prev,
+                    quoteAmount: cleaned && Number.isNaN(n) ? 'Enter a valid amount' : undefined,
+                  }));
+                  setFormData({ ...formData, quoteAmount: cleaned });
+                }}
+                fullWidth
+                placeholder="e.g., 2500"
+                error={Boolean(formErrors.quoteAmount)}
+                helperText={formErrors.quoteAmount}
+              />
+              <TextField
+                select
+                label="Rating"
+                value={formData.rating}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const n = val ? Number(val) : '';
+                  setFormErrors((prev) => ({
+                    ...prev,
+                    rating:
+                      n !== '' && (!Number.isInteger(n) || n < 1 || n > 5)
+                        ? 'Rating must be 1-5'
+                        : undefined,
+                  }));
+                  setFormData({ ...formData, rating: val });
+                }}
+                fullWidth
+                SelectProps={{ native: true }}
+                error={Boolean(formErrors.rating)}
+                helperText={formErrors.rating}
+              >
+                <option value="">No rating</option>
+                {[1,2,3,4,5].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </TextField>
+              <TextField
+                label="Tags"
+                value={formData.tags}
+                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                fullWidth
+                placeholder="comma, separated, tags"
+                helperText="Comma-separated (e.g., luxury, local, vegan)"
+              />
+              <TextField
+                label="Notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                fullWidth
+                multiline
+                minRows={3}
+                placeholder="Any important details (e.g., contract terms, availability, etc.)"
+              />
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleSave} variant="contained">
+            <Button
+              onClick={handleSave}
+              variant="contained"
+              disabled={Boolean(formErrors.quoteAmount || formErrors.rating) || !formData.name || !formData.category}
+            >
               {editingVendor ? 'Save Changes' : 'Add Vendor'}
             </Button>
           </DialogActions>

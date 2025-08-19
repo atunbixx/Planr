@@ -12,9 +12,16 @@ export interface AuthenticatedRequest extends NextRequest {
   }
 }
 
+export type AuthenticatedUser = {
+  id: string
+  email: string
+  role: string
+  onboardingCompleted: boolean
+}
+
 export async function authenticateRequest(request: NextRequest): Promise<{
   success: boolean
-  user?: any
+  user?: AuthenticatedUser
   error?: string
 }> {
   try {
@@ -32,7 +39,7 @@ export async function authenticateRequest(request: NextRequest): Promise<{
     const payload: JWTPayload = JWTService.verifyToken(token)
 
     // Fetch the user from database or temp storage to ensure they still exist
-    let user
+    let user: AuthenticatedUser | null = null
     try {
       user = await prisma.user.findUnique({
         where: { id: payload.userId },
@@ -43,7 +50,7 @@ export async function authenticateRequest(request: NextRequest): Promise<{
           onboardingCompleted: true
         }
       })
-    } catch (dbError) {
+    } catch (_) {
       console.log('Database not available, using temp storage for auth')
       const tempUser = await tempStorage.findUserById(payload.userId)
       if (tempUser) {
