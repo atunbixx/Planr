@@ -19,7 +19,7 @@ export class GuestRepository extends BaseRepository {
     try {
       const { limit = 50, offset = 0, side, plusOneAllowed, hasEmail, hasPhone } = filters || {}
 
-      const where: any = { coupleId }
+      const where: any = { userId: coupleId } // Using userId field from current schema
       
       if (side) where.side = side
       if (plusOneAllowed !== undefined) where.plusOneAllowed = plusOneAllowed
@@ -50,23 +50,14 @@ export class GuestRepository extends BaseRepository {
         // Transform temp storage format to match Prisma Guest model
         const transformedGuests = guests.map(guest => ({
           id: guest.id,
-          coupleId: guest.userId, // Using userId as coupleId in temp storage
-          firstName: guest.name.split(' ')[0] || guest.name,
-          lastName: guest.name.split(' ').slice(1).join(' ') || '',
-          email: null,
-          phone: null,
-          address: null,
-          relationship: null,
+          userId: guest.userId, // Keep existing field name for compatibility  
+          name: guest.name,
+          rsvpStatus: guest.rsvpStatus,
+          mealPreference: guest.mealPreference,
           side: guest.side || null,
-          plusOneAllowed: false,
-          plusOneName: null,
-          dietaryRestrictions: guest.mealPreference || null,
-          notes: null,
+          invitationSent: guest.invitationSent,
           createdAt: new Date(guest.createdAt),
-          updatedAt: new Date(guest.updatedAt),
-          attendingCount: 1,
-          invitationSentAt: guest.invitationSent ? new Date() : null,
-          rsvpDeadline: null
+          updatedAt: new Date(guest.updatedAt)
         })) as Guest[]
 
         return createSuccessResult(transformedGuests)
@@ -133,20 +124,12 @@ export class GuestRepository extends BaseRepository {
       const guest = await this.withTransaction(async (tx) => {
         return await tx.guest.create({
           data: {
-            coupleId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone,
-            address: data.address,
-            relationship: data.relationship,
+            userId: coupleId, // Using userId field from current schema
+            name: `${data.firstName} ${data.lastName}`, // Combine names for current schema
+            rsvpStatus: 'pending', // Default for current schema
+            mealPreference: data.dietaryRestrictions || undefined, // Map to current schema field
             side: data.side,
-            plusOneAllowed: data.plusOneAllowed,
-            plusOneName: data.plusOneName,
-            dietaryRestrictions: data.dietaryRestrictions,
-            notes: data.notes,
-            attendingCount: data.attendingCount,
-            rsvpDeadline: data.rsvpDeadline ? new Date(data.rsvpDeadline) : null
+            invitationSent: false // Default for current schema
           }
         })
       })
