@@ -68,6 +68,52 @@ model Vendor {
   @@map("vendors")
 }
 
+// Public directory vendors (global, not user-scoped)
+model DirectoryVendor {
+  id              String   @id @default(uuid()) @db.Uuid
+  ownerUserId     String?  @db.Uuid
+  name            String
+  category        String
+  city            String?
+  region          String?
+  priceBand       String? // e.g., $, $$, $$$
+  averageRating   Int?     @db.SmallInt
+  reviewCount     Int?     @default(0)
+  shortDescription String?
+  description     String?
+  photos          String[] @default([])
+  website         String?
+  email           String?
+  phone           String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  tags            String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category, region], map: "dirvendors_category_region_idx")
+  @@index([averageRating, reviewCount], map: "dirvendors_rating_reviews_idx")
+  @@index([ownerUserId], map: "dirvendors_owner_idx")
+  @@map("directory_vendors")
+}
+
+model DirectoryInquiry {
+  id          String   @id @default(uuid()) @db.Uuid
+  vendorId    String   @db.Uuid
+  name        String
+  email       String
+  phone       String?
+  message     String
+  eventDate   DateTime?
+  budget      Decimal? @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vendorId, createdAt], map: "dirinquiries_vendor_created_idx")
+  @@map("directory_inquiries")
+}
+
 model Guest {
   id             String     @id @default(uuid()) @db.Uuid
   userId         String     @db.Uuid

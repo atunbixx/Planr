@@ -10,6 +10,7 @@ const VENDORS_FILE = path.join(STORAGE_DIR, 'vendors.json')
 const BUDGETS_FILE = path.join(STORAGE_DIR, 'budgets.json')
 const TIMELINE_FILE = path.join(STORAGE_DIR, 'timeline.json')
 const SEATING_FILE = path.join(STORAGE_DIR, 'seating.json')
+const INQUIRIES_FILE = path.join(STORAGE_DIR, 'inquiries.json')
 const PREFERENCES_FILE = path.join(STORAGE_DIR, 'preferences.json')
 
 interface User {
@@ -238,6 +239,24 @@ class TempStorage {
   private writeSeating(items: any[]) {
     this.ensureStorageDir()
     fs.writeFileSync(SEATING_FILE, JSON.stringify(items, null, 2))
+  }
+
+  private readInquiries(): any[] {
+    this.ensureStorageDir()
+    try {
+      if (fs.existsSync(INQUIRIES_FILE)) {
+        const data = fs.readFileSync(INQUIRIES_FILE, 'utf8')
+        return JSON.parse(data)
+      }
+    } catch (error) {
+      console.error('Error reading inquiries file:', error)
+    }
+    return []
+  }
+
+  private writeInquiries(items: any[]) {
+    this.ensureStorageDir()
+    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(items, null, 2))
   }
 
   private readPreferences(): UserPreferences[] {
@@ -721,6 +740,21 @@ class TempStorage {
     }
     this.writeSeating(all)
     return tables
+  }
+
+  // Public directory inquiries (temp only)
+  async addDirectoryInquiry(data: { vendorId: string; name: string; email: string; phone?: string; message: string; eventDate?: string; budget?: number }) {
+    const all = this.readInquiries()
+    const item = {
+      id: `inq_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      source: 'public'
+    }
+    all.push(item)
+    this.writeInquiries(all)
+    return item
   }
 }
 
