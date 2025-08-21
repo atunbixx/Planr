@@ -3,12 +3,15 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import AuthClient from '@/lib/auth/client'
 import { Box, Typography, Grid, Card, CardContent, TextField, Button, List, ListItem, ListItemText, Divider } from '@mui/material'
 
 export default function VendorPortalPage() {
   const { user, isLoading } = useAuth()
+  const { themeMode } = useCustomTheme()
   const router = useRouter()
   const [list, setList] = useState<any[]>([])
   const [form, setForm] = useState({ name: '', category: '', city: '', region: '', priceBand: '', shortDescription: '' })
@@ -53,12 +56,14 @@ export default function VendorPortalPage() {
 
   if (isLoading) return null
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" sx={{ mb: 2 }}>Vendor Portal</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>Your Directory Vendors</Typography>
@@ -76,7 +81,7 @@ export default function VendorPortalPage() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>Create New Vendor</Typography>
@@ -94,7 +99,7 @@ export default function VendorPortalPage() {
           </Grid>
 
           {editing && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" sx={{ mb: 2 }}>Edit Vendor</Typography>
@@ -117,6 +122,6 @@ export default function VendorPortalPage() {
           )}
         </Grid>
       </Box>
-    </DashboardLayout>
+    </Layout>
   )
 }

@@ -45,6 +45,8 @@ import {
   Flag as PriorityIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ChecklistItem {
@@ -77,6 +79,7 @@ const defaultCategories = [
 export default function ChecklistPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [categories, setCategories] = useState<ChecklistCategory[]>([]);
   const [selectedTab, setSelectedTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
@@ -325,20 +328,22 @@ export default function ChecklistPage() {
   };
 
   if (isLoading || !user) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     );
   }
 
   const overdueTasks = getOverdueTasks();
   const timelineItems = getTimelineItems();
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
 
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ px: 0, py: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
@@ -362,7 +367,7 @@ export default function ChecklistPage() {
         {/* Progress Overview */}
         <Box sx={{ mb: 4, px: 3 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={8} component="div">
+            <Grid size={{ xs: 12, md: 8 }} component="div">
               <Card>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
@@ -421,7 +426,7 @@ export default function ChecklistPage() {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={4} component="div">
+            <Grid size={{ xs: 12, md: 4 }} component="div">
               <Card>
                 <CardContent sx={{ p: 3 }}>
                   <Typography
@@ -589,7 +594,7 @@ export default function ChecklistPage() {
             // Category View
             <Grid container spacing={3}>
               {categories.map((category) => (
-                <Grid item xs={12} md={6} key={category.id} component="div">
+                <Grid size={{ xs: 12, md: 6 }} key={category.id} component="div">
                   <Card>
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -676,14 +681,14 @@ export default function ChecklistPage() {
                 rows={2}
               />
               <Grid container spacing={2}>
-                <Grid item xs={6} component="div">
+                <Grid size={{ xs: 6 }} component="div">
                   <TextField
                     select
                     label="Category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     fullWidth
-                    SelectProps={{ native: true }}
+                    slotProps={{ select: { native: true } }}
                   >
                     {defaultCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -692,14 +697,14 @@ export default function ChecklistPage() {
                     ))}
                   </TextField>
                 </Grid>
-                <Grid item xs={6} component="div">
+                <Grid size={{ xs: 6 }} component="div">
                   <TextField
                     select
                     label="Priority"
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                     fullWidth
-                    SelectProps={{ native: true }}
+                    slotProps={{ select: { native: true } }}
                   >
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
@@ -708,7 +713,7 @@ export default function ChecklistPage() {
                 </Grid>
               </Grid>
               <Grid container spacing={2}>
-                <Grid item xs={6} component="div">
+                <Grid size={{ xs: 6 }} component="div">
                   <TextField
                     label="Due Date"
                     type="date"
@@ -718,14 +723,14 @@ export default function ChecklistPage() {
                     InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
-                <Grid item xs={6} component="div">
+                <Grid size={{ xs: 6 }} component="div">
                   <TextField
                     select
                     label="Timeline"
                     value={formData.monthsBeforeWedding}
                     onChange={(e) => setFormData({ ...formData, monthsBeforeWedding: e.target.value })}
                     fullWidth
-                    SelectProps={{ native: true }}
+                    slotProps={{ select: { native: true } }}
                   >
                     <option value="12">12+ Months Before</option>
                     <option value="9">9 Months Before</option>
@@ -745,6 +750,6 @@ export default function ChecklistPage() {
           </DialogActions>
         </Dialog>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

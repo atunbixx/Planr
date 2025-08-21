@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 export async function GET(request: Request) {
   try {
+    const ip = (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '').split(',')[0].trim()
+    const rl = checkRateLimit(`pub:vendors:${ip || 'unknown'}`, { windowMs: 60000, max: 300 })
+    if (!rl.ok) {
+      const res = NextResponse.json({ success: false, error: { message: 'Too many requests' } }, { status: 429 })
+      res.headers.set('X-RateLimit-Limit', String(rl.limit))
+      res.headers.set('X-RateLimit-Remaining', String(rl.remaining))
+      res.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt / 1000)))
+      res.headers.set('Retry-After', String(Math.ceil(rl.retryAfter / 1000)))
+      return res
+    }
     const url = new URL(request.url)
     const sp = url.searchParams
     const q = sp.get('q') || undefined
@@ -40,7 +51,11 @@ export async function GET(request: Request) {
     if (sort === 'rating_desc') orderBy = { averageRating: 'desc' }
     else if (sort === 'reviews_desc') orderBy = { reviewCount: 'desc' }
     const vendors = await prisma.directoryVendor.findMany({ where, skip: (page - 1) * pageSize, take: pageSize, orderBy }).catch(() => [])
-    return NextResponse.json({ success: true, data: { vendors, total, page, pageSize } })
+    const res = NextResponse.json({ success: true, data: { vendors, total, page, pageSize } })
+    res.headers.set('X-RateLimit-Limit', String(rl.limit))
+    res.headers.set('X-RateLimit-Remaining', String(rl.remaining))
+    res.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt / 1000)))
+    return res
   } catch (e) {
     return NextResponse.json({ success: true, data: { vendors: [], total: 0, page: 1, pageSize: 20 } })
   }

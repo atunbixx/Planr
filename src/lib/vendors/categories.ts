@@ -30,14 +30,22 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
   { id: 'other', name: 'Other', color: '#999999' },
 ];
 
-const nameToIdMap: Record<string, VendorCategoryId> = VENDOR_CATEGORIES.reduce(
-  (acc, c) => {
-    acc[c.id] = c.id;
-    acc[c.name.toLowerCase()] = c.id;
-    return acc;
-  },
-  {} as Record<string, VendorCategoryId>
-);
+// Common synonyms/aliases mapped to canonical ids
+const SYNONYMS: Record<string, VendorCategoryId> = {
+  photographer: 'photography',
+  videographer: 'photography',
+  caterer: 'catering',
+  florist: 'flowers',
+  dj: 'music',
+  entertainment: 'music',
+  transport: 'transportation',
+};
+
+const nameToIdMap: Record<string, VendorCategoryId> = VENDOR_CATEGORIES.reduce((acc, c) => {
+  acc[c.id] = c.id;
+  acc[c.name.toLowerCase()] = c.id;
+  return acc;
+}, { ...SYNONYMS } as Record<string, VendorCategoryId>);
 
 // Normalize free-form category text to a known id when possible.
 // If unknown, return a lowercased trimmed value to avoid breaking existing data.
@@ -51,4 +59,3 @@ export function normalizeCategory(input: string): string {
 export function isKnownCategoryId(id: string): id is VendorCategoryId {
   return Boolean((VENDOR_CATEGORIES as VendorCategory[]).find(c => c.id === id));
 }
-

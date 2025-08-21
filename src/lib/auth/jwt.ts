@@ -5,6 +5,7 @@ export interface JWTPayload {
   userId: string
   email: string
   role: string
+  impBy?: string // admin userId if impersonation
 }
 
 export interface AuthUser {
@@ -30,6 +31,12 @@ export class JWTService {
     }
 
     return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn })
+  }
+
+  static generateImpersonationToken(user: User, adminUserId: string, ttl: string = '1h'): string {
+    if (!this.secret) throw new Error('JWT_SECRET environment variable is required')
+    const payload: JWTPayload = { userId: user.id, email: user.email, role: user.role, impBy: adminUserId }
+    return jwt.sign(payload, this.secret, { expiresIn: ttl })
   }
 
   static verifyToken(token: string): JWTPayload {

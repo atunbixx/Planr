@@ -31,6 +31,8 @@ import {
   Lock as PrivateIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface StorySection {
@@ -54,6 +56,7 @@ interface WeddingDetails {
 export default function StoryPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [weddingDetails, setWeddingDetails] = useState<WeddingDetails>({
     coupleName1: 'Sarah',
     coupleName2: 'Michael',
@@ -153,17 +156,20 @@ export default function StoryPage() {
   };
 
   if (isLoading || !user) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     );
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ px: 0, py: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
@@ -254,7 +260,7 @@ export default function StoryPage() {
               {isEditingMain && (
                 <Box sx={{ mt: 3 }}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         label="Partner 1 Name"
                         value={weddingDetails.coupleName1}
@@ -262,7 +268,7 @@ export default function StoryPage() {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         label="Partner 2 Name"
                         value={weddingDetails.coupleName2}
@@ -270,7 +276,7 @@ export default function StoryPage() {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         label="Wedding Date"
                         type="date"
@@ -280,7 +286,7 @@ export default function StoryPage() {
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         label="Venue"
                         value={weddingDetails.venue}
@@ -328,7 +334,7 @@ export default function StoryPage() {
 
           <Grid container spacing={3}>
             {storySections.map((section) => (
-              <Grid item xs={12} md={6} key={section.id}>
+              <Grid size={{ xs: 12, md: 6 }} key={section.id}>
                 <Card
                   sx={{
                     height: '100%',
@@ -458,7 +464,7 @@ export default function StoryPage() {
           </Typography>
 
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 sx={{
                   transition: 'all 0.2s',
@@ -522,7 +528,7 @@ export default function StoryPage() {
                       Your wedding website is now public! Share this link with your guests:
                     </Typography>
                     <Paper sx={{ p: 2, bgcolor: '#F5F5F5', mb: 3 }}>
-                      <Typography variant="code" sx={{ fontFamily: 'monospace' }}>
+                      <Typography component="code" sx={{ fontFamily: 'monospace' }}>
                         https://weddingplanner.com/story/sarah-and-michael
                       </Typography>
                     </Paper>
@@ -555,6 +561,6 @@ export default function StoryPage() {
           </Card>
         </Box>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

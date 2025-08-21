@@ -17,6 +17,7 @@ export default async function Head({ params }: Props) {
     }
   } catch {}
   const url = `${base}/vendors/${encodeURIComponent(id)}`
+  if (!image) image = `${base}/og/vendors.svg`
   return (
     <>
       <title>{title}</title>

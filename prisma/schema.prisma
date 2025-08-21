@@ -13,6 +13,7 @@ model User {
   email               String          @unique
   password            String
   role                UserRole        @default(couple)
+  isActive            Boolean         @default(true)
   onboardingCompleted Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -83,19 +84,64 @@ model DirectoryVendor {
   description     String?
   photos          String[] @default([])
   website         String?
+  // Normalized anti-abuse fields
+  websiteHost     String?
   email           String?
+  emailLower      String?
   phone           String?
+  phoneDigits     String?
   address         String?
   latitude        Float?
   longitude       Float?
   tags            String[] @default([])
+  // Anti-abuse flags
+  fraudFlags      String[] @default([])
+  duplicateOfId   String?  @db.Uuid
+  isSuspended     Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([category, region], map: "dirvendors_category_region_idx")
   @@index([averageRating, reviewCount], map: "dirvendors_rating_reviews_idx")
   @@index([ownerUserId], map: "dirvendors_owner_idx")
+  @@index([websiteHost], map: "dirvendors_websitehost_idx")
+  @@index([emailLower], map: "dirvendors_emaillower_idx")
+  @@index([phoneDigits], map: "dirvendors_phonedigits_idx")
   @@map("directory_vendors")
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  adminUserId String   @db.Uuid
+  action      String
+  targetType  String
+  targetId    String
+  details     Json?
+  ip          String?
+  ua          String?
+  createdAt   DateTime @default(now())
+
+  @@index([adminUserId, createdAt], map: "admin_audit_admin_created_idx")
+  @@index([targetType, targetId, createdAt], map: "admin_audit_target_idx")
+  @@map("admin_audit_logs")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  ipHash       String?
+  uaHash       String?
+  region       String?
+  country      String?
+  city         String?
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+  revokedAt    DateTime?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lastActiveAt], map: "sessions_user_lastactive_idx")
+  @@index([revokedAt], map: "sessions_revoked_idx")
+  @@map("sessions")
 }
 
 model DirectoryInquiry {

@@ -36,6 +36,8 @@ import {
   ContentCopy as CopyIcon,
 } from '@mui/icons-material'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext'
 import Snackbar from '@mui/material/Snackbar'
 
 interface Guest {
@@ -67,6 +69,7 @@ const sides = [
 export default function GuestsPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const { themeMode } = useCustomTheme()
   const [guests, setGuests] = useState<Guest[]>([])
   const [filtered, setFiltered] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,7 +86,7 @@ export default function GuestsPage() {
   const [tagQuery, setTagQuery] = useState('')
   const [form, setForm] = useState({
     name: '',
-    rsvpStatus: 'pending' as const,
+    rsvpStatus: 'pending' as 'pending' | 'accepted' | 'declined',
     mealPreference: '',
     side: '' as 'bride' | 'groom' | '',
     invitationSent: false,
@@ -387,18 +390,21 @@ export default function GuestsPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || loading) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
     return (
-      <DashboardLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <LoadingLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     )
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <IconButton onClick={() => router.push('/dashboard')} sx={{ mr: 2 }}>
@@ -546,7 +552,7 @@ export default function GuestsPage() {
             onChange={(e) => setStatus(e.target.value as any)}
             sx={{ minWidth: 120 }}
             size="small"
-            SelectProps={{ native: true }}
+            slotProps={{ select: { native: true } }}
           >
             <option value="all">All</option>
             <option value="pending">Pending</option>
@@ -560,7 +566,7 @@ export default function GuestsPage() {
             onChange={(e) => setSide(e.target.value as any)}
             sx={{ minWidth: 120 }}
             size="small"
-            SelectProps={{ native: true }}
+            slotProps={{ select: { native: true } }}
           >
             <option value="all">All Sides</option>
             <option value="bride">Bride</option>
@@ -573,7 +579,7 @@ export default function GuestsPage() {
             onChange={(e) => setRelationship(e.target.value as any)}
             sx={{ minWidth: 180 }}
             size="small"
-            SelectProps={{ native: true }}
+            slotProps={{ select: { native: true } }}
           >
             <option value="">All relationships</option>
             <option value="sibling">Sibling</option>
@@ -597,7 +603,7 @@ export default function GuestsPage() {
                   await GuestsClient.setRsvpStatusBulk(selectedIds, newStatus)
                   setGuests(prev => prev.map(g => selectedIds.includes(g.id) ? { ...g, rsvpStatus: newStatus } : g))
                 }}
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 <option value="">Choose…</option>
                 <option value="pending">Pending</option>
@@ -683,7 +689,7 @@ export default function GuestsPage() {
                             setGuests(prev => prev.map(g => g.id === guest.id ? { ...g, rsvpStatus: newStatus } : g))
                           } catch {}
                         }}
-                        SelectProps={{ native: true }}
+                        slotProps={{ select: { native: true } }}
                       >
                         <option value="pending">Pending</option>
                         <option value="accepted">Accepted</option>
@@ -781,7 +787,7 @@ export default function GuestsPage() {
                           size="small"
                           value={mapping[field] || ''}
                           onChange={(e) => setMapping(prev => ({ ...prev, [field]: e.target.value }))}
-                          SelectProps={{ native: true }}
+                          slotProps={{ select: { native: true } }}
                         >
                           <option value="">(none)</option>
                           {csvHeaders.map(h => (
@@ -859,7 +865,7 @@ export default function GuestsPage() {
                 value={form.rsvpStatus}
                 onChange={handleChange}
                 sx={{ mb: 2 }}
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 <option value="pending">Pending</option>
                 <option value="accepted">Accepted</option>
@@ -873,7 +879,7 @@ export default function GuestsPage() {
                 value={form.side}
                 onChange={handleChange}
                 sx={{ mb: 2 }}
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 <option value="">Select side</option>
                 <option value="bride">Bride</option>
@@ -895,7 +901,7 @@ export default function GuestsPage() {
                 value={(form as any).relationshipCategory || ''}
                 onChange={handleChange}
                 sx={{ mb: 2 }}
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 <option value="">Select relationship</option>
                 <option value="sibling">Sibling</option>
@@ -956,7 +962,7 @@ export default function GuestsPage() {
           </DialogActions>
         </Dialog>
       </Box>
-    </DashboardLayout>
+    </Layout>
   )
 }
 // Snackbar renderer appended after component (Note: must be inside return; adjust placement)

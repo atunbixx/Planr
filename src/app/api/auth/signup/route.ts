@@ -4,9 +4,20 @@ import { tempStorage } from '@/lib/db/temp-storage'
 import { PasswordService } from '@/lib/auth/password'
 import { JWTService, createAuthResponse, createErrorResponse } from '@/lib/auth/jwt'
 import { signupSchema } from '@/lib/validation/auth'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '').split(',')[0].trim()
+    const rl = checkRateLimit(`auth:signup:${ip || 'unknown'}`, { windowMs: 10 * 60 * 1000, max: 5 })
+    if (!rl.ok) {
+      const res = NextResponse.json(createErrorResponse('Too many requests', 429), { status: 429 })
+      res.headers.set('X-RateLimit-Limit', String(rl.limit))
+      res.headers.set('X-RateLimit-Remaining', String(rl.remaining))
+      res.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt / 1000)))
+      res.headers.set('Retry-After', String(Math.ceil(rl.retryAfter / 1000)))
+      return res
+    }
     const body = await request.json()
     
     // Validate input
@@ -88,10 +99,11 @@ export async function POST(request: NextRequest) {
     const token = JWTService.generateToken(user)
 
     // Return success response
-    return NextResponse.json(
-      createAuthResponse(user, token),
-      { status: 201 }
-    )
+    const res = NextResponse.json(createAuthResponse(user, token), { status: 201 })
+    res.headers.set('X-RateLimit-Limit', String(rl.limit))
+    res.headers.set('X-RateLimit-Remaining', String(rl.remaining))
+    res.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt / 1000)))
+    return res
 
   } catch (error) {
     console.error('Signup error:', error)

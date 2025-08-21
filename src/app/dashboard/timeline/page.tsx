@@ -38,6 +38,8 @@ import {
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import AuthClient from '@/lib/auth/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -62,6 +64,7 @@ const eventCategories = [
 export default function TimelinePage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
@@ -191,17 +194,20 @@ export default function TimelinePage() {
   const sortedEvents = events.sort((a, b) => a.time.localeCompare(b.time));
 
   if (isLoading || !user) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     );
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ px: 0, py: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
@@ -225,7 +231,7 @@ export default function TimelinePage() {
         {/* Timeline Overview */}
         <Box sx={{ mb: 4, px: 3 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Card>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
@@ -337,7 +343,7 @@ export default function TimelinePage() {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card>
                 <CardContent sx={{ p: 3 }}>
                   <Typography
@@ -409,7 +415,7 @@ export default function TimelinePage() {
                 helperText={titleError ? 'Title is required' : ' '}
               />
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     required
                     label="Time"
@@ -423,7 +429,7 @@ export default function TimelinePage() {
                     helperText={timeError ? 'Time is required' : ' '}
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     label="Duration (minutes)"
                     type="number"
@@ -439,7 +445,7 @@ export default function TimelinePage() {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 fullWidth
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 {eventCategories.map((cat) => (
                   <option key={cat.value} value={cat.value}>
@@ -471,6 +477,6 @@ export default function TimelinePage() {
           </DialogActions>
         </Dialog>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

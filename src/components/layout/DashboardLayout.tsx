@@ -40,6 +40,7 @@ import {
   Logout as LogoutIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
+import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 
 const drawerWidth = 280;
 
@@ -57,6 +58,7 @@ const menuItems: MenuItem[] = [
   { text: 'Checklist', icon: <ChecklistIcon />, path: '/dashboard/checklist' },
   { text: 'Table Seating', icon: <TableRestaurantIcon />, path: '/dashboard/seating' },
   { text: 'Vendors', icon: <VendorsIcon />, path: '/dashboard/vendors' },
+  { text: 'Find Vendors', icon: <VendorsIcon />, path: '/vendors' },
   { text: 'Photos', icon: <PhotosIcon />, path: '/dashboard/photos' },
   { text: 'Messages', icon: <MessagesIcon />, path: '/dashboard/messages', badge: 3 },
   { text: 'Timeline', icon: <TimelineIcon />, path: '/dashboard/timeline' },
@@ -201,12 +203,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               || (pathname?.startsWith('/dashboard/settings') ? 'Settings' : 'Dashboard')}
           </Typography>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton color="inherit" size="large">
               <Badge badgeContent={4} color="error">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
+            
+            <ThemeSwitcher />
             
             <IconButton
               size="large"

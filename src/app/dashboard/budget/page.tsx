@@ -27,6 +27,7 @@ import {
   MenuItem,
   Avatar,
   Fab,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -39,6 +40,8 @@ import {
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { BudgetClient, type BudgetSummary } from '@/lib/api/budget.client';
 
@@ -69,6 +72,7 @@ const categories = [
 export default function BudgetPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
@@ -220,11 +224,20 @@ export default function BudgetPage() {
   };
 
   if (isLoading || !user) {
-    return null;
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
+    return (
+      <LoadingLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      </LoadingLayout>
+    );
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ p: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -244,7 +257,7 @@ export default function BudgetPage() {
 
         {/* Stats */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -259,7 +272,7 @@ export default function BudgetPage() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -276,7 +289,7 @@ export default function BudgetPage() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -384,13 +397,13 @@ export default function BudgetPage() {
                 ))}
               </TextField>
               <Grid container spacing={2}>
-                <Grid xs={4}>
+                <Grid size={{ xs: 4 }}>
                   <TextField label="Amount" type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} fullWidth />
                 </Grid>
-                <Grid xs={4}>
+                <Grid size={{ xs: 4 }}>
                   <TextField label="Allocated" type="number" value={formData.allocated} onChange={(e) => setFormData({ ...formData, allocated: e.target.value })} fullWidth />
                 </Grid>
-                <Grid xs={4}>
+                <Grid size={{ xs: 4 }}>
                   <TextField label="Actual" type="number" value={formData.actual} onChange={(e) => setFormData({ ...formData, actual: e.target.value })} fullWidth />
                 </Grid>
               </Grid>
@@ -425,6 +438,6 @@ export default function BudgetPage() {
           <AddIcon />
         </Fab>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

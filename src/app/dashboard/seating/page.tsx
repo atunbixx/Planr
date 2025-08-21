@@ -12,6 +12,8 @@ import {
 } from '@mui/material'
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext'
 
 type Guest = { id: string; name: string; side?: 'bride'|'groom'; rsvpStatus: 'pending'|'accepted'|'declined'; mealPreference?: string; invitationSent: boolean; relationshipCategory?: string }
 type Table = { id: string; name: string; capacity: number; guestIds: string[] }
@@ -19,6 +21,7 @@ type Table = { id: string; name: string; capacity: number; guestIds: string[] }
 export default function SeatingPlannerPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const { themeMode } = useCustomTheme()
   const [guests, setGuests] = useState<Guest[]>([])
   const [tables, setTables] = useState<Table[]>([])
   const [loading, setLoading] = useState(true)
@@ -108,23 +111,26 @@ export default function SeatingPlannerPage() {
   }
 
   if (isLoading || loading) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ p: 3 }}>
           <Typography>Loading...</Typography>
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     )
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Typography variant="h4" sx={{ flexGrow: 1 }}>Seating Planner</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <TextField
-              select size="small" label="Relationship filter" SelectProps={{ native: true }}
+              select size="small" label="Relationship filter" slotProps={{ select: { native: true } }}
               value={relFilter} onChange={e => setRelFilter(e.target.value)} sx={{ minWidth: 180 }}
             >
               <option value="">All</option>
@@ -146,11 +152,11 @@ export default function SeatingPlannerPage() {
         </Box>
 
         <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>Unassigned Guests ({unassignedGuests.length})</Typography>
-                <TextField select size="small" label="Assign to table" SelectProps={{ native: true }} value={selectedTableId} onChange={e => setSelectedTableId(e.target.value)} sx={{ mb: 1, minWidth: 220 }}>
+                <TextField select size="small" label="Assign to table" slotProps={{ select: { native: true } }} value={selectedTableId} onChange={e => setSelectedTableId(e.target.value)} sx={{ mb: 1, minWidth: 220 }}>
                   <option value="">Select table</option>
                   {tables.map(t => (<option key={t.id} value={t.id}>{t.name} ({t.guestIds.length}/{t.capacity})</option>))}
                 </TextField>
@@ -166,7 +172,7 @@ export default function SeatingPlannerPage() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -176,7 +182,7 @@ export default function SeatingPlannerPage() {
                 </Box>
                 <Grid container spacing={2}>
                   {tables.map(t => (
-                    <Grid item xs={12} md={6} key={t.id}>
+                    <Grid size={{ xs: 12, md: 6 }} key={t.id}>
                       <Card variant="outlined">
                         <CardContent>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -210,6 +216,6 @@ export default function SeatingPlannerPage() {
           </Grid>
         </Grid>
       </Box>
-    </DashboardLayout>
+    </Layout>
   )
 }

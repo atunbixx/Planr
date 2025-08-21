@@ -39,6 +39,8 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface PhotoAlbum {
@@ -65,6 +67,7 @@ interface Photo {
 export default function PhotosPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [albums, setAlbums] = useState<PhotoAlbum[]>([]);
   const [selectedAlbum, setSelectedAlbum] = useState<PhotoAlbum | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -165,17 +168,20 @@ export default function PhotosPage() {
   };
 
   if (isLoading || !user) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     );
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ px: 0, py: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
@@ -361,7 +367,7 @@ export default function PhotosPage() {
             ) : (
               <Grid container spacing={3}>
                 {albums.map((album) => (
-                  <Grid item xs={12} sm={6} md={4} key={album.id}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={album.id}>
                     <Card
                       sx={{
                         transition: 'all 0.2s',
@@ -410,15 +416,23 @@ export default function PhotosPage() {
                             <Typography variant="caption" color="text.secondary">
                               {album.photoCount} photos
                             </Typography>
-                            <IconButton
-                              size="small"
+                            <Box
+                              component="div"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDeleteAlbum(album.id);
                               }}
+                              sx={{
+                                cursor: 'pointer',
+                                p: 0.5,
+                                borderRadius: '50%',
+                                '&:hover': {
+                                  bgcolor: 'rgba(0, 0, 0, 0.04)'
+                                }
+                              }}
                             >
                               <DeleteIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
+                            </Box>
                           </Box>
                         </CardContent>
                       </CardActionArea>
@@ -485,6 +499,6 @@ export default function PhotosPage() {
           </DialogActions>
         </Dialog>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

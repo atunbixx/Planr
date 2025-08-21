@@ -5,11 +5,15 @@ interface User {
   email: string
   role: string
   onboardingCompleted: boolean
+  impersonating?: boolean
+  impersonatedBy?: string
 }
 
 class AuthClient {
   private static readonly TOKEN_KEY = 'wedding_planner_token'
   private static readonly USER_KEY = 'wedding_planner_user'
+  private static readonly ADMIN_BACKUP_TOKEN_KEY = 'wedding_planner_admin_token_backup'
+  private static readonly ADMIN_BACKUP_USER_KEY = 'wedding_planner_admin_user_backup'
 
   static getToken(): string | null {
     if (typeof window === 'undefined') return null
@@ -19,6 +23,27 @@ class AuthClient {
   static setToken(token: string): void {
     if (typeof window === 'undefined') return
     localStorage.setItem(this.TOKEN_KEY, token)
+  }
+
+  static backupCurrentSession(): void {
+    if (typeof window === 'undefined') return
+    const token = this.getToken()
+    const user = this.getUser()
+    if (token) localStorage.setItem(this.ADMIN_BACKUP_TOKEN_KEY, token)
+    if (user) localStorage.setItem(this.ADMIN_BACKUP_USER_KEY, JSON.stringify(user))
+  }
+
+  static getBackupSession(): { token: string | null; user: User | null } {
+    if (typeof window === 'undefined') return { token: null, user: null }
+    const token = localStorage.getItem(this.ADMIN_BACKUP_TOKEN_KEY)
+    const userStr = localStorage.getItem(this.ADMIN_BACKUP_USER_KEY)
+    return { token, user: userStr ? JSON.parse(userStr) as User : null }
+  }
+
+  static clearBackupSession(): void {
+    if (typeof window === 'undefined') return
+    localStorage.removeItem(this.ADMIN_BACKUP_TOKEN_KEY)
+    localStorage.removeItem(this.ADMIN_BACKUP_USER_KEY)
   }
 
   static removeToken(): void {
@@ -132,6 +157,19 @@ class AuthClient {
   static signout(): void {
     this.removeToken()
     window.location.href = '/signin'
+  }
+
+  static endImpersonation(): void {
+    const { token, user } = this.getBackupSession()
+    if (token && user) {
+      this.setToken(token)
+      this.setUser(user)
+      this.clearBackupSession()
+      window.location.reload()
+    } else {
+      // Fallback: sign out
+      this.signout()
+    }
   }
 
   static isAuthenticated(): boolean {

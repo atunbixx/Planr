@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { JWTService, JWTPayload } from './jwt'
 import { prisma } from '@/lib/db/prisma'
 import { tempStorage } from '@/lib/db/temp-storage'
+import { hashString } from '@/lib/utils/hash'
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
@@ -9,6 +10,8 @@ export interface AuthenticatedRequest extends NextRequest {
     email: string
     role: string
     onboardingCompleted: boolean
+    impersonating?: boolean
+    impersonatedBy?: string
   }
 }
 
@@ -17,6 +20,8 @@ export type AuthenticatedUser = {
   email: string
   role: string
   onboardingCompleted: boolean
+  impersonating?: boolean
+  impersonatedBy?: string
 }
 
 export async function authenticateRequest(request: NextRequest): Promise<{
@@ -39,7 +44,7 @@ export async function authenticateRequest(request: NextRequest): Promise<{
     const payload: JWTPayload = JWTService.verifyToken(token)
 
     // Fetch the user from database or temp storage to ensure they still exist
-    let user: AuthenticatedUser | null = null
+    let user: (AuthenticatedUser & { isActive?: boolean }) | null = null
     try {
       user = await prisma.user.findUnique({
         where: { id: payload.userId },
@@ -47,7 +52,8 @@ export async function authenticateRequest(request: NextRequest): Promise<{
           id: true,
           email: true,
           role: true,
-          onboardingCompleted: true
+          onboardingCompleted: true,
+          isActive: true,
         }
       })
     } catch (_) {
@@ -70,9 +76,45 @@ export async function authenticateRequest(request: NextRequest): Promise<{
       }
     }
 
+    if (user.isActive === false) {
+      return {
+        success: false,
+        error: 'Account deactivated'
+      }
+    }
+
+    // Best-effort: record/update a session for analytics/admin
+    try {
+      const ipHeader = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || ''
+      const ip = ipHeader.split(',')[0].trim()
+      const ua = request.headers.get('user-agent') || ''
+      const region = request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || undefined
+      const country = region || undefined
+      const city = request.headers.get('x-vercel-ip-city') || undefined
+      const ipHash = ip ? hashString(ip) : null
+      const uaHash = ua ? hashString(ua) : null
+      if (prisma && user.id) {
+        const existing = await prisma.session.findFirst({ where: { userId: user.id, ipHash: ipHash || undefined, uaHash: uaHash || undefined, revokedAt: null } })
+        if (existing) {
+          await prisma.session.update({ where: { id: existing.id }, data: { lastActiveAt: new Date() } })
+        } else {
+          await prisma.session.create({ data: { userId: user.id, ipHash, uaHash, region: region || null, country: country || null, city: city || null } })
+        }
+      }
+    } catch (_) {
+      // ignore session persistence errors
+    }
+
     return {
       success: true,
-      user
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        onboardingCompleted: user.onboardingCompleted,
+        impersonating: Boolean(payload.impBy),
+        impersonatedBy: payload.impBy,
+      }
     }
   } catch (error) {
     return {

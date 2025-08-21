@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -22,6 +22,11 @@ import {
   CircularProgress,
   Link,
   Pagination,
+  MenuItem,
+  InputAdornment,
+  Rating,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import {
@@ -44,7 +49,10 @@ import {
   Hotel as HotelIcon,
   Checkroom as AttireIcon,
 } from '@mui/icons-material';
+import { VENDOR_CATEGORIES } from '@/lib/vendors/categories'
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import AuthClient from '@/lib/auth/client';
 import { VendorsClient } from '@/lib/api/vendors.client';
@@ -62,16 +70,47 @@ interface Vendor {
   updatedAt: string;
 }
 
+type DirVendor = {
+  id: string
+  name: string
+  category: string
+  city?: string
+  region?: string
+  priceBand?: string
+  averageRating?: number
+  reviewCount?: number
+  shortDescription?: string
+  photos?: string[]
+  website?: string
+  phone?: string
+}
+
+function iconForCategory(id: string) {
+  switch (id) {
+    case 'photography':
+      return <PhotoIcon />
+    case 'catering':
+      return <RestaurantIcon />
+    case 'venue':
+      return <HotelIcon />
+    case 'flowers':
+      return <FlowerIcon />
+    case 'music':
+      return <MusicIcon />
+    case 'cake':
+      return <CakeIcon />
+    case 'attire':
+      return <AttireIcon />
+    case 'transportation':
+      return <CarIcon />
+    default:
+      return <VendorIcon />
+  }
+}
+
 const vendorCategories = [
   { id: 'all', name: 'All Vendors', icon: <VendorIcon />, color: '#000000' },
-  { id: 'photography', name: 'Photography', icon: <PhotoIcon />, color: '#333333' },
-  { id: 'catering', name: 'Catering', icon: <RestaurantIcon />, color: '#666666' },
-  { id: 'venue', name: 'Venue', icon: <HotelIcon />, color: '#999999' },
-  { id: 'flowers', name: 'Flowers', icon: <FlowerIcon />, color: '#4CAF50' },
-  { id: 'music', name: 'Music/DJ', icon: <MusicIcon />, color: '#2196F3' },
-  { id: 'cake', name: 'Cake', icon: <CakeIcon />, color: '#FF9800' },
-  { id: 'attire', name: 'Attire', icon: <AttireIcon />, color: '#9C27B0' },
-  { id: 'transportation', name: 'Transportation', icon: <CarIcon />, color: '#795548' },
+  ...VENDOR_CATEGORIES.map(c => ({ id: c.id, name: c.name, color: c.color, icon: iconForCategory(c.id) })),
 ];
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
@@ -89,6 +128,7 @@ const vendorStatuses = [
 export default function VendorsPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -116,6 +156,35 @@ export default function VendorsPage() {
     isFavorite: false,
   });
   const [formErrors, setFormErrors] = useState<{ quoteAmount?: string; rating?: string }>({});
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Marketplace state
+  const [marketplaceVendors, setMarketplaceVendors] = useState<DirVendor[]>([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [marketplaceTotal, setMarketplaceTotal] = useState(0);
+  const [marketplacePage, setMarketplacePage] = useState(1);
+  const [marketplacePageSize] = useState(12);
+  const [marketplaceQuery, setMarketplaceQuery] = useState('');
+  const [marketplaceCategory, setMarketplaceCategory] = useState('');
+  const [marketplaceRegion, setMarketplaceRegion] = useState('');
+  const [marketplaceMinRating, setMarketplaceMinRating] = useState('');
+  const [marketplaceSort, setMarketplaceSort] = useState('newest');
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [saved, setSaved] = useState<Record<string, boolean>>({});
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity?: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
+
+  const categories = ['venue','photographer','videographer','catering','florist','music'];
+  const regions = ['NG','US','GB','CA'];
+  const placeholderByCategory: Record<string, string> = {
+    photographer: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop',
+    videographer: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop',
+    venue: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+    catering: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
+    florist: 'https://images.unsplash.com/photo-1487412912498-0447578fcca8?q=80&w=1200&auto=format&fit=crop',
+    music: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop',
+  };
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -301,6 +370,7 @@ export default function VendorsPage() {
   }
 
   const getCategoryInfo = (categoryName: string) => {
+    if (!categoryName) return vendorCategories[0];
     return vendorCategories.find(cat => 
       cat.id === categoryName.toLowerCase() || 
       cat.name.toLowerCase() === categoryName.toLowerCase()
@@ -316,8 +386,10 @@ export default function VendorsPage() {
   const getVendorsByCategory = () => {
     const categoryCounts: { [key: string]: number } = {};
     vendors.forEach(vendor => {
-      const category = vendor.category.toLowerCase();
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      if (vendor.category) {
+        const category = vendor.category.toLowerCase();
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      }
     });
     return categoryCounts;
   };
@@ -328,20 +400,127 @@ export default function VendorsPage() {
     return totalCategories > 0 ? (bookedCategories / totalCategories) * 100 : 0;
   };
 
+  // Marketplace functions
+  const loadMarketplaceVendors = useCallback(async () => {
+    const params = new URLSearchParams();
+    params.set('page', String(marketplacePage));
+    params.set('pageSize', String(marketplacePageSize));
+    if (marketplaceQuery.trim()) params.set('q', marketplaceQuery.trim());
+    if (marketplaceCategory) params.set('category', marketplaceCategory);
+    if (marketplaceRegion) params.set('region', marketplaceRegion);
+    if (marketplaceMinRating) params.set('minRating', marketplaceMinRating);
+    if (marketplaceSort) params.set('sort', marketplaceSort);
+    
+    setMarketplaceLoading(true);
+    try {
+      const res = await fetch(`/api/public/vendors?${params.toString()}`);
+      const json = await res.json();
+      setMarketplaceVendors(json?.data?.vendors || []);
+      setMarketplaceTotal(json?.data?.total || 0);
+    } catch (error) {
+      console.error('Error loading marketplace vendors:', error);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  }, [marketplacePage, marketplacePageSize, marketplaceQuery, marketplaceCategory, marketplaceRegion, marketplaceMinRating, marketplaceSort]);
+
+  // Map marketplace categories to personal vendor categories
+  const mapMarketplaceCategory = (marketplaceCategory: string): string => {
+    const categoryMap: Record<string, string> = {
+      'photographer': 'photography',
+      'videographer': 'videography',
+      'venue': 'venue',
+      'catering': 'catering',
+      'florist': 'flowers',
+      'music': 'music',
+    };
+    return categoryMap[marketplaceCategory] || marketplaceCategory;
+  };
+
+  const saveMarketplaceVendor = async (vendor: DirVendor) => {
+    const token = AuthClient.getToken();
+    if (!token) {
+      router.push('/signin');
+      return;
+    }
+    
+    setSaving(prev => ({ ...prev, [vendor.id]: true }));
+    try {
+      const payload = {
+        name: vendor.name,
+        category: mapMarketplaceCategory(vendor.category),
+        website: vendor.website,
+        phone: vendor.phone,
+        contact: vendor.phone || vendor.website || '',
+        priceRange: vendor.priceBand,
+        notes: vendor.shortDescription || '',
+        status: 'inquiry' as const,
+      };
+      
+      await VendorsClient.createVendor(payload);
+      setSaved(prev => ({ ...prev, [vendor.id]: true }));
+      setSnackbar({ open: true, message: `${vendor.name} added to your vendors!`, severity: 'success' });
+      await fetchVendors(); // Refresh the vendors list
+    } catch (error) {
+      console.error('Error saving vendor:', error);
+      setSnackbar({ open: true, message: 'Error adding vendor. Please try again.', severity: 'error' });
+    } finally {
+      setSaving(prev => ({ ...prev, [vendor.id]: false }));
+    }
+  };
+
+  // Load marketplace vendors when tab changes or filters change
+  useEffect(() => {
+    if (activeTab === 1) {
+      loadMarketplaceVendors();
+    }
+  }, [activeTab, loadMarketplaceVendors]);
+
+  // Reload marketplace vendors when filters change
+  useEffect(() => {
+    if (activeTab === 1) {
+      setMarketplacePage(1);
+      loadMarketplaceVendors();
+    }
+  }, [marketplaceCategory, marketplaceRegion, marketplaceMinRating, marketplaceSort, activeTab, loadMarketplaceVendors]);
+
+  // Handle search on Enter key
+  const handleMarketplaceSearch = () => {
+    if (activeTab === 1) {
+      setMarketplacePage(1);
+      loadMarketplaceVendors();
+    }
+  };
+
+  // Check if marketplace vendor is already saved
+  const isVendorSaved = useMemo(() => {
+    const savedMap: Record<string, boolean> = {};
+    for (const mv of marketplaceVendors) {
+      const isAlreadySaved = vendors.some(v => 
+        v.name.toLowerCase().trim() === mv.name.toLowerCase().trim() &&
+        v.category.toLowerCase() === mv.category.toLowerCase()
+      );
+      savedMap[mv.id] = isAlreadySaved;
+    }
+    return savedMap;
+  }, [marketplaceVendors, vendors]);
+
   if (isLoading || loading) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     );
   }
 
   const categoryCounts = getVendorsByCategory();
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
 
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ px: 0, py: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
@@ -353,19 +532,32 @@ export default function VendorsPage() {
               Manage your wedding vendors and service providers
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Add Vendor
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+            >
+              Add Vendor
+            </Button>
+          </Box>
         </Box>
 
-        {/* Progress Overview */}
-        <Box sx={{ mb: 4, px: 3 }}>
+        {/* Tabs */}
+        <Box sx={{ px: 3, mb: 3 }}>
+          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+            <Tab label="My Vendors" />
+            <Tab label="Browse Marketplace" />
+          </Tabs>
+        </Box>
+
+        {/* My Vendors Tab */}
+        {activeTab === 0 && (
+          <>
+            {/* Progress Overview */}
+            <Box sx={{ mb: 4, px: 3 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Card>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
@@ -422,7 +614,7 @@ export default function VendorsPage() {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card>
                 <CardContent sx={{ p: 3 }}>
                   <Typography
@@ -482,7 +674,7 @@ export default function VendorsPage() {
         {/* Search and Filter */}
         <Box sx={{ mb: 3, px: 3 }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -494,7 +686,7 @@ export default function VendorsPage() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Tabs
                 value={selectedCategory}
                 onChange={(e, newValue) => setSelectedCategory(newValue)}
@@ -515,7 +707,7 @@ export default function VendorsPage() {
             </Grid>
           </Grid>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Tabs
                 value={selectedStatus}
                 onChange={(e, v) => setSelectedStatus(v)}
@@ -566,7 +758,7 @@ export default function VendorsPage() {
               {filteredVendors.map((vendor) => {
                 const categoryInfo = getCategoryInfo(vendor.category);
                 return (
-                  <Grid item xs={12} sm={6} md={4} key={vendor.id}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={vendor.id}>
                     <Card
                       sx={{
                         height: '100%',
@@ -737,7 +929,7 @@ export default function VendorsPage() {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 fullWidth
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
                 required
               >
                 {vendorCategories.slice(1).map((cat) => (
@@ -752,7 +944,7 @@ export default function VendorsPage() {
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 fullWidth
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 <option value="">No status</option>
                 {vendorStatuses.slice(1).map((s) => (
@@ -767,7 +959,7 @@ export default function VendorsPage() {
                 value={formData.priceRange}
                 onChange={(e) => setFormData({ ...formData, priceRange: e.target.value })}
                 fullWidth
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
               >
                 <option value="">Select price range</option>
                 {priceRanges.map((range) => (
@@ -840,7 +1032,7 @@ export default function VendorsPage() {
                   setFormData({ ...formData, rating: val });
                 }}
                 fullWidth
-                SelectProps={{ native: true }}
+                slotProps={{ select: { native: true } }}
                 error={Boolean(formErrors.rating)}
                 helperText={formErrors.rating}
               >
@@ -879,7 +1071,128 @@ export default function VendorsPage() {
             </Button>
           </DialogActions>
         </Dialog>
+          </>
+        )}
+
+        {/* Marketplace Tab */}
+        {activeTab === 1 && (
+          <Box sx={{ px: 3 }}>
+            {/* Marketplace Search Filters */}
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3, alignItems: 'center' }}>
+              <TextField
+                placeholder="Search vendors…"
+                value={marketplaceQuery}
+                onChange={(e) => setMarketplaceQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleMarketplaceSearch(); } }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+                size="small"
+                sx={{ minWidth: { xs: 260, sm: 320 }, flexGrow: 1 }}
+              />
+              <TextField select size="small" label="Category" value={marketplaceCategory} onChange={(e) => setMarketplaceCategory(e.target.value)}
+                 sx={{ minWidth: { xs: 160, sm: 200 } }}>
+                 <MenuItem value="">All</MenuItem>
+                 {categories.map(c => <MenuItem key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</MenuItem>)}
+               </TextField>
+               <TextField select size="small" label="Region" value={marketplaceRegion} onChange={(e) => setMarketplaceRegion(e.target.value)}
+                 sx={{ minWidth: { xs: 140, sm: 180 } }}>
+                 <MenuItem value="">All</MenuItem>
+                 {regions.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+               </TextField>
+               <TextField select size="small" label="Min Rating" value={marketplaceMinRating} onChange={(e) => setMarketplaceMinRating(e.target.value)}
+                 sx={{ minWidth: { xs: 140, sm: 180 } }}>
+                 <MenuItem value="">Any</MenuItem>
+                 {[5,4,3].map(n => <MenuItem key={n} value={String(n)}>{n}+</MenuItem>)}
+               </TextField>
+               <TextField select size="small" label="Sort" value={marketplaceSort} onChange={(e) => setMarketplaceSort(e.target.value)}
+                 sx={{ minWidth: { xs: 160, sm: 200 } }}>
+                <MenuItem value="newest">Newest</MenuItem>
+                <MenuItem value="rating_desc">Rating</MenuItem>
+                <MenuItem value="reviews_desc">Most Reviews</MenuItem>
+              </TextField>
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {marketplaceLoading ? 'Loading vendors…' : marketplaceTotal === 0 ? 'No vendors match your filters.' : `${marketplaceTotal} result${marketplaceTotal === 1 ? '' : 's'}`}
+            </Typography>
+
+            {/* Marketplace Vendors Grid */}
+            <Grid container spacing={2}>
+              {!marketplaceLoading && marketplaceVendors.map(vendor => {
+                const img = (vendor.photos && vendor.photos[0]) || placeholderByCategory[vendor.category] || 'linear-gradient(135deg, #fafafa 0%, #eee 100%)';
+                const isAlreadySaved = isVendorSaved[vendor.id] || saved[vendor.id];
+                return (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={vendor.id}>
+                    <Card sx={{ borderRadius: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <Box sx={{ height: 180, backgroundColor: '#F5F5F5', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                      <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1, flexGrow: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, lineHeight: 1.2 }}>
+                            {vendor.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {vendor.priceBand && <Chip label={vendor.priceBand} size="small" />}
+                          </Box>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {vendor.category.charAt(0).toUpperCase() + vendor.category.slice(1)}
+                          {vendor.city && ` • ${vendor.city}`}
+                        </Typography>
+                        {vendor.shortDescription && (
+                          <Typography variant="body2" sx={{ mb: 1, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                            {vendor.shortDescription}
+                          </Typography>
+                        )}
+                        {vendor.averageRating && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Rating value={vendor.averageRating} readOnly size="small" />
+                            <Typography variant="body2" color="text.secondary">
+                              ({vendor.reviewCount || 0} reviews)
+                            </Typography>
+                          </Box>
+                        )}
+                        <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
+                          <Button 
+                            size="small" 
+                            variant={isAlreadySaved ? "outlined" : "contained"}
+                            onClick={() => saveMarketplaceVendor(vendor)} 
+                            disabled={Boolean(saving[vendor.id]) || isAlreadySaved}
+                            sx={{ flex: 1 }}
+                          >
+                            {isAlreadySaved ? 'Already Added' : (saving[vendor.id] ? 'Adding…' : 'Add to My Vendors')}
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+
+            {/* Marketplace Pagination */}
+            {marketplaceTotal > marketplacePageSize && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <Pagination
+                  count={Math.ceil(marketplaceTotal / marketplacePageSize)}
+                  page={marketplacePage}
+                  onChange={(e, page) => setMarketplacePage(page)}
+                  color="primary"
+                />
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Snackbar for notifications */}
+         <Snackbar
+           open={snackbar.open}
+           autoHideDuration={4000}
+           onClose={() => setSnackbar({ ...snackbar, open: false })}
+         >
+           <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+             {snackbar.message}
+           </Alert>
+         </Snackbar>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

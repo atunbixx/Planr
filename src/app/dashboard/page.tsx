@@ -41,8 +41,11 @@ import {
   EventNote as EventIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
 import AuthClient from '@/lib/auth/client';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
+import PremiumDashboardOverview from '@/components/dashboard/PremiumDashboardOverview';
 
 interface FeatureCard {
   title: string;
@@ -56,6 +59,7 @@ interface FeatureCard {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, signout, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [topCards, setTopCards] = useState<FeatureCard[]>([]);
   const [middleCards, setMiddleCards] = useState<FeatureCard[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -245,6 +249,21 @@ export default function DashboardPage() {
     );
   }
 
+  // Render Premium Dashboard if premium theme is active
+  if (themeMode === 'premium') {
+    return (
+      <PremiumDashboardLayout>
+        <PremiumDashboardOverview
+          guestTotal={guestTotal || 0}
+          vendorTotal={vendorTotal || 0}
+          budgetSummary={budgetSummary || undefined}
+          completedTasks={completedTasks}
+          totalTasks={totalTasks}
+        />
+      </PremiumDashboardLayout>
+    );
+  }
+
   if (!user) {
     return null;
   }
@@ -254,7 +273,7 @@ export default function DashboardPage() {
       <Box sx={{ px: 0, py: 3 }}>
         {/* Hero Section - Countdown Focus */}
         <Grid container spacing={3} sx={{ mb: 4, px: 3 }}>
-          <Grid item xs={12} lg={4} md={5}>
+          <Grid size={{ xs: 12, lg: 4, md: 5 }}>
             <Paper
               sx={{
                 p: 6,
@@ -349,7 +368,7 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Planning Progress */}
-          <Grid item xs={12} lg={3} md={4}>
+          <Grid size={{ xs: 12, lg: 3, md: 4 }}>
             <Paper
               sx={{
                 p: 4,
@@ -445,7 +464,7 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Your Wedding Team - Compact Version */}
-          <Grid item xs={12} lg={5} md={3}>
+          <Grid size={{ xs: 12, lg: 5, md: 3 }}>
             <Paper
               sx={{
                 p: 4,
@@ -474,7 +493,7 @@ export default function DashboardPage() {
               <Box sx={{ flex: 1 }}>
                 <Grid container spacing={1.5}>
                   {teamRoles.map((vendor) => (
-                    <Grid item xs={4} key={vendor.key}>
+                    <Grid size={{ xs: 4 }} key={vendor.key}>
                       <Box
                         sx={{
                           p: 1.5,
@@ -561,7 +580,7 @@ export default function DashboardPage() {
           
           <Grid container spacing={3}>
             {/* Recent Activity */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>RECENT ACTIVITY</Typography>
@@ -580,7 +599,7 @@ export default function DashboardPage() {
               </Card>
             </Grid>
             {/* Guest Management - Most Important */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -595,7 +614,7 @@ export default function DashboardPage() {
                 <CardActionArea onClick={() => router.push('/dashboard/guests')}>
                   <CardContent sx={{ p: 4 }}>
                     <Grid container spacing={3} alignItems="center">
-                      <Grid item xs={8}>
+                      <Grid size={{ xs: 8 }}>
                         <Typography
                           variant="h4"
                           sx={{
@@ -628,7 +647,7 @@ export default function DashboardPage() {
                           </Box>
                         </Box>
                       </Grid>
-                      <Grid item xs={4} sx={{ textAlign: 'center' }}>
+                      <Grid size={{ xs: 4 }} sx={{ textAlign: 'center' }}>
                         <PeopleIcon sx={{ fontSize: 64, color: '#F5F5F5' }} />
                       </Grid>
                     </Grid>
@@ -638,7 +657,7 @@ export default function DashboardPage() {
             </Grid>
 
             {/* Budget Tracker */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -653,7 +672,7 @@ export default function DashboardPage() {
                 <CardActionArea onClick={() => router.push('/dashboard/budget')}>
                   <CardContent sx={{ p: 4 }}>
                     <Grid container spacing={3} alignItems="center">
-                      <Grid item xs={8}>
+                      <Grid size={{ xs: 8 }}>
                         <Typography
                           variant="h4"
                           sx={{
@@ -690,7 +709,7 @@ export default function DashboardPage() {
                           </Typography>
                         </Box>
                       </Grid>
-                      <Grid item xs={4} sx={{ textAlign: 'center' }}>
+                      <Grid size={{ xs: 4 }} sx={{ textAlign: 'center' }}>
                         <MoneyIcon sx={{ fontSize: 64, color: '#F5F5F5' }} />
                       </Grid>
                     </Grid>
@@ -705,7 +724,7 @@ export default function DashboardPage() {
         <Box sx={{ mb: 4, px: 3 }}>
           <Grid container spacing={3}>
             {/* Immediate Actions */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>IMMEDIATE ACTIONS</Typography>
@@ -728,7 +747,7 @@ export default function DashboardPage() {
               </Card>
             </Grid>
             {/* Key Vendor Status */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>KEY VENDOR STATUS</Typography>
@@ -764,7 +783,7 @@ export default function DashboardPage() {
           
           <Grid container spacing={3}>
             {/* Vendors - Visual Focus */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -832,7 +851,7 @@ export default function DashboardPage() {
             </Grid>
 
             {/* Timeline - Day Schedule */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -906,7 +925,7 @@ export default function DashboardPage() {
             </Grid>
 
             {/* Photo Gallery */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -998,7 +1017,7 @@ export default function DashboardPage() {
           
           <Grid container spacing={3}>
             {/* Your Love Story */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -1041,7 +1060,7 @@ export default function DashboardPage() {
             </Grid>
 
             {/* Wedding Vision Board */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card
                 sx={{
                   backgroundColor: '#FFFFFF',
@@ -1071,7 +1090,7 @@ export default function DashboardPage() {
                   </Box>
                   <Grid container spacing={1}>
                     {['Garden Romance', 'Elegant Classic', 'Modern Minimal', 'Bohemian'].map((style) => (
-                      <Grid item xs={6} key={style}>
+                      <Grid size={{ xs: 6 }} key={style}>
                         <Chip
                           label={style}
                           variant="outlined"
@@ -1097,7 +1116,7 @@ export default function DashboardPage() {
         {/* Activity Dashboard - Refined */}
         <Grid container spacing={3} sx={{ mb: 3, px: 3 }}>
           {/* Budget Overview - Enhanced */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -1165,7 +1184,7 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Next Steps - Middle */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -1226,7 +1245,7 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Messages & Communication - Right */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', mb: 2, textTransform: 'uppercase', letterSpacing: '0.1em' }}>

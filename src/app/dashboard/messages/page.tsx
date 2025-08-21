@@ -21,6 +21,7 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
+  ListItemButton,
   ListItemSecondaryAction,
   Paper,
   InputAdornment,
@@ -45,6 +46,8 @@ import {
   Add as AddIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Message {
@@ -76,6 +79,7 @@ interface Contact {
 export default function MessagesPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { themeMode } = useCustomTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -259,17 +263,20 @@ export default function MessagesPage() {
   );
 
   if (isLoading || !user) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <DashboardLayout>
+      <LoadingLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
           <CircularProgress />
         </Box>
-      </DashboardLayout>
+      </LoadingLayout>
     );
   }
 
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ px: 0, py: 3 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
@@ -294,7 +301,7 @@ export default function MessagesPage() {
         <Box sx={{ px: 3 }}>
           <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
             {/* Contacts Sidebar */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ p: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {/* Search */}
@@ -364,9 +371,8 @@ export default function MessagesPage() {
                     ) : (
                       <List sx={{ p: 0 }}>
                         {filteredContacts.map((contact) => (
-                          <ListItem
+                          <ListItemButton
                             key={contact.id}
-                            button
                             selected={selectedContact?.id === contact.id}
                             onClick={() => {
                               setSelectedContact(contact);
@@ -428,7 +434,7 @@ export default function MessagesPage() {
                                 </Box>
                               }
                             />
-                          </ListItem>
+                          </ListItemButton>
                         ))}
                       </List>
                     )}
@@ -438,7 +444,7 @@ export default function MessagesPage() {
             </Grid>
 
             {/* Message View */}
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {selectedContact ? (
                   <>
@@ -592,6 +598,6 @@ export default function MessagesPage() {
           </DialogActions>
         </Dialog>
       </Box>
-    </DashboardLayout>
+    </Layout>
   );
 }

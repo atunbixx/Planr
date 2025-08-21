@@ -6,7 +6,7 @@ export default function Head({ params }: Props) {
   const title = `${category.charAt(0).toUpperCase()+category.slice(1)} Vendors — Wedding Directory`
   const description = `Discover ${category} vendors. View ratings, pricing, photos, and request quotes.`
   const url = `${base}/vendors/category/${encodeURIComponent(category)}`
-  const image = `${base}/og/category-${category.toLowerCase()}.svg`
+  const image = `${base}/og/vendors.svg`
   return (
     <>
       <title>{title}</title>

@@ -6,7 +6,7 @@ export default function Head({ params }: Props) {
   const title = `Vendors in ${region} — Wedding Directory`
   const description = `Browse top wedding vendors in ${region}. Compare ratings and request quotes.`
   const url = `${base}/vendors/region/${encodeURIComponent(region)}`
-  const image = `${base}/og/region-${region.toLowerCase()}.svg`
+  const image = `${base}/og/vendors.svg`
   return (
     <>
       <title>{title}</title>
@@ -53,4 +53,3 @@ export default function Head({ params }: Props) {
     </>
   )
 }
-

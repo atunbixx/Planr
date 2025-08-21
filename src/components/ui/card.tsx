@@ -4,9 +4,10 @@ interface CardProps {
   children: React.ReactNode
   className?: string
   padding?: 'none' | 'sm' | 'md' | 'lg'
+  variant?: 'default' | 'elevated' | 'outlined'
 }
 
-export function Card({ children, className = '', padding = 'md' }: CardProps) {
+export function Card({ children, className = '', padding = 'md', variant = 'default' }: CardProps) {
   const paddingClasses = {
     none: '',
     sm: 'p-4',
@@ -14,8 +15,14 @@ export function Card({ children, className = '', padding = 'md' }: CardProps) {
     lg: 'p-8'
   }
 
+  const variantClasses = {
+    default: 'bg-white shadow-sm border border-[#F1F5F9]',
+    elevated: 'bg-white shadow-lg border-0',
+    outlined: 'bg-white border-2 border-[#E2E8F0] shadow-none'
+  }
+
   return (
-    <div className={`bg-white shadow-sm border border-gray-200 rounded-lg ${paddingClasses[padding]} ${className}`}>
+    <div className={`${variantClasses[variant]} rounded-xl transition-all duration-200 hover:shadow-md ${paddingClasses[padding]} ${className}`}>
       {children}
     </div>
   )
@@ -28,7 +35,7 @@ interface CardHeaderProps {
 
 export function CardHeader({ children, className = '' }: CardHeaderProps) {
   return (
-    <div className={`border-b border-gray-200 pb-4 mb-6 ${className}`}>
+    <div className={`border-b border-[#F1F5F9] pb-4 mb-6 ${className}`}>
       {children}
     </div>
   )
@@ -41,7 +48,7 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className = '' }: CardTitleProps) {
   return (
-    <h3 className={`text-lg font-medium text-gray-900 ${className}`}>
+    <h3 className={`text-lg font-semibold text-[#1E293B] ${className}`}>
       {children}
     </h3>
   )

@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { useTheme as useCustomTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import {
   Box, Grid, Card, CardContent, Typography, TextField, MenuItem, Button, Snackbar, Alert,
@@ -22,6 +24,7 @@ const timeFormats = ['HH:mm','hh:mm A']
 export default function SettingsPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const { themeMode } = useCustomTheme()
   const [wd, setWd] = useState<WeddingDetails>({})
   const [pf, setPf] = useState<Preferences>({})
   const [saving, setSaving] = useState(false)
@@ -73,61 +76,77 @@ export default function SettingsPage() {
     } finally { setSaving(false) }
   }
 
-  if (isLoading) return null
+  if (isLoading) {
+    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
+    return (
+      <LoadingLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <Typography>Loading...</Typography>
+        </Box>
+      </LoadingLayout>
+    )
+  }
+
+  if (!user) {
+    router.push('/signin')
+    return null
+  }
+
+  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
 
   return (
-    <DashboardLayout>
+    <Layout>
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" sx={{ mb: 2 }}>Settings</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>Wedding Details</Typography>
                 <TextField fullWidth label="Venue / Location" value={wd.venue || ''} onChange={e => setWd({ ...wd, venue: e.target.value })} sx={{ mb: 2 }} />
                 <TextField fullWidth label="Wedding Date" type="date" value={wd.weddingDate || ''} onChange={e => setWd({ ...wd, weddingDate: e.target.value })} InputLabelProps={{ shrink: true }} sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField fullWidth label="Budget" type="number" value={wd.budget ?? ''} onChange={e => setWd({ ...wd, budget: e.target.value ? Number(e.target.value) : undefined })} />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField fullWidth label="Guest Count" type="number" value={wd.guestCount ?? ''} onChange={e => setWd({ ...wd, guestCount: e.target.value ? Number(e.target.value) : undefined })} />
                   </Grid>
                 </Grid>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>Preferences</Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField select fullWidth label="Currency" value={pf.currency || ''} onChange={e => setPf({ ...pf, currency: e.target.value })}>
                       {currencies.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </TextField>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField select fullWidth label="Language" value={pf.language || ''} onChange={e => setPf({ ...pf, language: e.target.value })}>
                       {languages.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </TextField>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField select fullWidth label="Region" value={pf.region || ''} onChange={e => setPf({ ...pf, region: e.target.value })}>
                       {regions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </TextField>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField select fullWidth label="Time Zone" value={pf.timeZone || ''} onChange={e => setPf({ ...pf, timeZone: e.target.value })}>
                       {timeZones.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </TextField>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField select fullWidth label="Date Format" value={pf.dateFormat || ''} onChange={e => setPf({ ...pf, dateFormat: e.target.value })}>
                       {dateFormats.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </TextField>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField select fullWidth label="Time Format" value={pf.timeFormat || ''} onChange={e => setPf({ ...pf, timeFormat: e.target.value })}>
                       {timeFormats.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </TextField>
@@ -146,6 +165,6 @@ export default function SettingsPage() {
           <Alert severity={snack.severity} onClose={() => setSnack({ ...snack, open: false })}>{snack.msg}</Alert>
         </Snackbar>
       </Box>
-    </DashboardLayout>
+    </Layout>
   )
 }
