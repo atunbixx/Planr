@@ -2,37 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Paper,
-  Avatar,
-  Chip,
-  IconButton,
-  CircularProgress,
-  CardActionArea,
-} from '@mui/material';
-import {
-  Favorite as HeartIcon,
-  Edit as EditIcon,
-  Save as SaveIcon,
-  Share as ShareIcon,
-  Photo as PhotoIcon,
-  CalendarToday as DateIcon,
-  LocationOn as LocationIcon,
-  AutoStories as StoryIcon,
-  Preview as PreviewIcon,
-  Public as PublicIcon,
-  Lock as PrivateIcon,
-} from '@mui/icons-material';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
-import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
+  Heart, Edit, Save, Share, Image as ImageIcon, Calendar, MapPin, BookOpen, Eye, Globe, Lock
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface StorySection {
@@ -56,7 +37,6 @@ interface WeddingDetails {
 export default function StoryPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const { themeMode } = useCustomTheme();
   const [weddingDetails, setWeddingDetails] = useState<WeddingDetails>({
     coupleName1: 'Sarah',
     coupleName2: 'Michael',
@@ -149,418 +129,228 @@ export default function StoryPage() {
 
   const getSectionIcon = (type: string) => {
     switch (type) {
-      case 'timeline': return <DateIcon />;
-      case 'details': return <LocationIcon />;
-      default: return <StoryIcon />;
+      case 'timeline': return <Calendar className="h-5 w-5" />;
+      case 'details': return <MapPin className="h-5 w-5" />;
+      default: return <BookOpen className="h-5 w-5" />;
     }
   };
 
   if (isLoading || !user) {
-    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-    return (
-      <LoadingLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <CircularProgress />
-        </Box>
-      </LoadingLayout>
-    );
+    return <div>Loading...</div>
   }
 
-  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-
   return (
-    <Layout>
-      <Box sx={{ px: 0, py: 3 }}>
+    <div className="p-4 md:p-8">
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400 }}>
-              Your Love Story
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Share your journey and wedding details with your guests
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<PreviewIcon />}
-              onClick={() => router.push('/preview-story')}
-            >
-              Preview
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<ShareIcon />}
-              onClick={togglePublic}
-            >
-              {weddingDetails.isPublic ? 'Make Private' : 'Share Publicly'}
-            </Button>
-          </Box>
-        </Box>
+        <div className="flex items-center justify-between mb-6">
+            <div>
+                <h1 className="text-3xl font-bold">Your Love Story</h1>
+                <p className="text-muted-foreground">Share your journey and wedding details with your guests</p>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => router.push('/preview-story')}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                </Button>
+                <div className="flex items-center space-x-2">
+                    <Switch id="public-switch" checked={weddingDetails.isPublic} onCheckedChange={togglePublic} />
+                    <Label htmlFor="public-switch">{weddingDetails.isPublic ? 'Public' : 'Private'}</Label>
+                </div>
+            </div>
+        </div>
 
         {/* Main Story Header */}
-        <Box sx={{ mb: 4, px: 3 }}>
-          <Card>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                  <HeartIcon sx={{ fontSize: 32, color: '#FF5722', mr: 1 }} />
-                  <Typography
-                    variant="h3"
-                    sx={{
-                      fontFamily: '"Bodoni Moda", serif',
-                      fontWeight: 300,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {weddingDetails.coupleName1} & {weddingDetails.coupleName2}
-                  </Typography>
-                </Box>
-                
-                <Typography variant="h5" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, mb: 2 }}>
-                  {new Date(weddingDetails.weddingDate).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </Typography>
+        <Card className="mb-8">
+            <CardContent className="p-6">
+                <div className="text-center mb-6">
+                    <div className="flex items-center justify-center mb-2">
+                        <Heart className="h-8 w-8 text-red-500 mr-2" />
+                        <h2 className="text-4xl font-serif">{weddingDetails.coupleName1} & {weddingDetails.coupleName2}</h2>
+                    </div>
+                    
+                    <p className="text-xl font-serif mb-3">
+                        {new Date(weddingDetails.weddingDate).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                        })}
+                    </p>
 
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-                  {weddingDetails.venue}
-                </Typography>
+                    <p className="text-lg text-muted-foreground mb-4">{weddingDetails.venue}</p>
 
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 3 }}>
-                  <Chip
-                    icon={weddingDetails.isPublic ? <PublicIcon /> : <PrivateIcon />}
-                    label={weddingDetails.isPublic ? 'Public Story' : 'Private Story'}
-                    color={weddingDetails.isPublic ? 'success' : 'default'}
-                  />
-                  {weddingDetails.websiteUrl && (
-                    <Chip
-                      icon={<ShareIcon />}
-                      label="Website Available"
-                      color="primary"
-                    />
-                  )}
-                </Box>
+                    <div className="flex justify-center gap-2 mb-4">
+                        <Badge variant={weddingDetails.isPublic ? 'success' : 'default'}>
+                            {weddingDetails.isPublic ? <Globe className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4" />}
+                            {weddingDetails.isPublic ? 'Public Story' : 'Private Story'}
+                        </Badge>
+                        {weddingDetails.websiteUrl && (
+                            <Badge variant="secondary">
+                                <Share className="mr-2 h-4 w-4" />
+                                Website Available
+                            </Badge>
+                        )}
+                    </div>
 
-                <IconButton
-                  onClick={() => setIsEditingMain(true)}
-                  sx={{
-                    bgcolor: '#F5F5F5',
-                    '&:hover': { bgcolor: '#EEEEEE' },
-                  }}
-                >
-                  <EditIcon />
-                </IconButton>
-              </Box>
-
-              {isEditingMain && (
-                <Box sx={{ mt: 3 }}>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Partner 1 Name"
-                        value={weddingDetails.coupleName1}
-                        onChange={(e) => setWeddingDetails({ ...weddingDetails, coupleName1: e.target.value })}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Partner 2 Name"
-                        value={weddingDetails.coupleName2}
-                        onChange={(e) => setWeddingDetails({ ...weddingDetails, coupleName2: e.target.value })}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Wedding Date"
-                        type="date"
-                        value={weddingDetails.weddingDate}
-                        onChange={(e) => setWeddingDetails({ ...weddingDetails, weddingDate: e.target.value })}
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Venue"
-                        value={weddingDetails.venue}
-                        onChange={(e) => setWeddingDetails({ ...weddingDetails, venue: e.target.value })}
-                        fullWidth
-                      />
-                    </Grid>
-                  </Grid>
-                  <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<SaveIcon />}
-                      onClick={handleSaveMainDetails}
-                    >
-                      Save Changes
+                    <Button variant="outline" size="icon" onClick={() => setIsEditingMain(true)}>
+                        <Edit className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setIsEditingMain(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </Box>
-                </Box>
-              )}
+                </div>
+
+                {isEditingMain && (
+                    <div className="mt-6">
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <Input
+                                placeholder="Partner 1 Name"
+                                value={weddingDetails.coupleName1}
+                                onChange={(e) => setWeddingDetails({ ...weddingDetails, coupleName1: e.target.value })}
+                            />
+                            <Input
+                                placeholder="Partner 2 Name"
+                                value={weddingDetails.coupleName2}
+                                onChange={(e) => setWeddingDetails({ ...weddingDetails, coupleName2: e.target.value })}
+                            />
+                            <Input
+                                type="date"
+                                value={weddingDetails.weddingDate}
+                                onChange={(e) => setWeddingDetails({ ...weddingDetails, weddingDate: e.target.value })}
+                            />
+                            <Input
+                                placeholder="Venue"
+                                value={weddingDetails.venue}
+                                onChange={(e) => setWeddingDetails({ ...weddingDetails, venue: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                            <Button onClick={handleSaveMainDetails}>
+                                <Save className="mr-2 h-4 w-4" />
+                                Save Changes
+                            </Button>
+                            <Button variant="outline" onClick={() => setIsEditingMain(false)}>Cancel</Button>
+                        </div>
+                    </div>
+                )}
             </CardContent>
-          </Card>
-        </Box>
+        </Card>
 
         {/* Story Sections */}
-        <Box sx={{ px: 3 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.625rem',
-              letterSpacing: '0.2em',
-              fontWeight: 600,
-              fontFamily: '"Bodoni Moda", serif',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            YOUR STORY SECTIONS
-          </Typography>
+        <div>
+            <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider mb-4">Your Story Sections</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+                {storySections.map((section) => (
+                    <Card key={section.id} className="h-full flex flex-col">
+                        <CardContent className="p-6 flex-1 flex flex-col">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center">
+                                    <Avatar className="h-10 w-10 mr-3">
+                                        <AvatarFallback>{getSectionIcon(section.type)}</AvatarFallback>
+                                    </Avatar>
+                                    <h4 className="text-xl font-semibold">{section.title}</h4>
+                                </div>
+                                {!section.isEditing && (
+                                    <Button variant="ghost" size="icon" onClick={() => handleEditSection(section.id)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
 
-          <Grid container spacing={3}>
-            {storySections.map((section) => (
-              <Grid size={{ xs: 12, md: 6 }} key={section.id}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.10)',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                          sx={{
-                            bgcolor: '#F5F5F5',
-                            color: '#000000',
-                            width: 40,
-                            height: 40,
-                            mr: 2,
-                          }}
-                        >
-                          {getSectionIcon(section.type)}
-                        </Avatar>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400 }}
-                        >
-                          {section.title}
-                        </Typography>
-                      </Box>
-                      {!section.isEditing && (
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditSection(section.id)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      )}
-                    </Box>
-
-                    <Box sx={{ flex: 1 }}>
-                      {section.isEditing ? (
-                        <Box>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={8}
-                            value={section.content}
-                            onChange={(e) => handleUpdateSection(section.id, e.target.value)}
-                            variant="outlined"
-                            sx={{ mb: 2 }}
-                          />
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              startIcon={<SaveIcon />}
-                              onClick={() => handleSaveSection(section.id, section.content)}
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() => {
-                                setStorySections(sections =>
-                                  sections.map(s =>
-                                    s.id === section.id
-                                      ? { ...s, isEditing: false }
-                                      : s
-                                  )
-                                );
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </Box>
-                        </Box>
-                      ) : (
-                        <Box>
-                          {section.type === 'timeline' ? (
-                            <Box>
-                              {section.content.split('\n').map((line, index) => (
-                                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                  <DateIcon sx={{ fontSize: 16, color: '#999999', mr: 1 }} />
-                                  <Typography variant="body2">
-                                    {line}
-                                  </Typography>
-                                </Box>
-                              ))}
-                            </Box>
-                          ) : (
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                lineHeight: 1.7,
-                                fontStyle: section.type === 'text' ? 'italic' : 'normal',
-                              }}
-                            >
-                              {section.content}
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
+                            <div className="flex-1">
+                                {section.isEditing ? (
+                                    <div>
+                                        <Textarea
+                                            value={section.content}
+                                            onChange={(e) => handleUpdateSection(section.id, e.target.value)}
+                                            className="min-h-[150px] mb-2"
+                                        />
+                                        <div className="flex gap-2">
+                                            <Button size="sm" onClick={() => handleSaveSection(section.id, section.content)}>
+                                                <Save className="mr-2 h-4 w-4" />
+                                                Save
+                                            </Button>
+                                            <Button size="sm" variant="outline" onClick={() => {
+                                                setStorySections(sections =>
+                                                    sections.map(s =>
+                                                        s.id === section.id
+                                                            ? { ...s, isEditing: false }
+                                                            : s
+                                                    )
+                                                );
+                                            }}>
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {section.type === 'timeline' ? (
+                                            <div className="space-y-2">
+                                                {section.content.split('\n').map((line, index) => (
+                                                    <div key={index} className="flex items-center">
+                                                        <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
+                                                        <p>{line}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted-foreground leading-relaxed italic">
+                                                {section.content}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
 
         {/* Photo Gallery Section */}
-        <Box sx={{ mt: 4, px: 3 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.625rem',
-              letterSpacing: '0.2em',
-              fontWeight: 600,
-              fontFamily: '"Bodoni Moda", serif',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            STORY PHOTOS
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <Card
-                sx={{
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.10)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <CardActionArea onClick={() => router.push('/dashboard/photos')}>
-                  <Box
-                    sx={{
-                      height: 200,
-                      bgcolor: '#F5F5F5',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <PhotoIcon sx={{ fontSize: 48, color: '#CCCCCC', mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Add photos to your story
-                    </Typography>
-                  </Box>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
+        <div className="mt-8">
+            <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider mb-4">Story Photos</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+                <div className="cursor-pointer" onClick={() => router.push('/dashboard/photos')}>
+                    <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6 flex flex-col items-center justify-center h-[200px]">
+                            <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
+                            <p className="text-muted-foreground">Add photos to your story</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </div>
 
         {/* Website Settings */}
-        <Box sx={{ mt: 4, px: 3 }}>
-          <Card>
-            <CardContent sx={{ p: 4 }}>
-              <Typography
-                variant="overline"
-                sx={{
-                  fontSize: '0.625rem',
-                  letterSpacing: '0.2em',
-                  fontWeight: 600,
-                  fontFamily: '"Bodoni Moda", serif',
-                  mb: 2,
-                  display: 'block',
-                }}
-              >
-                WEDDING WEBSITE
-              </Typography>
+        <div className="mt-8">
+            <Card>
+                <CardContent className="p-6 text-center">
+                    <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider mb-4">Wedding Website</h3>
+                    <h4 className="text-xl font-semibold mb-2">Share Your Love Story Online</h4>
+                    <p className="text-muted-foreground mb-4">Create a beautiful wedding website to share your story, details, and photos with your guests.</p>
 
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, mb: 2 }}>
-                  Share Your Love Story Online
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                  Create a beautiful wedding website to share your story, details, and photos with your guests.
-                </Typography>
-
-                {weddingDetails.isPublic ? (
-                  <Box>
-                    <Typography variant="body2" sx={{ mb: 2 }}>
-                      Your wedding website is now public! Share this link with your guests:
-                    </Typography>
-                    <Paper sx={{ p: 2, bgcolor: '#F5F5F5', mb: 3 }}>
-                      <Typography component="code" sx={{ fontFamily: 'monospace' }}>
-                        https://weddingplanner.com/story/sarah-and-michael
-                      </Typography>
-                    </Paper>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                      <Button variant="outlined" startIcon={<ShareIcon />}>
-                        Share Link
-                      </Button>
-                      <Button variant="outlined" startIcon={<PreviewIcon />}>
-                        Preview Website
-                      </Button>
-                    </Box>
-                  </Box>
-                ) : (
-                  <Box>
-                    <Typography variant="body2" sx={{ mb: 3 }}>
-                      Your story is currently private. Make it public to create a wedding website.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      size="large"
-                      startIcon={<PublicIcon />}
-                      onClick={togglePublic}
-                    >
-                      Create Wedding Website
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-      </Box>
-    </Layout>
+                    {weddingDetails.isPublic ? (
+                        <div>
+                            <p className="mb-2">Your wedding website is now public! Share this link with your guests:</p>
+                            <div className="bg-muted p-2 rounded-md mb-4">
+                                <code className="text-sm">https://weddingplanner.com/story/sarah-and-michael</code>
+                            </div>
+                            <div className="flex gap-2 justify-center">
+                                <Button variant="outline"><Share className="mr-2 h-4 w-4" /> Share Link</Button>
+                                <Button variant="outline"><Eye className="mr-2 h-4 w-4" /> Preview Website</Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div>
+                            <p className="mb-4">Your story is currently private. Make it public to create a wedding website.</p>
+                            <Button size="lg" onClick={togglePublic}>
+                                <Globe className="mr-2 h-4 w-4" />
+                                Create Wedding Website
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    </div>
   );
 }

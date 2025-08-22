@@ -2,53 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemSecondaryAction,
-  Paper,
-  InputAdornment,
-  Divider,
-  CircularProgress,
-  Badge,
-  Tabs,
-  Tab,
-} from '@mui/material';
-import {
-  Send as SendIcon,
-  Search as SearchIcon,
-  AttachFile as AttachIcon,
-  MoreVert as MoreVertIcon,
-  Message as MessageIcon,
-  People as PeopleIcon,
-  Business as VendorIcon,
-  Star as StarIcon,
-  Reply as ReplyIcon,
-  Archive as ArchiveIcon,
-  Delete as DeleteIcon,
-  Add as AddIcon,
-} from '@mui/icons-material';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
-import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
+  Send, Search, Paperclip, MoreVertical, MessageSquare, Users, Building, Star, Reply, Archive, Trash2, Plus, User, Bot
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -79,11 +47,10 @@ interface Contact {
 export default function MessagesPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const { themeMode } = useCustomTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [openComposeDialog, setOpenComposeDialog] = useState(false);
@@ -184,7 +151,7 @@ export default function MessagesPage() {
   }, [selectedContact]);
 
   const getContactsByType = (type?: string) => {
-    if (!type) return contacts;
+    if (!type || type === 'all') return contacts;
     return contacts.filter(contact => contact.type === type);
   };
 
@@ -234,13 +201,13 @@ export default function MessagesPage() {
   const getContactIcon = (contact: Contact) => {
     switch (contact.type) {
       case 'vendor':
-        return <VendorIcon />;
+        return <Building />;
       case 'guest':
-        return <PeopleIcon />;
+        return <Users />;
       case 'planner':
-        return <MessageIcon />;
+        return <Bot />;
       default:
-        return <MessageIcon />;
+        return <User />;
     }
   };
 
@@ -253,351 +220,244 @@ export default function MessagesPage() {
     }
   };
 
-  const filteredContacts = getContactsByType(
-    selectedTab === 0 ? undefined : 
-    selectedTab === 1 ? 'vendor' : 
-    selectedTab === 2 ? 'guest' : 'planner'
-  ).filter(contact =>
+  const filteredContacts = getContactsByType(selectedTab).filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading || !user) {
-    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-    return (
-      <LoadingLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <CircularProgress />
-        </Box>
-      </LoadingLayout>
-    );
+    return <div>Loading...</div>
   }
 
-  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-
   return (
-    <Layout>
-      <Box sx={{ px: 0, py: 3 }}>
+    <div className="p-4 md:p-8 h-full flex flex-col">
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400 }}>
-              Messages
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Communicate with vendors, guests, and your planning team
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setOpenComposeDialog(true)}
-          >
-            Compose
-          </Button>
-        </Box>
+        <div className="flex items-center justify-between mb-4">
+            <div>
+                <h1 className="text-2xl font-bold">Messages</h1>
+                <p className="text-muted-foreground">Communicate with vendors, guests, and your planning team</p>
+            </div>
+            <Button onClick={() => setOpenComposeDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Compose
+            </Button>
+        </div>
 
         {/* Main Content */}
-        <Box sx={{ px: 3 }}>
-          <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
+        <div className="grid md:grid-cols-[350px_1fr] gap-4 flex-1">
             {/* Contacts Sidebar */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ p: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  {/* Search */}
-                  <Box sx={{ p: 2, borderBottom: '1px solid #F0F0F0' }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Search contacts..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Box>
+            <Card className="flex flex-col">
+                <div className="p-4 border-b">
+                    <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search contacts..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-8"
+                        />
+                    </div>
+                </div>
 
-                  {/* Tabs */}
-                  <Tabs
-                    value={selectedTab}
-                    onChange={(e, newValue) => setSelectedTab(newValue)}
-                    variant="fullWidth"
-                    sx={{ borderBottom: '1px solid #F0F0F0' }}
-                  >
-                    <Tab 
-                      label={
-                        <Badge badgeContent={getUnreadCount()} color="error">
-                          All
-                        </Badge>
-                      } 
-                    />
-                    <Tab 
-                      label={
-                        <Badge badgeContent={getUnreadCount('vendor')} color="error">
-                          Vendors
-                        </Badge>
-                      } 
-                    />
-                    <Tab 
-                      label={
-                        <Badge badgeContent={getUnreadCount('guest')} color="error">
-                          Guests
-                        </Badge>
-                      } 
-                    />
-                    <Tab 
-                      label={
-                        <Badge badgeContent={getUnreadCount('planner')} color="error">
-                          Team
-                        </Badge>
-                      } 
-                    />
-                  </Tabs>
+                <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col">
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="all">All <Badge className="ml-2">{getUnreadCount('all')}</Badge></TabsTrigger>
+                        <TabsTrigger value="vendor">Vendors <Badge className="ml-2">{getUnreadCount('vendor')}</Badge></TabsTrigger>
+                        <TabsTrigger value="guest">Guests <Badge className="ml-2">{getUnreadCount('guest')}</Badge></TabsTrigger>
+                        <TabsTrigger value="team">Team <Badge className="ml-2">{getUnreadCount('planner')}</Badge></TabsTrigger>
+                    </TabsList>
 
-                  {/* Contacts List */}
-                  <Box sx={{ flex: 1, overflow: 'auto' }}>
-                    {filteredContacts.length === 0 ? (
-                      <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <MessageIcon sx={{ fontSize: 48, color: '#CCCCCC', mb: 2 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          No contacts found
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <List sx={{ p: 0 }}>
-                        {filteredContacts.map((contact) => (
-                          <ListItemButton
-                            key={contact.id}
-                            selected={selectedContact?.id === contact.id}
-                            onClick={() => {
-                              setSelectedContact(contact);
-                              if (contact.unreadCount > 0) {
-                                markAsRead(contact.id);
-                              }
-                            }}
-                            sx={{
-                              borderBottom: '1px solid #F5F5F5',
-                              '&.Mui-selected': {
-                                bgcolor: '#F5F5F5',
-                              },
-                            }}
-                          >
-                            <ListItemAvatar>
-                              <Avatar sx={{ bgcolor: '#000000', color: '#FFFFFF' }}>
-                                {getContactIcon(contact)}
-                              </Avatar>
-                            </ListItemAvatar>
-                            <ListItemText
-                              primary={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                      fontWeight: contact.unreadCount > 0 ? 600 : 400,
-                                      flex: 1,
-                                    }}
-                                  >
-                                    {contact.name.length > 25 ? contact.name.substring(0, 25) + '...' : contact.name}
-                                  </Typography>
-                                  {contact.unreadCount > 0 && (
-                                    <Badge
-                                      badgeContent={contact.unreadCount}
-                                      color="error"
-                                      sx={{ ml: 1 }}
-                                    />
-                                  )}
-                                </Box>
-                              }
-                              secondary={
-                                <Box>
-                                  <Typography variant="caption" color="primary">
-                                    {getContactTypeLabel(contact.type)}
-                                    {contact.category && ` • ${contact.category}`}
-                                  </Typography>
-                                  <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{
-                                      fontWeight: contact.unreadCount > 0 ? 500 : 400,
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
-                                    }}
-                                  >
-                                    {contact.lastMessage}
-                                  </Typography>
-                                </Box>
-                              }
-                            />
-                          </ListItemButton>
-                        ))}
-                      </List>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                    <div className="flex-1 overflow-auto">
+                        {filteredContacts.length === 0 ? (
+                            <div className="text-center py-8">
+                                <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                                <p className="text-muted-foreground">No contacts found</p>
+                            </div>
+                        ) : (
+                            <div>
+                                {filteredContacts.map((contact) => (
+                                    <div
+                                        key={contact.id}
+                                        className={cn(
+                                            "flex items-center gap-3 p-3 cursor-pointer border-b",
+                                            selectedContact?.id === contact.id && "bg-muted"
+                                        )}
+                                        onClick={() => {
+                                            setSelectedContact(contact);
+                                            if (contact.unreadCount > 0) {
+                                                markAsRead(contact.id);
+                                            }
+                                        }}
+                                    >
+                                        <Avatar>
+                                            <AvatarFallback>{getContactIcon(contact)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 truncate">
+                                            <div className="flex items-center justify-between">
+                                                <p className={cn("font-semibold truncate", contact.unreadCount > 0 && "font-bold")}>
+                                                    {contact.name}
+                                                </p>
+                                                {contact.unreadCount > 0 && (
+                                                    <Badge variant="error">{contact.unreadCount}</Badge>
+                                                )}
+                                            </div>
+                                            <p className={cn("text-sm text-muted-foreground truncate", contact.unreadCount > 0 && "font-semibold text-primary")}>
+                                                {contact.lastMessage}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </Tabs>
+            </Card>
 
             {/* Message View */}
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card className="flex flex-col h-full">
                 {selectedContact ? (
-                  <>
-                    {/* Message Header */}
-                    <Box sx={{ p: 2, borderBottom: '1px solid #F0F0F0' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ bgcolor: '#000000', color: '#FFFFFF', mr: 2 }}>
-                            {getContactIcon(selectedContact)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400 }}>
-                              {selectedContact.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {selectedContact.email}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <Box>
-                          <IconButton size="small">
-                            <StarIcon />
-                          </IconButton>
-                          <IconButton size="small">
-                            <ArchiveIcon />
-                          </IconButton>
-                          <IconButton size="small">
-                            <MoreVertIcon />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    </Box>
+                    <>
+                        {/* Message Header */}
+                        <div className="p-4 border-b flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarFallback>{getContactIcon(selectedContact)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-semibold">{selectedContact.name}</p>
+                                    <p className="text-sm text-muted-foreground">{selectedContact.email}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon"><Star className="h-4 w-4" /></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Star</p></TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon"><Archive className="h-4 w-4" /></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Archive</p></TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>More</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        </div>
 
-                    {/* Messages */}
-                    <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                      {messages.map((message) => (
-                        <Box
-                          key={message.id}
-                          sx={{
-                            display: 'flex',
-                            justifyContent: message.senderType === 'self' ? 'flex-end' : 'flex-start',
-                            mb: 2,
-                          }}
-                        >
-                          <Paper
-                            sx={{
-                              p: 2,
-                              maxWidth: '70%',
-                              bgcolor: message.senderType === 'self' ? '#000000' : '#F5F5F5',
-                              color: message.senderType === 'self' ? '#FFFFFF' : '#000000',
-                            }}
-                          >
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                              {message.content}
-                            </Typography>
-                            <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                              {new Date(message.timestamp).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </Typography>
-                          </Paper>
-                        </Box>
-                      ))}
-                    </Box>
+                        {/* Messages */}
+                        <div className="flex-1 overflow-auto p-4 space-y-4">
+                            {messages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={cn(
+                                        "flex items-end gap-2",
+                                        message.senderType === 'self' ? "justify-end" : "justify-start"
+                                    )}
+                                >
+                                    {message.senderType !== 'self' && (
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarFallback>{getContactIcon(selectedContact)}</AvatarFallback>
+                                        </Avatar>
+                                    )}
+                                    <div
+                                        className={cn(
+                                            "rounded-lg p-3 max-w-[70%]",
+                                            message.senderType === 'self'
+                                                ? "bg-primary text-primary-foreground"
+                                                : "bg-muted"
+                                        )}
+                                    >
+                                        <p className="text-sm">{message.content}</p>
+                                        <p className="text-xs text-right opacity-70 mt-1">
+                                            {new Date(message.timestamp).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
 
-                    {/* Message Input */}
-                    <Box sx={{ p: 2, borderTop: '1px solid #F0F0F0' }}>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          placeholder="Type a message..."
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSendMessage();
-                            }
-                          }}
-                          multiline
-                          maxRows={3}
-                        />
-                        <IconButton
-                          onClick={handleSendMessage}
-                          disabled={!newMessage.trim()}
-                          sx={{
-                            bgcolor: '#000000',
-                            color: '#FFFFFF',
-                            '&:hover': { bgcolor: '#333333' },
-                            '&.Mui-disabled': { bgcolor: '#CCCCCC' },
-                          }}
-                        >
-                          <SendIcon />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </>
+                        {/* Message Input */}
+                        <div className="p-4 border-t">
+                            <div className="relative">
+                                <Input
+                                    placeholder="Type a message..."
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSendMessage();
+                                        }
+                                    }}
+                                    className="pr-20"
+                                />
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon"><Paperclip className="h-4 w-4" /></Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Attach File</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <Button onClick={handleSendMessage} disabled={!newMessage.trim()} size="sm">
+                                        <Send className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 ) : (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <MessageIcon sx={{ fontSize: 64, color: '#CCCCCC', mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, color: '#999999' }} gutterBottom>
-                        Select a conversation
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Choose a contact from the sidebar to start messaging
-                      </Typography>
-                    </Box>
-                  </Box>
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                        <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
+                        <h3 className="text-xl font-semibold">Select a conversation</h3>
+                        <p className="text-muted-foreground">Choose a contact from the sidebar to start messaging</p>
+                    </div>
                 )}
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
+            </Card>
+        </div>
 
         {/* Compose Dialog */}
-        <Dialog open={openComposeDialog} onClose={() => setOpenComposeDialog(false)} maxWidth="md" fullWidth>
-          <DialogTitle>Compose New Message</DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-              <TextField
-                label="To"
-                value={composeData.to}
-                onChange={(e) => setComposeData({ ...composeData, to: e.target.value })}
-                fullWidth
-                placeholder="Enter email address"
-              />
-              <TextField
-                label="Subject"
-                value={composeData.subject}
-                onChange={(e) => setComposeData({ ...composeData, subject: e.target.value })}
-                fullWidth
-              />
-              <TextField
-                label="Message"
-                value={composeData.content}
-                onChange={(e) => setComposeData({ ...composeData, content: e.target.value })}
-                fullWidth
-                multiline
-                rows={6}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenComposeDialog(false)}>Cancel</Button>
-            <Button onClick={handleComposeMessage} variant="contained">
-              Send Message
-            </Button>
-          </DialogActions>
+        <Dialog open={openComposeDialog} onOpenChange={setOpenComposeDialog}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Compose New Message</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <Input
+                        placeholder="To: Enter email address"
+                        value={composeData.to}
+                        onChange={(e) => setComposeData({ ...composeData, to: e.target.value })}
+                    />
+                    <Input
+                        placeholder="Subject"
+                        value={composeData.subject}
+                        onChange={(e) => setComposeData({ ...composeData, subject: e.target.value })}
+                    />
+                    <textarea
+                        placeholder="Message"
+                        value={composeData.content}
+                        onChange={(e) => setComposeData({ ...composeData, content: e.target.value })}
+                        className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpenComposeDialog(false)}>Cancel</Button>
+                    <Button onClick={handleComposeMessage}>Send Message</Button>
+                </DialogFooter>
+            </DialogContent>
         </Dialog>
-      </Box>
-    </Layout>
+    </div>
   );
 }

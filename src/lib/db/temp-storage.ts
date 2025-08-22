@@ -12,6 +12,7 @@ const TIMELINE_FILE = path.join(STORAGE_DIR, 'timeline.json')
 const SEATING_FILE = path.join(STORAGE_DIR, 'seating.json')
 const INQUIRIES_FILE = path.join(STORAGE_DIR, 'inquiries.json')
 const PREFERENCES_FILE = path.join(STORAGE_DIR, 'preferences.json')
+const TASKS_FILE = path.join(STORAGE_DIR, 'tasks.json')
 
 interface User {
   id: string
@@ -100,6 +101,27 @@ interface BudgetItem {
   allocated: number
   actual: number
   status: 'planned' | 'quoted' | 'booked' | 'paid'
+  createdAt: string
+  updatedAt: string
+}
+
+interface Task {
+  id: string
+  userId: string
+  title: string
+  description?: string
+  category?: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold'
+  dueDate?: string
+  completedAt?: string
+  assignedTo?: string
+  isTemplate: boolean
+  templateId?: string
+  timeline?: string
+  order?: number
+  tags: string[]
+  notes?: string
   createdAt: string
   updatedAt: string
 }
@@ -275,6 +297,22 @@ class TempStorage {
   private writePreferences(items: UserPreferences[]) {
     this.ensureStorageDir()
     fs.writeFileSync(PREFERENCES_FILE, JSON.stringify(items, null, 2))
+  }
+
+  private readTasks(): Task[] {
+    try {
+      if (fs.existsSync(TASKS_FILE)) {
+        return JSON.parse(fs.readFileSync(TASKS_FILE, 'utf8'))
+      }
+      return []
+    } catch {
+      return []
+    }
+  }
+
+  private writeTasks(tasks: Task[]) {
+    this.ensureStorageDir()
+    fs.writeFileSync(TASKS_FILE, JSON.stringify(tasks, null, 2))
   }
 
   // User operations
@@ -755,6 +793,238 @@ class TempStorage {
     all.push(item)
     this.writeInquiries(all)
     return item
+  }
+
+  // Task operations
+  async findTasksByUserId(userId: string): Promise<Task[]> {
+    const tasks = this.readTasks()
+    return tasks.filter(task => task.userId === userId)
+  }
+
+  async findTaskById(id: string): Promise<Task | null> {
+    const tasks = this.readTasks()
+    return tasks.find(task => task.id === id) || null
+  }
+
+  async createTask(data: {
+    userId: string
+    title: string
+    description?: string
+    category?: string
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold'
+    dueDate?: string
+    assignedTo?: string
+    timeline?: string
+    order?: number
+    tags?: string[]
+    notes?: string
+  }): Promise<Task> {
+    const tasks = this.readTasks()
+    const task: Task = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userId: data.userId,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      priority: data.priority,
+      status: data.status,
+      dueDate: data.dueDate,
+      assignedTo: data.assignedTo,
+      isTemplate: false,
+      timeline: data.timeline,
+      order: data.order,
+      tags: data.tags || [],
+      notes: data.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    tasks.push(task)
+    this.writeTasks(tasks)
+    return task
+  }
+
+  async updateTask(id: string, data: Partial<Task>): Promise<Task | null> {
+    const tasks = this.readTasks()
+    const index = tasks.findIndex(task => task.id === id)
+    if (index === -1) return null
+
+    const updatedTask = {
+      ...tasks[index],
+      ...data,
+      updatedAt: new Date().toISOString()
+    }
+    tasks[index] = updatedTask
+    this.writeTasks(tasks)
+    return updatedTask
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const tasks = this.readTasks()
+    const index = tasks.findIndex(task => task.id === id)
+    if (index === -1) return false
+
+    tasks.splice(index, 1)
+    this.writeTasks(tasks)
+    return true
+  }
+
+  // Enhanced seating operations for new Table/Seat models
+  async findTableById(tableId: string): Promise<any | null> {
+    const tables = this.readSeating()
+    return tables.find(table => table.id === tableId) || null
+  }
+
+  async createSeatsForTable(tableId: string, capacity: number): Promise<any[]> {
+    const seats = []
+    for (let i = 1; i <= capacity; i++) {
+      seats.push({
+        id: `seat_${tableId}_${i}_${Date.now()}`,
+        tableId,
+        guestId: null,
+        seatNumber: i,
+        positionX: 0,
+        positionY: 0,
+        isHost: false,
+        notes: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+    }
+    return seats
+  }
+
+  async assignGuestToSeat(seatId: string, guestId: string | null, notes?: string): Promise<any> {
+    return {
+      id: seatId,
+      guestId,
+      notes: notes || null,
+      updatedAt: new Date().toISOString()
+    }
+  }
+
+  async bulkAssignGuests(assignments: Array<{ seatId: string; guestId: string | null }>): Promise<any[]> {
+    return assignments.map(assignment => ({
+      id: assignment.seatId,
+      guestId: assignment.guestId,
+      updatedAt: new Date().toISOString()
+    }))
+  }
+
+  async getSeatingStats(userId: string): Promise<{
+    totalTables: number
+    totalSeats: number
+    assignedSeats: number
+    unassignedSeats: number
+    totalGuests: number
+    seatedGuests: number
+    unseatedGuests: number
+  }> {
+    const tables = this.readSeating().filter(t => t.userId === userId)
+    const guests = this.readGuests().filter(g => g.userId === userId)
+    
+    const totalTables = tables.length
+    const totalSeats = tables.reduce((sum, table) => sum + table.capacity, 0)
+    const assignedSeats = tables.reduce((sum, table) => sum + (table.guestIds?.length || 0), 0)
+    
+    return {
+      totalTables,
+      totalSeats,
+      assignedSeats,
+      unassignedSeats: totalSeats - assignedSeats,
+      totalGuests: guests.length,
+      seatedGuests: assignedSeats,
+      unseatedGuests: guests.length - assignedSeats
+    }
+  }
+
+  // Task assignment operations
+  async listTaskAssignments(filters?: any): Promise<any[]> {
+    // Placeholder implementation for temp storage
+    return []
+  }
+
+  async findTaskAssignment(taskId: string, assigneeId: string): Promise<any | null> {
+    // Placeholder implementation for temp storage
+    return null
+  }
+
+  async createTaskAssignment(data: any): Promise<any> {
+    // Placeholder implementation for temp storage
+    return {
+      id: `assignment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      taskId: data.taskId,
+      assigneeId: data.assigneeId,
+      assignedBy: data.assignedBy,
+      status: 'pending',
+      notes: data.notes || null,
+      dueDate: data.dueDate || null,
+      assignedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  }
+
+  async bulkAssignTasks(data: any): Promise<any[]> {
+    // Placeholder implementation for temp storage
+    return data.taskIds.map((taskId: string) => ({
+      id: `assignment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      taskId,
+      assigneeId: data.assigneeId,
+      assignedBy: data.assignedBy,
+      status: 'pending',
+      notes: data.notes || null,
+      dueDate: data.dueDate || null,
+      assignedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }))
+  }
+
+  async updateTaskAssignment(taskId: string, assigneeId: string, data: any): Promise<any | null> {
+    // Placeholder implementation for temp storage
+    return {
+      id: `assignment_${taskId}_${assigneeId}`,
+      taskId,
+      assigneeId,
+      assignedBy: data.updatedBy,
+      status: data.status || 'pending',
+      notes: data.notes || null,
+      dueDate: data.dueDate || null,
+      assignedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  }
+
+  async unassignTask(taskId: string, assigneeId: string): Promise<boolean> {
+    // Placeholder implementation for temp storage
+    return true
+  }
+
+  async getTaskAssignmentStats(userId?: string): Promise<{
+    totalAssignments: number
+    assignmentsByStatus: Record<string, number>
+    assignmentsByPriority: Record<string, number>
+    overdueTasks: number
+    completionRate: number
+  }> {
+    // Placeholder implementation for temp storage
+    return {
+      totalAssignments: 0,
+      assignmentsByStatus: {
+        pending: 0,
+        in_progress: 0,
+        completed: 0,
+        cancelled: 0,
+        on_hold: 0
+      },
+      assignmentsByPriority: {
+        low: 0,
+        medium: 0,
+        high: 0,
+        urgent: 0
+      },
+      overdueTasks: 0,
+      completionRate: 0
+    }
   }
 }
 

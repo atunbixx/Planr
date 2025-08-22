@@ -25,5 +25,14 @@
     "guestIds": [],
     "createdAt": "2025-08-19T23:34:32.914Z",
     "updatedAt": "2025-08-19T23:34:32.914Z"
+  },
+  {
+    "id": "table_1755754585578_4ajpuq",
+    "userId": "user_1755366687167_yxvivql5a",
+    "name": "head table",
+    "capacity": 8,
+    "guestIds": [],
+    "createdAt": "2025-08-21T05:36:25.578Z",
+    "updatedAt": "2025-08-21T05:36:25.578Z"
   }
 ]

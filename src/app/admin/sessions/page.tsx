@@ -1,8 +1,11 @@
-"use client"
+'use client'
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, Typography, TextField, Button, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, Pagination, Chip, CircularProgress, Snackbar, Alert } from '@mui/material'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import AuthClient from '@/lib/auth/client'
 
@@ -18,13 +21,12 @@ export default function AdminSessionsPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [snack, setSnack] = useState<{ open: boolean; message: string; severity?: 'success'|'error' }>({ open: false, message: '', severity: 'success' })
 
   async function load() {
     setLoading(true)
     try {
       const token = AuthClient.getToken()
-      const headers: any = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const p = new URLSearchParams()
       p.set('page', String(page))
       p.set('pageSize', String(pageSize))
@@ -35,14 +37,18 @@ export default function AdminSessionsPage() {
       const j = await res.json()
       setRows(j?.data?.sessions || [])
       setTotal(j?.data?.total || 0)
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError('Failed to load')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { load() }, [page])
+  useEffect(() => { load() }, [page, activeOnly, load])
 
   async function revoke(id: string) {
     try {
@@ -50,74 +56,72 @@ export default function AdminSessionsPage() {
       const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       const res = await fetch(`/api/admin/sessions/${id}`, { method: 'PATCH', headers, body: JSON.stringify({ revoke: true }) })
       if (!res.ok) throw new Error('Failed')
-      setSnack({ open: true, message: 'Session revoked', severity: 'success' })
       await load()
     } catch {
-      setSnack({ open: true, message: 'Failed to revoke', severity: 'error' })
+        // handle error
     }
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif' }}>Sessions</Typography>
-        <Box sx={{ flex: 1 }} />
+    <div className="p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <h1 className="text-2xl font-bold">Sessions</h1>
+        <div className="flex-1" />
         <Button onClick={()=>router.push('/admin')}>Overview</Button>
-      </Box>
+      </div>
       <AdminToolbar />
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-        <TextField size="small" placeholder="Filter by userId" value={userId} onChange={(e)=>{ setUserId(e.target.value) }} />
-        <Button variant={activeOnly ? 'contained' : 'outlined'} onClick={()=>{ setActiveOnly(!activeOnly); setPage(1); load() }}>{activeOnly ? 'Active Only' : 'All'}</Button>
-        <Button variant="outlined" onClick={()=>{ setPage(1); load() }}>Search</Button>
-      </Box>
+      <div className="flex gap-1 mb-2 flex-wrap">
+        <Input placeholder="Filter by userId" value={userId} onChange={(e)=>{ setUserId(e.target.value) }} />
+        <Button variant={activeOnly ? 'default' : 'outline'} onClick={()=>{ setActiveOnly(!activeOnly); setPage(1); }}>{activeOnly ? 'Active Only' : 'All'}</Button>
+        <Button variant="outline" onClick={()=>{ setPage(1); load() }}>Search</Button>
+      </div>
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
+        <div className="flex justify-center py-6"><p>Loading...</p></div>
       ) : error ? (
-        <Typography color="error">{error}</Typography>
+        <p className="text-red-500">{error}</p>
       ) : (
         <>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell>User</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Region</TableCell>
-                  <TableCell>Geo</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell>Last Active</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableHead>User</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Geo</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Last Active</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 {rows.map(r => (
-                  <TableRow key={r.id} hover>
+                  <TableRow key={r.id}>
                     <TableCell>{r.userId.slice(0,8)}…</TableCell>
                     <TableCell>{r.userEmail || ''}</TableCell>
                     <TableCell>{r.region || ''}</TableCell>
                     <TableCell>{[r.city, r.country].filter(Boolean).join(', ')}</TableCell>
                     <TableCell>{new Date(r.createdAt).toLocaleString()}</TableCell>
                     <TableCell>{new Date(r.lastActiveAt).toLocaleString()}</TableCell>
-                    <TableCell>{r.revokedAt ? 'Revoked' : 'Active'}</TableCell>
-                    <TableCell align="right">
-                      <Button size="small" disabled={Boolean(r.revokedAt)} onClick={()=>revoke(r.id)}>Revoke</Button>
+                    <TableCell><Badge variant={r.revokedAt ? "destructive" : "default"}>{r.revokedAt ? 'Revoked' : 'Active'}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" disabled={Boolean(r.revokedAt)} onClick={()=>revoke(r.id)}>Revoke</Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </div>
           {total > pageSize && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <Pagination page={page} count={Math.ceil(total/pageSize)} onChange={(e,p)=>setPage(p)} />
-            </Box>
+            <div className="flex justify-center py-2">
+                <Button variant="outline" onClick={() => setPage(p => p - 1)} disabled={page === 1}>Previous</Button>
+                <span className="mx-4">Page {page} of {Math.ceil(total/pageSize)}</span>
+                <Button variant="outline" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(total/pageSize)}>Next</Button>
+            </div>
           )}
         </>
       )}
-      <Snackbar open={snack.open} autoHideDuration={2500} onClose={()=>setSnack(s=>({ ...s, open: false }))}>
-        <Alert severity={snack.severity || 'success'} onClose={()=>setSnack(s=>({ ...s, open: false }))}>{snack.message}</Alert>
-      </Snackbar>
-    </Box>
+    </div>
   )
 }

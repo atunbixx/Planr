@@ -1,8 +1,10 @@
-"use client"
+'use client'
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, Typography, TextField, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, Pagination, CircularProgress, Button } from '@mui/material'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import { useAuth } from '@/hooks/useAuth'
 import AuthClient from '@/lib/auth/client'
@@ -24,7 +26,7 @@ export default function AdminUsersPage() {
     setLoading(true)
     try {
       const token = AuthClient.getToken()
-      const headers: any = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const p = new URLSearchParams()
       p.set('page', String(page))
       p.set('pageSize', String(pageSize))
@@ -34,46 +36,50 @@ export default function AdminUsersPage() {
       const j = await res.json()
       setRows(j?.data?.users || [])
       setTotal(j?.data?.total || 0)
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError('Failed to load')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { if (!isLoading && user) load() }, [user, isLoading, page])
+  useEffect(() => { if (!isLoading && user) load() }, [user, isLoading, page, load])
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif' }}>Users</Typography>
-        <Box sx={{ flex: 1 }} />
+    <div className="p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <h1 className="text-2xl font-bold">Users</h1>
+        <div className="flex-1" />
         <Button onClick={()=>router.push('/admin')}>Overview</Button>
-      </Box>
+      </div>
       <AdminToolbar />
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <TextField size="small" placeholder="Search email" value={q} onChange={(e)=>setQ(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter'){ setPage(1); load() } }} />
-        <Button variant="outlined" onClick={()=>{ setPage(1); load() }}>Search</Button>
-      </Box>
+      <div className="flex gap-1 mb-2">
+        <Input placeholder="Search email" value={q} onChange={(e)=>setQ(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter'){ setPage(1); load() } }} />
+        <Button variant="outline" onClick={()=>{ setPage(1); load() }}>Search</Button>
+      </div>
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
+        <div className="flex justify-center py-6"><p>Loading...</p></div>
       ) : error ? (
-        <Typography color="error">{error}</Typography>
+        <p className="text-red-500">{error}</p>
       ) : (
         <>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Onboarded</TableCell>
-                  <TableCell>Created</TableCell>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Onboarded</TableHead>
+                  <TableHead>Created</TableHead>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 {rows.map(r => (
-                  <TableRow key={r.id} hover>
+                  <TableRow key={r.id}>
                     <TableCell>{r.email}</TableCell>
                     <TableCell>{r.role}</TableCell>
                     <TableCell>{r.onboardingCompleted ? 'Yes' : 'No'}</TableCell>
@@ -82,14 +88,16 @@ export default function AdminUsersPage() {
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </div>
           {total > pageSize && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <Pagination page={page} count={Math.ceil(total/pageSize)} onChange={(e,p)=>setPage(p)} />
-            </Box>
+            <div className="flex justify-center py-2">
+                <Button variant="outline" onClick={() => setPage(p => p - 1)} disabled={page === 1}>Previous</Button>
+                <span className="mx-4">Page {page} of {Math.ceil(total/pageSize)}</span>
+                <Button variant="outline" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(total/pageSize)}>Next</Button>
+            </div>
           )}
         </>
       )}
-    </Box>
+    </div>
   )
 }

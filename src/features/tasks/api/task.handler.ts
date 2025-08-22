@@ -1,0 +1,293 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { TaskService } from '../service/task.service'
+import { CreateTaskDto, UpdateTaskDto, TaskFilterDto } from '../dto/task.dto'
+
+export class TaskHandler {
+  private service = new TaskService()
+
+  /**
+   * GET /api/tasks - List tasks with filtering
+   */
+  async list(request: NextRequest, userId: string) {
+    try {
+      const { searchParams } = new URL(request.url)
+      
+      // Parse query parameters
+      const filters = {
+        status: searchParams.get('status') || undefined,
+        priority: searchParams.get('priority') || undefined,
+        category: searchParams.get('category') || undefined,
+        assignedTo: searchParams.get('assignedTo') || undefined,
+        timeline: searchParams.get('timeline') || undefined,
+        limit: parseInt(searchParams.get('limit') || '50'),
+        offset: parseInt(searchParams.get('offset') || '0'),
+        includeCompleted: searchParams.get('includeCompleted') !== 'false'
+      }
+
+      // Validate filters
+      const validationResult = TaskFilterDto.safeParse(filters)
+      if (!validationResult.success) {
+        return NextResponse.json({
+          success: false,
+          error: {
+            message: 'Invalid filter parameters',
+            details: validationResult.error.issues
+          }
+        }, { status: 400 })
+      }
+
+      const result = await this.service.list(userId, validationResult.data)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true, data: result.data })
+    } catch (error) {
+      console.error('Error in TaskHandler.list:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * POST /api/tasks - Create a new task
+   */
+  async create(request: NextRequest, userId: string) {
+    try {
+      const body = await request.json()
+      
+      // Validate input
+      const validationResult = CreateTaskDto.safeParse(body)
+      if (!validationResult.success) {
+        return NextResponse.json({
+          success: false,
+          error: {
+            message: 'Invalid task data',
+            details: validationResult.error.issues
+          }
+        }, { status: 400 })
+      }
+
+      const result = await this.service.create(userId, validationResult.data)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json(
+        { success: true, data: result.data },
+        { status: 201 }
+      )
+    } catch (error) {
+      console.error('Error in TaskHandler.create:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * GET /api/tasks/[id] - Get a single task
+   */
+  async getById(request: NextRequest, taskId: string) {
+    try {
+      const result = await this.service.getById(taskId)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      if (!result.data) {
+        return NextResponse.json(
+          { success: false, error: { message: 'Task not found' } },
+          { status: 404 }
+        )
+      }
+
+      return NextResponse.json({ success: true, data: result.data })
+    } catch (error) {
+      console.error('Error in TaskHandler.getById:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * PATCH /api/tasks/[id] - Update a task
+   */
+  async update(request: NextRequest, taskId: string) {
+    try {
+      const body = await request.json()
+      
+      // Validate input
+      const validationResult = UpdateTaskDto.safeParse(body)
+      if (!validationResult.success) {
+        return NextResponse.json({
+          success: false,
+          error: {
+            message: 'Invalid task data',
+            details: validationResult.error.issues
+          }
+        }, { status: 400 })
+      }
+
+      const result = await this.service.update(taskId, validationResult.data)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true, data: result.data })
+    } catch (error) {
+      console.error('Error in TaskHandler.update:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * DELETE /api/tasks/[id] - Delete a task
+   */
+  async delete(request: NextRequest, taskId: string) {
+    try {
+      const result = await this.service.delete(taskId)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true, data: { deleted: result.data } })
+    } catch (error) {
+      console.error('Error in TaskHandler.delete:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * GET /api/tasks/stats - Get task statistics
+   */
+  async getStats(request: NextRequest, userId: string) {
+    try {
+      const result = await this.service.getStats(userId)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true, data: result.data })
+    } catch (error) {
+      console.error('Error in TaskHandler.getStats:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * POST /api/tasks/template - Create tasks from template
+   */
+  async createFromTemplate(request: NextRequest, userId: string) {
+    try {
+      const body = await request.json()
+      const { timeline } = body
+
+      if (!timeline || typeof timeline !== 'string') {
+        return NextResponse.json({
+          success: false,
+          error: { message: 'Timeline is required' }
+        }, { status: 400 })
+      }
+
+      const result = await this.service.createFromTemplate(userId, timeline)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json(
+        { success: true, data: result.data },
+        { status: 201 }
+      )
+    } catch (error) {
+      console.error('Error in TaskHandler.createFromTemplate:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+
+  /**
+   * PATCH /api/tasks/bulk - Bulk update task status
+   */
+  async bulkUpdate(request: NextRequest, userId: string) {
+    try {
+      const body = await request.json()
+      const { taskIds, status } = body
+
+      if (!Array.isArray(taskIds) || taskIds.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: { message: 'Task IDs array is required' }
+        }, { status: 400 })
+      }
+
+      if (!status || !['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'].includes(status)) {
+        return NextResponse.json({
+          success: false,
+          error: { message: 'Valid status is required' }
+        }, { status: 400 })
+      }
+
+      const result = await this.service.bulkUpdateStatus(taskIds, status)
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true, data: result.data })
+    } catch (error) {
+      console.error('Error in TaskHandler.bulkUpdate:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+}

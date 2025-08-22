@@ -3,37 +3,30 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Avatar,
-  Chip,
-  Button,
-  IconButton,
-  Divider,
-  Stack,
-  Paper,
-} from '@mui/material';
-import Grid from '@mui/material/Grid';
-import {
-  People as PeopleIcon,
-  AttachMoney as MoneyIcon,
-  Store as VendorIcon,
-  CheckCircle as CheckIcon,
-  CalendarToday as CalendarIcon,
-  Timeline as TimelineIcon,
-  PhotoLibrary as PhotoIcon,
-  TrendingUp as TrendingUpIcon,
-  EmojiEvents as TrophyIcon,
-  Favorite as HeartIcon,
-  ArrowForward as ArrowForwardIcon,
-  Schedule as ScheduleIcon,
-  EventNote as EventIcon,
-} from '@mui/icons-material';
+  Users,
+  DollarSign,
+  Store,
+  CheckCircle,
+  Calendar,
+  Activity,
+  Image,
+  TrendingUp,
+  Trophy,
+  Heart,
+  ArrowRight,
+  Clock,
+  CalendarDays,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import WeddingProgressChart from '@/components/charts/WeddingProgressChart';
 import BudgetTrackingChart from '@/components/charts/BudgetTrackingChart';
+import WeddingCountdown from '@/components/ui/WeddingCountdown';
 
 interface StatsCardProps {
   title: string;
@@ -58,58 +51,54 @@ const StatsCard: React.FC<StatsCardProps> = ({
   onClick,
 }) => {
   return (
-    <Card
+    <div 
+      className={cn(
+        "h-full transition-all duration-200",
+        onClick && "cursor-pointer"
+      )}
       onClick={onClick}
-      sx={{
-        cursor: onClick ? 'pointer' : 'default',
-        height: '100%',
-        backgroundColor: '#FFFFFF',
-        color: '#1E293B',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid #F1F5F9',
-      }}
     >
-      <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-          <Avatar
-            sx={{
-              bgcolor: gradient,
-              color: '#FFFFFF',
-              width: 48,
-              height: 48,
-            }}
-          >
-            {icon}
-          </Avatar>
-          {trend && (
-            <Chip
-              label={`${trend.isPositive ? '+' : ''}${trend.value}%`}
-              size="small"
-              sx={{
-                bgcolor: trend.isPositive ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                color: trend.isPositive ? '#22C55E' : '#EF4444',
-                fontWeight: 600,
-              }}
-            />
+      <Card className="h-full bg-white border border-gray-100 relative overflow-hidden hover:shadow-md">
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-start justify-between mb-4">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback 
+                className="text-white font-semibold"
+                style={{ backgroundColor: gradient }}
+              >
+                {icon}
+              </AvatarFallback>
+            </Avatar>
+            {trend && (
+              <Badge 
+                className={cn(
+                  "text-xs font-semibold",
+                  trend.isPositive 
+                    ? "bg-green-100 text-green-600 hover:bg-green-100" 
+                    : "bg-red-100 text-red-600 hover:bg-red-100"
+                )}
+              >
+                {trend.isPositive ? '+' : ''}{trend.value}%
+              </Badge>
+            )}
+          </div>
+          
+          <h3 className="text-3xl font-bold text-slate-900 mb-1">
+            {value}
+          </h3>
+          
+          <h4 className="text-lg font-medium text-slate-600 mb-1">
+            {title}
+          </h4>
+          
+          {subtitle && (
+            <p className="text-sm text-slate-500">
+              {subtitle}
+            </p>
           )}
-        </Box>
-        
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5, color: '#1E293B' }}>
-          {value}
-        </Typography>
-        
-        <Typography variant="h6" sx={{ fontWeight: 500, mb: 0.5, color: '#475569' }}>
-          {title}
-        </Typography>
-        
-        {subtitle && (
-          <Typography variant="body2" sx={{ color: '#64748B' }}>
-            {subtitle}
-          </Typography>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
@@ -133,91 +122,74 @@ const ActionCard: React.FC<ActionCardProps> = ({
   badge,
 }) => {
   return (
-    <Card
+    <div 
+      className="cursor-pointer h-full transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-xl"
       onClick={onClick}
-      sx={{
-        cursor: 'pointer',
-        height: '100%',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        '&:hover': {
-          transform: 'translateY(-8px)',
-          boxShadow: '0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        },
-      }}
     >
-      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Avatar
-            sx={{
-              bgcolor: `${color}20`,
-              color: color,
-              width: 48,
-              height: 48,
-            }}
-          >
-            {icon}
-          </Avatar>
-          
-          {badge && (
-            <Chip
-              label={badge}
-              size="small"
-              sx={{
-                bgcolor: `${color}20`,
+      <Card className="h-full">
+        <CardContent className="p-6 h-full flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback 
+                className="font-semibold"
+                style={{ 
+                  backgroundColor: `${color}20`, 
+                  color: color 
+                }}
+              >
+                {icon}
+              </AvatarFallback>
+            </Avatar>
+            
+            {badge && (
+              <Badge className="text-xs font-semibold bg-opacity-20">
+                 {badge}
+               </Badge>
+            )}
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 rounded-full"
+              style={{
                 color: color,
-                fontWeight: 600,
+                backgroundColor: `${color}10`
               }}
-            />
-          )}
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
           
-          <IconButton
-            size="small"
-            sx={{
-              color: color,
-              bgcolor: `${color}10`,
-              '&:hover': {
-                bgcolor: `${color}20`,
-              },
-            }}
-          >
-            <ArrowForwardIcon fontSize="small" />
-          </IconButton>
-        </Box>
-        
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
-          {title}
-        </Typography>
-        
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, flexGrow: 1 }}>
-          {description}
-        </Typography>
-        
-        {progress !== undefined && (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                Progress
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {progress}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                bgcolor: `${color}20`,
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: color,
-                },
-              }}
-            />
-          </Box>
-        )}
-      </CardContent>
-    </Card>
+          <h3 className="text-lg font-semibold mb-2 text-slate-900">
+            {title}
+          </h3>
+          
+          <p className="text-sm text-slate-600 mb-4 flex-grow">
+            {description}
+          </p>
+          
+          {progress !== undefined && (
+            <div>
+              <div className="flex justify-between mb-2">
+                <span className="text-xs text-slate-500">
+                  Progress
+                </span>
+                <span className="text-xs text-slate-500">
+                  {progress}%
+                </span>
+              </div>
+              <Progress 
+                value={progress} 
+                className="h-2"
+                style={{
+                  backgroundColor: `${color}20`
+                }}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
@@ -232,6 +204,7 @@ interface PremiumDashboardOverviewProps {
   };
   completedTasks?: number;
   totalTasks?: number;
+  weddingDate?: Date;
 }
 
 const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
@@ -240,6 +213,7 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
   budgetSummary,
   completedTasks = 0,
   totalTasks = 0,
+  weddingDate,
 }) => {
   const router = useRouter();
 
@@ -247,257 +221,204 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
   const budgetPercentage = budgetSummary?.percentSpent || 0;
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="p-6">
       {/* Welcome Header */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography
-          variant="h2"
-          sx={{
-            fontWeight: 800,
-            mb: 1,
-            color: '#722F37',
-          }}
-        >
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-extrabold mb-2 text-[#722F37]">
           Welcome to Your Wedding Dashboard
-        </Typography>
-        <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
+        </h1>
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           Your complete wedding planning command center with beautiful insights and seamless organization
-        </Typography>
-      </Box>
+        </p>
+      </div>
+
+      {/* Wedding Countdown */}
+      {weddingDate && (
+        <div className="mb-8 flex justify-center">
+          <WeddingCountdown 
+            weddingDate={weddingDate} 
+            className="max-w-2xl w-full"
+          />
+        </div>
+      )}
 
       {/* Stats Cards Row */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <StatsCard
-            title="Total Guests"
-            value={guestTotal}
-            subtitle="Invited to your special day"
-            icon={<PeopleIcon />}
-            gradient="#722F37"
-            trend={{ value: 12, isPositive: true }}
-            onClick={() => router.push('/dashboard/guests')}
-          />
-        </Grid>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatsCard
+          title="Total Guests"
+          value={guestTotal}
+          subtitle="Invited to your special day"
+          icon={<Users className="h-6 w-6" />}
+          gradient="#722F37"
+          trend={{ value: 12, isPositive: true }}
+          onClick={() => router.push('/dashboard/guests')}
+        />
         
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <StatsCard
-            title="Vendors"
-            value={vendorTotal}
-            subtitle="Professional services booked"
-            icon={<VendorIcon />}
-            gradient="#6B7C32"
-            trend={{ value: 8, isPositive: true }}
-            onClick={() => router.push('/dashboard/vendors')}
-          />
-        </Grid>
+        <StatsCard
+          title="Vendors"
+          value={vendorTotal}
+          subtitle="Professional services booked"
+          icon={<Store className="h-6 w-6" />}
+          gradient="#6B7C32"
+          trend={{ value: 8, isPositive: true }}
+          onClick={() => router.push('/dashboard/vendors')}
+        />
         
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <StatsCard
-            title="Budget Used"
-            value={`${budgetPercentage}%`}
-            subtitle={budgetSummary ? `$${budgetSummary.totalActual.toLocaleString()} spent` : 'Track your expenses'}
-            icon={<MoneyIcon />}
-            gradient="#6B7C32"
-            trend={{ value: budgetPercentage > 80 ? -5 : 3, isPositive: budgetPercentage <= 80 }}
-            onClick={() => router.push('/dashboard/budget')}
-          />
-        </Grid>
+        <StatsCard
+          title="Budget Used"
+          value={`${budgetPercentage}%`}
+          subtitle={budgetSummary ? `$${budgetSummary.totalActual.toLocaleString()} spent` : 'Track your expenses'}
+          icon={<DollarSign className="h-6 w-6" />}
+          gradient="#6B7C32"
+          trend={{ value: budgetPercentage > 80 ? -5 : 3, isPositive: budgetPercentage <= 80 }}
+          onClick={() => router.push('/dashboard/budget')}
+        />
         
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <StatsCard
-            title="Tasks Done"
-            value={`${progressPercentage}%`}
-            subtitle={`${completedTasks} of ${totalTasks} completed`}
-            icon={<CheckIcon />}
-            gradient="#722F37"
-            trend={{ value: 15, isPositive: true }}
-            onClick={() => router.push('/dashboard/checklist')}
-          />
-        </Grid>
-      </Grid>
+        <StatsCard
+          title="Tasks Done"
+          value={`${progressPercentage}%`}
+          subtitle={`${completedTasks} of ${totalTasks} completed`}
+          icon={<CheckCircle className="h-6 w-6" />}
+          gradient="#722F37"
+          trend={{ value: 15, isPositive: true }}
+          onClick={() => router.push('/dashboard/checklist')}
+        />
+      </div>
 
       {/* Wedding Analytics Dashboard */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <WeddingProgressChart
-            title="Wedding Planning Progress"
-            data={{
-              categories: ['Venue', 'Catering', 'Photography', 'Music', 'Flowers', 'Attire'],
-              completed: [1, 0, 1, 0, 0, 0],
-              total: [1, 3, 2, 2, 1, 2]
-            }}
-          />
-        </Grid>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <WeddingProgressChart
+          title="Wedding Planning Progress"
+          data={{
+            categories: ['Venue', 'Catering', 'Photography', 'Music', 'Flowers', 'Attire'],
+            completed: [1, 0, 1, 0, 0, 0],
+            total: [1, 3, 2, 2, 1, 2]
+          }}
+        />
         
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <BudgetTrackingChart
-            title="Budget Overview"
-            data={{
-              categories: ['Venue', 'Catering', 'Photography', 'Music', 'Flowers', 'Attire'],
-              budgeted: [15000, 8000, 3000, 2000, 1500, 2000],
-              actual: [15000, 2500, 3200, 0, 800, 1200],
-              totalBudget: 31500,
-              totalSpent: 22700,
-              variance: -8800
-            }}
-          />
-        </Grid>
-        
-      </Grid>
+        <BudgetTrackingChart
+          title="Budget Overview"
+          data={{
+            categories: ['Venue', 'Catering', 'Photography', 'Music', 'Flowers', 'Attire'],
+            budgeted: [15000, 8000, 3000, 2000, 1500, 2000],
+            actual: [15000, 2500, 3200, 0, 800, 1200],
+            totalBudget: 31500,
+            totalSpent: 22700,
+            variance: -8800
+          }}
+        />
+      </div>
       
       {/* Planning Insights */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper
-            sx={{
-              p: 3,
-              height: '100%',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#722F37' }}>
-              Overall Progress
-            </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: '#722F37', mb: 1 }}>
-              {Math.round((2 / 11) * 100)}%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tasks completed across all categories
-            </Typography>
-          </Paper>
-        </Grid>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="p-6 h-full bg-slate-50 border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-[#722F37]">
+            Overall Progress
+          </h3>
+          <div className="text-3xl font-bold text-[#722F37] mb-2">
+            {Math.round((2 / 11) * 100)}%
+          </div>
+          <p className="text-sm text-slate-600">
+            Tasks completed across all categories
+          </p>
+        </Card>
         
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper
-            sx={{
-              p: 3,
-              height: '100%',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#6B7C32' }}>
-              Budget Status
-            </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: '#6B7C32', mb: 1 }}>
-              72%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Of total budget spent • $8.8k under budget
-            </Typography>
-          </Paper>
-        </Grid>
+        <Card className="p-6 h-full bg-slate-50 border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-[#6B7C32]">
+            Budget Status
+          </h3>
+          <div className="text-3xl font-bold text-[#6B7C32] mb-2">
+            72%
+          </div>
+          <p className="text-sm text-slate-600">
+            Of total budget spent • $8.8k under budget
+          </p>
+        </Card>
         
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper
-            sx={{
-              p: 3,
-              height: '100%',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#722F37' }}>
-              Next Priority
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-              Book Catering
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              3 vendors to review • 365 days remaining
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+        <Card className="p-6 h-full bg-slate-50 border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-[#722F37]">
+            Next Priority
+          </h3>
+          <div className="text-xl font-semibold mb-2">
+            Book Catering
+          </div>
+          <p className="text-sm text-slate-600">
+            3 vendors to review • 365 days remaining
+          </p>
+        </Card>
+      </div>
 
       {/* Action Cards Grid */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <ActionCard
-            title="Wedding Timeline"
-            description="Plan your perfect day with detailed timeline management and vendor coordination"
-            icon={<TimelineIcon />}
-            color="#722F37"
-            onClick={() => router.push('/dashboard/timeline')}
-            progress={65}
-          />
-        </Grid>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <ActionCard
+          title="Wedding Timeline"
+          description="Plan your perfect day with detailed timeline management and vendor coordination"
+          icon={<Activity className="h-6 w-6" />}
+          color="#722F37"
+          onClick={() => router.push('/dashboard/timeline')}
+          progress={65}
+        />
         
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <ActionCard
-            title="Photo Gallery"
-            description="Organize and share your engagement photos, venue visits, and inspiration"
-            icon={<PhotoIcon />}
-            color="#6B7C32"
-            onClick={() => router.push('/dashboard/photos')}
-            badge="New"
-          />
-        </Grid>
+        <ActionCard
+          title="Photo Gallery"
+          description="Organize and share your engagement photos, venue visits, and inspiration"
+          icon={<Image className="h-6 w-6" />}
+          color="#6B7C32"
+          onClick={() => router.push('/dashboard/photos')}
+          badge="New"
+        />
         
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <ActionCard
-            title="Table Seating"
-            description="Create the perfect seating arrangement for your reception with drag-and-drop ease"
-            icon={<TrophyIcon />}
-            color="#6B7C32"
-            onClick={() => router.push('/dashboard/seating')}
-            progress={30}
-          />
-        </Grid>
-      </Grid>
+        <ActionCard
+          title="Table Seating"
+          description="Create the perfect seating arrangement for your reception with drag-and-drop ease"
+          icon={<Trophy className="h-6 w-6" />}
+          color="#6B7C32"
+          onClick={() => router.push('/dashboard/seating')}
+          progress={30}
+        />
+      </div>
 
       {/* Quick Actions */}
-      <Paper
-        sx={{
-          p: 3,
-          backgroundColor: '#F8FAFC',
-          border: '1px solid #E2E8F0',
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+      <Card className="p-6 bg-slate-50 border border-gray-200">
+        <h3 className="text-lg font-semibold mb-4 text-slate-900">
           Quick Actions
-        </Typography>
+        </h3>
         
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <div className="flex flex-col sm:flex-row gap-4">
           <Button
-            variant="contained"
-            startIcon={<PeopleIcon />}
+            className="flex-1"
             onClick={() => router.push('/dashboard/guests')}
-            sx={{ flex: 1 }}
           >
+            <Users className="mr-2 h-4 w-4" />
             Add Guests
           </Button>
           
           <Button
-            variant="contained"
-            startIcon={<VendorIcon />}
+            className="flex-1"
             onClick={() => router.push('/dashboard/vendors')}
-            sx={{ flex: 1 }}
           >
+            <Store className="mr-2 h-4 w-4" />
             Find Vendors
           </Button>
           
           <Button
-            variant="contained"
-            startIcon={<MoneyIcon />}
+            className="flex-1"
             onClick={() => router.push('/dashboard/budget')}
-            sx={{ flex: 1 }}
           >
+            <DollarSign className="mr-2 h-4 w-4" />
             Track Budget
           </Button>
           
           <Button
-            variant="contained"
-            startIcon={<CalendarIcon />}
+            className="flex-1"
             onClick={() => router.push('/dashboard/timeline')}
-            sx={{ flex: 1 }}
           >
+            <Calendar className="mr-2 h-4 w-4" />
             Plan Timeline
           </Button>
-        </Stack>
-      </Paper>
-    </Box>
+        </div>
+      </Card>
+    </div>
   );
 };
 

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
 import { JWTService, JWTPayload } from './jwt'
-import { prisma } from '@/lib/db/prisma'
-import { tempStorage } from '@/lib/db/temp-storage'
-import { hashString } from '@/lib/utils/hash'
+import { prisma } from '../db/prisma'
+import { tempStorage } from '../db/temp-storage'
+import { hashString } from '../utils/hash'
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {

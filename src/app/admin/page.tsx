@@ -1,8 +1,10 @@
-"use client"
+'use client'
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, Grid, Card, CardContent, Typography, Chip, CircularProgress, Button } from '@mui/material'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import { useAuth } from '@/hooks/useAuth'
 import AuthClient from '@/lib/auth/client'
@@ -18,7 +20,7 @@ export default function AdminOverviewPage() {
     async function load() {
       try {
         const token = AuthClient.getToken()
-        const headers: any = token ? { Authorization: `Bearer ${token}` } : {}
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
         const res = await fetch('/api/admin/overview', { headers })
         if (!res.ok) {
           const j = await res.json().catch(()=>({}))
@@ -26,8 +28,12 @@ export default function AdminOverviewPage() {
         }
         const j = await res.json()
         setData(j?.data)
-      } catch (e: any) {
-        setError(e?.message || 'Failed to load')
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          setError(e.message)
+        } else {
+          setError('Failed to load')
+        }
       } finally {
         setLoading(false)
       }
@@ -37,60 +43,66 @@ export default function AdminOverviewPage() {
 
   if (isLoading || loading) {
     return (
-      <Box sx={{ p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Box>
+      <div className="p-4 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography variant="h5" sx={{ mb: 2 }}>Admin</Typography>
-        <Typography variant="body2" color="error.main">{error}</Typography>
-      </Box>
+      <div className="p-4">
+        <h1 className="text-xl font-bold mb-2">Admin</h1>
+        <p className="text-red-500">{error}</p>
+      </div>
     )
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif' }}>Super Admin</Typography>
-        <Chip label="Preview" size="small" />
-        <Box sx={{ flex: 1 }} />
+    <div className="p-3">
+      <div className="flex items-center gap-2 mb-3">
+        <h1 className="text-2xl font-bold">Super Admin</h1>
+        <Badge>Preview</Badge>
+        <div className="flex-1" />
         <Button onClick={()=>router.push('/dashboard')}>Back to Dashboard</Button>
-      </Box>
+      </div>
       <AdminToolbar />
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={4}>
-          <Card><CardContent>
-            <Typography variant="overline">Users</Typography>
-            <Typography variant="h4">{data?.users ?? 0}</Typography>
-          </CardContent></Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card><CardContent>
-            <Typography variant="overline">Private Vendors</Typography>
-            <Typography variant="h4">{data?.vendors ?? 0}</Typography>
-          </CardContent></Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card><CardContent>
-            <Typography variant="overline">Directory Vendors</Typography>
-            <Typography variant="h4">{data?.directoryVendors ?? 0}</Typography>
-          </CardContent></Card>
-        </Grid>
-        <Grid item xs={12}>
-          <Card><CardContent>
-            <Typography variant="h6" sx={{ mb: 1 }}>Regions</Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {(data?.regions || []).map((r, i) => (
-                <Chip key={i} label={`${r.region || 'N/A'} • ${r._count?._all ?? 0}`} />
-              ))}
-            </Box>
-          </CardContent></Card>
-        </Grid>
-      </Grid>
-    </Box>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+            <CardHeader>
+                <CardTitle>Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-2xl font-bold">{data?.users ?? 0}</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Private Vendors</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-2xl font-bold">{data?.vendors ?? 0}</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Directory Vendors</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-2xl font-bold">{data?.directoryVendors ?? 0}</p>
+            </CardContent>
+        </Card>
+        <Card className="col-span-1 sm:col-span-2 lg:col-span-3">
+            <CardHeader>
+                <CardTitle>Regions</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+                {(data?.regions || []).map((r, i) => (
+                    <Badge key={i} variant="secondary">{r.region || 'N/A'} • {r._count?._all ?? 0}</Badge>
+                ))}
+            </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

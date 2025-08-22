@@ -1,83 +1,78 @@
-'use client';
+'use client'
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Chip,
-  Button,
-  IconButton,
-  Avatar,
-  Divider,
-  Alert,
-  CircularProgress,
-  CardActionArea,
-} from '@mui/material';
-import {
-  People as PeopleIcon,
-  AttachMoney as MoneyIcon,
-  CheckCircle as CheckIcon,
-  Store as VendorIcon,
-  CalendarToday as CalendarIcon,
-  Favorite as HeartIcon,
-  PhotoLibrary as PhotoIcon,
-  Message as MessageIcon,
-  Timeline as TimelineIcon,
-  CheckBox as CheckBoxIcon,
-  Schedule as ScheduleIcon,
-  EmojiEvents as TrophyIcon,
-  TrendingUp as TrendingUpIcon,
-  AccessTime as ClockIcon,
-  EventNote as EventIcon,
-} from '@mui/icons-material';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
-import { useAuth } from '@/hooks/useAuth';
-import AuthClient from '@/lib/auth/client';
-import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
-import PremiumDashboardOverview from '@/components/dashboard/PremiumDashboardOverview';
+import React, { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { 
+  Users as PeopleIcon, 
+  DollarSign as MoneyIcon, 
+  CheckCircle as CheckIcon, 
+  Store as VendorIcon, 
+  Calendar as CalendarIcon, 
+  Heart as HeartIcon, 
+  Image as PhotoIcon, 
+  MessageSquare as MessageIcon, 
+  Activity as TimelineIcon, 
+  CheckSquare as CheckBoxIcon, 
+  Clock as ScheduleIcon, 
+  Trophy as TrophyIcon, 
+  TrendingUp as TrendingUpIcon, 
+  Clock as ClockIcon, 
+  Calendar as EventIcon,
+  ArrowRight
+} from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { useAuth } from '@/hooks/useAuth'
+import AuthClient from '@/lib/auth/client'
+import PremiumDashboardOverview from '@/components/dashboard/PremiumDashboardOverview'
 
-interface FeatureCard {
+interface FeatureCardProps {
   title: string;
   description: string;
   icon: React.ReactElement;
-  color: string;
   path: string;
-  stats?: string;
 }
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, path }) => {
+  const router = useRouter();
+  return (
+    <div className="group hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-300 cursor-pointer" onClick={() => router.push(path)}>
+      <Card className="h-full border-none shadow-[0_2px_8px_rgba(0,0,0,0.06)] group-hover:shadow-none transition-all duration-300">
+        <CardHeader className="flex flex-col items-center text-center pb-4 pt-8">
+          <div className="mb-4 p-3 bg-[#F5F5F5] group-hover:bg-black transition-all duration-300">
+            <div className="group-hover:text-white transition-all duration-300">
+              {icon}
+            </div>
+          </div>
+          <CardTitle className="text-lg font-light text-black">{title}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center pb-8">
+          <p className="text-sm text-[#666666] font-light leading-relaxed">{description}</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, signout, isLoading } = useAuth();
-  const { themeMode } = useCustomTheme();
-  const [topCards, setTopCards] = useState<FeatureCard[]>([]);
-  const [middleCards, setMiddleCards] = useState<FeatureCard[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [budgetBreakdown, setBudgetBreakdown] = useState<any[]>([]);
   const [completedTasks, setCompletedTasks] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
   const [guestTotal, setGuestTotal] = useState<number | null>(null);
   const [vendorTotal, setVendorTotal] = useState<number | null>(null);
   const [vendorBookedTotal, setVendorBookedTotal] = useState<number | null>(null);
   const [guestAccepted, setGuestAccepted] = useState<number | null>(null);
-  const [vendorCritical, setVendorCritical] = useState<{ venue: boolean; photographer: boolean; caterer: boolean; music: boolean; florist: boolean } | null>(null);
   const [budgetSummary, setBudgetSummary] = useState<{ totalAmount: number; totalAllocated: number; totalActual: number; percentSpent?: number } | null>(null);
   const [weddingDate, setWeddingDate] = useState<Date | null>(null);
   const [venue, setVenue] = useState<string | null>(null);
   const [teamRoles, setTeamRoles] = useState<Array<{ key: string; role: string; status: 'needed' | 'hired' }>>([]);
-  const [nextEventLabel, setNextEventLabel] = useState<string | null>(null);
-  const [timelineCount, setTimelineCount] = useState<number>(0);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -85,66 +80,6 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    // Set up the feature cards
-    setTopCards([
-      {
-        title: 'Guest Management',
-        description: 'Manage your guest list and RSVPs',
-        icon: <PeopleIcon sx={{ fontSize: 28 }} />,
-        color: '#000000',
-        path: '/dashboard/guests',
-        stats: guestTotal === null ? '—' : `${guestTotal} ${guestTotal === 1 ? 'guest' : 'guests'}`,
-      },
-      {
-        title: 'Budget Tracker',
-        description: 'Track expenses and stay on budget',
-        icon: <MoneyIcon sx={{ fontSize: 28 }} />,
-        color: '#000000',
-        path: '/dashboard/budget',
-        stats: budgetSummary ? `$${Number(budgetSummary.totalActual).toLocaleString()} spent` : '—',
-      },
-      {
-        title: 'Vendor Directory',
-        description: 'Find and manage wedding vendors',
-        icon: <VendorIcon sx={{ fontSize: 28 }} />,
-        color: '#000000',
-        path: '/dashboard/vendors',
-        stats: vendorTotal === null ? '—' : `${vendorTotal} ${vendorTotal === 1 ? 'vendor' : 'vendors'}`,
-      },
-    ]);
-
-    setMiddleCards([
-      {
-        title: 'Timeline',
-        description: 'Plan your wedding day schedule',
-        icon: <TimelineIcon sx={{ fontSize: 28 }} />,
-        color: '#000000',
-        path: '/dashboard/timeline',
-        stats: 'Not started',
-      },
-      {
-        title: 'Photo Gallery',
-        description: 'Collect and share wedding photos',
-        icon: <PhotoIcon sx={{ fontSize: 28 }} />,
-        color: '#000000',
-        path: '/dashboard/photos',
-        stats: '0 photos',
-      },
-      {
-        title: 'Messages',
-        description: 'Communicate with guests and vendors',
-        icon: <MessageIcon sx={{ fontSize: 28 }} />,
-        color: '#000000',
-        path: '/dashboard/messages',
-        stats: '0 messages',
-      },
-    ]);
-
-    // Tasks, recent activity, and budget breakdown are loaded dynamically below
-  }, [guestTotal, vendorTotal, budgetSummary]);
-
-  // Fetch live stats via consolidated overview endpoint to minimize DB calls
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -159,7 +94,6 @@ export default function DashboardPage() {
             if (typeof d?.guests?.accepted === 'number') setGuestAccepted(d.guests.accepted);
             if (typeof d.vendorTotal === 'number') setVendorTotal(d.vendorTotal);
             if (typeof d.vendorBookedTotal === 'number') setVendorBookedTotal(d.vendorBookedTotal);
-            if (d.vendorCritical) setVendorCritical(d.vendorCritical);
             if (d.budget) {
               setBudgetSummary({
                 totalAmount: d.budget.totalAmount,
@@ -171,7 +105,6 @@ export default function DashboardPage() {
           }
         }
 
-        // Wedding details (date & venue)
         const wd = await fetch('/api/wedding-details', { headers })
         if (wd.ok) {
           const wj = await wd.json()
@@ -180,7 +113,6 @@ export default function DashboardPage() {
           if (w?.venue) setVenue(w.venue)
         }
 
-        // Checklist
         const cl = await fetch('/api/dashboard/checklist', { headers })
         if (cl.ok) {
           const cj = await cl.json()
@@ -189,41 +121,18 @@ export default function DashboardPage() {
           setTotalTasks(cj?.data?.total || 0)
         }
 
-        // Team roles
         const tr = await fetch('/api/dashboard/team', { headers })
         if (tr.ok) {
           const tj = await tr.json()
           setTeamRoles(tj?.data || [])
         }
-
-        // Timeline next event label
-        const tl = await fetch('/api/dashboard/timeline', { headers })
-        if (tl.ok) {
-          const tj = await tl.json()
-          const events: Array<{ time: string; title: string }> = tj?.data?.events || []
-          setTimelineCount(events.length)
-          const now = new Date()
-          const upcoming = events
-            .map(e => ({ ...e, date: new Date(e.time) }))
-            .filter(e => !isNaN(e.date.getTime()))
-            .sort((a, b) => a.date.getTime() - b.date.getTime())
-            .find(e => e.date.getTime() >= now.getTime())
-          if (upcoming) {
-            const t = upcoming.date
-            const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            setNextEventLabel(`${upcoming.title.toUpperCase()} AT ${timeStr}`)
-          } else {
-            setNextEventLabel(null)
-          }
-        }
-        // Recent activity
+        
         const ra = await fetch('/api/dashboard/activity', { headers })
         if (ra.ok) {
           const rj = await ra.json()
           setRecentActivity(rj?.data?.items || [])
         }
       } catch (e) {
-        // Silently ignore; UI will keep placeholders
         console.error('Failed to load dashboard stats', e);
       }
     };
@@ -232,1090 +141,177 @@ export default function DashboardPage() {
   }, []);
 
   const getDaysUntilWedding = () => {
-    const date = weddingDate || new Date();
+    if (!weddingDate) return '-';
     const today = new Date();
-    const diffTime = Math.abs(date.getTime() - today.getTime());
+    today.setHours(0, 0, 0, 0);
+    const weddingDay = new Date(weddingDate);
+    weddingDay.setHours(0, 0, 0, 0);
+    const diffTime = weddingDay.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
-      <DashboardLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <CircularProgress />
-        </Box>
-      </DashboardLayout>
-    );
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+            </div>
+        </div>
+    )
   }
 
-  // Render Premium Dashboard if premium theme is active
-  if (themeMode === 'premium') {
-    return (
-      <PremiumDashboardLayout>
-        <PremiumDashboardOverview
-          guestTotal={guestTotal || 0}
-          vendorTotal={vendorTotal || 0}
-          budgetSummary={budgetSummary || undefined}
-          completedTasks={completedTasks}
-          totalTasks={totalTasks}
-        />
-      </PremiumDashboardLayout>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
+  const planningProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
-    <DashboardLayout>
-      <Box sx={{ px: 0, py: 3 }}>
-        {/* Hero Section - Countdown Focus */}
-        <Grid container spacing={3} sx={{ mb: 4, px: 3 }}>
-          <Grid size={{ xs: 12, lg: 4, md: 5 }}>
-            <Paper
-              sx={{
-                p: 6,
-                background: 'linear-gradient(135deg, #000000 0%, #333333 100%)',
-                color: '#FFFFFF',
-                borderRadius: 0,
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                position: 'relative',
-                overflow: 'hidden',
-                minHeight: 320,
-              }}
-            >
-              <Box sx={{ position: 'relative', zIndex: 1 }}>
-                <Typography 
-                  variant="overline" 
-                  sx={{ 
-                    fontSize: '0.625rem', 
-                    letterSpacing: '0.2em',
-                    opacity: 0.8,
-                    fontWeight: 600,
-                    fontFamily: '"Bodoni Moda", serif',
-                  }}
-                >
-                  YOUR WEDDING DAY
-                </Typography>
-                <Typography 
-                  variant="h1" 
-                  sx={{ 
-                    fontFamily: '"Bodoni Moda", "Playfair Display", serif',
-                    fontSize: '5rem',
-                    fontWeight: 300,
-                    letterSpacing: '-0.05em',
-                    lineHeight: 1,
-                    mt: 2,
-                    mb: 1,
-                  }}
-                >
-                  {getDaysUntilWedding()}
-                </Typography>
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontFamily: '"Bodoni Moda", serif',
-                    fontWeight: 300,
-                    letterSpacing: '0.05em',
-                    mb: 4,
-                  }}
-                >
-                  DAYS TO GO
-                </Typography>
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    fontSize: '1.125rem',
-                    opacity: 0.9,
-                    mb: 3,
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {weddingDate ? weddingDate.toLocaleDateString() : '—'}{venue ? ` • ${venue}` : ''}
-                </Typography>
-                <Button
-                  variant="outlined"
-                  sx={{
-                    color: '#FFFFFF',
-                    borderColor: '#FFFFFF',
-                    px: 4,
-                    py: 1.5,
-                    '&:hover': {
-                      bgcolor: '#FFFFFF',
-                      color: '#000000',
-                    },
-                  }}
-                  onClick={() => router.push('/dashboard/timeline')}
-                >
-                  VIEW TIMELINE
-                </Button>
-              </Box>
-              {/* Decorative element */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: -50,
-                  right: -50,
-                  width: 200,
-                  height: 200,
-                  borderRadius: '50%',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              />
-            </Paper>
-          </Grid>
+    <div className="min-h-screen bg-[#E9F5EB]">
+      <main className="p-4 sm:p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-12">
+            <h1 className="text-5xl font-light text-black mb-4">Welcome, {user.email}!</h1>
+            <p className="text-xl text-[#666666] font-light">Let's get your wedding planned. Here's your overview.</p>
+          </div>
 
-          {/* Planning Progress */}
-          <Grid size={{ xs: 12, lg: 3, md: 4 }}>
-            <Paper
-              sx={{
-                p: 4,
-                backgroundColor: '#FFFFFF',
-                borderRadius: 0,
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                height: '100%',
-                minHeight: 320,
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Typography
-                variant="overline"
-                sx={{
-                  fontSize: '0.625rem',
-                  letterSpacing: '0.2em',
-                  fontWeight: 600,
-                  fontFamily: '"Bodoni Moda", serif',
-                  mb: 3,
-                }}
-              >
-                PLANNING PROGRESS
-              </Typography>
-              
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Box sx={{ position: 'relative', mb: 4 }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}
-                    size={120}
-                    thickness={2}
-                    sx={{
-                      color: '#000000',
-                      position: 'absolute',
-                      left: '50%',
-                      marginLeft: '-60px',
-                    }}
-                  />
-                  <CircularProgress
-                    variant="determinate"
-                    value={100}
-                    size={120}
-                    thickness={2}
-                    sx={{
-                      color: '#F5F5F5',
-                      position: 'absolute',
-                      left: '50%',
-                      marginLeft: '-60px',
-                      zIndex: 0,
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: 120,
-                    }}
-                  >
-                    <Typography
-                      variant="h3"
-                      sx={{
-                        fontFamily: '"Bodoni Moda", serif',
-                        fontWeight: 400,
-                      }}
-                    >
-                      {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
-                    </Typography>
-                  </Box>
-                </Box>
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Countdown and Key Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <Card className="md:col-span-1 flex flex-col justify-center items-center text-center bg-black text-white border-none shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_48px_rgba(0,0,0,0.18)] transition-all duration-300">
+                  <CardContent className="p-8">
+                    <p className="text-7xl font-light mb-2">{getDaysUntilWedding()}</p>
+                    <p className="text-lg font-light tracking-wide">days to go</p>
+                  </CardContent>
+                </Card>
+                <Card className="md:col-span-2 shadow-[0_4px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-300">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="text-2xl font-light">Key Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-6 text-base">
+                    <div className="space-y-2">
+                      <p className="text-[#666666] text-sm font-medium tracking-wide uppercase">Wedding Date</p>
+                      <p className="font-light text-black text-lg">{weddingDate ? weddingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[#666666] text-sm font-medium tracking-wide uppercase">Venue</p>
+                      <p className="font-light text-black text-lg">{venue || 'Not selected'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[#666666] text-sm font-medium tracking-wide uppercase">Guests</p>
+                      <p className="font-light text-black text-lg">{guestTotal ?? 0} invited, {guestAccepted ?? 0} accepted</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[#666666] text-sm font-medium tracking-wide uppercase">Vendors</p>
+                      <p className="font-light text-black text-lg">{vendorBookedTotal ?? 0} / {vendorTotal ?? 0} booked</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', mb: 1 }}>
-                    Almost There!
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {completedTasks} of {totalTasks} tasks completed
-                  </Typography>
-                </Box>
-              </Box>
+              {/* Planning Progress */}
+              <Card className="shadow-[0_4px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-300">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-2xl font-light">Planning Progress</CardTitle>
+                  <CardDescription className="text-lg text-[#666666] mt-2">{completedTasks} of {totalTasks} tasks completed</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Progress value={planningProgress} className="h-3 bg-[#F5F5F5]" />
+                  <div className="flex justify-between text-base text-[#666666]">
+                    <span className="font-medium">Tasks</span>
+                    <span className="font-light text-xl">{planningProgress}%</span>
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-6">
+                  <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white transition-all duration-200 font-medium tracking-wide" onClick={() => router.push('/dashboard/checklist')}>View Checklist</Button>
+                </CardFooter>
+              </Card>
 
-              <Button
-                fullWidth
-                variant="outlined"
-                sx={{ mt: 3 }}
-                onClick={() => router.push('/dashboard/checklist')}
-              >
-                VIEW CHECKLIST
-              </Button>
-            </Paper>
-          </Grid>
+              {/* Quick Actions */}
+              <div>
+                <h2 className="text-3xl font-light text-black mb-8">Quick Actions</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <FeatureCard title="Manage Guests" description="Add, edit, and track RSVPs" icon={<PeopleIcon className="w-5 h-5 text-black"/>} path="/dashboard/guests" />
+                  <FeatureCard title="Track Budget" description="Keep an eye on your spending" icon={<MoneyIcon className="w-5 h-5 text-black"/>} path="/dashboard/budget" />
+                  <FeatureCard title="Find Vendors" description="Discover and book professionals" icon={<VendorIcon className="w-5 h-5 text-black"/>} path="/dashboard/vendors" />
+                  <FeatureCard title="View Timeline" description="See your wedding day schedule" icon={<CalendarIcon className="w-5 h-5 text-black"/>} path="/dashboard/timeline" />
+                </div>
+              </div>
+            </div>
 
-          {/* Your Wedding Team - Compact Version */}
-          <Grid size={{ xs: 12, lg: 5, md: 3 }}>
-            <Paper
-              sx={{
-                p: 4,
-                backgroundColor: '#FFFFFF',
-                borderRadius: 0,
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                height: '100%',
-                minHeight: 320,
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Typography
-                variant="overline"
-                sx={{
-                  fontSize: '0.625rem',
-                  letterSpacing: '0.2em',
-                  fontWeight: 600,
-                  fontFamily: '"Bodoni Moda", serif',
-                  mb: 2,
-                }}
-              >
-                YOUR WEDDING TEAM
-              </Typography>
-              
-              <Box sx={{ flex: 1 }}>
-                <Grid container spacing={1.5}>
-                  {teamRoles.map((vendor) => (
-                    <Grid size={{ xs: 4 }} key={vendor.key}>
-                      <Box
-                        sx={{
-                          p: 1.5,
-                          border: '1px solid #F0F0F0',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: '#000000',
-                            bgcolor: '#FAFAFA',
-                          },
-                        }}
-                        onClick={() => router.push('/dashboard/vendors')}
-                      >
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            bgcolor: '#FAFAFA',
-                            color: '#999999',
-                            mx: 'auto',
-                            mb: 0.5,
-                          }}
-                        >
-                          <VendorIcon sx={{ fontSize: 16 }} />
-                        </Avatar>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontSize: '0.625rem',
-                            mb: 0.5,
-                            lineHeight: 1.2,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {vendor.role}
-                        </Typography>
-                        <Chip
-                          label={vendor.status === 'needed' ? 'HIRE' : '✓'}
-                          size="small"
-                          sx={{
-                            fontSize: '0.5rem',
-                            height: 16,
-                            fontWeight: 600,
-                            bgcolor: vendor.status === 'needed' ? '#FFF' : '#000',
-                            color: vendor.status === 'needed' ? '#000' : '#FFF',
-                            border: '1px solid #000',
-                            minWidth: 35,
-                          }}
-                        />
-                      </Box>
-                    </Grid>
+            {/* Right Column */}
+            <div className="space-y-8">
+              {/* Budget Overview */}
+              <Card className="shadow-[0_4px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-300">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-2xl font-light">Budget Overview</CardTitle>
+                  <CardDescription className="text-lg text-[#666666] mt-2">
+                    ${(budgetSummary?.totalActual ?? 0).toLocaleString()} spent of ${(budgetSummary?.totalAmount ?? 0).toLocaleString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Progress value={budgetSummary?.percentSpent || 0} className="h-3 bg-[#F5F5F5]" />
+                    <div className="text-right">
+                      <span className="text-2xl font-light text-black">{Math.round(budgetSummary?.percentSpent || 0)}%</span>
+                    </div>
+                </CardContent>
+                <CardFooter className="pt-6">
+                    <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white transition-all duration-200 font-medium tracking-wide w-full" onClick={() => router.push('/dashboard/budget')}>
+                        Manage Budget
+                    </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Wedding Team */}
+              <Card className="shadow-[0_4px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-300">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-2xl font-light">Your Wedding Team</CardTitle>
+                  <CardDescription className="text-lg text-[#666666] mt-2">Key vendors for your big day</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-6">
+                  {teamRoles.slice(0, 4).map((vendor) => (
+                    <div key={vendor.key} className="text-center space-y-3">
+                      <Avatar className="mx-auto mb-3 w-12 h-12">
+                        <AvatarFallback className="bg-[#F5F5F5] text-black"><VendorIcon className="w-6 h-6"/></AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium text-black">{vendor.role}</p>
+                      <Badge variant={vendor.status === 'hired' ? "default" : "secondary"} className="text-xs bg-black text-white border-none">{vendor.status === 'hired' ? 'Hired' : 'Needed'}</Badge>
+                    </div>
                   ))}
-                </Grid>
-              </Box>
-              
-              <Button
-                fullWidth
-                variant="outlined"
-                sx={{ mt: 3 }}
-                onClick={() => router.push('/dashboard/vendors')}
-              >
-                FIND VENDORS
-              </Button>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Priority Actions - What Matters Most */}
-        <Box sx={{ mb: 4, px: 3 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.625rem',
-              letterSpacing: '0.2em',
-              fontWeight: 600,
-              fontFamily: '"Bodoni Moda", serif',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            PRIORITY ACTIONS
-          </Typography>
-          
-          <Grid container spacing={3}>
-            {/* Recent Activity */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>RECENT ACTIVITY</Typography>
-                  {recentActivity && recentActivity.length > 0 ? (
-                    <List dense>
-                      {recentActivity.slice(0,6).map((a:any, idx:number) => (
-                        <ListItem key={idx} sx={{ px: 0 }}>
-                          <ListItemText primary={a.title} secondary={new Date(a.when).toLocaleString()} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">No recent changes.</Typography>
-                  )}
                 </CardContent>
+                <CardFooter className="pt-6">
+                  <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white transition-all duration-200 font-medium tracking-wide w-full" onClick={() => router.push('/dashboard/vendors')}>Manage Your Team</Button>
+                </CardFooter>
               </Card>
-            </Grid>
-            {/* Guest Management - Most Important */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  transition: 'box-shadow 0.3s ease',
-                  '&:hover': {
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.10)',
-                  },
-                }}
-              >
-                <CardActionArea onClick={() => router.push('/dashboard/guests')}>
-                  <CardContent sx={{ p: 4 }}>
-                    <Grid container spacing={3} alignItems="center">
-                      <Grid size={{ xs: 8 }}>
-                        <Typography
-                          variant="h4"
-                          sx={{
-                            fontFamily: '"Bodoni Moda", serif',
-                            fontWeight: 400,
-                            mb: 1,
-                          }}
-                        >
-                          Guest List
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                          Manage RSVPs and seating arrangements
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 3 }}>
-                          <Box>
-                            <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                              {guestAccepted ?? 0}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              CONFIRMED
-                            </Typography>
-                          </Box>
-                          <Box>
-                            <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                              {guestTotal ?? 0}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              INVITED
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Grid>
-                      <Grid size={{ xs: 4 }} sx={{ textAlign: 'center' }}>
-                        <PeopleIcon sx={{ fontSize: 64, color: '#F5F5F5' }} />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
 
-            {/* Budget Tracker */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  transition: 'box-shadow 0.3s ease',
-                  '&:hover': {
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.10)',
-                  },
-                }}
-              >
-                <CardActionArea onClick={() => router.push('/dashboard/budget')}>
-                  <CardContent sx={{ p: 4 }}>
-                    <Grid container spacing={3} alignItems="center">
-                      <Grid size={{ xs: 8 }}>
-                        <Typography
-                          variant="h4"
-                          sx={{
-                            fontFamily: '"Bodoni Moda", serif',
-                            fontWeight: 400,
-                            mb: 1,
-                          }}
-                        >
-                          Budget
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                          Track expenses and payments
-                        </Typography>
-                        <Box>
-                          <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                            {budgetSummary ? `$${Number(budgetSummary.totalAmount).toLocaleString()}` : '—'}
-                          </Typography>
-                          <LinearProgress
-                            variant="determinate"
-                            value={Math.min(100, Math.max(0, Number(budgetSummary?.percentSpent ?? 0)))}
-                            sx={{
-                              height: 4,
-                              mt: 1,
-                              bgcolor: '#F5F5F5',
-                              '& .MuiLinearProgress-bar': {
-                                bgcolor: '#000000',
-                              },
-                            }}
-                          />
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            {budgetSummary
-                              ? `${Math.round(Number((budgetSummary.percentSpent ?? ((Number(budgetSummary.totalAmount)||0) > 0 ? (Number(budgetSummary.totalActual)/Number(budgetSummary.totalAmount))*100 : 0))))}% spent ($${Number(budgetSummary.totalActual).toLocaleString()} of $${Number(budgetSummary.totalAmount).toLocaleString()})`
-                              : '—'}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid size={{ xs: 4 }} sx={{ textAlign: 'center' }}>
-                        <MoneyIcon sx={{ fontSize: 64, color: '#F5F5F5' }} />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Immediate Actions & Vendor Status */}
-        <Box sx={{ mb: 4, px: 3 }}>
-          <Grid container spacing={3}>
-            {/* Immediate Actions */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>IMMEDIATE ACTIONS</Typography>
-                  {tasks && tasks.length > 0 ? (
-                    <List dense>
-                      {tasks.filter((t:any)=>!t.completed).slice(0,5).map((t:any, idx:number) => (
-                        <ListItem key={idx} sx={{ px: 0 }}>
-                          <ListItemIcon><CheckIcon color={t.completed ? 'success' : 'disabled'} /></ListItemIcon>
-                          <ListItemText primary={t.title} secondary={t.hint || ''} />
-                        </ListItem>
-                      ))}
-                      {tasks.filter((t:any)=>!t.completed).length === 0 && (
-                        <ListItem sx={{ px: 0 }}><ListItemText primary="You're all caught up!" /></ListItem>
-                      )}
-                    </List>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">No urgent tasks right now.</Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-            {/* Key Vendor Status */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="overline" sx={{ fontSize: '0.625rem', letterSpacing: '0.2em', fontWeight: 600, fontFamily: '"Bodoni Moda", serif', mb: 2, display: 'block' }}>KEY VENDOR STATUS</Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {/* These chips will be updated by overview vendorCritical if present */}
-                    <Chip label={`Venue`} variant='outlined' />
-                    <Chip label={`Photographer`} variant='outlined' />
-                    <Chip label={`Caterer`} variant='outlined' />
-                    <Chip label={`Music/DJ`} variant='outlined' />
-                    <Chip label={`Florist`} variant='outlined' />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Your Wedding Journey - Visual Cards */}
-        <Box sx={{ mb: 4, px: 3 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.625rem',
-              letterSpacing: '0.2em',
-              fontWeight: 600,
-              fontFamily: '"Bodoni Moda", serif',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            YOUR WEDDING JOURNEY
-          </Typography>
-          
-          <Grid container spacing={3}>
-            {/* Vendors - Visual Focus */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <CardActionArea onClick={() => router.push('/dashboard/vendors')}>
-                  <Box
-                    sx={{
-                      height: 180,
-                      background: 'linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                    }}
-                  >
-                    <VendorIcon sx={{ fontSize: 72, color: '#E0E0E0' }} />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 16,
-                        right: 16,
-                        bgcolor: '#000000',
-                        color: '#FFFFFF',
-                        px: 2,
-                        py: 0.5,
-                        fontSize: '0.625rem',
-                        letterSpacing: '0.1em',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {vendorBookedTotal === null ? '—' : `${vendorBookedTotal} BOOKED`}
-                    </Box>
-                  </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontFamily: '"Bodoni Moda", serif',
-                        fontWeight: 400,
-                        mb: 1,
-                      }}
-                    >
-                      Vendor Directory
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Find and manage your dream team
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <Chip label="Photographer" size="small" variant="outlined" />
-                      <Chip label="Florist" size="small" variant="outlined" />
-                      <Chip label="+5 more" size="small" variant="outlined" />
-                    </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-
-            {/* Timeline - Day Schedule */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <CardActionArea onClick={() => router.push('/dashboard/timeline')}>
-                  <Box
-                    sx={{
-                      height: 180,
-                      background: 'linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                    }}
-                  >
-                    <TimelineIcon sx={{ fontSize: 72, color: '#E0E0E0' }} />
-                    <Typography
-                      sx={{
-                        position: 'absolute',
-                        bottom: 16,
-                        fontSize: '0.625rem',
-                        letterSpacing: '0.1em',
-                        fontWeight: 600,
-                        color: '#666666',
-                      }}
-                    >
-                      {nextEventLabel || 'SET YOUR TIMELINE'}
-                    </Typography>
-                  </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontFamily: '"Bodoni Moda", serif',
-                        fontWeight: 400,
-                        mb: 1,
-                      }}
-                    >
-                      Day Timeline
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Plan every magical moment
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={timelineCount > 0 ? Math.min(100, (timelineCount / 12) * 100) : 0}
-                      sx={{
-                        height: 4,
-                        bgcolor: '#F5F5F5',
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: '#000000',
-                        },
-                      }}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      {timelineCount} of 12 events planned
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-
-            {/* Photo Gallery */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <CardActionArea onClick={() => router.push('/dashboard/photos')}>
-                  <Box
-                    sx={{
-                      height: 180,
-                      background: 'linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%)',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gridTemplateRows: 'repeat(2, 1fr)',
-                      gap: 0.5,
-                      p: 2,
-                    }}
-                  >
-                    {[...Array(6)].map((_, i) => (
-                      <Box
-                        key={i}
-                        sx={{
-                          bgcolor: '#FFFFFF',
-                          border: '1px solid #F0F0F0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <PhotoIcon sx={{ fontSize: 20, color: '#E0E0E0' }} />
-                      </Box>
+              {/* Recent Activity */}
+              <Card className="shadow-[0_4px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-300">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-2xl font-light">Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-4">
+                    {recentActivity.slice(0, 4).map((activity, index) => (
+                      <li key={activity.id || `activity-${index}`} className="flex items-start text-base border-b border-[#F5F5F5] pb-3 last:border-b-0">
+                        <CheckIcon className="w-5 h-5 mr-4 text-black mt-0.5 flex-shrink-0" />
+                        <span className="text-[#666666] font-light">{activity.title}</span>
+                      </li>
                     ))}
-                  </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontFamily: '"Bodoni Moda", serif',
-                        fontWeight: 400,
-                        mb: 1,
-                      }}
-                    >
-                      Photo Gallery
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Collect and share memories
-                    </Typography>
-                    <Button
-                      size="small"
-                      sx={{
-                        color: '#000000',
-                        textTransform: 'uppercase',
-                        fontSize: '0.625rem',
-                        letterSpacing: '0.1em',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Upload Photos →
-                    </Button>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Wedding Inspiration Section */}
-        <Box sx={{ mb: 4, px: 3 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.625rem',
-              letterSpacing: '0.2em',
-              fontWeight: 600,
-              fontFamily: '"Bodoni Moda", serif',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            WEDDING INSPIRATION
-          </Typography>
-          
-          <Grid container spacing={3}>
-            {/* Your Love Story */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <HeartIcon sx={{ fontSize: 32, color: '#F5F5F5', mr: 2 }} />
-                    <Box>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontFamily: '"Bodoni Moda", serif',
-                          fontWeight: 400,
-                        }}
-                      >
-                        Your Love Story
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Share your journey together
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Typography variant="body1" sx={{ mb: 3, fontStyle: 'italic', color: 'text.secondary' }}>
-                    "We met on a rainy Tuesday in October, and from that moment, everything changed..."
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => router.push('/dashboard/story')}
-                  >
-                    Write Your Story
-                  </Button>
+                  </ul>
                 </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Wedding Vision Board */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card
-                sx={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                  borderRadius: 0,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <TrophyIcon sx={{ fontSize: 32, color: '#F5F5F5', mr: 2 }} />
-                    <Box>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontFamily: '"Bodoni Moda", serif',
-                          fontWeight: 400,
-                        }}
-                      >
-                        Vision Board
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Visualize your perfect day
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Grid container spacing={1}>
-                    {['Garden Romance', 'Elegant Classic', 'Modern Minimal', 'Bohemian'].map((style) => (
-                      <Grid size={{ xs: 6 }} key={style}>
-                        <Chip
-                          label={style}
-                          variant="outlined"
-                          sx={{
-                            width: '100%',
-                            justifyContent: 'flex-start',
-                            py: 2,
-                            borderColor: '#F0F0F0',
-                            '&:hover': {
-                              bgcolor: '#FAFAFA',
-                            },
-                          }}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Activity Dashboard - Refined */}
-        <Grid container spacing={3} sx={{ mb: 3, px: 3 }}>
-          {/* Budget Overview - Enhanced */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                    Budget Overview
-                  </Typography>
-                  <Typography variant="body2" color="primary">
-                    $7.5K / $25K
-                  </Typography>
-                </Box>
-                
-                <List dense sx={{ py: 0 }}>
-                  {budgetBreakdown.map((item, index) => (
-                    <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            bgcolor: item.color,
-                          }}
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2">{item.category}</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              ${item.amount}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          <LinearProgress
-                            variant="determinate"
-                            value={item.percentage}
-                            sx={{
-                              mt: 0.5,
-                              height: 4,
-                              borderRadius: 2,
-                              bgcolor: item.color + '20',
-                              '& .MuiLinearProgress-bar': {
-                                bgcolor: item.color,
-                                borderRadius: 2,
-                              },
-                            }}
-                          />
-                        }
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-                
-                <Button
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 2 }}
-                  onClick={() => router.push('/dashboard/budget')}
-                >
-                  Manage Budget
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Next Steps - Middle */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                    Next Steps
-                  </Typography>
-                  <Chip
-                    label="5 URGENT"
-                    size="small"
-                    sx={{ 
-                      bgcolor: '#000000',
-                      color: '#FFFFFF',
-                      height: 24,
-                      fontWeight: 600,
-                    }}
-                  />
-                </Box>
-                
-                <List dense sx={{ maxHeight: 250, overflow: 'auto' }}>
-                  {[
-                    { id: 1, title: 'Book venue visit', priority: 'high', date: 'This week' },
-                    { id: 2, title: 'Finalize guest list', priority: 'high', date: 'Next week' },
-                    { id: 3, title: 'Choose photographer', priority: 'medium', date: '2 weeks' },
-                    { id: 4, title: 'Send save the dates', priority: 'medium', date: '1 month' },
-                    { id: 5, title: 'Book catering tasting', priority: 'low', date: '6 weeks' },
-                  ].map((task) => (
-                    <ListItem key={task.id} sx={{ px: 0, py: 1.5, borderBottom: '1px solid #F5F5F5' }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor: task.priority === 'high' ? '#000000' : task.priority === 'medium' ? '#666666' : '#CCCCCC',
-                          }}
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={task.title}
-                        secondary={task.date}
-                        primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }}
-                        secondaryTypographyProps={{ fontSize: '0.75rem' }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-                
-                <Button
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 2 }}
-                  onClick={() => router.push('/dashboard/checklist')}
-                >
-                  View All Tasks
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Messages & Communication - Right */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card sx={{ height: 360, backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)', border: 'none' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ fontFamily: '"Didot", "Bodoni MT", "Playfair Display", serif', fontWeight: 400, fontSize: '1.125rem', mb: 2, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  Messages
-                </Typography>
-                
-                <Box sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', p: 2, bgcolor: '#FAFAFA', mb: 1 }}>
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#000000', color: '#FFFFFF', mr: 2 }}>
-                      <MessageIcon sx={{ fontSize: 16 }} />
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        Venue Coordinator
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        "Your venue is confirmed for June 15th!"
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      2h ago
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', p: 2, bgcolor: '#FAFAFA', mb: 1 }}>
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#666666', color: '#FFFFFF', mr: 2 }}>
-                      <MessageIcon sx={{ fontSize: 16 }} />
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        Wedding Planner
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        "Let's schedule a call this week"
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      1d ago
-                    </Typography>
-                  </Box>
-                </Box>
-                
-                <Divider sx={{ my: 2 }} />
-                
-                <Box>
-                  <Typography 
-                    variant="overline" 
-                    sx={{ 
-                      fontSize: '0.625rem', 
-                      letterSpacing: '0.1em',
-                      fontFamily: '"Bodoni Moda", serif',
-                    }}
-                  >
-                    Quick Actions
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    <Button size="small" variant="outlined" fullWidth>
-                      Send Update
+                <CardFooter className="pt-6">
+                    <Button variant="ghost" size="sm" className="text-black hover:bg-[#F5F5F5] font-medium tracking-wide" onClick={() => router.push('/admin/logs')}>
+                        View all activity <ArrowRight className="w-4 h-4 ml-1" />
                     </Button>
-                    <Button size="small" variant="outlined" fullWidth>
-                      View All
-                    </Button>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-      </Box>
-    </DashboardLayout>
-  );
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
 }

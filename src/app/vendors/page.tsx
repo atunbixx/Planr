@@ -4,10 +4,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
 import Link from 'next/link'
-import {
-  Box, Grid, Card, CardContent, Typography, TextField, MenuItem, InputAdornment, Chip, Rating, Pagination, Button, Snackbar, Alert
-} from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Search, Star } from 'lucide-react'
 import AuthClient from '@/lib/auth/client'
 import { normalizeCategory } from '@/lib/vendors/categories'
 
@@ -41,7 +44,7 @@ export default function PublicVendorsPage() {
   const [saving, setSaving] = useState<Record<string, boolean>>({})
   const [saved, setSaved] = useState<Record<string, boolean>>({})
   const [myVendors, setMyVendors] = useState<any[]>([])
-  const [snack, setSnack] = useState<{ open: boolean; message: string; severity?: 'success'|'error' }>({ open: false, message: '', severity: 'success' })
+  const [snack, setSnack] = useState<{ open: boolean; message: string; severity?: 'success'|'error'|'info' }>({ open: false, message: '', severity: 'success' })
 
   const categories = ['venue','photographer','videographer','catering','florist','music']
   const regions = ['NG','US','GB','CA']
@@ -238,7 +241,7 @@ export default function PublicVendorsPage() {
   }
 
   return (
-    <Box sx={{ px: { xs: 2, md: 4 }, py: 4 }}>
+    <div className="px-4 md:px-8 py-8">
       <Head>
         <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL || ''}/vendors`} />
       </Head>
@@ -255,144 +258,201 @@ export default function PublicVendorsPage() {
           })),
         })}
       </Script>
-      <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, mb: 3 }}>
+      <h1 className="text-3xl font-normal mb-6" style={{ fontFamily: '"Bodoni Moda", serif' }}>
         Vendor Directory
-      </Typography>
+      </h1>
 
       {/* Quick links to landing pages */}
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+      <div className="flex gap-2 flex-wrap mb-2">
         {['venue','photographer','videographer','catering','florist','music'].map(c => (
-          <Chip key={c} label={`${c.charAt(0).toUpperCase()+c.slice(1)}`} component={Link as any} href={`/vendors/category/${encodeURIComponent(c)}`} clickable />
+          <Link key={c} href={`/vendors/category/${encodeURIComponent(c)}`}>
+            <Badge variant="secondary" className="cursor-pointer hover:bg-gray-200">
+              {c.charAt(0).toUpperCase()+c.slice(1)}
+            </Badge>
+          </Link>
         ))}
         {region && (
-          <Chip color="primary" label={`Region: ${region}`} component={Link as any} href={`/vendors/region/${encodeURIComponent(region)}`} clickable />
+          <Link href={`/vendors/region/${encodeURIComponent(region)}`}>
+            <Badge className="cursor-pointer">
+              Region: {region}
+            </Badge>
+          </Link>
         )}
-      </Box>
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 1.5, alignItems: 'center' }}>
-        <TextField
-          placeholder="Search vendors…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load() } }}
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
-          size="small"
-          sx={{ minWidth: { xs: 260, sm: 320 }, flexGrow: 1 }}
-        />
-        <TextField select size="small" label="Category" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-          sx={{ minWidth: { xs: 160, sm: 200 } }}>
-          <MenuItem value="">All</MenuItem>
-          {categories.map(c => <MenuItem key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</MenuItem>)}
-        </TextField>
-        <TextField select size="small" label="Region" value={region} onChange={(e) => { setRegion(e.target.value); setPage(1); }}
-          sx={{ minWidth: { xs: 140, sm: 180 } }}>
-          <MenuItem value="">All</MenuItem>
-          {regions.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-        </TextField>
-        <TextField select size="small" label="Min Rating" value={minRating} onChange={(e) => { setMinRating(e.target.value); setPage(1); }}
-          sx={{ minWidth: { xs: 140, sm: 180 } }}>
-          <MenuItem value="">Any</MenuItem>
-          {[5,4,3].map(n => <MenuItem key={n} value={String(n)}>{n}+</MenuItem>)}
-        </TextField>
-        <TextField select size="small" label="Sort" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}
-          sx={{ minWidth: { xs: 160, sm: 200 } }}>
-          <MenuItem value="newest">Newest</MenuItem>
-          <MenuItem value="rating_desc">Rating</MenuItem>
-          <MenuItem value="reviews_desc">Most Reviews</MenuItem>
-        </TextField>
-      </Box>
+      <div className="flex gap-4 flex-wrap mb-4 items-center">
+        <div className="relative flex-grow min-w-64 sm:min-w-80">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search vendors…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load() } }}
+            className="pl-10"
+          />
+        </div>
+        <Select value={category} onValueChange={(value) => { setCategory(value); setPage(1); }}>
+          <SelectTrigger className="w-40 sm:w-48">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All</SelectItem>
+            {categories.map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={region} onValueChange={(value) => { setRegion(value); setPage(1); }}>
+          <SelectTrigger className="w-36 sm:w-44">
+            <SelectValue placeholder="Region" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All</SelectItem>
+            {regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={minRating} onValueChange={(value) => { setMinRating(value); setPage(1); }}>
+          <SelectTrigger className="w-36 sm:w-44">
+            <SelectValue placeholder="Min Rating" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Any</SelectItem>
+            {[5,4,3].map(n => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={(value) => { setSort(value); setPage(1); }}>
+          <SelectTrigger className="w-40 sm:w-48">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="rating_desc">Rating</SelectItem>
+            <SelectItem value="reviews_desc">Most Reviews</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       {/* Subtle region info chip */}
       {region && (
-        <Box sx={{ mb: 2 }}>
-          <Chip size="small" variant="outlined" label={`Using region: ${region}`} onDelete={() => { setRegion(''); setPage(1); load() }} />
-        </Box>
+        <div className="mb-4">
+          <Badge variant="outline" className="text-xs">
+            Using region: {region}
+            <button 
+              onClick={() => { setRegion(''); setPage(1); load() }}
+              className="ml-2 hover:bg-gray-200 rounded-full p-1"
+            >
+              ×
+            </button>
+          </Badge>
+        </div>
       )}
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+      <p className="text-sm text-gray-600 mb-2">
         {loading ? 'Loading vendors…' : total === 0 ? 'No vendors match your filters.' : `${total} result${total === 1 ? '' : 's'}`}
-      </Typography>
-      <Grid container spacing={2}>
+      </p>
+      <div className="space-y-4">
         {activeFilters.length > 0 && (
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
-              {activeFilters.map((f, i) => (
-                <Chip key={i} label={f.label} onDelete={f.onClear} />
-              ))}
-              <Button size="small" onClick={() => { setCategory(''); setRegion(''); setMinRating(''); setSort('newest'); setTags(''); setQ(''); setPage(1); load() }}>Clear All</Button>
-            </Box>
-          </Grid>
+          <div className="flex gap-2 flex-wrap mb-2">
+            {activeFilters.map((f, i) => (
+              <Badge key={i} variant="secondary" className="cursor-pointer" onClick={f.onClear}>
+                {f.label} ×
+              </Badge>
+            ))}
+            <Button size="sm" variant="outline" onClick={() => { setCategory(''); setRegion(''); setMinRating(''); setSort('newest'); setTags(''); setQ(''); setPage(1); load() }}>Clear All</Button>
+          </div>
         )}
-        <Grid item xs={12}>
-          <TextField fullWidth size="small" label="Tags (comma-separated)" placeholder="editorial, outdoor" value={tags} onChange={(e)=>{ setTags(e.target.value); setPage(1); }} />
-        </Grid>
-        {!loading && vendors.map(v => {
-          const img = (v.photos && v.photos[0]) || placeholderByCategory[v.category] || 'linear-gradient(135deg, #fafafa 0%, #eee 100%)'
-          return (
-            <Grid item xs={12} sm={6} md={4} key={v.id}>
-              <Card sx={{ borderRadius: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div>
+          <Input placeholder="Tags (comma-separated)" value={tags} onChange={(e)=>{ setTags(e.target.value); setPage(1); }} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {!loading && vendors.map(v => {
+            const img = (v.photos && v.photos[0]) || placeholderByCategory[v.category] || 'linear-gradient(135deg, #fafafa 0%, #eee 100%)'
+            return (
+              <Card key={v.id} className="h-full flex flex-col">
                 {/* Image header fixed height */}
-                <Box sx={{ height: 180, backgroundColor: '#F5F5F5', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1, flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, lineHeight: 1.2 }}>
-                      <Link href={`/vendors/${v.id}`}>{v.name}</Link>
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {v.priceBand && <Chip label={v.priceBand} size="small" />}
-                      <Button size="small" variant="outlined" onClick={() => saveToMyVendors(v)} disabled={Boolean(saving[v.id]) || Boolean(saved[v.id])}>
+                <div 
+                  className="h-44 bg-gray-100 bg-cover bg-center" 
+                  style={{ backgroundImage: `url(${img})` }}
+                />
+                <CardContent className="flex flex-col gap-2 flex-grow p-4">
+                  <div className="flex justify-between items-center gap-2">
+                    <h3 className="font-normal text-lg leading-tight" style={{ fontFamily: '"Bodoni Moda", serif' }}>
+                      <Link href={`/vendors/${v.id}`} className="hover:underline">{v.name}</Link>
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {v.priceBand && <Badge variant="secondary" className="text-xs">{v.priceBand}</Badge>}
+                      <Button size="sm" variant="outline" onClick={() => saveToMyVendors(v)} disabled={Boolean(saving[v.id]) || Boolean(saved[v.id])}>
                         {saved[v.id] ? 'Saved' : (saving[v.id] ? 'Saving…' : 'Save')}
                       </Button>
                       {saved[v.id] && (
-                        <Button size="small" onClick={() => { if (typeof window !== 'undefined') window.location.href = '/dashboard/vendors' }}>
+                        <Button size="sm" onClick={() => { if (typeof window !== 'undefined') window.location.href = '/dashboard/vendors' }}>
                           View
                         </Button>
                       )}
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Rating value={Number(v.averageRating || 0)} readOnly precision={0.5} size="small" />
-                    <Typography variant="caption" color="text.secondary">{v.reviewCount || 0} reviews</Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{
-                    mb: 0.5,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    minHeight: '3em',
-                  }}>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {[1,2,3,4,5].map((star) => (
+                        <Star key={star} className={`h-4 w-4 ${star <= (v.averageRating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-600">{v.reviewCount || 0} reviews</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2 line-clamp-2 min-h-10">
                     {v.shortDescription || '\u00A0'}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 'auto' }}>
-                    <Chip label={v.category} size="small" variant="outlined" />
-                    {v.city && <Chip label={v.city} size="small" variant="outlined" />}
-                    {v.region && <Chip label={v.region} size="small" variant="outlined" />}
-                  </Box>
+                  </p>
+                  <div className="flex gap-2 flex-wrap mt-auto">
+                    <Badge variant="outline" className="text-xs">{v.category}</Badge>
+                    {v.city && <Badge variant="outline" className="text-xs">{v.city}</Badge>}
+                    {v.region && <Badge variant="outline" className="text-xs">{v.region}</Badge>}
+                  </div>
                 </CardContent>
               </Card>
-            </Grid>
-          )
-        })}
-      </Grid>
+            )
+          })}
+        </div>
+      </div>
 
       {total > pageSize && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-          <Pagination count={Math.ceil(total / pageSize)} page={page} onChange={(e, p) => setPage(p)} color="primary" />
-        </Box>
+        <div className="flex justify-center py-6">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+            <span className="px-4 py-2 text-sm">Page {page} of {Math.ceil(total / pageSize)}</span>
+            <Button
+              variant="outline"
+              disabled={page >= Math.ceil(total / pageSize)}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
-      <Snackbar open={snack.open} autoHideDuration={3500} onClose={() => setSnack(s => ({ ...s, open: false }))}>
-        <Alert
-          onClose={() => setSnack(s => ({ ...s, open: false }))}
-          severity={snack.severity || 'success'}
-          variant="filled"
-          sx={{ width: '100%' }}
-          action={
-            <Button size="small" color="inherit" onClick={() => { if (typeof window !== 'undefined') window.location.href = '/dashboard/vendors' }}>View</Button>
-          }
-        >
-          {snack.message}
+      {snack.open && (
+        <Alert className="fixed bottom-4 right-4 w-auto">
+          <AlertDescription>
+            {snack.message}
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="ml-2" 
+              onClick={() => { if (typeof window !== 'undefined') window.location.href = '/dashboard/vendors' }}
+            >
+              View
+            </Button>
+            <button 
+              onClick={() => setSnack(s => ({ ...s, open: false }))}
+              className="ml-2 hover:bg-gray-200 rounded-full p-1"
+            >
+              ×
+            </button>
+          </AlertDescription>
         </Alert>
-      </Snackbar>
-    </Box>
+      )}
+    </div>
   )
 }

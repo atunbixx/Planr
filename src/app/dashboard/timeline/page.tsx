@@ -1,47 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  // Grid2 as Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  CircularProgress,
-} from '@mui/material';
-import Grid from '@mui/material/Grid';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Schedule as ScheduleIcon,
-  Event as EventIcon,
-  People as PeopleIcon,
-  Restaurant as FoodIcon,
-  PhotoCamera as PhotoIcon,
-  LocalFlorist as FlowerIcon,
-  AccessTime as TimeIcon,
-} from '@mui/icons-material';
+import { Plus, Edit, Trash2, Calendar, CalendarDays, Users, Utensils, Camera, Flower, Clock } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
 import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
-import AuthClient from '@/lib/auth/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import AuthClient from '@/lib/auth/client';
+
+type TimelineEventCategory = 'ceremony' | 'reception' | 'photo' | 'vendor' | 'personal';
 
 interface TimelineEvent {
   id: string;
@@ -54,17 +30,16 @@ interface TimelineEvent {
 }
 
 const eventCategories = [
-  { value: 'ceremony', label: 'Ceremony', icon: <EventIcon />, color: '#000000' },
-  { value: 'reception', label: 'Reception', icon: <FoodIcon />, color: '#333333' },
-  { value: 'photo', label: 'Photography', icon: <PhotoIcon />, color: '#666666' },
-  { value: 'vendor', label: 'Vendor', icon: <PeopleIcon />, color: '#999999' },
-  { value: 'personal', label: 'Personal', icon: <FlowerIcon />, color: '#CCCCCC' },
+  { value: 'ceremony', label: 'Ceremony', icon: <CalendarDays />, color: '#000000' },
+  { value: 'reception', label: 'Reception', icon: <Utensils />, color: '#333333' },
+  { value: 'photo', label: 'Photography', icon: <Camera />, color: '#666666' },
+  { value: 'vendor', label: 'Vendor', icon: <Users />, color: '#999999' },
+  { value: 'personal', label: 'Personal', icon: <Flower />, color: '#CCCCCC' },
 ];
 
 export default function TimelinePage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const { themeMode } = useCustomTheme();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
@@ -191,292 +166,231 @@ export default function TimelinePage() {
     return eventCategories.find(cat => cat.value === category) || eventCategories[0];
   };
 
-  const sortedEvents = events.sort((a, b) => a.time.localeCompare(b.time));
+  const sortedEvents = useMemo(() => events.sort((a, b) => a.time.localeCompare(b.time)), [events]);
 
   if (isLoading || !user) {
-    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
     return (
-      <LoadingLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <CircularProgress />
-        </Box>
-      </LoadingLayout>
+      <div className="flex justify-center items-center h-[60vh]">
+        <p>Loading...</p>
+      </div>
     );
   }
 
-  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-
   return (
-    <Layout>
-      <Box sx={{ px: 0, py: 3 }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, px: 3 }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400 }}>
-              Wedding Day Timeline
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Plan every moment of your perfect day
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Add Event
-          </Button>
-        </Box>
+    <div className="p-3">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 px-3">
+        <div>
+          <h1 className="text-4xl font-bodoni-moda">Wedding Day Timeline</h1>
+          <p className="text-sm text-gray-500">Plan every moment of your perfect day</p>
+        </div>
+        <Button
+          onClick={() => handleOpenDialog()}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Event
+        </Button>
+      </div>
 
-        {/* Timeline Overview */}
-        <Box sx={{ mb: 4, px: 3 }}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Card>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontSize: '0.625rem',
-                      letterSpacing: '0.2em',
-                      fontWeight: 600,
-                      fontFamily: '"Bodoni Moda", serif',
-                      mb: 2,
-                      display: 'block',
-                    }}
-                  >
-                    JUNE 15, 2025 SCHEDULE
-                  </Typography>
+      {/* Timeline Overview */}
+      <div className="mb-4 px-3">
+        <div className="flex flex-wrap -mx-3">
+          <div className="w-full md:w-2/3 px-3">
+            <Card>
+              <CardContent className="p-4">
+                <span
+                  className="text-xs tracking-widest font-semibold font-bodoni-moda mb-2 block"
+                >
+                  JUNE 15, 2025 SCHEDULE
+                </span>
 
-                  {sortedEvents.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 8 }}>
-                      <ScheduleIcon sx={{ fontSize: 48, color: '#CCCCCC', mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, color: '#999999' }} gutterBottom>
-                        No events scheduled yet
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Start by adding your first event to create your timeline
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpenDialog()}
-                      >
-                        Add First Event
-                      </Button>
-                    </Box>
-                  ) : (
-                    <List>
-                      {sortedEvents.map((event) => {
-                        const categoryInfo = getCategoryInfo(event.category);
-                        return (
-                          <ListItem
-                            key={event.id}
-                            sx={{
-                              border: '1px solid #F0F0F0',
-                              mb: 1,
-                              borderRadius: 0,
-                              '&:hover': {
-                                bgcolor: '#FAFAFA',
-                              },
-                            }}
-                          >
-                            <ListItemIcon>
-                              <Avatar
-                                sx={{
-                                  bgcolor: categoryInfo.color,
-                                  color: '#FFFFFF',
-                                  width: 40,
-                                  height: 40,
-                                }}
-                              >
-                                {categoryInfo.icon}
-                              </Avatar>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                  <Typography variant="h6" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400 }}>
-                                    {event.title}
-                                  </Typography>
-                                  <Chip
-                                    label={categoryInfo.label}
-                                    size="small"
-                                    sx={{ bgcolor: categoryInfo.color + '20', color: categoryInfo.color }}
-                                  />
-                                </Box>
-                              }
-                              secondary={
-                                <Box sx={{ mt: 1 }}>
-                                  <Typography variant="body2" color="text.secondary">
-                                    {event.description}
-                                  </Typography>
-                                  <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                      <TimeIcon sx={{ fontSize: 14 }} />
-                                      {event.time} ({event.duration} min)
-                                    </Typography>
-                                    {event.location && (
-                                      <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <EventIcon sx={{ fontSize: 14 }} />
-                                        {event.location}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Box>
-                              }
-                            />
-                            <ListItemSecondaryAction>
-                              <IconButton size="small" onClick={() => handleOpenDialog(event)}>
-                                <EditIcon />
-                              </IconButton>
-                              <IconButton size="small" onClick={() => handleDelete(event.id)}>
-                                <DeleteIcon />
-                              </IconButton>
-                            </ListItemSecondaryAction>
-                          </ListItem>
-                        );
-                      })}
-                    </List>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontSize: '0.625rem',
-                      letterSpacing: '0.2em',
-                      fontWeight: 600,
-                      fontFamily: '"Bodoni Moda", serif',
-                      mb: 2,
-                      display: 'block',
-                    }}
-                  >
-                    TIMELINE SUMMARY
-                  </Typography>
-
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h3" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 300 }}>
-                      {sortedEvents.length}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Events
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h5" sx={{ fontFamily: '"Bodoni Moda", serif', fontWeight: 400, mb: 1 }}>
-                      Event Categories
-                    </Typography>
-                    {eventCategories.map((category) => {
-                      const count = events.filter(e => e.category === category.value).length;
+                {sortedEvents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="mx-auto h-12 w-12 text-gray-300 mb-2" />
+                    <h2 className="text-xl font-bodoni-moda text-gray-500">No events scheduled yet</h2>
+                    <p className="text-sm text-gray-500 mb-3">Start by adding your first event to create your timeline</p>
+                    <Button
+                      onClick={() => handleOpenDialog()}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add First Event
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    {sortedEvents.map((event) => {
+                      const categoryInfo = getCategoryInfo(event.category);
                       return (
-                        <Box key={category.value} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">{category.label}</Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>{count}</Typography>
-                        </Box>
+                        <div
+                          key={event.id}
+                          className="border border-gray-200 mb-1 rounded-md hover:bg-gray-50 p-4 flex items-center"
+                        >
+                          <div className="mr-4">
+                            <Avatar
+                              style={{
+                                backgroundColor: categoryInfo.color,
+                                color: '#FFFFFF',
+                                width: 40,
+                                height: 40,
+                              }}
+                            >
+                              <AvatarFallback>
+                                {categoryInfo.icon}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          <div className="flex-grow">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-bodoni-moda">{event.title}</h3>
+                              <Badge variant="secondary">
+                                {categoryInfo.label}
+                              </Badge>
+                            </div>
+                            <div className="mt-1">
+                              <p className="text-sm text-gray-500">{event.description}</p>
+                              <div className="flex gap-2 mt-1">
+                                <p className="text-xs flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {event.time} ({event.duration} min)
+                                </p>
+                                {event.location && (
+                                  <p className="text-xs flex items-center gap-1">
+                                    <CalendarDays className="h-3 w-3" />
+                                    {event.location}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(event)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(event.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       );
                     })}
-                  </Box>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => router.push('/dashboard')}
-                  >
-                    Back to Dashboard
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
+          <div className="w-full md:w-1/3 px-3">
+            <Card>
+              <CardContent className="p-3">
+                <span
+                  className="text-xs tracking-widest font-semibold font-bodoni-moda mb-2 block"
+                >
+                  TIMELINE SUMMARY
+                </span>
 
-        {/* Add/Edit Dialog */}
-        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {editingEvent ? 'Edit Event' : 'Add New Event'}
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-              <TextField
-                required
-                label="Event Title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                onBlur={() => setTouched((t) => ({ ...t, title: true }))}
-                fullWidth
-                error={titleError}
-                helperText={titleError ? 'Title is required' : ' '}
-              />
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    required
-                    label="Time"
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    onBlur={() => setTouched((t) => ({ ...t, time: true }))}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                    error={timeError}
-                    helperText={timeError ? 'Time is required' : ' '}
-                  />
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    label="Duration (minutes)"
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    fullWidth
-                  />
-                </Grid>
-              </Grid>
-              <TextField
-                select
-                label="Category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                fullWidth
-                slotProps={{ select: { native: true } }}
-              >
+                <div className="mb-3">
+                  <h2 className="text-4xl font-bodoni-moda font-light">{sortedEvents.length}</h2>
+                  <p className="text-sm text-gray-500">Total Events</p>
+                </div>
+
+                <div className="mb-3">
+                  <h3 className="text-lg font-bodoni-moda mb-1">Event Categories</h3>
+                  {eventCategories.map((category) => {
+                    const count = events.filter(e => e.category === category.value).length;
+                    return (
+                      <div key={category.value} className="flex justify-between mb-1">
+                        <p className="text-sm">{category.label}</p>
+                        <p className="text-sm font-medium">{count}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push('/dashboard')}
+                >
+                  Back to Dashboard
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={openDialog} onOpenChange={handleCloseDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingEvent ? 'Edit Event' : 'Add New Event'}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <Input
+              required
+              placeholder="Event Title"
+              value={formData.title}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
+              onBlur={() => setTouched((t) => ({ ...t, title: true }))}
+            />
+            {titleError && <p className="text-red-500 text-xs mt-1">Title is required</p>}
+            
+            <div className="flex flex-wrap -mx-2">
+              <div className="w-1/2 px-2">
+                <Input
+                  required
+                  placeholder="Time"
+                  type="time"
+                  value={formData.time}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, time: e.target.value })}
+                  onBlur={() => setTouched((t) => ({ ...t, time: true }))}
+                />
+                {timeError && <p className="text-red-500 text-xs mt-1">Time is required</p>}
+              </div>
+              <div className="w-1/2 px-2">
+                <Input
+                  placeholder="Duration (minutes)"
+                  type="number"
+                  value={formData.duration}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, duration: e.target.value })}
+                />
+              </div>
+            </div>
+            <Select
+              value={formData.category}
+              onValueChange={(value) => setFormData({ ...formData, category: value as TimelineEventCategory })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
                 {eventCategories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
+                  <SelectItem key={cat.value} value={cat.value}>
                     {cat.label}
-                  </option>
+                  </SelectItem>
                 ))}
-              </TextField>
-              <TextField
-                label="Location (optional)"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                fullWidth
-              />
-              <TextField
-                label="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleSave} variant="contained" disabled={!canSave}>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Location (optional)"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            />
+            <Textarea
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleSave} disabled={!canSave}>
               {editingEvent ? 'Save Changes' : 'Add Event'}
             </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-    </Layout>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

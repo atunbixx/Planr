@@ -1,26 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import {
-  AppBar,
-  Box,
-  IconButton,
-  Toolbar,
-  Typography,
-  Avatar,
   Menu,
-  MenuItem,
-  Badge,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+  Search,
+  Bell,
+  User,
+  LogOut,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
-  Menu as MenuIcon,
-  Notifications as NotificationsIcon,
-  AccountCircle,
-  Logout as LogoutIcon,
-} from '@mui/icons-material';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import PremiumSidebar from './PremiumSidebar';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
@@ -45,33 +43,30 @@ const menuItems: MenuItem[] = [
 
 export default function PremiumDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user, signout } = useAuth();
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Set sidebar state after hydration to avoid SSR mismatch
-  React.useEffect(() => {
-    setSidebarOpen(!isMobile);
-  }, [isMobile]);
-  const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      setSidebarOpen(!mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileMenuAnchor(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setProfileMenuAnchor(null);
-  };
-
   const handleSignOut = async () => {
     await signout();
-    handleProfileMenuClose();
   };
 
   const getCurrentPageTitle = () => {
@@ -85,7 +80,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="flex min-h-screen">
       {/* Sidebar */}
       <PremiumSidebar 
         isOpen={sidebarOpen} 
@@ -93,212 +88,84 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
       />
 
       {/* Main Content Area */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* ntheme-style Header */}
-        <Box
-          component="header"
-          sx={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 30,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid #E2E8F0',
-            bgcolor: '#FFFFFF',
-            px: { xs: 2, md: 3, xl: 5 },
-            py: 2.5,
-            boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06)',
-          }}
-        >
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6 xl:px-10 py-4 shadow-sm">
           {/* Mobile menu button */}
-          <IconButton
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleSidebarToggle}
-            sx={{
-              display: { lg: 'none' },
-              border: '1px solid #E2E8F0',
-              borderRadius: 2,
-              p: 1,
-              '&:hover': {
-                bgcolor: '#F8FAFC',
-              },
-            }}
+            className="lg:hidden border-gray-200 hover:bg-gray-50"
           >
-            <MenuIcon sx={{ fontSize: 20 }} />
-          </IconButton>
+            <Menu className="h-5 w-5" />
+          </Button>
 
           {/* Page Title Section */}
-          <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 700,
-                color: '#722F37',
-                mb: 0.5,
-                fontSize: '1.5rem',
-              }}
-            >
+          <div className="hidden xl:block">
+            <h1 className="text-2xl font-bold text-[#722F37] mb-1">
               {getCurrentPageTitle()}
-            </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: '#64748B',
-                fontWeight: 500,
-              }}
-            >
+            </h1>
+            <p className="text-sm text-slate-500 font-medium">
               Wedding Planning Dashboard
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
           {/* Right side actions */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: { xs: 1, sm: 2 },
-            flex: 1,
-            justifyContent: 'flex-end',
-          }}>
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
             {/* Search Bar */}
-            <Box sx={{ 
-              position: 'relative', 
-              width: '100%', 
-              maxWidth: 300,
-              display: { xs: 'none', sm: 'block' }
-            }}>
-              <Box
-                component="input"
+            <div className="relative w-full max-w-sm hidden sm:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <input
                 type="search"
                 placeholder="Search..."
-                sx={{
-                  width: '100%',
-                  py: 1.5,
-                  pl: 6,
-                  pr: 2.5,
-                  border: '1px solid #E2E8F0',
-                  borderRadius: 25,
-                  bgcolor: '#F8FAFC',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  '&:focus': {
-                    borderColor: '#722F37',
-                    bgcolor: '#FFFFFF',
-                  },
-                  '&::placeholder': {
-                    color: '#94A3B8',
-                  },
-                }}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full bg-gray-50 text-sm outline-none transition-all focus:border-[#722F37] focus:bg-white placeholder:text-slate-400"
               />
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: 20,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#94A3B8',
-                  pointerEvents: 'none',
-                }}
-              >
-                🔍
-              </Box>
-            </Box>
+            </div>
 
             {/* Theme Switcher */}
             <ThemeSwitcher />
 
             {/* Notifications */}
-            <IconButton 
-              sx={{ 
-                color: '#64748B',
-                '&:hover': {
-                  bgcolor: '#F8FAFC',
-                },
-              }}
-            >
-              <Badge badgeContent={4} color="error">
-                <NotificationsIcon sx={{ fontSize: 20 }} />
-              </Badge>
-            </IconButton>
+            <Button variant="ghost" size="sm" className="relative text-slate-600 hover:bg-gray-50">
+              <div className="relative">
+                <Bell className="h-5 w-5" />
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs bg-red-500 text-white border-0">
+                  4
+                </Badge>
+              </div>
+            </Button>
 
             {/* Profile Menu */}
-            <IconButton
-              onClick={handleProfileMenuOpen}
-              sx={{
-                p: 0,
-                '&:hover': {
-                  bgcolor: 'transparent',
-                },
-              }}
-            >
-              <Avatar 
-                sx={{ 
-                  bgcolor: '#722F37', 
-                  width: 32, 
-                  height: 32,
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                }}
-              >
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </Avatar>
-            </IconButton>
-          </Box>
-        </Box>
-
-        {/* Profile Menu */}
-        <Menu
-          anchorEl={profileMenuAnchor}
-          open={Boolean(profileMenuAnchor)}
-          onClose={handleProfileMenuClose}
-          onClick={handleProfileMenuClose}
-          PaperProps={{
-            elevation: 3,
-            sx: {
-              overflow: 'visible',
-              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-              mt: 1.5,
-              minWidth: 200,
-              borderRadius: 2,
-              '&:before': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                top: 0,
-                right: 14,
-                width: 10,
-                height: 10,
-                bgcolor: 'background.paper',
-                transform: 'translateY(-50%) rotate(45deg)',
-                zIndex: 0,
-              },
-            },
-          }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <MenuItem onClick={handleProfileMenuClose}>
-            <AccountCircle sx={{ mr: 2 }} />
-            Profile
-          </MenuItem>
-          <MenuItem onClick={handleSignOut}>
-            <LogoutIcon sx={{ mr: 2 }} />
-            Sign Out
-          </MenuItem>
-        </Menu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-[#722F37] text-white text-xs font-semibold">
+                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48" align="end">
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
 
         {/* Main Content */}
-        <Box
-          component="main"
-          sx={{
-            flex: 1,
-            bgcolor: '#FAFBFF',
-            overflow: 'auto',
-          }}
-        >
+        <main className="flex-1 bg-[#FAFBFF] overflow-auto">
           {children}
-        </Box>
-      </Box>
-    </Box>
+        </main>
+      </div>
+    </div>
   );
 }

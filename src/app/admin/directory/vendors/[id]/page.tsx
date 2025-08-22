@@ -5,11 +5,12 @@ import { useRouter, useParams } from 'next/navigation'
 import { Box, Grid, Card, CardContent, Typography, Chip, Button, CircularProgress, TextField, Snackbar, Alert } from '@mui/material'
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import AuthClient from '@/lib/auth/client'
+import { AdminVendorDetails, VendorInquiry, SimilarVendor, CandidateVendor } from '@/types/admin'
 
 export default function AdminDirectoryVendorDetailPage() {
   const router = useRouter()
   const params = useParams<{ id: string }>()
-  const [data, setData] = useState<any | null>(null)
+  const [data, setData] = useState<AdminVendorDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [snack, setSnack] = useState<{ open: boolean; message: string; severity?: 'success'|'error' }>({ open: false, message: '', severity: 'success' })
@@ -19,22 +20,26 @@ export default function AdminDirectoryVendorDetailPage() {
     setLoading(true)
     try {
       const token = AuthClient.getToken()
-      const headers: any = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const res = await fetch(`/api/admin/directory/vendors/${params.id}`, { headers })
       if (!res.ok) throw new Error('Unauthorized')
       const j = await res.json()
       setData(j?.data)
-    } catch (e:any) {
-      setError(e?.message || 'Failed to load')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError('Failed to load')
+      }
     } finally { setLoading(false) }
   }
 
-  useEffect(() => { if (params?.id) load() }, [params?.id])
+  useEffect(() => { if (params?.id) load() }, [params?.id, load])
 
-  async function patch(body: any) {
+  async function patch(body: Record<string, unknown>) {
     try {
       const token = AuthClient.getToken()
-      const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       const res = await fetch(`/api/admin/directory/vendors/${params.id}`, { method: 'PATCH', headers, body: JSON.stringify(body) })
       if (!res.ok) throw new Error('Update failed')
       setSnack({ open: true, message: 'Updated', severity: 'success' })
@@ -85,7 +90,7 @@ export default function AdminDirectoryVendorDetailPage() {
               <Typography variant="body2" color="text.secondary">No inquiries.</Typography>
             ) : (
               <Box sx={{ display: 'grid', gap: 1 }}>
-                {inquiries.map((q:any) => (
+                {inquiries.map((q:VendorInquiry) => (
                   <Box key={q.id} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2">{q.name} &lt;{q.email}&gt;</Typography>
                     <Typography variant="caption" color="text.secondary">{new Date(q.createdAt).toLocaleString()}</Typography>
@@ -111,7 +116,7 @@ export default function AdminDirectoryVendorDetailPage() {
               <Typography variant="body2" color="text.secondary">None</Typography>
             ) : (
               <Box sx={{ display: 'grid', gap: 0.5 }}>
-                {similar.map((s:any)=> (
+                {similar.map((s:SimilarVendor)=> (
                   <Button key={s.id} size="small" onClick={()=>router.push(`/admin/directory/vendors/${s.id}`)}>{s.name} ({Math.round((s.similarity||0)*100)}%)</Button>
                 ))}
               </Box>
@@ -123,7 +128,7 @@ export default function AdminDirectoryVendorDetailPage() {
               <Typography variant="body2" color="text.secondary">None</Typography>
             ) : (
               <Box sx={{ display: 'grid', gap: 0.5 }}>
-                {candidates.map((c:any)=> (
+                {candidates.map((c:CandidateVendor)=> (
                   <Button key={c.id} size="small" onClick={()=>router.push(`/admin/directory/vendors/${c.id}`)}>{c.name}</Button>
                 ))}
               </Box>

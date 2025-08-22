@@ -3,11 +3,11 @@ import { requireSuperAdmin } from '@/lib/auth/admin'
 import { prisma } from '@/lib/db/prisma'
 import { detectDirectoryDuplicate } from '@/features/vendors/anti-abuse'
 
-async function patchHandler(request: any) {
+async function patchHandler(request: Request) {
   try {
     const id = request.url.split('/').pop()!
     const body = await request.json().catch(()=>({}))
-    const updates: any = {}
+    const updates: Record<string, unknown> = {}
     if (typeof body?.isSuspended === 'boolean') updates.isSuspended = body.isSuspended
     if (Array.isArray(body?.fraudFlags)) updates.fraudFlags = body.fraudFlags
     if (typeof body?.resolveFlags === 'boolean' && body.resolveFlags === true) updates.fraudFlags = []
@@ -29,21 +29,21 @@ async function patchHandler(request: any) {
         action: 'directory_vendor.update',
         targetType: 'directory_vendor',
         targetId: id,
-        details: { before: { isSuspended: before.isSuspended, fraudFlags: before.fraudFlags, duplicateOfId: (before as any).duplicateOfId || null }, after: { isSuspended: updated.isSuspended, fraudFlags: updated.fraudFlags, duplicateOfId: (updated as any).duplicateOfId || null } } as any,
+        details: { before: { isSuspended: before.isSuspended, fraudFlags: before.fraudFlags, duplicateOfId: (before as { duplicateOfId?: string | null }).duplicateOfId || null }, after: { isSuspended: updated.isSuspended, fraudFlags: updated.fraudFlags, duplicateOfId: (updated as { duplicateOfId?: string | null }).duplicateOfId || null } },
         ip: (request.headers.get?.('x-forwarded-for') || request.headers.get?.('x-real-ip') || '') as string,
         ua: (request.headers.get?.('user-agent') || '') as string,
       } })
     } catch {}
 
     return NextResponse.json({ success: true, data: updated })
-  } catch (e) {
+  } catch (e: unknown) {
     return NextResponse.json({ success: false, error: { message: 'Update failed' } }, { status: 500 })
   }
 }
 
 export const PATCH = requireSuperAdmin(patchHandler)
 
-async function getHandler(request: any) {
+async function getHandler(request: Request) {
   try {
     const id = request.url.split('/').pop()!
     const v = await prisma.directoryVendor.findUnique({ where: { id } })
@@ -57,11 +57,11 @@ async function getHandler(request: any) {
         v.websiteHost ? { websiteHost: v.websiteHost } : undefined,
         v.emailLower ? { emailLower: v.emailLower } : undefined,
         v.phoneDigits ? { phoneDigits: v.phoneDigits } : undefined,
-      ].filter(Boolean) as any[],
+      ].filter(Boolean) as ({ websiteHost: string } | { emailLower: string } | { phoneDigits: string })[],
       NOT: { id: v.id },
     } }).catch(()=>[])
     return NextResponse.json({ success: true, data: { vendor: v, owner, inquiries, similar: dup.similarMatches || [], candidates } })
-  } catch (e) {
+  } catch (e: unknown) {
     return NextResponse.json({ success: false, error: { message: 'Internal error' } }, { status: 500 })
   }
 }

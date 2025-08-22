@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Alert, Box, Button } from '@mui/material'
+import { Alert } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import AuthClient from '@/lib/auth/client'
 
@@ -20,13 +21,13 @@ export default function ImpersonationBanner() {
     }
   }
   return (
-    <Box sx={{ position: 'sticky', top: 0, zIndex: (t)=>t.zIndex.appBar }}>
-      <Alert severity="warning" sx={{ borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="sticky top-0 z-50">
+      <Alert className="rounded-none flex items-center justify-between">
         <span>
           Impersonating as {user?.email}. Some actions will be performed as them.
         </span>
-        <Button size="small" variant="outlined" disabled={ending} onClick={end}>{ending ? 'Ending…' : 'End Impersonation'}</Button>
+        <Button size="sm" variant="outline" disabled={ending} onClick={end}>{ending ? 'Ending…' : 'End Impersonation'}</Button>
       </Alert>
-    </Box>
+    </div>
   )
 }

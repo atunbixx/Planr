@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent } from '@/components/ui/card';
 import type { ApexOptions } from 'apexcharts';
 import dynamic from 'next/dynamic';
 
@@ -117,35 +117,22 @@ const WeddingProgressChart: React.FC<WeddingProgressChartProps> = ({
   ];
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        borderRadius: 2,
-        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06)',
-      }}
-    >
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontWeight: 600, 
-              color: '#722F37',
-              fontSize: '1.125rem'
-            }}
-          >
+    <Card className="h-full shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-[#722F37]">
             {title}
-          </Typography>
-        </Box>
+          </h3>
+        </div>
         
-        <Box sx={{ height: 300 }}>
+        <div className="h-[300px]">
           <Chart
             options={options}
             series={series}
             type="bar"
             height="100%"
           />
-        </Box>
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,49 +1,21 @@
-'use client';
+'use client'
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Chip,
-  LinearProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  MenuItem,
-  Avatar,
-  Fab,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  AttachMoney as MoneyIcon,
-  TrendingUp as TrendingUpIcon,
-  PieChart as PieChartIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
-} from '@mui/icons-material';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout';
-import { useTheme as useCustomTheme } from '@/contexts/ThemeContext';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+
+import { DollarSign, Calculator, Plus, Edit, Trash2, TrendingUp, PieChart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { BudgetClient, type BudgetSummary } from '@/lib/api/budget.client';
+
+import { cn } from '@/lib/utils';
 
 type BudgetItem = {
   id: string;
@@ -53,8 +25,6 @@ type BudgetItem = {
   actual: number;
   status: 'planned' | 'quoted' | 'booked' | 'paid';
 }
-
-type ChipColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
 
 const categories = [
   'Venue',
@@ -72,11 +42,12 @@ const categories = [
 export default function BudgetPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const { themeMode } = useCustomTheme();
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [summary, setSummary] = useState<BudgetSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     category: '',
     amount: '',
@@ -94,6 +65,7 @@ export default function BudgetPage() {
   useEffect(() => {
     async function load() {
       try {
+        setLoading(true)
         const { items, summary } = await BudgetClient.list()
         const rows: BudgetItem[] = (items || []).map((it: any) => ({
           id: it.id,
@@ -107,6 +79,8 @@ export default function BudgetPage() {
         setSummary(summary)
       } catch (e) {
         console.error('Failed to load budget', e)
+      } finally {
+        setLoading(false)
       }
     }
     if (!isLoading && user) load()
@@ -152,292 +126,241 @@ export default function BudgetPage() {
       actual: Number(formData.actual || 0),
       status: formData.status,
     }
+    
+    setSaving(true)
+    
+    // Optimistic update
+    const tempId = `temp_${Date.now()}`
+    const optimisticItem: BudgetItem = {
+      id: editingItem ? editingItem.id : tempId,
+      category: payload.category,
+      amount: payload.amount,
+      allocated: payload.allocated,
+      actual: payload.actual,
+      status: payload.status,
+    }
+    
+    if (editingItem) {
+      // Optimistically update existing item
+      setBudgetItems(prev => prev.map(item => 
+        item.id === editingItem.id ? optimisticItem : item
+      ))
+    } else {
+      // Optimistically add new item
+      setBudgetItems(prev => [...prev, optimisticItem])
+    }
+    
+    setOpenDialog(false)
+    
     try {
       if (editingItem) {
-        await BudgetClient.update(editingItem.id, payload)
+        const updated = await BudgetClient.update(editingItem.id, payload)
+        setBudgetItems(prev => prev.map(item => 
+          item.id === editingItem.id ? {
+            id: updated.id,
+            category: updated.category,
+            amount: Number(updated.amount) || 0,
+            allocated: Number(updated.allocated) || 0,
+            actual: Number(updated.actual) || 0,
+            status: updated.status,
+          } : item
+        ))
       } else {
-        await BudgetClient.create(payload)
+        const created = await BudgetClient.create(payload)
+        // Replace temp item with real item
+        setBudgetItems(prev => prev.map(item => 
+          item.id === tempId ? {
+            id: created.id,
+            category: created.category,
+            amount: Number(created.amount) || 0,
+            allocated: Number(created.allocated) || 0,
+            actual: Number(created.actual) || 0,
+            status: created.status,
+          } : item
+        ))
       }
-      setOpenDialog(false)
-      const { items, summary } = await BudgetClient.list()
-      const rows: BudgetItem[] = (items || []).map((it: any) => ({
-        id: it.id,
-        category: it.category,
-        amount: Number(it.amount as any) || 0,
-        allocated: Number(it.allocated as any) || 0,
-        actual: Number(it.actual as any) || 0,
-        status: it.status,
-      }))
-      setBudgetItems(rows)
+      
+      // Refresh summary
+      const { summary } = await BudgetClient.list()
       setSummary(summary)
     } catch (e) {
       console.error('Save budget error', e)
-      alert('Error saving budget item')
+      // Revert optimistic update on error
+      if (editingItem) {
+        setBudgetItems(prev => prev.map(item => 
+          item.id === editingItem.id ? editingItem : item
+        ))
+      } else {
+        setBudgetItems(prev => prev.filter(item => item.id !== tempId))
+      }
+      setOpenDialog(true)
+    } finally {
+      setSaving(false)
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this budget item?')) return
+    
+    const itemToDelete = budgetItems.find(item => item.id === id)
+    if (!itemToDelete) return
+    
+    // Optimistic delete
+    setBudgetItems(prev => prev.filter(item => item.id !== id))
+    
     try {
       await BudgetClient.remove(id)
-      const { items, summary } = await BudgetClient.list()
-      const rows: BudgetItem[] = (items || []).map((it: any) => ({
-        id: it.id,
-        category: it.category,
-        amount: Number(it.amount as any) || 0,
-        allocated: Number(it.allocated as any) || 0,
-        actual: Number(it.actual as any) || 0,
-        status: it.status,
-      }))
-      setBudgetItems(rows)
+      // Refresh summary
+      const { summary } = await BudgetClient.list()
       setSummary(summary)
     } catch (e) {
       console.error('Delete budget error', e)
-      alert('Error deleting budget item')
-    }
-  };
-
-  const getStatusColor = (status: BudgetItem['status']): ChipColor => {
-    switch (status) {
-      case 'paid':
-        return 'success';
-      case 'booked':
-        return 'info';
-      case 'quoted':
-        return 'warning';
-      case 'planned':
-      default:
-        return 'default';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <CheckCircleIcon sx={{ fontSize: 16 }} />;
-      case 'quoted':
-        return <WarningIcon sx={{ fontSize: 16 }} />;
-      case 'booked':
-        return <TrendingUpIcon sx={{ fontSize: 16 }} />;
-      default:
-        return <MoneyIcon sx={{ fontSize: 16 }} />;
+      // Revert on error
+      setBudgetItems(prev => [...prev, itemToDelete])
     }
   };
 
   if (isLoading || !user) {
-    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-    return (
-      <LoadingLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <CircularProgress />
-        </Box>
-      </LoadingLayout>
-    );
+    return <div>Loading...</div>
   }
 
-  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout;
-
   return (
-    <Layout>
-      <Box sx={{ p: 3 }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400 }}>
-              Budget Tracker
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Track your wedding expenses and stay within budget
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'right' }}>
-            <Typography variant="body2" color="text.secondary">Total Amount</Typography>
-            <Typography variant="h5" sx={{ fontWeight: 600 }}>${getTotalEstimated().toLocaleString()}</Typography>
-          </Box>
-        </Box>
+    <div className="p-4 md:p-8">
+        <div className="flex items-center justify-between mb-4">
+            <div>
+                <h1 className="text-2xl font-bold">Budget Tracker</h1>
+                <p className="text-muted-foreground">Track your wedding expenses and stay within budget</p>
+            </div>
+            <Button onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+            </Button>
+        </div>
 
-        {/* Stats */}
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
+        <div className="grid gap-4 md:grid-cols-3 mb-4">
             <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: '#4A5D3A' }}>
-                    <TrendingUpIcon />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary">Total Amount</Typography>
-                    <Typography variant="h6">${getTotalEstimated().toLocaleString()}</Typography>
-                  </Box>
-                </Box>
-              </CardContent>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">${getTotalEstimated().toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">Estimated budget</p>
+                </CardContent>
             </Card>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: '#4A5D3A' }}>
-                    <PieChartIcon />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Total Actual
-                    </Typography>
-                    <Typography variant="h6">${getTotalActual().toLocaleString()}</Typography>
-                  </Box>
-                </Box>
-              </CardContent>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Actual</CardTitle>
+                    <PieChart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">${getTotalActual().toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">Spent so far</p>
+                </CardContent>
             </Card>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: '#4A5D3A' }}>
-                    <MoneyIcon />
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Budget Used
-                    </Typography>
-                    <LinearProgress variant="determinate" value={Math.min(getBudgetProgress(), 100)} sx={{ height: 8, borderRadius: 5 }} />
-                    <Typography variant="caption" color="text.secondary">${getTotalActual().toLocaleString()} of ${getTotalEstimated().toLocaleString()}</Typography>
-                  </Box>
-                </Box>
-              </CardContent>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Budget Used</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{getBudgetProgress().toFixed(0)}%</div>
+                    <Progress value={getBudgetProgress()} className="mt-2" />
+                </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+        </div>
 
-        {/* Budget List */}
         <Card>
-          <CardContent>
-            {budgetItems.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 8 }}>
-                <MoneyIcon sx={{ fontSize: 48, color: '#4A5D3A', mb: 2 }} />
-                <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 400, color: '#4A5D3A' }} gutterBottom>
-                  No budget items yet
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Start by adding your first budget item to track expenses
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => handleOpenDialog()}
-                >
-                  Add First Item
-                </Button>
-              </Box>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Category</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                      <TableCell align="right">Allocated</TableCell>
-                      <TableCell align="right">Actual</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="center">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {budgetItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Chip label={item.category} size="small" />
-                        </TableCell>
-                        <TableCell align="right">${item.amount.toLocaleString()}</TableCell>
-                        <TableCell align="right">${item.allocated.toLocaleString()}</TableCell>
-                        <TableCell align="right">${item.actual.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={item.status}
-                            size="small"
-                            color={getStatusColor(item.status)}
-                            icon={getStatusIcon(item.status)}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton size="small" onClick={() => handleOpenDialog(item)}>
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(item.id)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </CardContent>
+            <CardHeader>
+                <CardTitle>Budget Items</CardTitle>
+                <CardDescription>A detailed breakdown of your budget.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <div className="text-center py-8">
+                        <div className="text-muted-foreground">Loading budget items...</div>
+                    </div>
+                ) : budgetItems.length === 0 ? (
+                    <div className="text-center py-12">
+                        <Calculator className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Your budget is empty
+                        </h3>
+                        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                            Create your wedding budget to track expenses and stay on top of your spending!
+                        </p>
+                        <Button onClick={() => handleOpenDialog()} className="mx-auto">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Budget Item
+                        </Button>
+                    </div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Category</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                                <TableHead className="text-right">Allocated</TableHead>
+                                <TableHead className="text-right">Actual</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {budgetItems.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell><Badge variant="secondary">{item.category}</Badge></TableCell>
+                                    <TableCell className="text-right">${item.amount.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">${item.allocated.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">${item.actual.toLocaleString()}</TableCell>
+                                    <TableCell><Badge variant={item.status === 'paid' ? 'default' : 'outline'}>{item.status}</Badge></TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}><Edit className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
         </Card>
 
-        {/* Add/Edit Dialog */}
-        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {editingItem ? 'Edit Budget Item' : 'Add Budget Item'}
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-              <TextField
-                select
-                label="Category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                fullWidth
-              >
-                {categories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 4 }}>
-                  <TextField label="Amount" type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} fullWidth />
-                </Grid>
-                <Grid size={{ xs: 4 }}>
-                  <TextField label="Allocated" type="number" value={formData.allocated} onChange={(e) => setFormData({ ...formData, allocated: e.target.value })} fullWidth />
-                </Grid>
-                <Grid size={{ xs: 4 }}>
-                  <TextField label="Actual" type="number" value={formData.actual} onChange={(e) => setFormData({ ...formData, actual: e.target.value })} fullWidth />
-                </Grid>
-              </Grid>
-              <TextField
-                select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                fullWidth
-              >
-                <MenuItem value="planned">Planned</MenuItem>
-                <MenuItem value="quoted">Quoted</MenuItem>
-                <MenuItem value="booked">Booked</MenuItem>
-                <MenuItem value="paid">Paid</MenuItem>
-              </TextField>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button variant="contained" onClick={handleSave}>
-              Save
-            </Button>
-          </DialogActions>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{editingItem ? 'Edit Budget Item' : 'Add Budget Item'}</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value})}>
+                        <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                        <SelectContent>
+                            {categories.map((cat) => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <div className="grid grid-cols-3 gap-4">
+                        <Input placeholder="Amount" type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
+                        <Input placeholder="Allocated" type="number" value={formData.allocated} onChange={(e) => setFormData({ ...formData, allocated: e.target.value })} />
+                        <Input placeholder="Actual" type="number" value={formData.actual} onChange={(e) => setFormData({ ...formData, actual: e.target.value })} />
+                    </div>
+                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value})}>
+                        <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="planned">Planned</SelectItem>
+                            <SelectItem value="quoted">Quoted</SelectItem>
+                            <SelectItem value="booked">Booked</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={handleCloseDialog} disabled={saving}>Cancel</Button>
+                    <Button onClick={handleSave} disabled={saving}>
+                        {saving ? 'Saving...' : 'Save'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
         </Dialog>
-
-        <Fab
-          color="primary"
-          aria-label="add"
-          onClick={() => handleOpenDialog()}
-          sx={{ position: 'fixed', bottom: 24, right: 24 }}
-        >
-          <AddIcon />
-        </Fab>
-      </Box>
-    </Layout>
-  );
+    </div>
+  )
 }

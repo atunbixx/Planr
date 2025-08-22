@@ -1,8 +1,11 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
-import { TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon } from '@mui/icons-material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { TrendingUp, TrendingDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ApexOptions } from 'apexcharts';
 import dynamic from 'next/dynamic';
 
@@ -140,124 +143,87 @@ const BudgetTrackingChart: React.FC<BudgetTrackingChartProps> = ({
   const isOverBudget = data.totalSpent > data.totalBudget;
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        borderRadius: 2,
-        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06)',
-      }}
-    >
-      <CardContent sx={{ p: 3 }}>
+    <Card className="h-full shadow-sm">
+      <CardContent className="p-6">
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'flex-start', 
-          mb: 3,
-          borderBottom: '1px solid #F1F5F9',
-          pb: 2
-        }}>
-          <Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 600, 
-                color: '#722F37',
-                fontSize: '1.125rem',
-                mb: 0.5
-              }}
-            >
+        <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-100">
+          <div>
+            <h3 className="text-lg font-semibold text-[#722F37] mb-1">
               {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </h3>
+            <p className="text-sm text-slate-500">
               Budget vs Actual Spending
-            </Typography>
-          </Box>
+            </p>
+          </div>
           
-          <Box sx={{ textAlign: 'right' }}>
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontWeight: 700, 
-                color: '#722F37',
-                mb: 0.5
-              }}
-            >
+          <div className="text-right">
+            <div className="text-2xl font-bold text-[#722F37] mb-1">
               {formatCurrency(data.totalSpent)}
-            </Typography>
+            </div>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <div className="flex items-center gap-2 justify-end">
               {isOverBudget ? (
-                <TrendingUpIcon sx={{ fontSize: 16, color: '#EF4444' }} />
+                <TrendingUp className="h-4 w-4 text-red-500" />
               ) : (
-                <TrendingDownIcon sx={{ fontSize: 16, color: '#10B981' }} />
+                <TrendingDown className="h-4 w-4 text-green-500" />
               )}
               
-              <Chip
-                label={`${variancePercent > 0 ? '+' : ''}${variancePercent}%`}
-                size="small"
-                sx={{
-                  backgroundColor: isOverBudget ? '#FEE2E2' : '#D1FAE5',
-                  color: isOverBudget ? '#EF4444' : '#10B981',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                }}
-              />
-            </Box>
-          </Box>
-        </Box>
+              <Badge 
+                className={cn(
+                  "text-xs font-semibold",
+                  isOverBudget 
+                    ? "bg-red-100 text-red-600 hover:bg-red-100" 
+                    : "bg-green-100 text-green-600 hover:bg-green-100"
+                )}
+              >
+                {variancePercent > 0 ? '+' : ''}{variancePercent}%
+              </Badge>
+            </div>
+          </div>
+        </div>
         
         {/* Chart */}
-        <Box sx={{ height: 300 }}>
+        <div className="h-[300px] mb-4">
           <Chart
             options={options}
             series={series}
             type="bar"
             height="100%"
           />
-        </Box>
+        </div>
         
         {/* Summary */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          mt: 2, 
-          pt: 2,
-          borderTop: '1px solid #F1F5F9'
-        }}>
-          <Box>
-            <Typography variant="caption" color="text.secondary">
+        <div className="flex justify-between pt-4 border-t border-gray-100">
+          <div>
+            <p className="text-xs text-slate-500 mb-1">
               Total Budget
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: '#6B7C32' }}>
+            </p>
+            <p className="text-sm font-semibold text-[#6B7C32]">
               {formatCurrency(data.totalBudget)}
-            </Typography>
-          </Box>
+            </p>
+          </div>
           
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="caption" color="text.secondary">
+          <div className="text-center">
+            <p className="text-xs text-slate-500 mb-1">
               Remaining
-            </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                fontWeight: 600, 
-                color: isOverBudget ? '#EF4444' : '#10B981'
-              }}
-            >
+            </p>
+            <p className={cn(
+              "text-sm font-semibold",
+              isOverBudget ? "text-red-500" : "text-green-500"
+            )}>
               {formatCurrency(data.totalBudget - data.totalSpent)}
-            </Typography>
-          </Box>
+            </p>
+          </div>
           
-          <Box sx={{ textAlign: 'right' }}>
-            <Typography variant="caption" color="text.secondary">
+          <div className="text-right">
+            <p className="text-xs text-slate-500 mb-1">
               Spent
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: '#722F37' }}>
+            </p>
+            <p className="text-sm font-semibold text-[#722F37]">
               {formatCurrency(data.totalSpent)}
-            </Typography>
-          </Box>
-        </Box>
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

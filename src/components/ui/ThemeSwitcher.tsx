@@ -2,194 +2,134 @@
 
 import React, { useState } from 'react';
 import {
-  IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-  Box,
-  Typography,
-  Chip,
-  Divider,
-} from '@mui/material';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import {
-  Palette as PaletteIcon,
-  AutoAwesome as PremiumIcon,
-  Article as ClassicIcon,
-  Check as CheckIcon,
-} from '@mui/icons-material';
-import { useTheme } from '@/contexts/ThemeContext';
+  Palette,
+  Sparkles,
+  FileText,
+  Check,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const ThemeSwitcher: React.FC = () => {
-  const { themeMode, toggleTheme, setThemeMode } = useTheme();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const [themeMode, setThemeMode] = useState<'default' | 'premium'>('premium');
 
   const handleThemeSelect = (mode: 'default' | 'premium') => {
     setThemeMode(mode);
-    handleClose();
+    // Since we're using pure shadcn/ui now, this is just for UI state
+    // The actual styling is handled by CSS and Tailwind
   };
 
   return (
-    <>
-      <Tooltip title="Switch Theme" arrow>
-        <IconButton
-          onClick={handleClick}
-          size="small"
-          sx={{
-            ml: 1,
-            backgroundColor: themeMode === 'premium' 
-              ? '#722F37'
-              : 'transparent',
-            color: themeMode === 'premium' ? '#FFFFFF' : 'inherit',
-            '&:hover': {
-              backgroundColor: themeMode === 'premium'
-                ? '#5A252A'
-                : 'rgba(0, 0, 0, 0.04)',
-            },
-            transition: 'all 0.2s ease',
-          }}
+    <TooltipProvider>
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "ml-2 h-8 w-8 p-0 transition-all duration-200",
+                  themeMode === 'premium'
+                    ? "bg-[#722F37] text-white hover:bg-[#5A252A]"
+                    : "bg-transparent hover:bg-gray-100"
+                )}
+              >
+                <Palette className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Switch Theme</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <DropdownMenuContent 
+          align="end" 
+          className={cn(
+            "w-72 p-0",
+            themeMode === 'premium' ? "rounded-lg" : "rounded-none"
+          )}
         >
-          <PaletteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        onClick={handleClose}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-            mt: 1.5,
-            minWidth: 280,
-            borderRadius: themeMode === 'premium' ? 2 : 0,
-            '& .MuiAvatar-root': {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
-            '&:before': {
-              content: '""',
-              display: 'block',
-              position: 'absolute',
-              top: 0,
-              right: 14,
-              width: 10,
-              height: 10,
-              bgcolor: 'background.paper',
-              transform: 'translateY(-50%) rotate(45deg)',
-              zIndex: 0,
-            },
-          },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="subtitle2" color="text.secondary">
-            Choose Your Theme
-          </Typography>
-        </Box>
-        
-        <Divider />
-        
-        <MenuItem
-          onClick={() => handleThemeSelect('default')}
-          selected={themeMode === 'default'}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: themeMode === 'premium' ? 1 : 0,
-            mx: themeMode === 'premium' ? 1 : 0,
-            my: themeMode === 'premium' ? 0.5 : 0,
-          }}
-        >
-          <ListItemIcon>
-            <ClassicIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" fontWeight={500}>
-                Classic Minimalist
-              </Typography>
-              {themeMode === 'default' && (
-                <CheckIcon fontSize="small" color="primary" />
-              )}
-            </Box>
-            <Typography variant="caption" color="text.secondary">
-              Clean, minimal design with sharp edges
-            </Typography>
-          </ListItemText>
-        </MenuItem>
-        
-        <MenuItem
-          onClick={() => handleThemeSelect('premium')}
-          selected={themeMode === 'premium'}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: themeMode === 'premium' ? 1 : 0,
-            mx: themeMode === 'premium' ? 1 : 0,
-            my: themeMode === 'premium' ? 0.5 : 0,
-          }}
-        >
-          <ListItemIcon>
-            <PremiumIcon 
-              fontSize="small" 
-              sx={{
-                color: '#722F37',
-              }}
-            />
-          </ListItemIcon>
-          <ListItemText>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" fontWeight={500}>
-                Million Dollar UI
-              </Typography>
-              <Chip 
-                label="Premium" 
-                size="small" 
-                sx={{
-                  height: 18,
-                  fontSize: '0.625rem',
-                  backgroundColor: '#722F37',
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                }}
-              />
-              {themeMode === 'premium' && (
-                <CheckIcon fontSize="small" color="primary" />
-              )}
-            </Box>
-            <Typography variant="caption" color="text.secondary">
-              Modern gradients, smooth animations & premium feel
-            </Typography>
-          </ListItemText>
-        </MenuItem>
-        
-        <Divider sx={{ my: 1 }} />
-        
-        <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            Theme preference is saved automatically
-          </Typography>
-        </Box>
-      </Menu>
-    </>
+          <div className="px-3 py-2">
+            <DropdownMenuLabel className="text-sm font-medium text-muted-foreground">
+              Choose Your Theme
+            </DropdownMenuLabel>
+          </div>
+          
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem
+            onClick={() => handleThemeSelect('default')}
+            className={cn(
+              "flex items-start gap-3 p-3 cursor-pointer",
+              themeMode === 'premium' ? "mx-1 my-1 rounded-md" : "mx-0 my-0 rounded-none",
+              themeMode === 'default' && "bg-accent"
+            )}
+          >
+            <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Classic Minimalist</span>
+                {themeMode === 'default' && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Clean, minimal design with sharp edges
+              </p>
+            </div>
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem
+            onClick={() => handleThemeSelect('premium')}
+            className={cn(
+              "flex items-start gap-3 p-3 cursor-pointer",
+              themeMode === 'premium' ? "mx-1 my-1 rounded-md" : "mx-0 my-0 rounded-none",
+              themeMode === 'premium' && "bg-accent"
+            )}
+          >
+            <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0 text-[#722F37]" />
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Million Dollar UI</span>
+                <Badge 
+                  variant="secondary" 
+                  className="h-4 px-1.5 text-xs font-semibold bg-[#722F37] text-white hover:bg-[#722F37]"
+                >
+                  Premium
+                </Badge>
+                {themeMode === 'premium' && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Modern gradients, smooth animations & premium feel
+              </p>
+            </div>
+          </DropdownMenuItem>
+          
+          <DropdownMenuSeparator className="my-2" />
+          
+          <div className="px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Theme preference is saved automatically
+            </p>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TooltipProvider>
   );
 };
 

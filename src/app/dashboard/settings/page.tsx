@@ -1,14 +1,12 @@
-"use client"
+'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
-import { useTheme as useCustomTheme } from '@/contexts/ThemeContext'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from '@/hooks/useAuth'
-import {
-  Box, Grid, Card, CardContent, Typography, TextField, MenuItem, Button, Snackbar, Alert,
-} from '@mui/material'
 import { SettingsClient, type WeddingDetails as Wd, type Preferences as Pf } from '@/lib/api/settings.client'
 
 type WeddingDetails = Wd
@@ -24,11 +22,9 @@ const timeFormats = ['HH:mm','hh:mm A']
 export default function SettingsPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
-  const { themeMode } = useCustomTheme()
   const [wd, setWd] = useState<WeddingDetails>({})
   const [pf, setPf] = useState<Preferences>({})
   const [saving, setSaving] = useState(false)
-  const [snack, setSnack] = useState<{open: boolean; msg: string; severity: 'success'|'error'}>({ open: false, msg: '', severity: 'success' })
 
   useEffect(() => { if (!isLoading && !user) router.push('/signin') }, [isLoading, user, router])
 
@@ -54,7 +50,7 @@ export default function SettingsPage() {
           timeFormat: p?.timeFormat || 'HH:mm',
         })
       } catch (e) {
-        setSnack({ open: true, msg: 'Failed to load settings', severity: 'error' })
+        console.error('Failed to load settings', e)
       }
     }
     if (!isLoading && user) load()
@@ -70,101 +66,81 @@ export default function SettingsPage() {
         guestCount: typeof wd.guestCount === 'number' ? wd.guestCount : undefined,
       })
       await SettingsClient.updatePreferences(pf)
-      setSnack({ open: true, msg: 'Settings saved', severity: 'success' })
     } catch (e) {
-      setSnack({ open: true, msg: 'Failed to save settings', severity: 'error' })
+        console.error('Failed to save settings', e)
     } finally { setSaving(false) }
   }
 
-  if (isLoading) {
-    const LoadingLayout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
-    return (
-      <LoadingLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-          <Typography>Loading...</Typography>
-        </Box>
-      </LoadingLayout>
-    )
+  if (isLoading || !user) {
+    return <div>Loading...</div>
   }
-
-  if (!user) {
-    router.push('/signin')
-    return null
-  }
-
-  const Layout = themeMode === 'premium' ? PremiumDashboardLayout : DashboardLayout
 
   return (
-    <Layout>
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" sx={{ mb: 2 }}>Settings</Typography>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
+    <div className="p-4 md:p-8">
+        <h1 className="text-2xl font-bold mb-4">Settings</h1>
+        <div className="grid gap-4 md:grid-cols-2">
             <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>Wedding Details</Typography>
-                <TextField fullWidth label="Venue / Location" value={wd.venue || ''} onChange={e => setWd({ ...wd, venue: e.target.value })} sx={{ mb: 2 }} />
-                <TextField fullWidth label="Wedding Date" type="date" value={wd.weddingDate || ''} onChange={e => setWd({ ...wd, weddingDate: e.target.value })} InputLabelProps={{ shrink: true }} sx={{ mb: 2 }} />
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField fullWidth label="Budget" type="number" value={wd.budget ?? ''} onChange={e => setWd({ ...wd, budget: e.target.value ? Number(e.target.value) : undefined })} />
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField fullWidth label="Guest Count" type="number" value={wd.guestCount ?? ''} onChange={e => setWd({ ...wd, guestCount: e.target.value ? Number(e.target.value) : undefined })} />
-                  </Grid>
-                </Grid>
-              </CardContent>
+                <CardHeader>
+                    <CardTitle>Wedding Details</CardTitle>
+                    <CardDescription>Basic information about your wedding.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Input placeholder="Venue / Location" value={wd.venue || ''} onChange={e => setWd({ ...wd, venue: e.target.value })} />
+                    <Input type="date" placeholder="Wedding Date" value={wd.weddingDate || ''} onChange={e => setWd({ ...wd, weddingDate: e.target.value })} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input type="number" placeholder="Budget" value={wd.budget ?? ''} onChange={e => setWd({ ...wd, budget: e.target.value ? Number(e.target.value) : undefined })} />
+                        <Input type="number" placeholder="Guest Count" value={wd.guestCount ?? ''} onChange={e => setWd({ ...wd, guestCount: e.target.value ? Number(e.target.value) : undefined })} />
+                    </div>
+                </CardContent>
             </Card>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>Preferences</Typography>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField select fullWidth label="Currency" value={pf.currency || ''} onChange={e => setPf({ ...pf, currency: e.target.value })}>
-                      {currencies.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </TextField>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField select fullWidth label="Language" value={pf.language || ''} onChange={e => setPf({ ...pf, language: e.target.value })}>
-                      {languages.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </TextField>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField select fullWidth label="Region" value={pf.region || ''} onChange={e => setPf({ ...pf, region: e.target.value })}>
-                      {regions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </TextField>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField select fullWidth label="Time Zone" value={pf.timeZone || ''} onChange={e => setPf({ ...pf, timeZone: e.target.value })}>
-                      {timeZones.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </TextField>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField select fullWidth label="Date Format" value={pf.dateFormat || ''} onChange={e => setPf({ ...pf, dateFormat: e.target.value })}>
-                      {dateFormats.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </TextField>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField select fullWidth label="Time Format" value={pf.timeFormat || ''} onChange={e => setPf({ ...pf, timeFormat: e.target.value })}>
-                      {timeFormats.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </TextField>
-                  </Grid>
-                </Grid>
-              </CardContent>
+                <CardHeader>
+                    <CardTitle>Preferences</CardTitle>
+                    <CardDescription>Customize your experience.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                    <Select value={pf.currency} onValueChange={(value) => setPf({ ...pf, currency: value})}>
+                        <SelectTrigger><SelectValue placeholder="Currency" /></SelectTrigger>
+                        <SelectContent>
+                            {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={pf.language} onValueChange={(value) => setPf({ ...pf, language: value})}>
+                        <SelectTrigger><SelectValue placeholder="Language" /></SelectTrigger>
+                        <SelectContent>
+                            {languages.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={pf.region} onValueChange={(value) => setPf({ ...pf, region: value})}>
+                        <SelectTrigger><SelectValue placeholder="Region" /></SelectTrigger>
+                        <SelectContent>
+                            {regions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={pf.timeZone} onValueChange={(value) => setPf({ ...pf, timeZone: value})}>
+                        <SelectTrigger><SelectValue placeholder="Time Zone" /></SelectTrigger>
+                        <SelectContent>
+                            {timeZones.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={pf.dateFormat} onValueChange={(value) => setPf({ ...pf, dateFormat: value})}>
+                        <SelectTrigger><SelectValue placeholder="Date Format" /></SelectTrigger>
+                        <SelectContent>
+                            {dateFormats.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={pf.timeFormat} onValueChange={(value) => setPf({ ...pf, timeFormat: value})}>
+                        <SelectTrigger><SelectValue placeholder="Time Format" /></SelectTrigger>
+                        <SelectContent>
+                            {timeFormats.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </CardContent>
             </Card>
-          </Grid>
-        </Grid>
-
-        <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-          <Button variant="contained" onClick={save} disabled={saving}>Save Settings</Button>
-        </Box>
-
-        <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack({ ...snack, open: false })}>
-          <Alert severity={snack.severity} onClose={() => setSnack({ ...snack, open: false })}>{snack.msg}</Alert>
-        </Snackbar>
-      </Box>
-    </Layout>
+        </div>
+        <div className="mt-4">
+            <Button onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</Button>
+        </div>
+    </div>
   )
 }

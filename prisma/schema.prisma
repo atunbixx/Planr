@@ -20,7 +20,12 @@ model User {
   budgets             Budget[]
   guests              Guest[]
   vendors             Vendor[]
+  tasks               Task[]
+  tables              Table[]
+  sessions            Session[]
   weddingDetails      WeddingDetails?
+  assignedTasks       TaskAssignment[] @relation("TaskAssignee")
+  assignedByTasks     TaskAssignment[] @relation("TaskAssigner")
 
   @@map("users")
 }
@@ -178,6 +183,7 @@ model Guest {
   updatedAt      DateTime   @updatedAt
   user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   rsvp           RSVP?
+  seats          Seat[]
 
   @@map("guests")
 }
@@ -206,6 +212,96 @@ model Budget {
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("budgets")
+}
+
+model Task {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @db.Uuid
+  title       String
+  description String?
+  category    String?      // e.g., "Venue", "Catering", "Photography"
+  priority    TaskPriority @default(medium)
+  status      TaskStatus   @default(pending)
+  dueDate     DateTime?
+  completedAt DateTime?
+  assignedTo  String?      // "bride", "groom", "planner", or specific user email
+  isTemplate  Boolean      @default(false) // true for template tasks
+  templateId  String?      // reference to template this task was created from
+  timeline    String?      // "12_months", "6_months", "3_months", "1_month", "1_week"
+  order       Int?         // for ordering within categories
+  tags        String[]     @default([])
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments TaskAssignment[]
+
+  @@index([userId, status], map: "tasks_user_status_idx")
+  @@index([userId, dueDate], map: "tasks_user_duedate_idx")
+  @@index([userId, category], map: "tasks_user_category_idx")
+  @@index([isTemplate, timeline], map: "tasks_template_timeline_idx")
+  @@map("tasks")
+}
+
+model TaskAssignment {
+  id          String     @id @default(uuid()) @db.Uuid
+  taskId      String     @db.Uuid
+  assigneeId  String     @db.Uuid
+  assignedBy  String     @db.Uuid
+  status      TaskStatus @default(pending)
+  notes       String?
+  dueDate     DateTime?
+  assignedAt  DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
+  assigner    User       @relation("TaskAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, assigneeId])
+  @@map("task_assignments")
+}
+
+model Table {
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String      @db.Uuid
+  name        String      // e.g., "Table 1", "Head Table", "Family Table"
+  shape       TableShape  @default(round)
+  capacity    Int         // maximum number of seats
+  positionX   Float       @default(0) // x coordinate on the floor plan
+  positionY   Float       @default(0) // y coordinate on the floor plan
+  rotation    Float       @default(0) // rotation angle in degrees
+  width       Float?      // width for rectangular tables
+  height      Float?      // height for rectangular tables
+  diameter    Float?      // diameter for round tables
+  color       String?     // hex color for visual customization
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seats       Seat[]
+
+  @@index([userId], map: "tables_user_idx")
+  @@map("tables")
+}
+
+model Seat {
+  id          String    @id @default(uuid()) @db.Uuid
+  tableId     String    @db.Uuid
+  guestId     String?   @db.Uuid // null if seat is empty
+  seatNumber  Int       // seat position at the table (1, 2, 3, etc.)
+  positionX   Float     @default(0) // relative position on the table
+  positionY   Float     @default(0) // relative position on the table
+  isHost      Boolean   @default(false) // special designation (bride, groom, etc.)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  table       Table     @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  guest       Guest?    @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@unique([tableId, seatNumber], map: "seats_table_number_unique")
+  @@index([tableId], map: "seats_table_idx")
+  @@index([guestId], map: "seats_guest_idx")
+  @@map("seats")
 }
 
 enum UserRole {
@@ -239,4 +335,26 @@ enum VendorStatus {
   booked
   contracted
   paid
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+  on_hold
+}
+
+enum TableShape {
+  round
+  rectangle
+  square
+  oval
 }

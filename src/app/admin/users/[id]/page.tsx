@@ -2,7 +2,11 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Box, Typography, Card, CardContent, Grid, Chip, CircularProgress, Button, Snackbar, Alert, TextField, MenuItem } from '@mui/material'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert } from '@/components/ui/alert'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import AuthClient from '@/lib/auth/client'
 
@@ -31,11 +35,18 @@ export default function AdminUserDetailPage() {
     if (params?.id) load()
   }, [params?.id])
 
+  useEffect(() => {
+    if (snack.open) {
+      const t = setTimeout(() => setSnack(s => ({ ...s, open: false })), 2500)
+      return () => clearTimeout(t)
+    }
+  }, [snack.open])
+
   if (loading) {
-    return <Box sx={{ p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CircularProgress /></Box>
+    return <div className="p-4 flex items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" /></div>
   }
   if (error || !data) {
-    return <Box sx={{ p: 4 }}><Typography color="error">{error || 'Not found'}</Typography></Box>
+    return <div className="p-4 text-destructive">{error || 'Not found'}</div>
   }
 
   const u = data.user
@@ -43,33 +54,42 @@ export default function AdminUserDetailPage() {
   const s = data.stats || {}
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif' }}>User Detail</Typography>
-        <Chip label={u.role} size="small" />
-        {u.onboardingCompleted ? <Chip label="Onboarded" size="small" color="success" /> : <Chip label="Not Onboarded" size="small" />}
-        <Box sx={{ flex: 1 }} />
+    <div className="p-3 md:p-6">
+      <div className="flex items-center gap-2 mb-2">
+        <h1 className="text-2xl font-serif">User Detail</h1>
+        <Badge variant="outline">{u.role}</Badge>
+        {u.onboardingCompleted ? (
+          <Badge className="bg-green-100 text-green-700 border-green-200">Onboarded</Badge>
+        ) : (
+          <Badge variant="outline">Not Onboarded</Badge>
+        )}
+        <div className="flex-1" />
         <Button onClick={()=>router.push('/admin/users')}>Back to Users</Button>
-      </Box>
+      </div>
       <AdminToolbar />
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
           <Card>
-            <CardContent>
-              <Typography variant="overline">Email</Typography>
-              <Typography variant="h6">{u.email}</Typography>
-              <Typography variant="overline" sx={{ display: 'block', mt: 2 }}>Created</Typography>
-              <Typography>{new Date(u.createdAt).toLocaleString()}</Typography>
-              <Typography variant="overline" sx={{ display: 'block', mt: 2 }}>Updated</Typography>
-              <Typography>{new Date(u.updatedAt).toLocaleString()}</Typography>
-              <Typography variant="overline" sx={{ display: 'block', mt: 2 }}>Role</Typography>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <TextField size="small" select value={role || currentRole} onChange={(e)=>setRole(e.target.value)} sx={{ minWidth: 160 }}>
-                  {['couple','planner','vendor'].map(r => (
-                    <MenuItem key={r} value={r}>{r}</MenuItem>
-                  ))}
-                </TextField>
-                <Button size="small" variant="outlined" disabled={!role || role === currentRole} onClick={async ()=>{
+            <CardContent className="space-y-2">
+              <span className="text-xs uppercase text-muted-foreground">Email</span>
+              <div className="text-lg font-medium">{u.email}</div>
+              <span className="text-xs uppercase text-muted-foreground block mt-2">Created</span>
+              <div>{new Date(u.createdAt).toLocaleString()}</div>
+              <span className="text-xs uppercase text-muted-foreground block mt-2">Updated</span>
+              <div>{new Date(u.updatedAt).toLocaleString()}</div>
+              <span className="text-xs uppercase text-muted-foreground block mt-2">Role</span>
+              <div className="flex items-center gap-2">
+                <Select value={role || currentRole} onValueChange={(v)=>setRole(v)}>
+                  <SelectTrigger className="min-w-40">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['couple','planner','vendor'].map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" variant="outline" disabled={!role || role === currentRole} onClick={async ()=>{
                   try {
                     const token = AuthClient.getToken()
                     const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
@@ -84,11 +104,13 @@ export default function AdminUserDetailPage() {
                     setSnack({ open: true, message: 'Update failed', severity: 'error' })
                   }
                 }}>Save</Button>
-              </Box>
-              <Typography variant="overline" sx={{ display: 'block', mt: 2 }}>Status</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Chip label={(u as any).isActive === false ? 'Deactivated' : 'Active'} size="small" color={(u as any).isActive === false ? 'warning' : 'success'} />
-                <Button size="small" variant="outlined" onClick={async ()=>{
+              </div>
+              <span className="text-xs uppercase text-muted-foreground block mt-2">Status</span>
+              <div className="flex items-center gap-2">
+                <Badge className={(u as any).isActive === false ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-green-100 text-green-700 border-green-200'}>
+                  {(u as any).isActive === false ? 'Deactivated' : 'Active'}
+                </Badge>
+                <Button size="sm" variant="outline" onClick={async ()=>{
                   try {
                     const token = AuthClient.getToken()
                     const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
@@ -102,7 +124,7 @@ export default function AdminUserDetailPage() {
                     setSnack({ open: true, message: 'Update failed', severity: 'error' })
                   }
                 }}>{(u as any).isActive === false ? 'Reactivate' : 'Deactivate'}</Button>
-                <Button size="small" onClick={async ()=>{
+                <Button size="sm" onClick={async ()=>{
                   try {
                     const token = AuthClient.getToken()
                     const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
@@ -119,39 +141,43 @@ export default function AdminUserDetailPage() {
                     setSnack({ open: true, message: e?.message || 'Impersonation failed', severity: 'error' })
                   }
                 }}>Impersonate</Button>
-              </Box>
+              </div>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
+        </div>
+        <div>
           <Card>
             <CardContent>
-              <Typography variant="overline">Stats</Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mt: 1 }}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">Private Vendors</Typography>
-                  <Typography variant="h6">{s.vendors ?? 0}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">Directory Vendors</Typography>
-                  <Typography variant="h6">{s.directoryVendors ?? 0}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">Guests</Typography>
-                  <Typography variant="h6">{s.guests ?? 0}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">Budgets</Typography>
-                  <Typography variant="h6">{s.budgets ?? 0}</Typography>
-                </Box>
-              </Box>
+              <span className="text-xs uppercase text-muted-foreground">Stats</span>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <div className="text-sm text-muted-foreground">Private Vendors</div>
+                  <div className="text-lg font-medium">{s.vendors ?? 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Directory Vendors</div>
+                  <div className="text-lg font-medium">{s.directoryVendors ?? 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Guests</div>
+                  <div className="text-lg font-medium">{s.guests ?? 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Budgets</div>
+                  <div className="text-lg font-medium">{s.budgets ?? 0}</div>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
-      <Snackbar open={snack.open} autoHideDuration={2500} onClose={()=>setSnack(s=>({ ...s, open: false }))}>
-        <Alert severity={snack.severity || 'success'} onClose={()=>setSnack(s=>({ ...s, open: false }))}>{snack.message}</Alert>
-      </Snackbar>
-    </Box>
+        </div>
+      </div>
+      {snack.open && (
+        <div className="fixed bottom-4 right-4 max-w-sm">
+          <Alert className={snack.severity === 'error' ? 'border-destructive text-destructive' : ''}>
+            {snack.message}
+          </Alert>
+        </div>
+      )}
+    </div>
   )
 }

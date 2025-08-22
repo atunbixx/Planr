@@ -11,7 +11,7 @@ async function handler(request: Request) {
     const pageSize = Math.max(1, Math.min(100, parseInt(sp.get('pageSize') || '20', 10)))
     const isSuspended = sp.get('isSuspended')
     const flag = sp.get('flag') || undefined // filter vendors that include given fraud flag
-    const where: any = {}
+    const where: Record<string, any> = {}
     if (q) where.OR = [
       { name: { contains: q, mode: 'insensitive' } },
       { website: { contains: q, mode: 'insensitive' } },
@@ -26,7 +26,7 @@ async function handler(request: Request) {
     const total = await prisma.directoryVendor.count({ where }).catch(()=>0)
     const vendors = await prisma.directoryVendor.findMany({ where, orderBy: { updatedAt: 'desc' }, skip: (page-1)*pageSize, take: pageSize }).catch(()=>[])
     return NextResponse.json({ success: true, data: { vendors, total, page, pageSize } })
-  } catch (e) {
+  } catch (e: unknown) {
     return NextResponse.json({ success: true, data: { vendors: [], total: 0, page: 1, pageSize: 20 } })
   }
 }

@@ -5,13 +5,7 @@ const seatingHandler = new SeatingHandler()
 
 async function getHandler(request: AuthenticatedRequest) {
   const userId = request.user!.id
-  return seatingHandler.list(request as any, userId)
-}
-
-async function postHandler(request: AuthenticatedRequest) {
-  const userId = request.user!.id
-  return seatingHandler.create(request as any, userId)
+  return await seatingHandler.getSeatingChart(request, userId)
 }
 
 export const GET = requireOnboarding(getHandler)
-export const POST = requireOnboarding(postHandler)

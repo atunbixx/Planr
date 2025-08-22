@@ -1,8 +1,12 @@
-"use client"
+'use client'
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, Typography, TextField, MenuItem, Button, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, Pagination, Chip, CircularProgress, Snackbar, Alert } from '@mui/material'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import { useAuth } from '@/hooks/useAuth'
 import AuthClient from '@/lib/auth/client'
@@ -21,13 +25,12 @@ export default function AdminDirectoryVendorsPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [snack, setSnack] = useState<{ open: boolean; message: string; severity?: 'success'|'error' }>({ open: false, message: '', severity: 'success' })
 
   async function load() {
     setLoading(true)
     try {
       const token = AuthClient.getToken()
-      const headers: any = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
       const p = new URLSearchParams()
       p.set('page', String(page))
       p.set('pageSize', String(pageSize))
@@ -39,102 +42,109 @@ export default function AdminDirectoryVendorsPage() {
       const j = await res.json()
       setRows(j?.data?.vendors || [])
       setTotal(j?.data?.total || 0)
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError('Failed to load')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { if (!isLoading && user) load() }, [user, isLoading, page])
+  useEffect(() => { if (!isLoading && user) load() }, [user, isLoading, page, flag, isSuspended, load])
 
-  async function updateRow(id: string, patch: any) {
+  async function updateRow(id: string, patch: Record<string, unknown>) {
     try {
       const token = AuthClient.getToken()
       const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       const res = await fetch(`/api/admin/directory/vendors/${id}`, { method: 'PATCH', headers, body: JSON.stringify(patch) })
       if (!res.ok) throw new Error('Update failed')
-      setSnack({ open: true, message: 'Updated', severity: 'success' })
       await load()
     } catch {
-      setSnack({ open: true, message: 'Update failed', severity: 'error' })
+        // handle error
     }
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Typography variant="h4" sx={{ fontFamily: '"Bodoni Moda", serif' }}>Directory Vendors</Typography>
-        <Box sx={{ flex: 1 }} />
+    <div className="p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <h1 className="text-2xl font-bold">Directory Vendors</h1>
+        <div className="flex-1" />
         <Button onClick={()=>router.push('/admin')}>Overview</Button>
-      </Box>
+      </div>
       <AdminToolbar />
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-        <TextField size="small" placeholder="Search name, website, email, phone" value={q} onChange={(e)=>setQ(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter'){ setPage(1); load() } }} />
-        <TextField size="small" select label="Flag" value={flag} onChange={(e)=>{ setFlag(e.target.value); setPage(1); load() }} sx={{ minWidth: 180 }}>
-          <MenuItem value="">All</MenuItem>
-          {['similar_name'].map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
-        </TextField>
-        <TextField size="small" select label="Suspended" value={isSuspended} onChange={(e)=>{ setIsSuspended(e.target.value); setPage(1); load() }} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="true">Yes</MenuItem>
-          <MenuItem value="false">No</MenuItem>
-        </TextField>
-        <Button variant="outlined" onClick={()=>{ setPage(1); load() }}>Search</Button>
-      </Box>
+      <div className="flex gap-1 mb-2 flex-wrap">
+        <Input placeholder="Search name, website, email, phone" value={q} onChange={(e)=>setQ(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter'){ setPage(1); load() } }} />
+        <Select value={flag} onValueChange={setFlag}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Flag" /></SelectTrigger>
+            <SelectContent>
+                <SelectItem value="">All</SelectItem>
+                <SelectItem value="similar_name">similar_name</SelectItem>
+            </SelectContent>
+        </Select>
+        <Select value={isSuspended} onValueChange={setIsSuspended}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Suspended" /></SelectTrigger>
+            <SelectContent>
+                <SelectItem value="">All</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+                <SelectItem value="false">No</SelectItem>
+            </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={()=>{ setPage(1); load() }}>Search</Button>
+      </div>
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
+        <div className="flex justify-center py-6"><p>Loading...</p></div>
       ) : error ? (
-        <Typography color="error">{error}</Typography>
+        <p className="text-red-500">{error}</p>
       ) : (
         <>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Region</TableCell>
-                  <TableCell>Website</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Phone</TableCell>
-                  <TableCell>Flags</TableCell>
-                  <TableCell>Suspended</TableCell>
-                  <TableCell>Updated</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Website</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Flags</TableHead>
+                  <TableHead>Suspended</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 {rows.map(r => (
-                  <TableRow key={r.id} hover onClick={()=>router.push(`/admin/directory/vendors/${r.id}`)} sx={{ cursor: 'pointer' }}>
+                  <TableRow key={r.id} onClick={()=>router.push(`/admin/directory/vendors/${r.id}`)} className="cursor-pointer">
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.category}</TableCell>
                     <TableCell>{r.region || ''}</TableCell>
                     <TableCell>{r.website || ''}</TableCell>
                     <TableCell>{r.email || ''}</TableCell>
                     <TableCell>{r.phone || ''}</TableCell>
-                    <TableCell>{(r.fraudFlags||[]).map((f,i)=>(<Chip key={i} size="small" label={f} sx={{ mr: 0.5 }} />))}</TableCell>
-                    <TableCell>{r.isSuspended ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{(r.fraudFlags||[]).map((f,i)=>(<Badge key={i} variant="secondary" className="mr-1">{f}</Badge>))}</TableCell>
+                    <TableCell><Badge variant={r.isSuspended ? "destructive" : "default"}>{r.isSuspended ? 'Yes' : 'No'}</Badge></TableCell>
                     <TableCell>{new Date(r.updatedAt).toLocaleString()}</TableCell>
-                    <TableCell align="right">
-                      <Button size="small" onClick={()=>updateRow(r.id, { isSuspended: !r.isSuspended })}>{r.isSuspended ? 'Unsuspend' : 'Suspend'}</Button>
+                    <TableCell className="text-right">
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); updateRow(r.id, { isSuspended: !r.isSuspended })}}>{r.isSuspended ? 'Unsuspend' : 'Suspend'}</Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </div>
           {total > pageSize && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <Pagination page={page} count={Math.ceil(total/pageSize)} onChange={(e,p)=>setPage(p)} />
-            </Box>
+            <div className="flex justify-center py-2">
+                <Button variant="outline" onClick={() => setPage(p => p - 1)} disabled={page === 1}>Previous</Button>
+                <span className="mx-4">Page {page} of {Math.ceil(total/pageSize)}</span>
+                <Button variant="outline" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(total/pageSize)}>Next</Button>
+            </div>
           )}
         </>
       )}
-
-      <Snackbar open={snack.open} autoHideDuration={2500} onClose={()=>setSnack(s=>({ ...s, open: false }))}>
-        <Alert severity={snack.severity || 'success'} onClose={()=>setSnack(s=>({ ...s, open: false }))}>{snack.message}</Alert>
-      </Snackbar>
-    </Box>
+    </div>
   )
 }
