@@ -52,11 +52,14 @@ export class VendorsRepository {
       return createSuccessResult({ vendors: vendors as any, total })
     } catch (err) {
       try {
-        const { vendors, total } = await tempStorage.listVendors(userId, { q: opts?.q, category: opts?.category, status: opts?.status, skip: opts?.page && opts?.pageSize ? (opts.page - 1) * opts.pageSize : 0, take: opts?.pageSize })
-        return createSuccessResult({ vendors: vendors as any, total })
+        if (process.env.NODE_ENV !== 'production') {
+          const { vendors, total } = await tempStorage.listVendors(userId, { q: opts?.q, category: opts?.category, status: opts?.status, skip: opts?.page && opts?.pageSize ? (opts.page - 1) * opts.pageSize : 0, take: opts?.pageSize })
+          return createSuccessResult({ vendors: vendors as any, total })
+        }
       } catch (e) {
-        return createErrorResult('Failed to list vendors', 'VENDORS_LIST_FAILED', 500)
+        // ignore and fall through to error
       }
+      return createErrorResult('Failed to list vendors', 'VENDORS_LIST_FAILED', 500)
     }
   }
 
@@ -66,11 +69,14 @@ export class VendorsRepository {
       return createSuccessResult(vendor as any)
     } catch (err) {
       try {
-        const v = await tempStorage.createVendor(userId, data as any)
-        return createSuccessResult(v as any)
+        if (process.env.NODE_ENV !== 'production') {
+          const v = await tempStorage.createVendor(userId, data as any)
+          return createSuccessResult(v as any)
+        }
       } catch (e) {
-        return createErrorResult('Failed to create vendor', 'VENDOR_CREATE_FAILED', 500)
+        // ignore and fall through
       }
+      return createErrorResult('Failed to create vendor', 'VENDOR_CREATE_FAILED', 500)
     }
   }
 
@@ -80,12 +86,15 @@ export class VendorsRepository {
       return createSuccessResult((v as any) || null)
     } catch (err) {
       try {
-        const { vendors } = await tempStorage.listVendors(userId)
-        const v = vendors.find((vv: any) => vv.id === id)
-        return createSuccessResult((v as any) || null)
+        if (process.env.NODE_ENV !== 'production') {
+          const { vendors } = await tempStorage.listVendors(userId)
+          const v = vendors.find((vv: any) => vv.id === id)
+          return createSuccessResult((v as any) || null)
+        }
       } catch (e) {
-        return createErrorResult('Failed to get vendor', 'VENDOR_GET_FAILED', 500)
+        // ignore
       }
+      return createErrorResult('Failed to get vendor', 'VENDOR_GET_FAILED', 500)
     }
   }
 
@@ -98,11 +107,14 @@ export class VendorsRepository {
       return createSuccessResult(updated as any)
     } catch (err) {
       try {
-        const updated = await tempStorage.updateVendor(userId, id, data as any)
-        return createSuccessResult(updated as any)
+        if (process.env.NODE_ENV !== 'production') {
+          const updated = await tempStorage.updateVendor(userId, id, data as any)
+          return createSuccessResult(updated as any)
+        }
       } catch (e) {
-        return createErrorResult('Failed to update vendor', 'VENDOR_UPDATE_FAILED', 500)
+        // ignore
       }
+      return createErrorResult('Failed to update vendor', 'VENDOR_UPDATE_FAILED', 500)
     }
   }
 
@@ -114,12 +126,14 @@ export class VendorsRepository {
       return createSuccessResult(true)
     } catch (err) {
       try {
-        const ok = await tempStorage.deleteVendor(userId, id)
-        return createSuccessResult(ok)
+        if (process.env.NODE_ENV !== 'production') {
+          const ok = await tempStorage.deleteVendor(userId, id)
+          return createSuccessResult(ok)
+        }
       } catch (e) {
-        return createErrorResult('Failed to delete vendor', 'VENDOR_DELETE_FAILED', 500)
+        // ignore
       }
+      return createErrorResult('Failed to delete vendor', 'VENDOR_DELETE_FAILED', 500)
     }
   }
 }
-
