@@ -227,6 +227,50 @@ class TempStorage {
     fs.writeFileSync(BUDGETS_FILE, JSON.stringify(items, null, 2))
   }
 
+  // Budget operations (temp fallback)
+  async findBudgetsByUserId(userId: string): Promise<BudgetItem[]> {
+    const all = this.readBudgets()
+    return all.filter(b => b.userId === userId)
+  }
+
+  async createBudgetItem(data: { userId: string; category: string; allocated: number; actual?: number; amount?: number; status?: BudgetItem['status']; name?: string }): Promise<BudgetItem & { name?: string }> {
+    const all = this.readBudgets()
+    const item: BudgetItem & { name?: string } = {
+      id: `budget_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+      userId: data.userId,
+      category: data.category,
+      amount: typeof data.amount === 'number' ? data.amount : data.allocated,
+      allocated: data.allocated,
+      actual: typeof data.actual === 'number' ? data.actual : 0,
+      status: data.status || 'planned',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...(data.name ? { name: data.name } : {})
+    }
+    all.push(item)
+    this.writeBudgets(all)
+    return item
+  }
+
+  async updateBudgetItem(id: string, updates: Partial<BudgetItem & { name?: string }>): Promise<(BudgetItem & { name?: string }) | null> {
+    const all = this.readBudgets()
+    const idx = all.findIndex(b => b.id === id)
+    if (idx === -1) return null
+    const merged = { ...all[idx], ...updates, updatedAt: new Date().toISOString() }
+    all[idx] = merged as any
+    this.writeBudgets(all)
+    return merged as any
+  }
+
+  async deleteBudgetItem(id: string): Promise<boolean> {
+    const all = this.readBudgets()
+    const idx = all.findIndex(b => b.id === id)
+    if (idx === -1) return false
+    all.splice(idx, 1)
+    this.writeBudgets(all)
+    return true
+  }
+
   private readTimeline(): any[] {
     this.ensureStorageDir()
     try {
