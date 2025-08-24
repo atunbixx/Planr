@@ -1,3 +1,17 @@
 {
-    "kiroAgent.configureMCP": "Disabled"
+    "kiroAgent.configureMCP": "Disabled",
+    "css.validate": false,
+    "scss.validate": false,
+    "less.validate": false,
+    "css.customData": [
+        ".vscode/css-custom-data.json"
+    ],
+    "tailwindCSS.includeLanguages": {
+        "html": "html",
+        "javascript": "javascript",
+        "css": "css"
+    },
+    "files.associations": {
+        "*.css": "tailwindcss"
+    }
 }

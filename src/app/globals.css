@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4: use the PostCSS plugin with a single import */
+@import "tailwindcss";
+
+/* Force regeneration of Tailwind classes */
 
 @layer base {
   :root {
@@ -31,6 +32,13 @@
     --radius: 0.5rem;
     --wedding-burgundy: 349 73% 31%;
     --wedding-sage: 79 27% 34%;
+    
+    /* Professional theme colors */
+    --gray-1: #F9FAFB;
+    --gray-2: #F3F4F6;
+    --stroke: #E6EBF1;
+    --dark-5: #6B7280;
+    --dark-6: #9CA3AF;
   }
 
   .dark {
@@ -47,7 +55,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
@@ -57,15 +65,46 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
     --wedding-burgundy: 349 73% 31%;
     --wedding-sage: 79 27% 34%;
+    
+    /* Professional dark theme colors */
+    --gray-dark: #122031;
+    --dark-2: #1F2A37;
+    --dark-3: #374151;
+    --stroke-dark: #27303E;
   }
 }
 
 @layer base {
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #F9FAFB;
+    color: #374151;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-playfair), serif;
+    font-weight: 600;
+    color: #111928;
+  }
+  
+  /* Professional dark mode */
+  .dark body {
+    background: #111928;
+    color: #9CA3AF;
+  }
+  
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #F9FAFB;
   }
 }
 
@@ -121,20 +160,50 @@
 /* Enhanced shadcn/ui component styling */
 .card {
   background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(114, 47, 55, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E6EBF1;
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.12);
   transition: all 0.2s ease;
+  border-radius: 8px;
 }
 
 .card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0px 8px 13px -3px rgba(0, 0, 0, 0.07);
   transform: translateY(-1px);
+}
+
+/* Dark mode cards */
+.dark .card {
+  background: #1F2A37;
+  border-color: #374151;
+  color: #F9FAFB;
+}
+
+.dark .card:hover {
+  box-shadow: 0px 8px 13px -3px rgba(0, 0, 0, 0.3);
+}
+
+/* Professional button styling */
+button {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* Enhanced badge styling */
+.badge {
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
 }
 
 /* Dashboard specific styling */
 .dashboard-container {
-  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+  background: #F9FAFB;
   min-height: 100vh;
+}
+
+.dark .dashboard-container {
+  background: #111928;
 }
 
 /* Wedding theme enhancements */
@@ -193,6 +262,115 @@
 }
 
 /* Stats card styling */
+.stats-card {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(114, 47, 55, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.stats-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Utility classes for better functionality */
+@layer utilities {
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .custom-scrollbar {
+    overflow: auto;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    position: relative;
+    flex: 1;
+    border-radius: 9999px;
+    background-color: #d1d5db;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+  }
+
+  .chat-height {
+    height: calc(100vh - 8.125rem);
+  }
+
+  @media (min-width: 1024px) {
+    .chat-height {
+      height: calc(100vh - 5.625rem);
+    }
+  }
+
+  .inbox-height {
+    height: calc(100vh - 8.125rem);
+  }
+
+  @media (min-width: 1024px) {
+    .inbox-height {
+      height: calc(100vh - 5.625rem);
+    }
+  }
+}
+
+/* Input focus styles */
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.custom-input-date::-webkit-calendar-picker-indicator {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 20px;
+  background: transparent;
+}
+
+/* Additional wedding theme enhancements */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 .stats-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 248, 248, 0.9) 100%);
   border: 1px solid rgba(114, 47, 55, 0.1);

@@ -80,7 +80,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen min-w-0">
       {/* Sidebar */}
       <PremiumSidebar 
         isOpen={sidebarOpen} 
@@ -88,25 +88,25 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6 xl:px-10 py-4 shadow-sm">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-stroke bg-white px-4 md:px-6 xl:px-10 py-4 shadow-card-2 dark:border-dark-3 dark:bg-dark-2">
           {/* Mobile menu button */}
           <Button
             variant="outline"
             size="sm"
             onClick={handleSidebarToggle}
-            className="lg:hidden border-gray-200 hover:bg-gray-50"
+            className="lg:hidden border-stroke hover:bg-gray-1 dark:border-dark-3 dark:hover:bg-dark-3"
           >
             <Menu className="h-5 w-5" />
           </Button>
 
           {/* Page Title Section */}
           <div className="hidden xl:block">
-            <h1 className="text-2xl font-bold text-[#722F37] mb-1">
+            <h1 className="text-2xl font-bold text-[#722F37] dark:text-white mb-1">
               {getCurrentPageTitle()}
             </h1>
-            <p className="text-sm text-slate-500 font-medium">
+            <p className="text-sm text-dark-5 dark:text-dark-6 font-medium">
               Wedding Planning Dashboard
             </p>
           </div>
@@ -115,11 +115,11 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
           <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
             {/* Search Bar */}
             <div className="relative w-full max-w-sm hidden sm:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-5 dark:text-dark-6 h-4 w-4" />
               <input
                 type="search"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full bg-gray-50 text-sm outline-none transition-all focus:border-[#722F37] focus:bg-white placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2 border border-stroke rounded-full bg-gray-1 text-sm outline-none transition-all focus:border-[#722F37] focus:bg-white dark:border-dark-3 dark:bg-dark-2 dark:focus:border-[#722F37] placeholder:text-dark-5 dark:placeholder:text-dark-6 dark:text-white"
               />
             </div>
 
@@ -127,7 +127,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
             <ThemeSwitcher />
 
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative text-slate-600 hover:bg-gray-50">
+            <Button variant="ghost" size="sm" className="relative text-dark-5 hover:bg-gray-1 dark:text-dark-6 dark:hover:bg-dark-3">
               <div className="relative">
                 <Bell className="h-5 w-5" />
                 <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs bg-red-500 text-white border-0">
@@ -162,7 +162,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#FAFBFF] overflow-auto">
+        <main className="flex-1 min-w-0 min-h-0 bg-gray-1 dark:bg-dark overflow-auto">
           {children}
         </main>
       </div>

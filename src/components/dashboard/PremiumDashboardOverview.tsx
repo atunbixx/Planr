@@ -53,12 +53,12 @@ const StatsCard: React.FC<StatsCardProps> = ({
   return (
     <div 
       className={cn(
-        "h-full transition-all duration-200",
+        "h-full transition-all duration-200 cursor-pointer group",
         onClick && "cursor-pointer"
       )}
       onClick={onClick}
     >
-      <Card className="h-full bg-white border border-gray-100 relative overflow-hidden hover:shadow-md">
+      <Card className="h-full bg-white border border-stroke shadow-card-2 hover:shadow-card-6 transition-all duration-200 group-hover:-translate-y-1 dark:bg-dark-2 dark:border-dark-3">
         <CardContent className="p-6 relative z-10">
           <div className="flex items-start justify-between mb-4">
             <Avatar className="h-12 w-12">
@@ -74,8 +74,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
                 className={cn(
                   "text-xs font-semibold",
                   trend.isPositive 
-                    ? "bg-green-100 text-green-600 hover:bg-green-100" 
-                    : "bg-red-100 text-red-600 hover:bg-red-100"
+                    ? "bg-green-light-6 text-green-light-1 hover:bg-green-light-6" 
+                    : "bg-red-light-6 text-red hover:bg-red-light-6"
                 )}
               >
                 {trend.isPositive ? '+' : ''}{trend.value}%
@@ -83,16 +83,16 @@ const StatsCard: React.FC<StatsCardProps> = ({
             )}
           </div>
           
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">
+          <h3 className="text-3xl font-bold text-dark mb-1 dark:text-white">
             {value}
           </h3>
           
-          <h4 className="text-lg font-medium text-slate-600 mb-1">
+          <h4 className="text-lg font-medium text-dark-5 mb-1 dark:text-dark-6">
             {title}
           </h4>
           
           {subtitle && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-dark-6 dark:text-dark-6">
               {subtitle}
             </p>
           )}
@@ -123,10 +123,10 @@ const ActionCard: React.FC<ActionCardProps> = ({
 }) => {
   return (
     <div 
-      className="cursor-pointer h-full transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-xl"
+      className="cursor-pointer h-full transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-card-6 group"
       onClick={onClick}
     >
-      <Card className="h-full">
+      <Card className="h-full bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
         <CardContent className="p-6 h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <Avatar className="h-12 w-12">
@@ -142,7 +142,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
             </Avatar>
             
             {badge && (
-              <Badge className="text-xs font-semibold bg-opacity-20">
+              <Badge className="text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                  {badge}
                </Badge>
             )}
@@ -150,7 +150,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 rounded-full"
+              className="h-8 w-8 p-0 rounded-full transition-all group-hover:scale-110"
               style={{
                 color: color,
                 backgroundColor: `${color}10`
@@ -160,21 +160,21 @@ const ActionCard: React.FC<ActionCardProps> = ({
             </Button>
           </div>
           
-          <h3 className="text-lg font-semibold mb-2 text-slate-900">
+          <h3 className="text-lg font-semibold mb-2 text-dark dark:text-white">
             {title}
           </h3>
           
-          <p className="text-sm text-slate-600 mb-4 flex-grow">
+          <p className="text-sm text-dark-5 mb-4 flex-grow dark:text-dark-6">
             {description}
           </p>
           
           {progress !== undefined && (
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-dark-6 dark:text-dark-6">
                   Progress
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-dark-6 dark:text-dark-6">
                   {progress}%
                 </span>
               </div>
@@ -221,13 +221,13 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
   const budgetPercentage = budgetSummary?.percentSpent || 0;
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-1 dark:bg-dark min-h-screen">
       {/* Welcome Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold mb-2 text-[#722F37]">
+        <h1 className="text-4xl font-extrabold mb-2 text-[#722F37] dark:text-white font-wedding">
           Welcome to Your Wedding Dashboard
         </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+        <p className="text-lg text-dark-5 max-w-2xl mx-auto dark:text-dark-6">
           Your complete wedding planning command center with beautiful insights and seamless organization
         </p>
       </div>
@@ -311,38 +311,38 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
       
       {/* Planning Insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6 h-full bg-slate-50 border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 text-[#722F37]">
+        <Card className="p-6 h-full bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
+          <h3 className="text-lg font-semibold mb-4 text-[#722F37] dark:text-white">
             Overall Progress
           </h3>
-          <div className="text-3xl font-bold text-[#722F37] mb-2">
+          <div className="text-3xl font-bold text-[#722F37] mb-2 dark:text-white">
             {Math.round((2 / 11) * 100)}%
           </div>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-dark-5 dark:text-dark-6">
             Tasks completed across all categories
           </p>
         </Card>
         
-        <Card className="p-6 h-full bg-slate-50 border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 text-[#6B7C32]">
+        <Card className="p-6 h-full bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
+          <h3 className="text-lg font-semibold mb-4 text-[#6B7C32] dark:text-white">
             Budget Status
           </h3>
-          <div className="text-3xl font-bold text-[#6B7C32] mb-2">
+          <div className="text-3xl font-bold text-[#6B7C32] mb-2 dark:text-white">
             72%
           </div>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-dark-5 dark:text-dark-6">
             Of total budget spent • $8.8k under budget
           </p>
         </Card>
         
-        <Card className="p-6 h-full bg-slate-50 border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 text-[#722F37]">
+        <Card className="p-6 h-full bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
+          <h3 className="text-lg font-semibold mb-4 text-[#722F37] dark:text-white">
             Next Priority
           </h3>
-          <div className="text-xl font-semibold mb-2">
+          <div className="text-xl font-semibold mb-2 text-dark dark:text-white">
             Book Catering
           </div>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-dark-5 dark:text-dark-6">
             3 vendors to review • 365 days remaining
           </p>
         </Card>
@@ -379,14 +379,14 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
       </div>
 
       {/* Quick Actions */}
-      <Card className="p-6 bg-slate-50 border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4 text-slate-900">
+      <Card className="p-6 bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
+        <h3 className="text-lg font-semibold mb-4 text-dark dark:text-white">
           Quick Actions
         </h3>
         
         <div className="flex flex-col sm:flex-row gap-4">
           <Button
-            className="flex-1"
+            className="flex-1 bg-[#722F37] hover:bg-[#722F37]/90 text-white shadow-card-2"
             onClick={() => router.push('/dashboard/guests')}
           >
             <Users className="mr-2 h-4 w-4" />
@@ -394,7 +394,7 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
           </Button>
           
           <Button
-            className="flex-1"
+            className="flex-1 bg-[#6B7C32] hover:bg-[#6B7C32]/90 text-white shadow-card-2"
             onClick={() => router.push('/dashboard/vendors')}
           >
             <Store className="mr-2 h-4 w-4" />
@@ -402,7 +402,7 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
           </Button>
           
           <Button
-            className="flex-1"
+            className="flex-1 bg-primary hover:bg-primary/90 text-white shadow-card-2"
             onClick={() => router.push('/dashboard/budget')}
           >
             <DollarSign className="mr-2 h-4 w-4" />
@@ -410,7 +410,7 @@ const PremiumDashboardOverview: React.FC<PremiumDashboardOverviewProps> = ({
           </Button>
           
           <Button
-            className="flex-1"
+            className="flex-1 bg-[#722F37] hover:bg-[#722F37]/90 text-white shadow-card-2"
             onClick={() => router.push('/dashboard/timeline')}
           >
             <Calendar className="mr-2 h-4 w-4" />

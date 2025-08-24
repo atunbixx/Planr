@@ -145,14 +145,14 @@ const PremiumSidebar: React.FC<PremiumSidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const sidebarContent = (
-    <div className="w-[280px] h-full bg-white border-r border-gray-100 flex flex-col">
+    <div className="w-[280px] h-full bg-white border-r border-stroke flex flex-col dark:bg-dark-2 dark:border-dark-3">
       {/* Header with Logo */}
-      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+      <div className="p-6 border-b border-stroke flex items-center justify-between dark:border-dark-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#722F37] to-[#6B7C32] flex items-center justify-center text-white font-bold text-xl">
             W
           </div>
-          <h2 className="text-lg font-bold text-[#722F37]">
+          <h2 className="text-lg font-bold text-[#722F37] dark:text-white">
             Wedding Planner
           </h2>
         </div>
@@ -168,7 +168,7 @@ const PremiumSidebar: React.FC<PremiumSidebarProps> = ({ isOpen, onClose }) => {
       <div className="flex-1 overflow-auto py-4">
         {WEDDING_NAV_DATA.map((section) => (
           <div key={section.label} className="mb-6">
-            <h3 className="px-6 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <h3 className="px-6 mb-2 text-xs font-semibold text-dark-5 dark:text-dark-6 uppercase tracking-wider">
               {section.label}
             </h3>
             
@@ -180,14 +180,14 @@ const PremiumSidebar: React.FC<PremiumSidebarProps> = ({ isOpen, onClose }) => {
                     <>
                       <button
                         onClick={() => toggleExpanded(item.title)}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-[#722F37]/5 transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-dark-5 rounded-lg hover:bg-[#722F37]/5 transition-colors dark:text-dark-6"
                       >
-                        <span className="text-slate-500">{item.icon}</span>
+                        <span className="text-dark-5 dark:text-dark-6">{item.icon}</span>
                         <span className="flex-1 text-left">{item.title}</span>
                         {expandedItems.includes(item.title) ? (
-                          <ChevronUp className="h-4 w-4 text-slate-400" />
+                          <ChevronUp className="h-4 w-4 text-dark-5 dark:text-dark-6" />
                         ) : (
-                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                          <ChevronDown className="h-4 w-4 text-dark-5 dark:text-dark-6" />
                         )}
                       </button>
                       
@@ -201,7 +201,7 @@ const PremiumSidebar: React.FC<PremiumSidebarProps> = ({ isOpen, onClose }) => {
                                 "w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left",
                                 pathname === subItem.path
                                   ? "bg-[#722F37]/10 text-[#722F37] font-semibold"
-                                  : "text-slate-600 hover:bg-[#722F37]/5"
+                                  : "text-dark-5 hover:bg-[#722F37]/5 dark:text-dark-6"
                               )}
                             >
                               {subItem.title}
@@ -218,12 +218,12 @@ const PremiumSidebar: React.FC<PremiumSidebarProps> = ({ isOpen, onClose }) => {
                         "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left",
                         pathname === item.path
                           ? "bg-[#722F37]/10 text-[#722F37] font-semibold"
-                          : "text-slate-600 hover:bg-[#722F37]/5"
+                          : "text-dark-5 hover:bg-[#722F37]/5 dark:text-dark-6"
                       )}
                     >
                       <span className={cn(
                         "transition-colors",
-                        pathname === item.path ? "text-[#722F37]" : "text-slate-500"
+                        pathname === item.path ? "text-[#722F37]" : "text-dark-5 dark:text-dark-6"
                       )}>
                         {item.icon}
                       </span>
@@ -238,19 +238,19 @@ const PremiumSidebar: React.FC<PremiumSidebarProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* Settings at bottom */}
-      <div className="border-t border-gray-100 p-4">
+      <div className="border-t border-stroke p-4 dark:border-dark-3">
         <button
           onClick={() => handleNavigation('/dashboard/settings')}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left",
             pathname === '/dashboard/settings'
               ? "bg-[#722F37]/10 text-[#722F37] font-semibold"
-              : "text-slate-600 hover:bg-[#722F37]/5"
+              : "text-dark-5 hover:bg-[#722F37]/5 dark:text-dark-6"
           )}
         >
           <span className={cn(
             "transition-colors",
-            pathname === '/dashboard/settings' ? "text-[#722F37]" : "text-slate-500"
+            pathname === '/dashboard/settings' ? "text-[#722F37]" : "text-dark-5 dark:text-dark-6"
           )}>
             <Settings className="h-5 w-5" />
           </span>

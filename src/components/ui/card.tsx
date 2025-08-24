@@ -94,4 +94,3 @@ export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDiv
     />
   );
 }
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };

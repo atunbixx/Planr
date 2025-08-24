@@ -51,7 +51,10 @@ export default function HomePage() {
       <main className="text-center px-4 py-20 bg-gradient-to-b from-pink-50 to-white">
         <h2 className="text-5xl font-bold text-gray-800 mb-4">Plan Your Perfect Day</h2>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">The ultimate platform to manage your guests, vendors, budget, and more. All in one place.</p>
-        <Button size="lg" onClick={() => router.push('/signup')}>Get Started for Free</Button>
+        <div className="flex gap-4 justify-center">
+          <Button size="lg" onClick={() => router.push('/signup')}>Get Started for Free</Button>
+          <Button size="lg" variant="outline" onClick={() => router.push('/admin-dashboard')}>View Demo Dashboard</Button>
+        </div>
       </main>
 
       {/* Features Section */}

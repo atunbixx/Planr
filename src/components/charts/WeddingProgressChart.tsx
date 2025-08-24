@@ -117,10 +117,10 @@ const WeddingProgressChart: React.FC<WeddingProgressChartProps> = ({
   ];
 
   return (
-    <Card className="h-full shadow-sm">
+    <Card className="h-full bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-[#722F37]">
+          <h3 className="text-lg font-semibold text-[#722F37] dark:text-white">
             {title}
           </h3>
         </div>

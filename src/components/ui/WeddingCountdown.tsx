@@ -68,7 +68,7 @@ export function WeddingCountdown({ weddingDate, className = '' }: WeddingCountdo
             <div className="flex justify-center gap-3 mb-2">
               {['DAYS','HOURS','MINUTES','SECONDS'].map((label) => (
                 <div key={label} className="text-center">
-                  <div className="font-[\"Bodoni Moda\",serif] text-2xl sm:text-3xl font-light leading-none mb-1">--</div>
+                  <div className="font-serif text-2xl sm:text-3xl font-light leading-none mb-1" style={{ fontFamily: '"Bodoni Moda", serif' }}>--</div>
                   <div className="text-[0.625rem] tracking-[0.1em] font-semibold opacity-80">{label}</div>
                 </div>
               ))}
@@ -94,7 +94,7 @@ export function WeddingCountdown({ weddingDate, className = '' }: WeddingCountdo
           <div className="flex justify-center gap-2 sm:gap-3 mb-2">
             {timeUnits.map((unit) => (
               <div key={unit.label} className="text-center">
-                <div className="font-[\"Bodoni Moda\",serif] text-xl sm:text-2xl md:text-3xl font-light leading-none mb-1" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.3)' }}>
+                <div className="font-serif text-xl sm:text-2xl md:text-3xl font-light leading-none mb-1" style={{ fontFamily: '"Bodoni Moda", serif', textShadow: '0px 2px 4px rgba(0,0,0,0.3)' }}>
                   {unit.value.toString().padStart(2, '0')}
                 </div>
                 <div className="text-[0.625rem] tracking-[0.1em] font-semibold opacity-80">{unit.label}</div>
@@ -102,7 +102,7 @@ export function WeddingCountdown({ weddingDate, className = '' }: WeddingCountdo
             ))}
           </div>
           {timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 ? (
-            <div className="font-[\"Bodoni Moda\",serif] text-base sm:text-lg opacity-90 mt-1">🎉 Your Wedding Day is Here! 🎉</div>
+            <div className="font-serif text-base sm:text-lg opacity-90 mt-1" style={{ fontFamily: '"Bodoni Moda", serif' }}>🎉 Your Wedding Day is Here! 🎉</div>
           ) : (
             <div className="opacity-80 italic mt-1 text-sm">Every moment brings you closer to forever</div>
           )}

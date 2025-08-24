@@ -143,37 +143,37 @@ const BudgetTrackingChart: React.FC<BudgetTrackingChartProps> = ({
   const isOverBudget = data.totalSpent > data.totalBudget;
 
   return (
-    <Card className="h-full shadow-sm">
+    <Card className="h-full bg-white border border-stroke shadow-card-2 dark:bg-dark-2 dark:border-dark-3">
       <CardContent className="p-6">
         {/* Header */}
-        <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-100">
+        <div className="flex justify-between items-start mb-6 pb-4 border-b border-stroke dark:border-dark-3">
           <div>
-            <h3 className="text-lg font-semibold text-[#722F37] mb-1">
+            <h3 className="text-lg font-semibold text-[#722F37] dark:text-white mb-1">
               {title}
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-dark-5 dark:text-dark-6">
               Budget vs Actual Spending
             </p>
           </div>
           
           <div className="text-right">
-            <div className="text-2xl font-bold text-[#722F37] mb-1">
+            <div className="text-2xl font-bold text-[#722F37] dark:text-white mb-1">
               {formatCurrency(data.totalSpent)}
             </div>
             
             <div className="flex items-center gap-2 justify-end">
               {isOverBudget ? (
-                <TrendingUp className="h-4 w-4 text-red-500" />
+                <TrendingUp className="h-4 w-4 text-red" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-green-500" />
+                <TrendingDown className="h-4 w-4 text-green" />
               )}
               
               <Badge 
                 className={cn(
                   "text-xs font-semibold",
                   isOverBudget 
-                    ? "bg-red-100 text-red-600 hover:bg-red-100" 
-                    : "bg-green-100 text-green-600 hover:bg-green-100"
+                    ? "bg-red-light-6 text-red hover:bg-red-light-6" 
+                    : "bg-green-light-6 text-green hover:bg-green-light-6"
                 )}
               >
                 {variancePercent > 0 ? '+' : ''}{variancePercent}%
@@ -193,9 +193,9 @@ const BudgetTrackingChart: React.FC<BudgetTrackingChartProps> = ({
         </div>
         
         {/* Summary */}
-        <div className="flex justify-between pt-4 border-t border-gray-100">
+        <div className="flex justify-between pt-4 border-t border-stroke dark:border-dark-3">
           <div>
-            <p className="text-xs text-slate-500 mb-1">
+            <p className="text-xs text-dark-5 mb-1 dark:text-dark-6">
               Total Budget
             </p>
             <p className="text-sm font-semibold text-[#6B7C32]">
