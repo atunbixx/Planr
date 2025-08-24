@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-08-24T00:00:00Z",
+  "channels": {
+    "email": {
+      "default": 1,
+      "countries": {
+        "NG": 1,
+        "US": 1,
+        "UK": 1,
+        "CA": 1,
+        "AU": 1,
+        "ZA": 1,
+        "KE": 1,
+        "GH": 1
+      }
+    },
+    "sms": {
+      "default": 10,
+      "countries": {
+        "NG": 5,
+        "US": 10,
+        "UK": 8,
+        "CA": 12,
+        "AU": 15,
+        "ZA": 6,
+        "KE": 7,
+        "GH": 6,
+        "IN": 4,
+        "PK": 5,
+        "BD": 4
+      }
+    },
+    "whatsapp": {
+      "default": 3,
+      "countries": {
+        "NG": 2,
+        "US": 3,
+        "UK": 3,
+        "CA": 4,
+        "AU": 5,
+        "ZA": 2,
+        "KE": 2,
+        "GH": 2,
+        "IN": 2,
+        "PK": 2,
+        "BD": 2
+      }
+    }
+  },
+  "metadata": {
+    "currency": "credits",
+    "description": "Messaging costs in abstract credit units",
+    "notes": [
+      "Email costs are uniform across regions due to low provider costs",
+      "SMS costs vary significantly by country due to carrier fees",
+      "WhatsApp costs are generally lower but vary by region",
+      "Default prices apply when country-specific pricing unavailable"
+    ]
+  }
+}

@@ -40,12 +40,12 @@ async function main() {
       }
 
       const vendors = [
-        { name: 'Sunset Photography', category: 'photographer', status: 'booked' },
-        { name: 'Bloom Florals', category: 'florist', status: 'inquiry' },
-        { name: 'Grand Catering', category: 'catering', status: 'quoted' },
+        { name: 'Sunset Photography', category: 'photographer', status: 'booked', slug: 'sunset-photography' },
+        { name: 'Bloom Florals', category: 'florist', status: 'inquiry', slug: 'bloom-florals' },
+        { name: 'Grand Catering', category: 'catering', status: 'quoted', slug: 'grand-catering' },
       ]
       for (const v of vendors) {
-        await prisma.vendor.create({ data: { userId: user.id, name: v.name, category: v.category, status: v.status } }).catch(() => {})
+        await prisma.vendor.create({ data: { userId: user.id, name: v.name, category: v.category, status: v.status, slug: v.slug } }).catch(() => {})
       }
 
       const budgets = [
@@ -55,6 +55,47 @@ async function main() {
       ]
       for (const b of budgets) {
         await prisma.budget.create({ data: { userId: user.id, ...b } }).catch(() => {})
+      }
+
+      // Seed RSVP and messaging data if new schema is available
+      try {
+        // Create credit balance
+        await prisma.creditBalance.upsert({
+          where: { userId: user.id },
+          update: { credits: 100 },
+          create: { userId: user.id, credits: 100 }
+        })
+
+        // Create sample invites
+        const invites = [
+          { email: 'alice@example.com', token: 'invite_alice_123', country: 'NG' },
+          { email: 'bob@example.com', token: 'invite_bob_456', country: 'US' },
+          { email: 'carol@example.com', token: 'invite_carol_789', country: 'NG' }
+        ]
+        
+        for (const invite of invites) {
+          const createdInvite = await prisma.invite.create({
+            data: { userId: user.id, ...invite }
+          }).catch(() => null)
+
+          // Create sample RSVP for first invite
+          if (createdInvite && invite.email === 'alice@example.com') {
+            await prisma.inviteRSVP.create({
+              data: {
+                userId: user.id,
+                inviteId: createdInvite.id,
+                email: invite.email,
+                status: 'accepted',
+                partySize: 2,
+                notes: 'Looking forward to celebrating with you!'
+              }
+            }).catch(() => {})
+          }
+        }
+
+        console.log('Seeded RSVP and messaging data')
+      } catch (e) {
+        console.warn('Skipping RSVP/messaging seed data (new schema not applied yet):', e?.message)
       }
     } catch (e) {
       console.warn('Skipping couple-specific seed data due to schema constraints')
