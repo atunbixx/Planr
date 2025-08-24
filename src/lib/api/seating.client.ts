@@ -11,11 +11,11 @@ type ApiEnvelope<T> = {
 }
 
 export class SeatingClient {
-  private static async authHeaders() {
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${await AuthClient.getToken()}`
-    }
+  private static authHeaders() {
+    const token = AuthClient.getToken()
+    const headers: Record<string,string> = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    return headers
   }
 
   /**
@@ -34,7 +34,7 @@ export class SeatingClient {
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<SeatingChartResponse> = await response.json()
@@ -52,7 +52,7 @@ export class SeatingClient {
   static async getTableById(tableId: string): Promise<TableResponse> {
     const response = await fetch(`/api/seating/tables/${tableId}`, {
       method: 'GET',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<TableResponse> = await response.json()
@@ -70,7 +70,7 @@ export class SeatingClient {
   static async createTable(data: CreateTableInput): Promise<TableResponse> {
     const response = await fetch('/api/seating/tables', {
       method: 'POST',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify(data)
     })
 
@@ -89,7 +89,7 @@ export class SeatingClient {
   static async updateTable(tableId: string, data: UpdateTableInput): Promise<TableResponse> {
     const response = await fetch(`/api/seating/tables/${tableId}`, {
       method: 'PATCH',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify(data)
     })
 
@@ -108,7 +108,7 @@ export class SeatingClient {
   static async deleteTable(tableId: string): Promise<boolean> {
     const response = await fetch(`/api/seating/tables/${tableId}`, {
       method: 'DELETE',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<{ deleted: boolean }> = await response.json()
@@ -126,7 +126,7 @@ export class SeatingClient {
   static async assignGuestToSeat(seatId: string, data: AssignGuestToSeatInput): Promise<boolean> {
     const response = await fetch(`/api/seating/seats/${seatId}/assign`, {
       method: 'POST',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify(data)
     })
 
@@ -152,7 +152,7 @@ export class SeatingClient {
   static async getStats(): Promise<SeatingStatsResponse> {
     const response = await fetch('/api/seating/stats', {
       method: 'GET',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<SeatingStatsResponse> = await response.json()
@@ -264,4 +264,3 @@ export class SeatingClient {
     ]
   }
 }
-

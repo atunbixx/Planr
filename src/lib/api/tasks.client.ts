@@ -11,11 +11,11 @@ type ApiEnvelope<T> = {
 }
 
 export class TasksClient {
-  private static async authHeaders() {
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${await AuthClient.getToken()}`
-    }
+  private static authHeaders() {
+    const token = AuthClient.getToken()
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    return headers
   }
 
   /**
@@ -37,7 +37,7 @@ export class TasksClient {
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<TaskListResponse> = await response.json()
@@ -55,7 +55,7 @@ export class TasksClient {
   static async getById(taskId: string): Promise<TaskResponse> {
     const response = await fetch(`/api/tasks/${taskId}`, {
       method: 'GET',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<TaskResponse> = await response.json()
@@ -73,7 +73,7 @@ export class TasksClient {
   static async create(data: CreateTaskInput): Promise<TaskResponse> {
     const response = await fetch('/api/tasks', {
       method: 'POST',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify(data)
     })
 
@@ -92,7 +92,7 @@ export class TasksClient {
   static async update(taskId: string, data: UpdateTaskInput): Promise<TaskResponse> {
     const response = await fetch(`/api/tasks/${taskId}`, {
       method: 'PATCH',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify(data)
     })
 
@@ -111,7 +111,7 @@ export class TasksClient {
   static async delete(taskId: string): Promise<boolean> {
     const response = await fetch(`/api/tasks/${taskId}`, {
       method: 'DELETE',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<{ deleted: boolean }> = await response.json()
@@ -129,7 +129,7 @@ export class TasksClient {
   static async getStats(): Promise<TaskStatsResponse> {
     const response = await fetch('/api/tasks/stats', {
       method: 'GET',
-      headers: await this.authHeaders()
+      headers: this.authHeaders()
     })
 
     const result: ApiEnvelope<TaskStatsResponse> = await response.json()
@@ -147,7 +147,7 @@ export class TasksClient {
   static async createFromTemplate(timeline: string): Promise<TaskResponse[]> {
     const response = await fetch('/api/tasks/template', {
       method: 'POST',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify({ timeline })
     })
 
@@ -169,7 +169,7 @@ export class TasksClient {
   ): Promise<TaskResponse[]> {
     const response = await fetch('/api/tasks/bulk', {
       method: 'PATCH',
-      headers: await this.authHeaders(),
+      headers: this.authHeaders(),
       body: JSON.stringify({ taskIds, status })
     })
 
