@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { GuestsClient, type LegacyGuest } from '@/lib/api/guests.client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 
 export default function GuestsPage() {
+  const router = useRouter()
   const [guests, setGuests] = useState<LegacyGuest[]>([])
   const [stats, setStats] = useState<{ total: number; totalAttending: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -23,7 +25,14 @@ export default function GuestsPage() {
         setGuests(guests)
         setStats({ total: gstats.total, totalAttending: gstats.totalAttending })
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load guests')
+        const msg = e instanceof Error ? e.message : 'Failed to load guests'
+        setError(msg)
+        if (/unauthorized/i.test(msg)) {
+          router.push('/signin')
+        }
+        if (/onboarding required/i.test(msg)) {
+          router.push('/onboarding')
+        }
       } finally {
         setLoading(false)
       }
