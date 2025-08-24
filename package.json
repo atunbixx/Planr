@@ -14,7 +14,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "import:budgets": "node scripts/import-temp-budgets.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

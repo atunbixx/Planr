@@ -37,15 +37,18 @@ export class TaskHandler {
       }
 
       const result = await this.service.list(userId, validationResult.data)
-      
-      if (!result.success) {
-        return NextResponse.json(
-          { success: false, error: result.error },
-          { status: result.error?.statusCode || 500 }
-        )
+      if (result.success) {
+        return NextResponse.json({ success: true, data: result.data })
       }
-
-      return NextResponse.json({ success: true, data: result.data })
+      // Dev fallback: use temp-storage in non-production
+      if (process.env.NODE_ENV !== 'production') {
+        const { tempStorage } = await import('@/lib/db/temp-storage')
+        const all = await tempStorage.findTasksByUserId(userId)
+        // apply minimal filtering
+        const filtered = all.filter(t => !validationResult.data.status || t.status === (validationResult.data.status as any))
+        return NextResponse.json({ success: true, data: { tasks: filtered, total: filtered.length, limit: filtered.length, offset: 0 } })
+      }
+      return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
     } catch (error) {
       console.error('Error in TaskHandler.list:', error)
       return NextResponse.json(
@@ -75,18 +78,28 @@ export class TaskHandler {
       }
 
       const result = await this.service.create(userId, validationResult.data)
-      
-      if (!result.success) {
-        return NextResponse.json(
-          { success: false, error: result.error },
-          { status: result.error?.statusCode || 500 }
-        )
+      if (result.success) {
+        return NextResponse.json({ success: true, data: result.data }, { status: 201 })
       }
-
-      return NextResponse.json(
-        { success: true, data: result.data },
-        { status: 201 }
-      )
+      if (process.env.NODE_ENV !== 'production') {
+        const { tempStorage } = await import('@/lib/db/temp-storage')
+        const created = await tempStorage.createTask({
+          userId,
+          title: validationResult.data.title,
+          description: validationResult.data.description,
+          category: validationResult.data.category || undefined,
+          priority: validationResult.data.priority as any,
+          status: (validationResult.data.status || 'pending') as any,
+          dueDate: validationResult.data.dueDate,
+          assignedTo: validationResult.data.assignedTo || undefined,
+          timeline: validationResult.data.timeline || undefined,
+          order: validationResult.data.order || undefined,
+          tags: validationResult.data.tags,
+          notes: validationResult.data.notes || undefined
+        })
+        return NextResponse.json({ success: true, data: created }, { status: 201 })
+      }
+      return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
     } catch (error) {
       console.error('Error in TaskHandler.create:', error)
       return NextResponse.json(
@@ -147,15 +160,15 @@ export class TaskHandler {
       }
 
       const result = await this.service.update(taskId, validationResult.data)
-      
-      if (!result.success) {
-        return NextResponse.json(
-          { success: false, error: result.error },
-          { status: result.error?.statusCode || 500 }
-        )
+      if (result.success) {
+        return NextResponse.json({ success: true, data: result.data })
       }
-
-      return NextResponse.json({ success: true, data: result.data })
+      if (process.env.NODE_ENV !== 'production') {
+        const { tempStorage } = await import('@/lib/db/temp-storage')
+        const updated = await tempStorage.updateTask(taskId, validationResult.data as any)
+        if (updated) return NextResponse.json({ success: true, data: updated })
+      }
+      return NextResponse.json({ success: false, error: { message: 'Task not found' } }, { status: 404 })
     } catch (error) {
       console.error('Error in TaskHandler.update:', error)
       return NextResponse.json(
@@ -171,15 +184,15 @@ export class TaskHandler {
   async delete(request: NextRequest, taskId: string) {
     try {
       const result = await this.service.delete(taskId)
-      
-      if (!result.success) {
-        return NextResponse.json(
-          { success: false, error: result.error },
-          { status: result.error?.statusCode || 500 }
-        )
+      if (result.success) {
+        return NextResponse.json({ success: true, data: { deleted: result.data } })
       }
-
-      return NextResponse.json({ success: true, data: { deleted: result.data } })
+      if (process.env.NODE_ENV !== 'production') {
+        const { tempStorage } = await import('@/lib/db/temp-storage')
+        const ok = await tempStorage.deleteTask(taskId)
+        return NextResponse.json({ success: true, data: { deleted: ok } })
+      }
+      return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
     } catch (error) {
       console.error('Error in TaskHandler.delete:', error)
       return NextResponse.json(

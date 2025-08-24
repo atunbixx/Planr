@@ -84,17 +84,20 @@ export class BudgetHandler {
         return NextResponse.json({ success: true, data: result.data }, { status: 201 })
       }
 
-      // Dev fallback: persist to temp storage when DB is not ready
-      const temp = await tempStorage.createBudgetItem({
-        userId,
-        category: mapped.category,
-        allocated: Number(body.allocated ?? mapped.budgetedAmount ?? 0),
-        actual: Number(body.actual ?? mapped.actualAmount ?? 0),
-        amount: Number(body.amount ?? mapped.budgetedAmount ?? 0),
-        status: body.status || (mapped.isPaid ? 'paid' : 'planned'),
-        name: mapped.name,
-      })
-      return NextResponse.json({ success: true, data: temp }, { status: 201 })
+      // Dev fallback: only allow in non-production
+      if (process.env.NODE_ENV !== 'production') {
+        const temp = await tempStorage.createBudgetItem({
+          userId,
+          category: mapped.category,
+          allocated: Number(body.allocated ?? mapped.budgetedAmount ?? 0),
+          actual: Number(body.actual ?? mapped.actualAmount ?? 0),
+          amount: Number(body.amount ?? mapped.budgetedAmount ?? 0),
+          status: body.status || (mapped.isPaid ? 'paid' : 'planned'),
+          name: mapped.name,
+        })
+        return NextResponse.json({ success: true, data: temp }, { status: 201 })
+      }
+      return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 500 })
     } catch (e: any) {
       // As a last resort, return a generic error
       return NextResponse.json({ success: false, error: { message: e?.message || 'Failed to create budget item' } }, { status: 500 })
@@ -130,15 +133,17 @@ export class BudgetHandler {
       const result = await this.service.updateBudgetItem(userId, id, mapped as any)
       if (result.success && result.data) return NextResponse.json({ success: true, data: result.data })
 
-      // Dev fallback: update temp storage
-      const updated = await tempStorage.updateBudgetItem(id, {
-        category: mapped.category,
-        name: mapped.name,
-        allocated: typeof mapped.budgetedAmount === 'number' ? mapped.budgetedAmount : undefined as any,
-        actual: typeof mapped.actualAmount === 'number' ? mapped.actualAmount : undefined as any,
-        status: body.status,
-      } as any)
-      if (updated) return NextResponse.json({ success: true, data: updated })
+      // Dev fallback: only allow in non-production
+      if (process.env.NODE_ENV !== 'production') {
+        const updated = await tempStorage.updateBudgetItem(id, {
+          category: mapped.category,
+          name: mapped.name,
+          allocated: typeof mapped.budgetedAmount === 'number' ? mapped.budgetedAmount : undefined as any,
+          actual: typeof mapped.actualAmount === 'number' ? mapped.actualAmount : undefined as any,
+          status: body.status,
+        } as any)
+        if (updated) return NextResponse.json({ success: true, data: updated })
+      }
       return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: { message: e?.message || 'Failed to update budget item' } }, { status: 500 })
@@ -149,9 +154,11 @@ export class BudgetHandler {
     try {
       const result = await this.service.deleteBudgetItem(userId, id)
       if (result.success && result.data) return NextResponse.json({ success: true, message: 'Budget item deleted successfully' })
-      // Dev fallback: delete from temp storage
-      const ok = await tempStorage.deleteBudgetItem(id)
-      if (ok) return NextResponse.json({ success: true, message: 'Budget item deleted successfully' })
+      // Dev fallback: only allow in non-production
+      if (process.env.NODE_ENV !== 'production') {
+        const ok = await tempStorage.deleteBudgetItem(id)
+        if (ok) return NextResponse.json({ success: true, message: 'Budget item deleted successfully' })
+      }
       return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: { message: e?.message || 'Failed to delete budget item' } }, { status: 500 })
