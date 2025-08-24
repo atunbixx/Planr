@@ -1,6 +1,8 @@
 "use client"
 
-import AuthClient from '@/lib/auth/client'
+import { api } from '@/lib/api/fetcher'
+import { VendorListResponseDto } from '@/contracts/vendors'
+import { z } from 'zod'
 
 export type Vendor = {
   id: string
@@ -35,13 +37,6 @@ type ApiEnvelope<T> = {
   pageSize?: number | null
 }
 
-function authHeaders(): HeadersInit {
-  const token = AuthClient.getToken()
-  const headers: Record<string,string> = { 'Content-Type': 'application/json' }
-  if (token) headers['Authorization'] = `Bearer ${token}`
-  return headers
-}
-
 function normalizeVendor(raw: any): Vendor {
   if (!raw) return raw
   const v: any = { ...raw }
@@ -63,14 +58,6 @@ function normalizeVendor(raw: any): Vendor {
   return v as Vendor
 }
 
-async function handle<T>(res: Response): Promise<ApiEnvelope<T>> {
-  const json = await res.json().catch(() => ({ success: false, error: { message: 'Invalid JSON response' } })) as ApiEnvelope<T>
-  if (!res.ok || !json.success) {
-    throw new Error(json?.error?.message || `Request failed with ${res.status}`)
-  }
-  return json
-}
-
 export const VendorsClient = {
   async listVendors(params?: { category?: string; status?: string; q?: string; page?: number; pageSize?: number }): Promise<{ vendors: Vendor[]; total?: number }>{
     const qs = new URLSearchParams()
@@ -79,27 +66,28 @@ export const VendorsClient = {
     if (params?.q) qs.set('q', params.q)
     if (params?.page) qs.set('page', String(params.page))
     if (params?.pageSize) qs.set('pageSize', String(params.pageSize))
-    const res = await fetch(`/api/vendors${qs.toString() ? `?${qs.toString()}` : ''}`, { headers: authHeaders() })
-    const env = await handle<any[]>(res)
-    const vendors = Array.isArray(env.data) ? env.data.map(normalizeVendor) : []
-    return { vendors, total: env.total ?? undefined }
+    const env = await api.get<ApiEnvelope<any>>(`/api/vendors${qs.toString() ? `?${qs.toString()}` : ''}`)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to list vendors')
+    const parsed = VendorListResponseDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid vendors response shape')
+    const vendors = parsed.data.vendors.map(normalizeVendor)
+    return { vendors, total: parsed.data.total ?? undefined }
   },
 
   async createVendor(payload: Partial<Vendor>): Promise<Vendor> {
-    const res = await fetch('/api/vendors', { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) })
-    const env = await handle<any>(res)
+    const env = await api.post<ApiEnvelope<any>>('/api/vendors', payload)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to create vendor')
     return normalizeVendor(env.data)
   },
 
   async updateVendor(id: string, payload: Partial<Vendor>): Promise<Vendor> {
-    const res = await fetch(`/api/vendors/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) })
-    const env = await handle<any>(res)
+    const env = await api.put<ApiEnvelope<any>>(`/api/vendors/${id}`, payload)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to update vendor')
     return normalizeVendor(env.data)
   },
 
   async deleteVendor(id: string): Promise<void> {
-    const res = await fetch(`/api/vendors/${id}`, { method: 'DELETE', headers: authHeaders() })
-    await handle(res)
+    const env = await api.delete<ApiEnvelope<any>>(`/api/vendors/${id}`)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to delete vendor')
   },
 }
-

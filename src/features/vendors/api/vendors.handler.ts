@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { VendorsService } from '../service/vendors.service'
+import { VendorDto, VendorListResponseDto } from '@/contracts/vendors'
 
 export class VendorsHandler {
   private service = new VendorsService()
@@ -14,21 +15,23 @@ export class VendorsHandler {
     const pageSize = sp.get('pageSize') ? Math.max(1, Math.min(100, parseInt(sp.get('pageSize') || '20', 10))) : undefined
     const result = await this.service.list(userId, { q, category, status, page, pageSize })
     if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    return NextResponse.json({ success: true, data: result.data?.vendors, total: result.data?.total, page: page ?? null, pageSize: pageSize ?? null })
+    const vendors = (result.data?.vendors || []).map(v => VendorDto.parse(v))
+    const data = VendorListResponseDto.parse({ vendors, total: result.data?.total ?? null, page: page ?? null, pageSize: pageSize ?? null })
+    return NextResponse.json({ success: true, data })
   }
 
   async create(request: NextRequest, userId: string) {
     const body = await request.json()
     const result = await this.service.create(userId, body)
     if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    return NextResponse.json({ success: true, data: result.data }, { status: 201 })
+    return NextResponse.json({ success: true, data: VendorDto.parse(result.data) }, { status: 201 })
   }
 
   async get(_request: NextRequest, userId: string, id: string) {
     const result = await this.service.get(userId, id)
     if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
     if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
-    return NextResponse.json({ success: true, data: result.data })
+    return NextResponse.json({ success: true, data: VendorDto.parse(result.data) })
   }
 
   async update(request: NextRequest, userId: string, id: string) {
@@ -36,7 +39,7 @@ export class VendorsHandler {
     const result = await this.service.update(userId, id, body)
     if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
     if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
-    return NextResponse.json({ success: true, data: result.data })
+    return NextResponse.json({ success: true, data: VendorDto.parse(result.data) })
   }
 
   async delete(_request: NextRequest, userId: string, id: string) {
@@ -46,4 +49,3 @@ export class VendorsHandler {
     return NextResponse.json({ success: true, message: 'Vendor deleted successfully' })
   }
 }
-
