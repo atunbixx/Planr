@@ -61,30 +61,30 @@ export class BudgetHandler {
   }
 
   async create(request: NextRequest, userId: string) {
-    const body = await request.json()
-    // Adapter: accept legacy payload shape and map to service input
-    const mapped = {
-      category: body.category,
-      name: body.name || body.title || `${body.category || 'Item'}`,
-      description: body.description,
-      budgetedAmount: Number(body.allocated ?? body.budgetedAmount ?? body.amount ?? 0),
-      actualAmount: Number(body.actual ?? body.actualAmount ?? 0),
-      currency: body.currency || 'NGN',
-      priority: body.priority,
-      vendorId: body.vendorId,
-      dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
-      isPaid: Boolean(body.isPaid),
-      paymentDate: body.paymentDate ? new Date(body.paymentDate) : undefined,
-      notes: body.notes,
-    }
-
-    const result = await this.service.createBudgetItem(userId, mapped as any)
-    if (result.success) {
-      return NextResponse.json({ success: true, data: result.data }, { status: 201 })
-    }
-
-    // Dev fallback: persist to temp storage when DB is not ready
     try {
+      const body = await request.json()
+      // Adapter: accept legacy payload shape and map to service input
+      const mapped = {
+        category: body.category,
+        name: body.name || body.title || `${body.category || 'Item'}`,
+        description: body.description,
+        budgetedAmount: Number(body.allocated ?? body.budgetedAmount ?? body.amount ?? 0),
+        actualAmount: Number(body.actual ?? body.actualAmount ?? 0),
+        currency: body.currency || 'NGN',
+        priority: body.priority,
+        vendorId: body.vendorId,
+        dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+        isPaid: Boolean(body.isPaid),
+        paymentDate: body.paymentDate ? new Date(body.paymentDate) : undefined,
+        notes: body.notes,
+      }
+
+      const result = await this.service.createBudgetItem(userId, mapped as any)
+      if (result.success) {
+        return NextResponse.json({ success: true, data: result.data }, { status: 201 })
+      }
+
+      // Dev fallback: persist to temp storage when DB is not ready
       const temp = await tempStorage.createBudgetItem({
         userId,
         category: mapped.category,
@@ -95,8 +95,9 @@ export class BudgetHandler {
         name: mapped.name,
       })
       return NextResponse.json({ success: true, data: temp }, { status: 201 })
-    } catch (e) {
-      return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
+    } catch (e: any) {
+      // As a last resort, return a generic error
+      return NextResponse.json({ success: false, error: { message: e?.message || 'Failed to create budget item' } }, { status: 500 })
     }
   }
 
@@ -125,9 +126,10 @@ export class BudgetHandler {
       paymentDate: body.paymentDate ? new Date(body.paymentDate) : undefined,
       notes: body.notes,
     }
-    const result = await this.service.updateBudgetItem(userId, id, mapped as any)
-    if (result.success && result.data) return NextResponse.json({ success: true, data: result.data })
-    if (!result.success) {
+    try {
+      const result = await this.service.updateBudgetItem(userId, id, mapped as any)
+      if (result.success && result.data) return NextResponse.json({ success: true, data: result.data })
+
       // Dev fallback: update temp storage
       const updated = await tempStorage.updateBudgetItem(id, {
         category: mapped.category,
@@ -137,18 +139,22 @@ export class BudgetHandler {
         status: body.status,
       } as any)
       if (updated) return NextResponse.json({ success: true, data: updated })
+      return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
+    } catch (e: any) {
+      return NextResponse.json({ success: false, error: { message: e?.message || 'Failed to update budget item' } }, { status: 500 })
     }
-    return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
   }
 
   async delete(_request: NextRequest, userId: string, id: string) {
-    const result = await this.service.deleteBudgetItem(userId, id)
-    if (result.success && result.data) return NextResponse.json({ success: true, message: 'Budget item deleted successfully' })
-    if (!result.success) {
+    try {
+      const result = await this.service.deleteBudgetItem(userId, id)
+      if (result.success && result.data) return NextResponse.json({ success: true, message: 'Budget item deleted successfully' })
       // Dev fallback: delete from temp storage
       const ok = await tempStorage.deleteBudgetItem(id)
       if (ok) return NextResponse.json({ success: true, message: 'Budget item deleted successfully' })
+      return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
+    } catch (e: any) {
+      return NextResponse.json({ success: false, error: { message: e?.message || 'Failed to delete budget item' } }, { status: 500 })
     }
-    return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
   }
 }

@@ -19,23 +19,24 @@ export function Input({
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
   const variantClasses = {
-    default: 'bg-white border-[#E2E8F0] focus:bg-white',
-    filled: 'bg-[#F8FAFC] border-[#E2E8F0] focus:bg-white'
+    default: 'bg-white border-[#E2E8F0] focus:bg-white dark:bg-dark-2',
+    filled: 'bg-[#F8FAFC] border-[#E2E8F0] focus:bg-white dark:bg-dark-2'
   }
 
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-semibold text-[#1E293B]">
+        <label htmlFor={inputId} className="block text-sm font-semibold text-[#1E293B] dark:text-neutral-200">
           {label}
         </label>
       )}
       <input
         id={inputId}
         className={`
-          w-full px-4 py-3 border-2 rounded-xl shadow-sm text-[#1E293B] transition-all duration-200
-          placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#722F37]/20 focus:border-[#722F37]
+          w-full px-4 py-3 border-2 rounded-xl shadow-sm text-[#1E293B] dark:text-white transition-all duration-200
+          placeholder-[#94A3B8] dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#722F37]/20 focus:border-[#722F37]
           ${variantClasses[variant]}
+          dark:bg-dark-2 dark:border-dark-3
           ${error ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : ''}
           ${className}
         `}

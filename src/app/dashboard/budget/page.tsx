@@ -93,25 +93,25 @@ export default function BudgetPage() {
               </DialogHeader>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-xs text-[#475569] mb-1">Name</label>
+                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Name</label>
                   <Input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Venue deposit" />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#475569] mb-1">Category</label>
+                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Category</label>
                   <Input value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} placeholder="e.g. venue" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-[#475569] mb-1">Allocated</label>
+                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Allocated</label>
                     <Input type="number" value={form.allocated} onChange={e=>setForm(f=>({...f,allocated:e.target.value}))} />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#475569] mb-1">Actual</label>
+                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Actual</label>
                     <Input type="number" value={form.actual} onChange={e=>setForm(f=>({...f,actual:e.target.value}))} />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-[#475569] mb-1">Status</label>
+                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Status</label>
                   <Select value={form.status} onValueChange={(v:any)=>setForm(f=>({...f,status:v}))}>
                     <SelectTrigger className="w-full"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
