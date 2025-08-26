@@ -17,6 +17,8 @@ import {
 } from '@/lib/validation/rsvp'
 import { RsvpStatus } from '@prisma/client'
 import { randomBytes } from 'crypto'
+import { OperationMonitoring, AnalyticsTracking } from '@/lib/monitoring/operations'
+import { logger } from '@/lib/logging/logger'
 
 export interface RSVPServiceResult<T> extends RepositoryResult<T> {}
 
@@ -53,71 +55,109 @@ export class RSVPService {
    * Validates invite token and creates/updates RSVP with idempotency
    */
   async submitRSVP(data: unknown): Promise<RSVPServiceResult<InviteRSVPRecord>> {
-    try {
-      // Validate input data
-      const validation = validateRSVPSubmission(data)
-      if (!validation.success) {
-        return createErrorResult(
-          'Invalid RSVP data',
-          'RSVP_VALIDATION_FAILED',
-          400
-        )
-      }
+    // Validate input data first
+    const validation = validateRSVPSubmission(data)
+    if (!validation.success) {
+      logger.warn(
+        'RSVP submission validation failed',
+        { validationErrors: validation.error?.issues },
+        'RSVPService',
+        'submitRSVP'
+      )
+      return createErrorResult(
+        'Invalid RSVP data',
+        'RSVP_VALIDATION_FAILED',
+        400
+      )
+    }
 
-      const rsvpData = validation.data
+    const rsvpData = validation.data
 
-      // Validate invite exists and is active
-      const inviteResult = await this.inviteRepo.getByToken(rsvpData.inviteId)
-      if (!inviteResult.success) {
-        return createErrorResult(
-          'Failed to validate invite',
-          'INVITE_VALIDATION_FAILED',
-          500
-        )
-      }
+    // Validate invite exists and is active
+    const inviteResult = await this.inviteRepo.getByToken(rsvpData.inviteId)
+    if (!inviteResult.success) {
+      logger.error(
+        'Failed to validate invite during RSVP submission',
+        undefined,
+        { inviteId: rsvpData.inviteId },
+        'RSVPService',
+        'submitRSVP'
+      )
+      return createErrorResult(
+        'Failed to validate invite',
+        'INVITE_VALIDATION_FAILED',
+        500
+      )
+    }
 
-      if (!inviteResult.data) {
-        return createErrorResult(
-          'Invalid or expired invite',
-          'INVALID_INVITE',
-          404
-        )
-      }
+    if (!inviteResult.data) {
+      logger.warn(
+        'RSVP submission attempted with invalid invite',
+        { inviteId: rsvpData.inviteId },
+        'RSVPService',
+        'submitRSVP'
+      )
+      return createErrorResult(
+        'Invalid or expired invite',
+        'INVALID_INVITE',
+        404
+      )
+    }
 
-      const invite = inviteResult.data
+    const invite = inviteResult.data
 
-      // Create or update RSVP with idempotency
-      const rsvpCreateData = {
+    // Check if this is an update (existing RSVP)
+    const existingRSVP = await this.rsvpRepo.getByInviteId(invite.id)
+    const isUpdate = existingRSVP.success && existingRSVP.data !== null
+
+    // Monitor the RSVP submission operation
+    const monitoringResult = await OperationMonitoring.monitorRSVPSubmission(
+      async () => {
+        // Create or update RSVP with idempotency
+        const rsvpCreateData = {
+          userId: invite.userId,
+          inviteId: invite.id,
+          email: rsvpData.email,
+          status: rsvpData.status as RsvpStatus,
+          partySize: rsvpData.partySize,
+          notes: rsvpData.notes
+        }
+
+        const result = await this.rsvpRepo.createOrUpdate(rsvpCreateData)
+        
+        if (!result.success) {
+          throw new Error('Failed to save RSVP to database')
+        }
+
+        return result.data!
+      },
+      {
+        inviteId: rsvpData.inviteId,
         userId: invite.userId,
-        inviteId: invite.id,
-        email: rsvpData.email,
-        status: rsvpData.status as RsvpStatus,
-        partySize: rsvpData.partySize,
-        notes: rsvpData.notes
+        isUpdate,
       }
+    )
 
-      const result = await this.rsvpRepo.createOrUpdate(rsvpCreateData)
-      
-      if (!result.success) {
-        return createErrorResult(
-          'Failed to save RSVP',
-          'RSVP_SAVE_FAILED',
-          500
-        )
-      }
+    if (!monitoringResult.success) {
+      return createErrorResult(
+        'Failed to save RSVP',
+        'RSVP_SAVE_FAILED',
+        500
+      )
+    }
 
-      // Log RSVP submission for analytics
-      console.log('RSVP submitted', {
-        userId: invite.userId,
-        inviteId: invite.id,
-        email: this.maskEmail(rsvpData.email),
-        status: rsvpData.status,
-        partySize: rsvpData.partySize,
-        operation: 'rsvp_submit'
-      })
+    // Track analytics event
+    AnalyticsTracking.trackRSVPSubmission({
+      inviteId: rsvpData.inviteId,
+      userId: invite.userId,
+      isUpdate,
+      attendanceStatus: rsvpData.status,
+      guestCount: rsvpData.partySize,
+      responseTime: monitoringResult.duration,
+    })
 
-      return createSuccessResult(result.data!)
-    } catch (error) {
+    return createSuccessResult(monitoringResult.data!)
+  } catch (error) {
       console.error('Error submitting RSVP:', error)
       return createErrorResult(
         'Internal server error',

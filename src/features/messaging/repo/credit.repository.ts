@@ -1,4 +1,6 @@
 import { BaseRepository, RepositoryResult, createErrorResult, createSuccessResult } from '@/lib/repositories/BaseRepository'
+import { OperationMonitoring } from '@/lib/monitoring/operations'
+import { logger } from '@/lib/logging/logger'
 
 export type CreditBalanceRecord = {
   userId: string
@@ -52,51 +54,69 @@ export class CreditRepository extends BaseRepository {
    * Returns true if successful, false if insufficient credits
    */
   async decrementAtomic(userId: string, units: number): Promise<RepositoryResult<boolean>> {
-    try {
-      if (units <= 0) {
-        return createErrorResult('Credit amount must be positive', 'INVALID_CREDIT_AMOUNT', 400)
-      }
+    if (units <= 0) {
+      logger.warn(
+        'Invalid credit decrement amount',
+        { userId, units },
+        'CreditRepository',
+        'decrementAtomic'
+      )
+      return createErrorResult('Credit amount must be positive', 'INVALID_CREDIT_AMOUNT', 400)
+    }
 
-      // Use updateMany with condition to ensure atomic operation
-      const result = await this.db.creditBalance.updateMany({
-        where: {
-          userId,
-          credits: { gte: units } // Only update if sufficient credits
-        },
-        data: {
-          credits: { decrement: units },
-          updatedAt: new Date()
-        }
-      })
-
-      // If count is 0, either user doesn't exist or insufficient credits
-      if (result.count === 0) {
-        // Check if user exists to provide better error message
-        const existing = await this.db.creditBalance.findUnique({
-          where: { userId },
-          select: { credits: true }
+    // Monitor the credit operation
+    const monitoringResult = await OperationMonitoring.monitorCreditOperation(
+      async () => {
+        // Use updateMany with condition to ensure atomic operation
+        const result = await this.db.creditBalance.updateMany({
+          where: {
+            userId,
+            credits: { gte: units } // Only update if sufficient credits
+          },
+          data: {
+            credits: { decrement: units },
+            updatedAt: new Date()
+          }
         })
 
-        if (!existing) {
-          // User doesn't have credit balance record, create one with 0 credits
-          await this.db.creditBalance.create({
-            data: {
-              userId,
-              credits: 0,
-              updatedAt: new Date()
-            }
+        // If count is 0, either user doesn't exist or insufficient credits
+        if (result.count === 0) {
+          // Check if user exists to provide better error message
+          const existing = await this.db.creditBalance.findUnique({
+            where: { userId },
+            select: { credits: true }
           })
-          return createSuccessResult(false) // Still insufficient credits
+
+          if (!existing) {
+            // User doesn't have credit balance record, create one with 0 credits
+            await this.db.creditBalance.create({
+              data: {
+                userId,
+                credits: 0,
+                updatedAt: new Date()
+              }
+            })
+            return false // Still insufficient credits
+          }
+
+          return false // Insufficient credits
         }
 
-        return createSuccessResult(false) // Insufficient credits
+        return true
+      },
+      {
+        userId,
+        operationType: 'deduct',
+        amount: units,
+        reason: 'messaging_operation',
       }
+    )
 
-      return createSuccessResult(true)
-    } catch (error) {
-      console.error('Failed to decrement credits atomically:', error)
+    if (!monitoringResult.success) {
       return createErrorResult('Failed to decrement credits', 'CREDIT_DECREMENT_FAILED', 500)
     }
+
+    return createSuccessResult(monitoringResult.data!)
   }
 
   /**

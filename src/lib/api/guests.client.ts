@@ -1,6 +1,7 @@
 "use client"
 
-import AuthClient from '@/lib/auth/client'
+import { api } from '@/lib/api/fetcher'
+import { GuestListResponseDto } from '@/contracts/guests'
 
 export type LegacyGuest = {
   id: string
@@ -21,22 +22,6 @@ type ApiEnvelope<T> = {
   offset?: number
 }
 
-function authHeaders(): HeadersInit {
-  const token = AuthClient.getToken()
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) headers['Authorization'] = `Bearer ${token}`
-  return headers
-}
-
-async function handle<T>(res: Response): Promise<ApiEnvelope<T>> {
-  const json: ApiEnvelope<T> = await res.json().catch(() => ({ success: false, error: { message: 'Invalid JSON response' } } as any))
-  if (!res.ok || !json.success) {
-    const msg = (json && json.error && json.error.message) ? json.error.message : `Request failed with ${res.status}`
-    throw new Error(msg)
-  }
-  return json
-}
-
 export const GuestsClient = {
   async listGuests(params?: { limit?: number; offset?: number; side?: 'bride'|'groom'; status?: 'pending'|'accepted'|'declined'; category?: string; dietary?: string }): Promise<{ guests: LegacyGuest[]; total?: number; limit?: number; offset?: number }> {
     const qs = new URLSearchParams()
@@ -47,37 +32,49 @@ export const GuestsClient = {
     if (params?.category) qs.set('category', params.category)
     if (params?.dietary) qs.set('dietary', params.dietary)
     const url = `/api/guests${qs.toString() ? `?${qs.toString()}` : ''}`
-    const res = await fetch(url, { headers: authHeaders(), method: 'GET' })
-    const env = await handle<LegacyGuest[]>(res)
-    return { guests: env.data || [], total: env.total, limit: env.limit, offset: env.offset }
+    const env = await api.get<ApiEnvelope<unknown>>(url)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to load guests')
+    const parsed = GuestListResponseDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid guests response shape')
+    // Map to LegacyGuest for page compatibility
+    const guests: LegacyGuest[] = parsed.data.guests.map((g:any) => ({
+      id: g.id,
+      name: `${g.firstName} ${g.lastName || ''}`.trim(),
+      rsvpStatus: 'pending', // until RSVP feature is fully wired to this client
+      mealPreference: g.dietaryRestrictions || undefined,
+      side: g.side || undefined,
+      invitationSent: Boolean(g.invitationSentAt),
+      relationshipCategory: g.relationshipCategory || undefined,
+    }))
+    return { guests, total: parsed.data.total, limit: parsed.data.limit, offset: parsed.data.offset }
   },
   async createGuest(payload: Partial<LegacyGuest & { plusOneAllowed?: boolean; plusOneName?: string; householdId?: string | null; tags?: string[] }>): Promise<LegacyGuest> {
-    const res = await fetch('/api/guests', { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) })
-    const env = await handle<LegacyGuest>(res)
+    const env = await api.post<ApiEnvelope<unknown>>('/api/guests', payload)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to create guest')
     return env.data as any
   },
   async updateGuest(id: string, payload: Partial<LegacyGuest & { plusOneAllowed?: boolean; plusOneName?: string; householdId?: string | null; tags?: string[] }>): Promise<LegacyGuest> {
-    const res = await fetch(`/api/guests/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) })
-    const env = await handle<LegacyGuest>(res)
+    const env = await api.put<ApiEnvelope<unknown>>(`/api/guests/${id}`, payload)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to update guest')
     return env.data as any
   },
   async deleteGuest(id: string): Promise<boolean> {
-    const res = await fetch(`/api/guests/${id}`, { method: 'DELETE', headers: authHeaders() })
-    const env = await handle<{ deleted: true }>(res)
+    const env = await api.delete<ApiEnvelope<{ deleted: true }>>(`/api/guests/${id}`)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to delete guest')
     return true
   },
   async setRsvpStatusBulk(ids: string[], status: 'pending'|'accepted'|'declined'): Promise<void> {
-    await fetch('/api/guests/bulk', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ action: 'setRsvpStatus', ids, status }) })
+    await api.post('/api/guests/bulk', { action: 'setRsvpStatus', ids, status })
   },
   async setInvitationSentBulk(ids: string[], invited: boolean): Promise<void> {
-    await fetch('/api/guests/bulk', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ action: 'setInvitationSent', ids, invitationSent: invited }) })
+    await api.post('/api/guests/bulk', { action: 'setInvitationSent', ids, invitationSent: invited })
   },
   async setHouseholdBulk(ids: string[], householdId: string | null): Promise<void> {
-    await fetch('/api/guests/bulk', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ action: 'setHousehold', ids, householdId }) })
+    await api.post('/api/guests/bulk', { action: 'setHousehold', ids, householdId })
   },
   async getStats(): Promise<{ total: number; bridesSide: number; groomsSide: number; withEmail: number; withPhone: number; plusOnesAllowed: number; totalAttending: number }>{
-    const res = await fetch('/api/guests/stats', { headers: authHeaders() })
-    const env = await handle<{ total: number; bridesSide: number; groomsSide: number; withEmail: number; withPhone: number; plusOnesAllowed: number; totalAttending: number }>(res)
+    const env = await api.get<ApiEnvelope<any>>('/api/guests/stats')
+    if (!env.success) throw new Error(env.error?.message || 'Failed to get guest stats')
     return env.data as any
   },
 }

@@ -90,7 +90,10 @@ export class TaskRepository extends BaseRepository {
 
         return createSuccessResult(tasks)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         console.warn('Database not available, using temp storage:', dbError)
         const tempTasks = await tempStorage.findTasksByUserId(userId)
         const filteredTasks = tempTasks.filter(task => {
@@ -123,7 +126,10 @@ export class TaskRepository extends BaseRepository {
         })
         return createSuccessResult(task)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const tempTask = await tempStorage.findTaskById(taskId)
         return createSuccessResult(tempTask ? transformTempTask(tempTask) : null)
       }
@@ -161,7 +167,10 @@ export class TaskRepository extends BaseRepository {
         })
         return createSuccessResult(task)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const tempTask = await tempStorage.createTask({
           userId,
           title: data.title,
@@ -221,7 +230,10 @@ export class TaskRepository extends BaseRepository {
         })
         return createSuccessResult(task)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const tempTask = await tempStorage.updateTask(taskId, data)
         return createSuccessResult(tempTask ? transformTempTask(tempTask) : null)
       }
@@ -243,7 +255,10 @@ export class TaskRepository extends BaseRepository {
         })
         return createSuccessResult(true)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const result = await tempStorage.deleteTask(taskId)
         return createSuccessResult(result)
       }
@@ -302,7 +317,10 @@ export class TaskRepository extends BaseRepository {
           completedThisWeek
         })
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const tasks = await tempStorage.findTasksByUserId(userId)
         
         const stats = {
@@ -350,7 +368,10 @@ export class TaskRepository extends BaseRepository {
         )
         return createSuccessResult(tasks)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const tasks = await Promise.all(
           templateTasks.map(template => 
             tempStorage.createTask({

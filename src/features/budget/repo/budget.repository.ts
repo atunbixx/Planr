@@ -26,6 +26,9 @@ export class BudgetRepository {
       }, { totalAmount: 0, totalAllocated: 0, totalActual: 0 })
       return createSuccessResult({ items: items as any, summary })
     } catch (err) {
+      if (process.env.NODE_ENV === 'production') {
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+      }
       try {
         const { items, summary } = await tempStorage.listBudgets(userId)
         return createSuccessResult({ items: items as any, summary })
@@ -40,6 +43,9 @@ export class BudgetRepository {
       const item = await prisma.budget.create({ data: { ...(data as any), userId } })
       return createSuccessResult(item as any)
     } catch (err) {
+      if (process.env.NODE_ENV === 'production') {
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+      }
       try {
         const created = await tempStorage.createBudget(userId, data as any)
         return createSuccessResult(created as any)
@@ -78,4 +84,3 @@ export class BudgetRepository {
     }
   }
 }
-

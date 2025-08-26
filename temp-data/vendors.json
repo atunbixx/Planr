@@ -2,6 +2,8 @@
   {
     "id": "vendor_1755702570733_lkxmf2",
     "userId": "user_1755366687167_yxvivql5a",
+    "name": "Sample Vendor 1",
+    "category": "other",
     "createdAt": "2025-08-20T15:09:30.733Z",
     "updatedAt": "2025-08-20T15:35:56.768Z",
     "isfavorite": true
@@ -9,6 +11,8 @@
   {
     "id": "vendor_1755732870463_cwa0wd",
     "userId": "user_1755366687167_yxvivql5a",
+    "name": "Sample Vendor 2",
+    "category": "other",
     "createdAt": "2025-08-20T23:34:30.463Z",
     "updatedAt": "2025-08-21T00:03:19.430Z",
     "isfavorite": true
@@ -18,7 +22,7 @@
     "userId": "user_1755366687167_yxvivql5a",
     "name": "Emerald Events Venue",
     "category": "venue",
-    "priceRange": "$$$",
+    "priceRange": "$$",
     "contact": "+2348000000001",
     "website": "https://example.com/emerald",
     "createdAt": "2025-08-20T23:34:31.640Z",

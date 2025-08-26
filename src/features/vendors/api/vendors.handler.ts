@@ -6,18 +6,40 @@ export class VendorsHandler {
   private service = new VendorsService()
 
   async list(request: NextRequest, userId: string) {
-    const url = new URL(request.url)
-    const sp = url.searchParams
-    const q = sp.get('q') || undefined
-    const category = sp.get('category') || undefined
-    const status = sp.get('status') || undefined
-    const page = sp.get('page') ? Math.max(1, parseInt(sp.get('page') || '1', 10)) : undefined
-    const pageSize = sp.get('pageSize') ? Math.max(1, Math.min(100, parseInt(sp.get('pageSize') || '20', 10))) : undefined
-    const result = await this.service.list(userId, { q, category, status, page, pageSize })
-    if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    const vendors = (result.data?.vendors || []).map(v => VendorDto.parse(v))
-    const data = VendorListResponseDto.parse({ vendors, total: result.data?.total ?? null, page: page ?? null, pageSize: pageSize ?? null })
-    return NextResponse.json({ success: true, data })
+    try {
+      const url = new URL(request.url)
+      const sp = url.searchParams
+      const q = sp.get('q') || undefined
+      const category = sp.get('category') || undefined
+      const status = sp.get('status') || undefined
+      const page = sp.get('page') ? Math.max(1, parseInt(sp.get('page') || '1', 10)) : undefined
+      const pageSize = sp.get('pageSize') ? Math.max(1, Math.min(100, parseInt(sp.get('pageSize') || '20', 10))) : undefined
+      
+      console.log('VendorsHandler.list called with:', { userId, q, category, status, page, pageSize })
+      
+      const result = await this.service.list(userId, { q, category, status, page, pageSize })
+      console.log('Service result:', { success: result.success, error: result.error, dataLength: result.data?.vendors?.length })
+      
+      if (!result.success) {
+        console.error('Service error:', result.error)
+        return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
+      }
+      
+      const vendors = (result.data?.vendors || []).map(v => {
+        try {
+          return VendorDto.parse(v)
+        } catch (parseError) {
+          console.error('VendorDto parse error for vendor:', v, 'Error:', parseError)
+          throw parseError
+        }
+      })
+      
+      const data = VendorListResponseDto.parse({ vendors, total: result.data?.total ?? null, page: page ?? null, pageSize: pageSize ?? null })
+      return NextResponse.json({ success: true, data })
+    } catch (error) {
+      console.error('VendorsHandler.list error:', error)
+      return NextResponse.json({ success: false, error: { message: error instanceof Error ? error.message : 'Internal server error' } }, { status: 500 })
+    }
   }
 
   async create(request: NextRequest, userId: string) {

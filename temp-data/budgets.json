@@ -9,5 +9,41 @@
     "status": "paid",
     "createdAt": "2025-08-19T23:03:41.642Z",
     "updatedAt": "2025-08-19T23:03:41.642Z"
+  },
+  {
+    "id": "budget_1756015528803_qo3ymh",
+    "userId": "user_1755366687167_yxvivql5a",
+    "category": "Venue",
+    "amount": 6000,
+    "allocated": 6000,
+    "actual": 0,
+    "status": "planned",
+    "createdAt": "2025-08-24T06:05:28.803Z",
+    "updatedAt": "2025-08-24T06:05:28.803Z",
+    "name": "5000"
+  },
+  {
+    "id": "budget_1756015574912_0i40on",
+    "userId": "user_1755366687167_yxvivql5a",
+    "category": "venue",
+    "amount": 6000,
+    "allocated": 6000,
+    "actual": 0,
+    "status": "planned",
+    "createdAt": "2025-08-24T06:06:14.912Z",
+    "updatedAt": "2025-08-24T06:06:14.912Z",
+    "name": "Venue"
+  },
+  {
+    "id": "budget_1756016034915_au5s3h",
+    "userId": "user_1755366687167_yxvivql5a",
+    "category": "hhhhhh",
+    "amount": 0,
+    "allocated": 0,
+    "actual": 0,
+    "status": "planned",
+    "createdAt": "2025-08-24T06:13:54.915Z",
+    "updatedAt": "2025-08-24T06:13:54.915Z",
+    "name": "hhhhhh"
   }
 ]

@@ -54,7 +54,7 @@ export class GuestRepository extends BaseRepository {
 
       // Dev-friendly: if DB returns no guests (e.g., rate limited or empty),
       // try reading from temp storage so entries created during fallback persist across refreshes.
-      if (!guests || guests.length === 0) {
+      if ((!guests || guests.length === 0) && process.env.NODE_ENV !== 'production') {
         try {
           const tempGuests = await tempStorage.findGuestsByUserId(coupleId)
           if (tempGuests && tempGuests.length > 0) {
@@ -80,7 +80,9 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guests)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      
+      if (process.env.NODE_ENV === 'production') {
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+      }
       try {
         // Fallback to temp storage - map coupleId to userId for now
         const guests = await tempStorage.findGuestsByUserId(coupleId)
@@ -124,7 +126,9 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guest)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      
+      if (process.env.NODE_ENV === 'production') {
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+      }
       try {
         const guest = await tempStorage.findGuestById(id)
         if (!guest) {
@@ -177,7 +181,9 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guest)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      
+      if (process.env.NODE_ENV === 'production') {
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+      }
       try {
         // Fallback to temp storage
         const tempGuest = await tempStorage.createGuest({
@@ -256,7 +262,9 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guest)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      
+      if (process.env.NODE_ENV === 'production') {
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+      }
       try {
         const updateData: GuestUpdateData = {}
         if (data.firstName || data.lastName) {

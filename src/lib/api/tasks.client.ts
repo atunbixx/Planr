@@ -1,7 +1,7 @@
 "use client"
 
-import AuthClient from '@/lib/auth/client'
-import { CreateTaskInput, UpdateTaskInput, TaskFilterInput, TaskResponse, TaskListResponse, TaskStatsResponse } from '@/features/tasks/dto/task.dto'
+import { api } from '@/lib/api/fetcher'
+import { TaskListResponseDto, TaskResponseDto, TaskStatsResponseDto, CreateTaskInput, UpdateTaskInput, TaskFilterInput, TaskResponse, TaskListResponse, TaskStatsResponse } from '@/features/tasks/dto/task.dto'
 
 // API response envelope
 type ApiEnvelope<T> = {
@@ -11,12 +11,6 @@ type ApiEnvelope<T> = {
 }
 
 export class TasksClient {
-  private static authHeaders() {
-    const token = AuthClient.getToken()
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-    return headers
-  }
 
   /**
    * List tasks with optional filtering
@@ -34,130 +28,74 @@ export class TasksClient {
     if (filters?.includeCompleted !== undefined) params.append('includeCompleted', filters.includeCompleted.toString())
 
     const url = `/api/tasks${params.toString() ? `?${params.toString()}` : ''}`
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: this.authHeaders()
-    })
-
-    const result: ApiEnvelope<TaskListResponse> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to fetch tasks')
-    }
-
-    return result.data!
+    const result = await api.get<ApiEnvelope<unknown>>(url)
+    if (!result.success) throw new Error(result.error?.message || 'Failed to fetch tasks')
+    const parsed = TaskListResponseDto.safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task list shape')
+    return parsed.data
   }
 
   /**
    * Get a single task by ID
    */
   static async getById(taskId: string): Promise<TaskResponse> {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: 'GET',
-      headers: this.authHeaders()
-    })
-
-    const result: ApiEnvelope<TaskResponse> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to fetch task')
-    }
-
-    return result.data!
+    const result = await api.get<ApiEnvelope<unknown>>(`/api/tasks/${taskId}`)
+    if (!result.success) throw new Error(result.error?.message || 'Failed to fetch task')
+    const parsed = TaskResponseDto.safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task shape')
+    return parsed.data
   }
 
   /**
    * Create a new task
    */
   static async create(data: CreateTaskInput): Promise<TaskResponse> {
-    const response = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: this.authHeaders(),
-      body: JSON.stringify(data)
-    })
-
-    const result: ApiEnvelope<TaskResponse> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to create task')
-    }
-
-    return result.data!
+    const result = await api.post<ApiEnvelope<unknown>>('/api/tasks', data)
+    if (!result.success) throw new Error(result.error?.message || 'Failed to create task')
+    const parsed = TaskResponseDto.safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task shape')
+    return parsed.data
   }
 
   /**
    * Update an existing task
    */
   static async update(taskId: string, data: UpdateTaskInput): Promise<TaskResponse> {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: 'PATCH',
-      headers: this.authHeaders(),
-      body: JSON.stringify(data)
-    })
-
-    const result: ApiEnvelope<TaskResponse> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to update task')
-    }
-
-    return result.data!
+    const result = await api.patch<ApiEnvelope<unknown>>(`/api/tasks/${taskId}`, data)
+    if (!result.success) throw new Error(result.error?.message || 'Failed to update task')
+    const parsed = TaskResponseDto.safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task shape')
+    return parsed.data
   }
 
   /**
    * Delete a task
    */
   static async delete(taskId: string): Promise<boolean> {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: 'DELETE',
-      headers: this.authHeaders()
-    })
-
-    const result: ApiEnvelope<{ deleted: boolean }> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to delete task')
-    }
-
-    return result.data!.deleted
+    const result = await api.delete<ApiEnvelope<{ deleted: boolean }>>(`/api/tasks/${taskId}`)
+    if (!result.success) throw new Error(result.error?.message || 'Failed to delete task')
+    return (result.data as any).deleted
   }
 
   /**
    * Get task statistics
    */
   static async getStats(): Promise<TaskStatsResponse> {
-    const response = await fetch('/api/tasks/stats', {
-      method: 'GET',
-      headers: this.authHeaders()
-    })
-
-    const result: ApiEnvelope<TaskStatsResponse> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to fetch task statistics')
-    }
-
-    return result.data!
+    const result = await api.get<ApiEnvelope<unknown>>('/api/tasks/stats')
+    if (!result.success) throw new Error(result.error?.message || 'Failed to fetch task statistics')
+    const parsed = TaskStatsResponseDto.safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task stats shape')
+    return parsed.data
   }
 
   /**
    * Create tasks from a template
    */
   static async createFromTemplate(timeline: string): Promise<TaskResponse[]> {
-    const response = await fetch('/api/tasks/template', {
-      method: 'POST',
-      headers: this.authHeaders(),
-      body: JSON.stringify({ timeline })
-    })
-
-    const result: ApiEnvelope<TaskResponse[]> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to create tasks from template')
-    }
-
-    return result.data!
+    const result = await api.post<ApiEnvelope<unknown>>('/api/tasks/template', { timeline })
+    if (!result.success) throw new Error(result.error?.message || 'Failed to create tasks from template')
+    // For brevity, skip strict parsing of arrays here
+    return result.data as any
   }
 
   /**
@@ -167,19 +105,9 @@ export class TasksClient {
     taskIds: string[], 
     status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold'
   ): Promise<TaskResponse[]> {
-    const response = await fetch('/api/tasks/bulk', {
-      method: 'PATCH',
-      headers: this.authHeaders(),
-      body: JSON.stringify({ taskIds, status })
-    })
-
-    const result: ApiEnvelope<TaskResponse[]> = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to bulk update tasks')
-    }
-
-    return result.data!
+    const result = await api.patch<ApiEnvelope<unknown>>('/api/tasks/bulk', { taskIds, status })
+    if (!result.success) throw new Error(result.error?.message || 'Failed to bulk update tasks')
+    return result.data as any
   }
 
   /**

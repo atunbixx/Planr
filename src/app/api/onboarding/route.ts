@@ -81,6 +81,9 @@ async function handler(request: AuthenticatedRequest) {
         return { user, weddingDetails }
       })
     } catch (dbError) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(createErrorResponse('Database unavailable'), { status: 503 })
+      }
       console.log('Database not available, using temp storage for onboarding')
       
       // Create wedding details in temp storage

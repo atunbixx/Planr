@@ -38,7 +38,10 @@ export class TaskHandler {
 
       const result = await this.service.list(userId, validationResult.data)
       if (result.success) {
-        return NextResponse.json({ success: true, data: result.data })
+        // Validate shape defensively using DTO
+        const { TaskListResponseDto } = await import('@/features/tasks/dto/task.dto')
+        const data = TaskListResponseDto.parse(result.data)
+        return NextResponse.json({ success: true, data })
       }
       // Dev fallback: use temp-storage in non-production
       if (process.env.NODE_ENV !== 'production') {
@@ -79,7 +82,9 @@ export class TaskHandler {
 
       const result = await this.service.create(userId, validationResult.data)
       if (result.success) {
-        return NextResponse.json({ success: true, data: result.data }, { status: 201 })
+        const { TaskResponseDto } = await import('@/features/tasks/dto/task.dto')
+        const data = TaskResponseDto.parse(result.data)
+        return NextResponse.json({ success: true, data }, { status: 201 })
       }
       if (process.env.NODE_ENV !== 'production') {
         const { tempStorage } = await import('@/lib/db/temp-storage')
@@ -161,7 +166,9 @@ export class TaskHandler {
 
       const result = await this.service.update(taskId, validationResult.data)
       if (result.success) {
-        return NextResponse.json({ success: true, data: result.data })
+        const { TaskResponseDto } = await import('@/features/tasks/dto/task.dto')
+        const data = TaskResponseDto.parse(result.data)
+        return NextResponse.json({ success: true, data })
       }
       if (process.env.NODE_ENV !== 'production') {
         const { tempStorage } = await import('@/lib/db/temp-storage')

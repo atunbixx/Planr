@@ -42,8 +42,11 @@ async function handler(request: AuthenticatedRequest) {
 
     return NextResponse.json({ success: true, data: { items, completed, total } })
   } catch (_) {
-    // Fallback to temp storage
+    // Fallback to temp storage (dev only)
     try {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 503 })
+      }
       const wedding = await tempStorage.getWeddingDetails(userId)
       const guests = await tempStorage.findGuestsByUserId(userId)
       const { vendors } = await tempStorage.listVendors(userId)
@@ -76,4 +79,3 @@ async function handler(request: AuthenticatedRequest) {
 }
 
 export const GET = requireOnboarding(handler)
-

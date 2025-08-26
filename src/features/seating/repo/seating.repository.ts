@@ -95,7 +95,10 @@ export class SeatingRepository extends BaseRepository {
 
         return createSuccessResult(tables)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         console.warn('Database not available, using temp storage:', dbError)
         const tempTables = await tempStorage.listSeating(userId)
         
@@ -143,7 +146,10 @@ export class SeatingRepository extends BaseRepository {
         })
         return createSuccessResult(table)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const tempTable = await tempStorage.findTableById(tableId)
         return createSuccessResult(tempTable ? this.transformTempTable(tempTable) : null)
       }
@@ -197,7 +203,11 @@ export class SeatingRepository extends BaseRepository {
         })
         return createSuccessResult(table)
       } catch (dbError) {
-         // Fallback to temp storage (basic table creation)
+         // Fallback to temp storage (dev only)
+         if (process.env.NODE_ENV === 'production') {
+           return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+         }
+         // Basic table creation in temp storage
          const tempTable = await tempStorage.createTable(userId, {
            name: data.name,
            capacity: data.capacity
@@ -269,7 +279,10 @@ export class SeatingRepository extends BaseRepository {
         })
         return createSuccessResult(table)
       } catch (dbError) {
-         // Fallback to temp storage
+         // Fallback to temp storage (dev only)
+         if (process.env.NODE_ENV === 'production') {
+           return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+         }
          const tempTable = await tempStorage.updateTable('', tableId, data as any)
          if (!tempTable) {
            return createErrorResult('Table not found', 'NOT_FOUND', 404)
@@ -294,7 +307,10 @@ export class SeatingRepository extends BaseRepository {
         })
         return createSuccessResult(true)
       } catch (dbError) {
-         // Fallback to temp storage
+         // Fallback to temp storage (dev only)
+         if (process.env.NODE_ENV === 'production') {
+           return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+         }
          const result = await tempStorage.deleteTable('', tableId)
          return createSuccessResult(result)
       }
@@ -326,7 +342,10 @@ export class SeatingRepository extends BaseRepository {
         }
         return createSuccessResult(seats)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const seats = await tempStorage.createSeatsForTable(tableId, capacity)
         return createSuccessResult(seats)
       }
@@ -353,7 +372,10 @@ export class SeatingRepository extends BaseRepository {
         })
         return createSuccessResult(seat)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const seat = await tempStorage.assignGuestToSeat(seatId, data.guestId, data.notes)
         return createSuccessResult(seat)
       }
@@ -383,7 +405,10 @@ export class SeatingRepository extends BaseRepository {
         )
         return createSuccessResult(seats)
       } catch (dbError) {
-        // Fallback to temp storage
+        // Fallback to temp storage (dev only)
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
         const seats = await tempStorage.bulkAssignGuests(assignments)
         return createSuccessResult(seats)
       }
@@ -493,4 +518,3 @@ export class SeatingRepository extends BaseRepository {
     }
   }
 }
-

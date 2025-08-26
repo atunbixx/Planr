@@ -100,6 +100,23 @@ async function main() {
     } catch (e) {
       console.warn('Skipping couple-specific seed data due to schema constraints')
     }
+    // Seed demo tasks for the user
+    try {
+      const in14d = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      const in21d = new Date(Date.now() + 21 * 24 * 60 * 60 * 1000)
+      const in30d = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      const demoTasks = [
+        { title: 'Book photographer', category: 'Photography', priority: 'high', status: 'in_progress', dueDate: in14d },
+        { title: 'Send invites', category: 'Invitations', priority: 'medium', status: 'pending', dueDate: in21d },
+        { title: 'Finalize menu', category: 'Catering', priority: 'medium', status: 'pending', dueDate: in30d },
+      ]
+      for (const t of demoTasks) {
+        await prisma.task.create({ data: { userId: user.id, ...t } }).catch(() => {})
+      }
+      console.log('Seeded demo tasks')
+    } catch (e) {
+      console.warn('Skipping demo tasks seeding:', e?.message)
+    }
   }
 
   // Directory Vendors (public directory) - seed a few if table exists and empty

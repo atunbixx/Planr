@@ -59,7 +59,7 @@ export class VendorsRepository {
       } catch (e) {
         // ignore and fall through to error
       }
-      return createErrorResult('Failed to list vendors', 'VENDORS_LIST_FAILED', 500)
+      return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
     }
   }
 
@@ -76,7 +76,7 @@ export class VendorsRepository {
       } catch (e) {
         // ignore and fall through
       }
-      return createErrorResult('Failed to create vendor', 'VENDOR_CREATE_FAILED', 500)
+      return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
     }
   }
 
@@ -94,7 +94,7 @@ export class VendorsRepository {
       } catch (e) {
         // ignore
       }
-      return createErrorResult('Failed to get vendor', 'VENDOR_GET_FAILED', 500)
+      return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
     }
   }
 
@@ -114,7 +114,7 @@ export class VendorsRepository {
       } catch (e) {
         // ignore
       }
-      return createErrorResult('Failed to update vendor', 'VENDOR_UPDATE_FAILED', 500)
+      return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
     }
   }
 
@@ -133,7 +133,7 @@ export class VendorsRepository {
       } catch (e) {
         // ignore
       }
-      return createErrorResult('Failed to delete vendor', 'VENDOR_DELETE_FAILED', 500)
+      return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
     }
   }
 }

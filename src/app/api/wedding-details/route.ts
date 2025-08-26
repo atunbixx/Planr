@@ -10,6 +10,9 @@ async function handler(request: AuthenticatedRequest) {
     const details = await prisma.weddingDetails.findUnique({ where: { userId } })
     return NextResponse.json({ success: true, data: details })
   } catch (error) {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 503 })
+    }
     try {
       const details = await tempStorage.getWeddingDetails(userId)
       return NextResponse.json({ success: true, data: details })
@@ -48,6 +51,9 @@ export const PUT = requireOnboarding(async (request: AuthenticatedRequest) => {
     })
     return NextResponse.json({ success: true, data: updated })
   } catch (err) {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 503 })
+    }
     const data = parsed.data
     const updated = await tempStorage.createOrUpdateWeddingDetails(userId, {
       venue: data.venue,

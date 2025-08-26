@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BudgetService } from '../service/budget.service'
 import { tempStorage } from '@/lib/db/temp-storage'
+import { BudgetItemDto, BudgetListResponseDto } from '@/contracts/budget'
 
 export class BudgetHandler {
   private service = new BudgetService()
@@ -52,7 +53,9 @@ export class BudgetHandler {
         percentSpent: Number(rawSummary.completionPercentage ?? 0),
       }
 
-      return NextResponse.json({ success: true, data: { items, summary } })
+      // Validate against contract schemas to guarantee shape
+      const data = BudgetListResponseDto.parse({ items, summary })
+      return NextResponse.json({ success: true, data })
     } catch (error) {
       console.error('BudgetHandler.list error:', error)
       // Soft-fail with empty payload to avoid breaking UI during migrations/setup
@@ -81,7 +84,8 @@ export class BudgetHandler {
 
       const result = await this.service.createBudgetItem(userId, mapped as any)
       if (result.success) {
-        return NextResponse.json({ success: true, data: result.data }, { status: 201 })
+        const data = BudgetItemDto.parse(result.data)
+        return NextResponse.json({ success: true, data }, { status: 201 })
       }
 
       // Dev fallback: only allow in non-production
@@ -95,7 +99,7 @@ export class BudgetHandler {
           status: body.status || (mapped.isPaid ? 'paid' : 'planned'),
           name: mapped.name,
         })
-        return NextResponse.json({ success: true, data: temp }, { status: 201 })
+      return NextResponse.json({ success: true, data: BudgetItemDto.parse(temp) }, { status: 201 })
       }
       return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 500 })
     } catch (e: any) {
@@ -131,7 +135,7 @@ export class BudgetHandler {
     }
     try {
       const result = await this.service.updateBudgetItem(userId, id, mapped as any)
-      if (result.success && result.data) return NextResponse.json({ success: true, data: result.data })
+      if (result.success && result.data) return NextResponse.json({ success: true, data: BudgetItemDto.parse(result.data) })
 
       // Dev fallback: only allow in non-production
       if (process.env.NODE_ENV !== 'production') {
@@ -142,7 +146,7 @@ export class BudgetHandler {
           actual: typeof mapped.actualAmount === 'number' ? mapped.actualAmount : undefined as any,
           status: body.status,
         } as any)
-        if (updated) return NextResponse.json({ success: true, data: updated })
+      if (updated) return NextResponse.json({ success: true, data: BudgetItemDto.parse(updated) })
       }
       return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
     } catch (e: any) {

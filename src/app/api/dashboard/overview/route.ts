@@ -31,6 +31,10 @@ async function handler(request: AuthenticatedRequest) {
 
     // If Prisma has no data (dev/temp mode), fall back to temp storage metrics
     try {
+      if (process.env.NODE_ENV === 'production') {
+        // In production do not attempt temp fallbacks
+        throw new Error('Skip temp fallback in production')
+      }
       if (guestTotal === 0) {
         const guests = await tempStorage.findGuestsByUserId(userId)
         if (guests.length > 0) {
@@ -81,8 +85,11 @@ async function handler(request: AuthenticatedRequest) {
       },
     })
   } catch (error) {
-    // Fallback to temp storage
+    // Fallback to temp storage (dev only)
     try {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 503 })
+      }
       const guests = await tempStorage.findGuestsByUserId(userId)
       const { vendors } = await tempStorage.listVendors(userId)
       const bookedVendors = vendors.filter((v: any) => v.status === 'booked').length

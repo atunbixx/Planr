@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GuestService } from '../service/guest.service'
 import { tempStorage } from '@/lib/db/temp-storage'
 import { CreateGuestDto, UpdateGuestDto, GuestFilterDto } from '../dto/guest.dto'
+import { GuestListResponseDto, GuestResponseDto } from '@/contracts/guests'
 
 export class GuestHandler {
   private guestService: GuestService
@@ -101,13 +102,13 @@ export class GuestHandler {
         )
       }
 
-      return NextResponse.json({
-        success: true,
-        data: result.data!.guests,
+      const data = GuestListResponseDto.parse({
+        guests: result.data!.guests,
         total: result.data!.total,
         limit: result.data!.limit,
         offset: result.data!.offset,
       })
+      return NextResponse.json({ success: true, data })
     } catch (error) {
       console.error('Error in getGuests handler:', error)
       return NextResponse.json({ success: false, error: { message: 'Internal server error' } }, { status: 500 })
@@ -128,10 +129,8 @@ export class GuestHandler {
         }, { status: result.error?.statusCode || 500 })
       }
 
-      return NextResponse.json({
-        success: true,
-        data: result.data
-      })
+      const data = result.data ? GuestResponseDto.parse(result.data) : null
+      return NextResponse.json({ success: true, data })
     } catch (error) {
       console.error('Error in getGuest handler:', error)
       return NextResponse.json({
@@ -176,10 +175,8 @@ export class GuestHandler {
         }, { status: result.error?.statusCode || 500 })
       }
 
-      return NextResponse.json({
-        success: true,
-        data: result.data
-      }, { status: 201 })
+      const data = GuestResponseDto.parse(result.data)
+      return NextResponse.json({ success: true, data }, { status: 201 })
     } catch (error) {
       console.error('Error in createGuest handler:', error)
       return NextResponse.json({
@@ -224,10 +221,8 @@ export class GuestHandler {
         }, { status: result.error?.statusCode || 500 })
       }
 
-      return NextResponse.json({
-        success: true,
-        data: result.data
-      })
+      const data = GuestResponseDto.parse(result.data)
+      return NextResponse.json({ success: true, data })
     } catch (error) {
       console.error('Error in updateGuest handler:', error)
       return NextResponse.json({

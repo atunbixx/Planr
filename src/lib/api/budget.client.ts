@@ -1,8 +1,9 @@
 "use client"
 
-import AuthClient from '@/lib/auth/client'
+import { api } from '@/lib/api/fetcher'
+import { BudgetListResponseDto, BudgetItemDto, BudgetSummaryDto } from '@/contracts/budget'
 
-// Raw API model from /api/budget
+// Keep exported types for compatibility
 export type RawBudgetItem = {
   id: string
   userId: string
@@ -13,6 +14,7 @@ export type RawBudgetItem = {
   status: 'planned'|'quoted'|'booked'|'paid'
   createdAt: string
   updatedAt: string
+  name?: string
 }
 
 export type BudgetSummary = {
@@ -23,44 +25,33 @@ export type BudgetSummary = {
   percentSpent: number
 }
 
-type ApiEnvelope<T> = {
-  success: boolean
-  data?: T
-  error?: { message: string }
-}
-
-function authHeaders(): HeadersInit {
-  const token = AuthClient.getToken()
-  const headers: Record<string,string> = { 'Content-Type': 'application/json' }
-  if (token) headers['Authorization'] = `Bearer ${token}`
-  return headers
-}
-
-async function handle<T>(res: Response): Promise<ApiEnvelope<T>> {
-  const json = await res.json().catch(() => ({ success: false, error: { message: 'Invalid JSON response' } })) as ApiEnvelope<T>
-  if (!res.ok || !json.success) throw new Error(json?.error?.message || `Request failed ${res.status}`)
-  return json
-}
+type ApiEnvelope<T> = { success: boolean; data?: T; error?: { message: string } }
 
 export const BudgetClient = {
   async list(): Promise<{ items: RawBudgetItem[]; summary: BudgetSummary }>{
-    const res = await fetch('/api/budget', { headers: authHeaders() })
-    const env = await handle<{ items: RawBudgetItem[]; summary: BudgetSummary }>(res)
-    return env.data as any
+    const env = await api.get<ApiEnvelope<unknown>>('/api/budget')
+    if (!env.success) throw new Error(env.error?.message || 'Failed to load budget')
+    const parsed = BudgetListResponseDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid budget response shape')
+    // Cast to legacy RawBudgetItem shape (numbers ok)
+    return parsed.data as any
   },
   async create(data: Partial<RawBudgetItem>): Promise<RawBudgetItem> {
-    const res = await fetch('/api/budget', { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) })
-    const env = await handle<RawBudgetItem>(res)
-    return env.data as any
+    const env = await api.post<ApiEnvelope<unknown>>('/api/budget', data)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to create budget item')
+    const parsed = BudgetItemDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid budget item shape')
+    return parsed.data as any
   },
   async update(id: string, data: Partial<RawBudgetItem>): Promise<RawBudgetItem> {
-    const res = await fetch(`/api/budget/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(data) })
-    const env = await handle<RawBudgetItem>(res)
-    return env.data as any
+    const env = await api.put<ApiEnvelope<unknown>>(`/api/budget/${id}`, data)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to update budget item')
+    const parsed = BudgetItemDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid budget item shape')
+    return parsed.data as any
   },
   async remove(id: string): Promise<void> {
-    const res = await fetch(`/api/budget/${id}`, { method: 'DELETE', headers: authHeaders() })
-    await handle(res)
+    const env = await api.delete<ApiEnvelope<unknown>>(`/api/budget/${id}`)
+    if (!env.success) throw new Error(env.error?.message || 'Failed to delete budget item')
   }
 }
-

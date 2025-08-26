@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { BudgetClient, type RawBudgetItem, type BudgetSummary } from '@/lib/api/budget.client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -8,28 +8,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { useApiQuery } from '@/lib/api/useApiQuery'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function BudgetPage() {
-  const [items, setItems] = useState<RawBudgetItem[]>([])
-  const [summary, setSummary] = useState<BudgetSummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = async () => {
-    try {
-      setLoading(true)
-      const { items, summary } = await BudgetClient.list()
-      setItems(items)
-      setSummary(summary)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load budget')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load() }, [])
+  const { data, error, isLoading, refetch } = useApiQuery('budget:list', async () => {
+    const { items, summary } = await BudgetClient.list()
+    return { items, summary }
+  })
+  const items = (data?.items || []) as RawBudgetItem[]
+  const summary = (data?.summary || null) as BudgetSummary | null
 
   // Create/Edit dialog state
   const [open, setOpen] = useState(false)
@@ -46,18 +34,14 @@ export default function BudgetPage() {
   }
   const onDelete = async (id: string) => {
     try {
-      setLoading(true)
       await BudgetClient.remove(id)
-      await load()
+      await refetch()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to delete item')
-    } finally {
-      setLoading(false)
+      // noop for now; could show toast
     }
   }
   const onSubmit = async () => {
     try {
-      setLoading(true)
       const payload: Partial<RawBudgetItem> = {
         category: form.category,
         // server adapter maps name/title to service name
@@ -70,11 +54,9 @@ export default function BudgetPage() {
       else await BudgetClient.create(payload)
       setOpen(false)
       resetForm()
-      await load()
+      await refetch()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save item')
-    } finally {
-      setLoading(false)
+      // noop for now; could show toast
     }
   }
 
@@ -160,10 +142,10 @@ export default function BudgetPage() {
           </div>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <div className="text-sm text-dark-6">Loading budget…</div>
         ) : error ? (
-          <div className="text-sm text-red-600">{error}</div>
+          <div className="text-sm text-red-600">{String(error)}</div>
         ) : (
           <Table>
             <TableHeader>

@@ -3,6 +3,8 @@ import { PricebookService, MessageChannel, CountryCode, PricingInfo } from './pr
 import { adapterRegistry } from '../adapters/registry'
 import { MessageRequest, MessageResult, MessageAdapter } from '../adapters/base.adapter'
 import { CreditRepository } from '../repo/credit.repository'
+import { OperationMonitoring, AnalyticsTracking } from '@/lib/monitoring/operations'
+import { logger } from '@/lib/logging/logger'
 
 /**
  * Main messaging service that orchestrates message sending
@@ -58,94 +60,152 @@ export class MessagingService {
    * Send a single message
    */
   async sendMessage(request: SendMessageRequest): Promise<RepositoryResult<MessageSendResult>> {
-    try {
-      // Ensure service is initialized
-      const initResult = await this.initialize()
-      if (!initResult.success) {
-        return createErrorResult(
-          'Messaging service not initialized',
-          'SERVICE_NOT_INITIALIZED',
-          500
-        )
-      }
+    // Ensure service is initialized
+    const initResult = await this.initialize()
+    if (!initResult.success) {
+      logger.error(
+        'Messaging service not initialized',
+        undefined,
+        { userId: request.userId },
+        'MessagingService',
+        'sendMessage'
+      )
+      return createErrorResult(
+        'Messaging service not initialized',
+        'SERVICE_NOT_INITIALIZED',
+        500
+      )
+    }
 
-      // Validate request
-      const validationResult = this.validateSendRequest(request)
-      if (!validationResult.success) {
-        return validationResult
-      }
+    // Validate request
+    const validationResult = this.validateSendRequest(request)
+    if (!validationResult.success) {
+      logger.warn(
+        'Message send request validation failed',
+        { validationError: validationResult.error },
+        'MessagingService',
+        'sendMessage'
+      )
+      return validationResult
+    }
 
-      // Get pricing information
-      const pricingResult = this.pricebookService.getPricing(request.channel, request.country)
-      if (!pricingResult.success || !pricingResult.data) {
-        return createErrorResult(
-          'Failed to get pricing information',
-          'PRICING_FAILED',
-          400
-        )
-      }
+    // Get pricing information
+    const pricingResult = this.pricebookService.getPricing(request.channel, request.country)
+    if (!pricingResult.success || !pricingResult.data) {
+      logger.error(
+        'Failed to get pricing information',
+        undefined,
+        { channel: request.channel, country: request.country },
+        'MessagingService',
+        'sendMessage'
+      )
+      return createErrorResult(
+        'Failed to get pricing information',
+        'PRICING_FAILED',
+        400
+      )
+    }
 
-      const pricing = pricingResult.data
+    const pricing = pricingResult.data
 
-      // Check and reserve credits
-      const creditResult = await this.reserveCredits(request.userId, pricing.cost)
-      if (!creditResult.success) {
-        return createErrorResult(
-          'Insufficient credits',
-          'INSUFFICIENT_CREDITS',
-          402
-        )
-      }
+    // Monitor the messaging operation
+    const monitoringResult = await OperationMonitoring.monitorMessagingOperation(
+      async () => {
+        // Check and reserve credits
+        const creditResult = await this.reserveCredits(request.userId, pricing.cost)
+        if (!creditResult.success) {
+          throw new Error('Insufficient credits')
+        }
 
-      // Get appropriate adapter
-      const adapter = adapterRegistry.getAdapterForChannel(request.channel, pricing.provider)
-      if (!adapter) {
-        // Refund credits since we can't send
-        await this.refundCredits(request.userId, pricing.cost)
-        return createErrorResult(
-          `No adapter available for channel: ${request.channel}`,
-          'ADAPTER_NOT_AVAILABLE',
-          503
-        )
-      }
+        // Get appropriate adapter
+        const adapter = adapterRegistry.getAdapterForChannel(request.channel, pricing.provider)
+        if (!adapter) {
+          // Refund credits since we can't send
+          await this.refundCredits(request.userId, pricing.cost)
+          throw new Error(`No adapter available for channel: ${request.channel}`)
+        }
 
-      // Prepare message request
-      const messageRequest: MessageRequest = {
-        to: request.to,
-        channel: request.channel,
-        templateId: request.templateId,
-        subject: request.subject,
-        content: request.content,
-        variables: request.variables,
-        metadata: {
-          userId: request.userId,
-          messageId: this.generateMessageId(),
-          country: request.country,
-          pricing: pricing,
-          ...request.metadata
-        },
-        priority: request.priority,
-        scheduledAt: request.scheduledAt
-      }
+        // Prepare message request
+        const messageRequest: MessageRequest = {
+          to: request.to,
+          channel: request.channel,
+          templateId: request.templateId,
+          subject: request.subject,
+          content: request.content,
+          variables: request.variables,
+          metadata: {
+            userId: request.userId,
+            messageId: this.generateMessageId(),
+            country: request.country,
+            pricing: pricing,
+            ...request.metadata
+          },
+          priority: request.priority,
+          scheduledAt: request.scheduledAt
+        }
 
-      // Send message via adapter
-      const sendResult = await adapter.send(messageRequest)
+        // Send message via adapter
+        const sendResult = await adapter.send(messageRequest)
 
-      // Handle result
-      if (sendResult.success) {
+        if (!sendResult.success) {
+          // Refund credits on failed send
+          await this.refundCredits(request.userId, pricing.cost)
+          throw new Error(sendResult.error || 'Message send failed')
+        }
+
         // Deduct credits on successful send
         await this.deductCredits(request.userId, pricing.cost)
-        
-        // Log successful send
-        console.log('Message sent successfully', {
-          messageId: sendResult.messageId,
+
+        return {
+          messageId: sendResult.messageId!,
           providerMessageId: sendResult.providerMessageId,
-          channel: request.channel,
-          provider: pricing.provider,
+          status: 'sent',
           cost: pricing.cost,
-          userId: request.userId,
-          operation: 'message_sent'
-        })
+          provider: pricing.provider,
+          channel: request.channel,
+          sentAt: new Date().toISOString(),
+          metadata: sendResult.metadata
+        }
+      },
+      {
+        userId: request.userId,
+        provider: pricing.provider,
+        messageType: request.channel === 'email' ? 'email' : 'sms',
+        recipientCount: Array.isArray(request.to) ? request.to.length : 1,
+        creditCost: pricing.cost,
+      }
+    )
+
+    if (!monitoringResult.success) {
+      // Track failed messaging event
+      AnalyticsTracking.trackMessagingEvent({
+        userId: request.userId,
+        provider: pricing.provider,
+        messageType: request.channel === 'email' ? 'email' : 'sms',
+        recipientCount: Array.isArray(request.to) ? request.to.length : 1,
+        creditCost: pricing.cost,
+        success: false,
+        errorType: monitoringResult.error?.name || 'UnknownError',
+      })
+
+      return createErrorResult(
+        monitoringResult.error?.message || 'Message send failed',
+        'MESSAGE_SEND_FAILED',
+        500
+      )
+    }
+
+    // Track successful messaging event
+    AnalyticsTracking.trackMessagingEvent({
+      userId: request.userId,
+      provider: pricing.provider,
+      messageType: request.channel === 'email' ? 'email' : 'sms',
+      recipientCount: Array.isArray(request.to) ? request.to.length : 1,
+      creditCost: pricing.cost,
+      success: true,
+    })
+
+    return createSuccessResult(monitoringResult.data!)
       } else {
         // Refund credits on failed send
         await this.refundCredits(request.userId, pricing.cost)

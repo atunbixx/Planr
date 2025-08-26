@@ -47,6 +47,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [fallbackMode, setFallbackMode] = useState<null | { dbOk: boolean; mode: string }>(null);
   
   // Set sidebar state after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -60,6 +61,23 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Detect DB fallback mode to show banner
+  useEffect(() => {
+    let cancelled = false
+    async function check() {
+      try {
+        const res = await fetch('/api/health/db', { cache: 'no-store' })
+        const j = await res.json().catch(() => ({}))
+        if (!cancelled && j?.data) setFallbackMode({ dbOk: j.data.dbOk, mode: j.data.mode })
+      } catch (_) {
+        if (!cancelled) setFallbackMode({ dbOk: false, mode: 'fallback' })
+      }
+    }
+    check()
+    const id = setInterval(check, 30000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [])
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
@@ -89,6 +107,12 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+        {fallbackMode && fallbackMode.mode === 'fallback' && (
+          <div className="w-full bg-yellow-100 text-yellow-900 px-4 py-2 text-sm flex items-center justify-between">
+            <span>Dev mode: database unavailable. Using temp-storage fallbacks.</span>
+            <a href="/api/health/db" className="underline">Details</a>
+          </div>
+        )}
         {/* Header */}
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-stroke bg-white px-4 md:px-6 xl:px-10 py-4 shadow-card-2 dark:border-dark-3 dark:bg-dark-2">
           {/* Mobile menu button */}

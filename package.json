@@ -11,12 +11,21 @@
     "dev:offline": "NEXT_FONT_IGNORE_FAILED_DOWNLOADS=1 next dev",
     "dev:3001:offline": "NEXT_FONT_IGNORE_FAILED_DOWNLOADS=1 next dev -p 3001",
     "dev:3002:offline": "NEXT_FONT_IGNORE_FAILED_DOWNLOADS=1 next dev -p 3002",
+    "dev:3005": "next dev -p 3005",
+    "dev:3005:offline": "NEXT_FONT_IGNORE_FAILED_DOWNLOADS=1 next dev -p 3005",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "seed": "prisma db seed",
+    "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.js",
     "import:budgets": "node scripts/import-temp-budgets.js",
-    "import:vendors": "node scripts/import-temp-vendors.js"
+    "import:vendors": "node scripts/import-temp-vendors.js",
+    "import:guests": "node scripts/import-temp-guests.js",
+    "import:tasks": "node scripts/import-temp-tasks.js",
+    "import:all": "npm run import:vendors && npm run import:budgets && npm run import:guests && npm run import:tasks"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
