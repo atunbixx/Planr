@@ -1,48 +1,43 @@
 "use client"
 
 import { useEffect, useRef, useState } from 'react'
-import { api } from './fetcher'
 
-type QueryState<T> = { data?: T; error?: Error; isLoading: boolean }
+export type ApiQueryState<T> = {
+  data?: T
+  error?: string
+  loading: boolean
+  refetch: () => void
+}
 
-const cache = new Map<string, any>()
+export function useApiQuery<T>(key: string, fetcher: () => Promise<T>): ApiQueryState<T> & { isLoading: boolean } {
+  const [data, setData] = useState<T | undefined>(undefined)
+  const [error, setError] = useState<string | undefined>(undefined)
+  const [loading, setLoading] = useState<boolean>(true)
+  const ref = useRef(0)
 
-export function useApiQuery<T = any>(key: string, fetcher: () => Promise<T>) {
-  const [state, setState] = useState<QueryState<T>>({ isLoading: true })
-  const mounted = useRef(true)
-
-  useEffect(() => {
-    mounted.current = true
-    async function run() {
-      try {
-        if (cache.has(key)) {
-          setState({ data: cache.get(key), isLoading: false })
-          return
-        }
-        const data = await fetcher()
-        cache.set(key, data)
-        if (mounted.current) setState({ data, isLoading: false })
-      } catch (e: any) {
-        if (mounted.current) setState({ error: e, isLoading: false })
-      }
-    }
-    run()
-    return () => { mounted.current = false }
-  }, [key])
-
-  const refetch = async () => {
+  const load = async () => {
+    const seq = ++ref.current
+    setLoading(true)
+    setError(undefined)
     try {
-      setState(s => ({ ...s, isLoading: true }))
-      const data = await fetcher()
-      cache.set(key, data)
-      if (mounted.current) setState({ data, isLoading: false })
+      const result = await fetcher()
+      // drop outdated responses
+      if (seq === ref.current) {
+        setData(result)
+      }
     } catch (e: any) {
-      if (mounted.current) setState({ error: e, isLoading: false })
+      if (seq === ref.current) {
+        setError(e?.message || 'Request failed')
+      }
+    } finally {
+      if (seq === ref.current) setLoading(false)
     }
   }
 
-  return { ...state, refetch }
+  useEffect(() => {
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  return { data, error, loading, isLoading: loading, refetch: load }
 }
-
-export { api }
-

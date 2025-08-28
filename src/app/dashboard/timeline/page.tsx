@@ -42,7 +42,8 @@ export default function TimelinePage() {
   const loadEvents = async () => {
     try {
       const token = AuthClient.getToken()
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
       
       const response = await fetch('/api/dashboard/timeline', { headers })
       const result = await response.json()
@@ -67,10 +68,8 @@ export default function TimelinePage() {
 
     try {
       const token = AuthClient.getToken()
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      }
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
 
       const payload = {
         time: formData.time,
@@ -124,7 +123,8 @@ export default function TimelinePage() {
 
     try {
       const token = AuthClient.getToken()
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
 
       const response = await fetch(`/api/dashboard/timeline/${eventId}`, {
         method: 'DELETE',
@@ -394,4 +394,3 @@ export default function TimelinePage() {
     </PremiumDashboardLayout>
   )
 }
-

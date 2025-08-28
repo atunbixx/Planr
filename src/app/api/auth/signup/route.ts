@@ -5,6 +5,7 @@ import { PasswordService } from '@/lib/auth/password'
 import { JWTService, createAuthResponse, createErrorResponse } from '@/lib/auth/jwt'
 import { signupSchema } from '@/lib/validation/auth'
 import { checkRateLimit } from '@/lib/security/rate-limit'
+import type { User as PrismaUser, UserRole } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     const { email, password, role } = validationResult.data
 
     // Try database first, fallback to temp storage
-    let user
+    let user: PrismaUser | null = null
     try {
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
@@ -89,17 +90,22 @@ export async function POST(request: NextRequest) {
       })
       // Map temp storage user to Prisma-like shape
       user = {
-        ...tempUser,
+        id: tempUser.id,
+        email: tempUser.email,
+        password: tempUser.password,
+        role: tempUser.role as UserRole,
+        isActive: true,
+        onboardingCompleted: Boolean(tempUser.onboardingCompleted),
         createdAt: new Date(tempUser.createdAt),
         updatedAt: new Date(tempUser.updatedAt)
-      } as typeof user
+      }
     }
 
     // Generate JWT token
-    const token = JWTService.generateToken(user)
+    const token = JWTService.generateToken(user as PrismaUser)
 
     // Return success response
-    const res = NextResponse.json(createAuthResponse(user, token), { status: 201 })
+    const res = NextResponse.json(createAuthResponse(user as PrismaUser, token), { status: 201 })
     res.headers.set('X-RateLimit-Limit', String(rl.limit))
     res.headers.set('X-RateLimit-Remaining', String(rl.remaining))
     res.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt / 1000)))

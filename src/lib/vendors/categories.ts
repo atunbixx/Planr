@@ -19,15 +19,15 @@ export interface VendorCategory {
 }
 
 export const VENDOR_CATEGORIES: VendorCategory[] = [
-  { id: 'photography', name: 'Photography', color: '#333333' },
-  { id: 'catering', name: 'Catering', color: '#666666' },
-  { id: 'venue', name: 'Venue', color: '#999999' },
-  { id: 'flowers', name: 'Flowers', color: '#4CAF50' },
-  { id: 'music', name: 'Music/DJ', color: '#2196F3' },
-  { id: 'cake', name: 'Cake', color: '#FF9800' },
-  { id: 'attire', name: 'Attire', color: '#9C27B0' },
-  { id: 'transportation', name: 'Transportation', color: '#795548' },
-  { id: 'other', name: 'Other', color: '#999999' },
+  { id: 'photography', name: 'Photography', color: 'hsl(var(--foreground))' },
+  { id: 'catering', name: 'Catering', color: 'hsl(var(--muted-foreground, 215.4 16.3% 46.9%))' },
+  { id: 'venue', name: 'Venue', color: 'hsl(var(--muted-foreground, 215.4 16.3% 46.9%))' },
+  { id: 'flowers', name: 'Flowers', color: 'hsl(142 72% 29%)' },
+  { id: 'music', name: 'Music/DJ', color: 'hsl(207 90% 54%)' },
+  { id: 'cake', name: 'Cake', color: 'hsl(33 94% 54%)' },
+  { id: 'attire', name: 'Attire', color: 'hsl(291 64% 42%)' },
+  { id: 'transportation', name: 'Transportation', color: 'hsl(16 25% 38%)' },
+  { id: 'other', name: 'Other', color: 'hsl(var(--muted-foreground, 215.4 16.3% 46.9%))' },
 ];
 
 // Common synonyms/aliases mapped to canonical ids

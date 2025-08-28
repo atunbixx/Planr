@@ -39,6 +39,9 @@
     --stroke: #E6EBF1;
     --dark-5: #6B7280;
     --dark-6: #9CA3AF;
+    /* Form field variables */
+    --input-fg: #000000;
+    --input-bg: #ffffff;
   }
 
   .dark {
@@ -75,11 +78,51 @@
     --dark-2: #1F2A37;
     --dark-3: #374151;
     --stroke-dark: #27303E;
+    /* Form field variables */
+    --input-fg: #ffffff;
+    --input-bg: var(--dark-2);
+  }
+}
+
+/* Hard global overrides for form readability (light/dark) */
+@layer base {
+  /* Light mode defaults */
+  input,
+  textarea,
+  select {
+    color: #000 !important;
+    background-color: #fff !important;
+  }
+  select option {
+    color: #111827 !important; /* slate-900 */
+    background-color: #ffffff !important;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #64748B !important; /* slate-500 */
+  }
+
+  /* Dark mode defaults */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    color: #fff !important;
+    background-color: var(--dark-2, #1F2A37) !important;
+    caret-color: #fff !important;
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #A3A3A3 !important; /* neutral-400/500 */
+  }
+  .dark select option {
+    color: #F3F4F6 !important; /* gray-100 */
+    background-color: var(--dark-2, #1F2A37) !important;
   }
 }
 
 @layer base {
   body {
+    color-scheme: light dark;
     font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #F9FAFB;
     color: #374151;
@@ -108,6 +151,35 @@
   }
 }
 
+/* Selection color for readability */
+::selection {
+  background: rgba(114, 47, 55, 0.25);
+}
+.dark ::selection {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* High-contrast mode tweaks */
+@media (prefers-contrast: more) {
+  :root {
+    --border: 214.3 31.8% 85%;
+  }
+  input, textarea, select {
+    border-width: 2px !important;
+  }
+  *:focus-visible {
+    outline: 3px solid #722F37 !important;
+    outline-offset: 2px !important;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    outline: 2px solid #722F37;
+    outline-offset: 2px;
+  }
+}
+
 /* Wedding theme styling */
 .wedding-theme {
   background: linear-gradient(135deg, #E9F5EB 0%, #F0F8F0 100%);
@@ -119,6 +191,28 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Autofill text color for readability */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #000 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 9999s ease-out 0s;
+}
+
+@media (prefers-color-scheme: dark) {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--dark-2) inset !important;
+  }
 }
 
 /* Enhanced button styling */

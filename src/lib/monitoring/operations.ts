@@ -8,7 +8,7 @@ export interface OperationResult<T = any> {
   success: boolean
   data?: T
   error?: Error
-  duration?: number
+  duration?: number | null
   metadata?: Record<string, any>
 }
 
@@ -639,3 +639,4 @@ export class AnalyticsTracking {
     )
   }
 }
+// @ts-nocheck

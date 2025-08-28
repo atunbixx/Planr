@@ -31,8 +31,8 @@ const rsvpSchema = z.object({
 
 export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmitting }: RSVPFormProps) {
   const [formData, setFormData] = useState<RSVPFormData>({
-    guestName: existingRSVP?.email || invite.guestName || '',
-    attending: existingRSVP ? existingRSVP.status === 'ATTENDING' : true,
+    guestName: existingRSVP?.email || invite.email || '',
+    attending: existingRSVP ? (existingRSVP.status === 'accepted') : true,
     partySize: existingRSVP?.partySize || 1,
     dietaryRestrictions: '',
     notes: existingRSVP?.notes || ''
@@ -61,11 +61,10 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
         partySize: formData.attending ? formData.partySize : 0
       })
 
-      // Additional validation for party size limit
-      if (formData.attending && formData.partySize > invite.maxPartySize) {
-        setErrors({
-          partySize: `Party size cannot exceed ${invite.maxPartySize} (invitation limit)`
-        })
+      // Additional validation for party size limit (fixed max of 10)
+      const MAX_PARTY = 10
+      if (formData.attending && formData.partySize > MAX_PARTY) {
+        setErrors({ partySize: `Party size cannot exceed ${MAX_PARTY}` })
         return false
       }
 
@@ -74,10 +73,9 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {}
-        error.errors.forEach(err => {
-          if (err.path[0]) {
-            newErrors[err.path[0] as string] = err.message
-          }
+        error.issues.forEach((issue) => {
+          const key = issue.path[0]
+          if (key) newErrors[String(key)] = issue.message
         })
         setErrors(newErrors)
       }
@@ -217,7 +215,7 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
                 type="number"
                 id="partySize"
                 min="1"
-                max={invite.maxPartySize}
+                max={10}
                 value={formData.partySize}
                 onChange={(e) => handleInputChange('partySize', parseInt(e.target.value) || 1)}
                 className={`w-24 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
@@ -228,7 +226,7 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
                 required
               />
               <span className="text-sm text-gray-600">
-                (Maximum: {invite.maxPartySize})
+                (Maximum: 10)
               </span>
             </div>
             {errors.partySize ? (
@@ -338,8 +336,7 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
               <p className="text-blue-800 font-medium">You have already responded to this invitation</p>
             </div>
             <p className="text-blue-700 text-sm mt-1">
-              You can update your response using the form above. Your previous response was submitted on{' '}
-              {new Date(existingRSVP.submittedAt).toLocaleDateString()}.
+              You can update your response using the form above. Your previous response was submitted on {new Date(existingRSVP.createdAt).toLocaleDateString()}.
             </p>
           </div>
         )}

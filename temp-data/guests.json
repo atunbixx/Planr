@@ -121,5 +121,23 @@
       "createdAt": "2025-08-19T12:47:50.601Z",
       "updatedAt": "2025-08-19T12:47:50.601Z"
     }
+  },
+  {
+    "id": "guest_1756221606873_ubrt12k3v",
+    "userId": "user_1755366687167_yxvivql5a",
+    "name": "Adebukola Adesanmi",
+    "rsvpStatus": "pending",
+    "side": "groom",
+    "invitationSent": false,
+    "tags": [],
+    "createdAt": "2025-08-26T15:20:06.873Z",
+    "updatedAt": "2025-08-26T15:20:06.873Z",
+    "rsvp": {
+      "id": "rsvp_1756221606874_0xzrjgk29",
+      "guestId": "guest_1756221606873_ubrt12k3v",
+      "status": "pending",
+      "createdAt": "2025-08-26T15:20:06.874Z",
+      "updatedAt": "2025-08-26T15:20:06.874Z"
+    }
   }
 ]

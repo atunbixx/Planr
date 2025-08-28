@@ -127,7 +127,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
 
           {/* Page Title Section */}
           <div className="hidden xl:block">
-            <h1 className="text-2xl font-bold text-[#722F37] dark:text-white mb-1">
+            <h1 className="text-2xl font-bold text-[hsl(var(--primary))] dark:text-white mb-1">
               {getCurrentPageTitle()}
             </h1>
             <p className="text-sm text-dark-5 dark:text-dark-6 font-medium">
@@ -143,7 +143,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
               <input
                 type="search"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 border border-stroke rounded-full bg-gray-1 text-sm outline-none transition-all focus:border-[#722F37] focus:bg-white dark:border-dark-3 dark:bg-dark-2 dark:focus:border-[#722F37] placeholder:text-dark-5 dark:placeholder:text-dark-6 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-stroke rounded-full bg-white text-black text-sm outline-none transition-all focus:border-[hsl(var(--primary))] dark:border-dark-3 dark:bg-dark-2 dark:text-white placeholder:text-slate-500 dark:placeholder:text-neutral-400"
               />
             </div>
 
@@ -165,7 +165,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-[#722F37] text-white text-xs font-semibold">
+                    <AvatarFallback className="bg-[hsl(var(--primary))] text-white text-xs font-semibold">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>

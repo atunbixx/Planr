@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { GuestsClient, type LegacyGuest } from '@/lib/api/guests.client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,8 +11,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useToast } from '@/components/ui/toast-provider'
+import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
 
 export default function GuestsPage() {
+  const { notify } = useToast()
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth()
+  const router = useRouter()
   // Filters
   const [side, setSide] = useState<''|'bride'|'groom'>('')
   const [status, setStatus] = useState<''|'pending'|'accepted'|'declined'>('')
@@ -21,20 +27,42 @@ export default function GuestsPage() {
 
   const key = useMemo(() => `guests:list:${side}:${status}:${category}:${dietary}`, [side, status, category, dietary])
 
-  const { data, error, isLoading, refetch } = useApiQuery(key, async () => {
-    const params: any = { limit: 200 }
-    if (side) params.side = side
-    if (status) params.status = status
-    if (category) params.category = category
-    if (dietary) params.dietary = dietary
-    const [{ guests }, gstats] = await Promise.all([
-      GuestsClient.listGuests(params),
-      GuestsClient.getStats(),
-    ])
-    return { guests, stats: { total: gstats.total, totalAttending: gstats.totalAttending } }
-  })
+  const { data, error, isLoading, refetch } = useApiQuery(
+    isAuthenticated && !authLoading ? key + `:${isAuthenticated}` : 'disabled', 
+    async () => {
+      if (!isAuthenticated) throw new Error('Please sign in to view guests')
+      
+      try {
+        const params: any = { limit: 100 }
+        if (side === 'bride' || side === 'groom') params.side = side
+        if (status === 'pending' || status === 'accepted' || status === 'declined') params.status = status
+        const allowedCategories = ['sibling','parent','relative','friend','neighbour','colleague','vendor','other']
+        const normalizedCategory = (category || '').trim().toLowerCase()
+        if (normalizedCategory && allowedCategories.includes(normalizedCategory)) params.category = normalizedCategory
+        if (dietary && dietary.trim().length > 0) params.dietary = dietary
+        
+        const [{ guests }, gstats] = await Promise.all([
+          GuestsClient.listGuests(params),
+          GuestsClient.getStats(),
+        ])
+        return { guests, stats: { total: gstats.total, totalAttending: gstats.totalAttending } }
+      } catch (err: any) {
+        console.error('Failed to fetch guests:', err)
+        if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+          // Token expired, redirect to signin
+          router.push('/signin')
+          throw new Error('Session expired. Please sign in again.')
+        }
+        throw err
+      }
+    }
+  )
   const guests = (data?.guests || []) as LegacyGuest[]
   const stats = data?.stats || null
+
+  useEffect(() => {
+    if (error) notify(String(error), { variant: 'error', title: 'Guest load failed' })
+  }, [error, notify])
 
   // Selection
   const [selected, setSelected] = useState<Record<string, boolean>>({})
@@ -48,16 +76,28 @@ export default function GuestsPage() {
 
   const onBulkRsvp = async (newStatus: 'pending'|'accepted'|'declined') => {
     if (!selectedIds.length) return
-    await GuestsClient.setRsvpStatusBulk(selectedIds, newStatus)
-    setSelected({})
-    await refetch()
+    try {
+      notify(`Updating ${selectedIds.length} guests…`)
+      await GuestsClient.setRsvpStatusBulk(selectedIds, newStatus)
+      notify('RSVP statuses updated', { variant: 'success' })
+      setSelected({})
+      await refetch()
+    } catch (e: any) {
+      notify(e?.message || 'Failed to update RSVP', { variant: 'error' })
+    }
   }
 
   const onBulkInvite = async (invited: boolean) => {
     if (!selectedIds.length) return
-    await GuestsClient.setInvitationSentBulk(selectedIds, invited)
-    setSelected({})
-    await refetch()
+    try {
+      notify(`Marking ${selectedIds.length} guests as ${invited ? 'invited' : 'not invited'}…`)
+      await GuestsClient.setInvitationSentBulk(selectedIds, invited)
+      notify('Invitation flags updated', { variant: 'success' })
+      setSelected({})
+      await refetch()
+    } catch (e: any) {
+      notify(e?.message || 'Failed to update invitations', { variant: 'error' })
+    }
   }
 
   // Create Guest Modal
@@ -66,9 +106,28 @@ export default function GuestsPage() {
   const canSubmit = useMemo(() => form.firstName.trim().length > 0, [form])
   const onAdd = () => { setForm({ firstName: '' }); setOpen(true) }
   const onSubmit = async () => {
-    await GuestsClient.createGuest(form as any)
-    setOpen(false)
-    await refetch()
+    try {
+      await GuestsClient.createGuest(form as any)
+      notify('Guest added', { variant: 'success' })
+      setOpen(false)
+      await refetch()
+    } catch (e: any) {
+      notify(e?.message || 'Failed to add guest', { variant: 'error' })
+    }
+  }
+
+  if (authLoading) {
+    return (
+      <PremiumDashboardLayout>
+        <div className="p-6 text-sm text-dark-6">Loading…</div>
+      </PremiumDashboardLayout>
+    )
+  }
+
+  if (!isAuthenticated) {
+    // Auto-redirect to signin for better UX
+    if (typeof window !== 'undefined') router.push('/signin')
+    return null
   }
 
   return (
@@ -161,7 +220,20 @@ export default function GuestsPage() {
           </div>
           <div>
             <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Category</label>
-            <Input className="w-48" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. family" />
+            <Select value={category || 'all'} onValueChange={(v:any)=>setCategory(v === 'all' ? '' : v)}>
+              <SelectTrigger className="w-56"><SelectValue placeholder="All" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="sibling">Sibling</SelectItem>
+                <SelectItem value="parent">Parent</SelectItem>
+                <SelectItem value="relative">Relative</SelectItem>
+                <SelectItem value="friend">Friend</SelectItem>
+                <SelectItem value="neighbour">Neighbour</SelectItem>
+                <SelectItem value="colleague">Colleague</SelectItem>
+                <SelectItem value="vendor">Vendor</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Dietary</label>
@@ -176,9 +248,29 @@ export default function GuestsPage() {
         </div>
 
         {isLoading ? (
-          <div className="text-sm text-dark-6">Loading guests…</div>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
+              <div className="h-6 w-40 bg-gray-200 animate-pulse rounded mb-2" />
+              <div className="h-4 w-64 bg-gray-200 animate-pulse rounded" />
+            </div>
+            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
+              <div className="h-6 w-56 bg-gray-200 animate-pulse rounded mb-3" />
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
+                <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
+                <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
+              </div>
+            </div>
+          </div>
         ) : error ? (
           <div className="text-sm text-red-600">{String(error)}</div>
+        ) : guests.length === 0 ? (
+          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
+            <div className="text-3xl mb-2">🧑‍🤝‍🧑</div>
+            <h3 className="text-lg font-semibold mb-1">No guests yet</h3>
+            <p className="text-sm text-gray-600 mb-4">Start by adding your first guest to build your list.</p>
+            <Button onClick={onAdd}>Add Guest</Button>
+          </div>
         ) : (
           <Table>
             <TableHeader>

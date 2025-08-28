@@ -7,7 +7,7 @@ interface TableProps {
 
 export function Table({ children, className = '' }: TableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white">
+    <div className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white dark:bg-dark-2 dark:border-dark-3">
       <div className="overflow-x-auto">
         <table className={`w-full ${className}`}>
           {children}
@@ -24,7 +24,7 @@ interface TableHeaderProps {
 
 export function TableHeader({ children, className = '' }: TableHeaderProps) {
   return (
-    <thead className={`bg-[#F8FAFC] ${className}`}>
+    <thead className={`bg-[#F8FAFC] dark:bg-dark-3 ${className}`}>
       {children}
     </thead>
   )
@@ -37,7 +37,7 @@ interface TableBodyProps {
 
 export function TableBody({ children, className = '' }: TableBodyProps) {
   return (
-    <tbody className={`divide-y divide-[#F1F5F9] ${className}`}>
+    <tbody className={`divide-y divide-[#F1F5F9] dark:divide-dark-3 ${className}`}>
       {children}
     </tbody>
   )
@@ -52,7 +52,7 @@ interface TableRowProps {
 export function TableRow({ children, className = '', onClick }: TableRowProps) {
   return (
     <tr 
-      className={`transition-colors hover:bg-[#F8FAFC] ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`transition-colors hover:bg-[#F8FAFC] dark:hover:bg-dark-3 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
@@ -67,7 +67,7 @@ interface TableHeadProps {
 
 export function TableHead({ children, className = '' }: TableHeadProps) {
   return (
-    <th className={`px-6 py-4 text-left text-xs font-semibold text-[#475569] uppercase tracking-wider ${className}`}>
+    <th className={`px-6 py-4 text-left text-xs font-semibold text-[#475569] dark:text-neutral-300 uppercase tracking-wider ${className}`}>
       {children}
     </th>
   )
@@ -80,7 +80,7 @@ interface TableCellProps {
 
 export function TableCell({ children, className = '' }: TableCellProps) {
   return (
-    <td className={`px-6 py-4 text-sm text-[#1E293B] ${className}`}>
+    <td className={`px-6 py-4 text-sm text-[#1E293B] dark:text-neutral-100 ${className}`}>
       {children}
     </td>
   )

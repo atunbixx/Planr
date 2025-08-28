@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { BudgetClient, type RawBudgetItem, type BudgetSummary } from '@/lib/api/budget.client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input'
 import { useApiQuery } from '@/lib/api/useApiQuery'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useToast } from '@/components/ui/toast-provider'
 
 export default function BudgetPage() {
+  const { notify } = useToast()
   const { data, error, isLoading, refetch } = useApiQuery('budget:list', async () => {
     const { items, summary } = await BudgetClient.list()
     return { items, summary }
@@ -35,9 +37,10 @@ export default function BudgetPage() {
   const onDelete = async (id: string) => {
     try {
       await BudgetClient.remove(id)
+      notify('Budget item deleted', { variant: 'success' })
       await refetch()
     } catch (e) {
-      // noop for now; could show toast
+      notify(e instanceof Error ? e.message : 'Failed to delete item', { variant: 'error' })
     }
   }
   const onSubmit = async () => {
@@ -50,15 +53,24 @@ export default function BudgetPage() {
         actual: Number(form.actual || 0),
         status: form.status
       }
-      if (form.id) await BudgetClient.update(form.id, payload)
-      else await BudgetClient.create(payload)
+      if (form.id) {
+        await BudgetClient.update(form.id, payload)
+        notify('Budget item updated', { variant: 'success' })
+      } else {
+        await BudgetClient.create(payload)
+        notify('Budget item created', { variant: 'success' })
+      }
       setOpen(false)
       resetForm()
       await refetch()
     } catch (e) {
-      // noop for now; could show toast
+      notify(e instanceof Error ? e.message : 'Failed to save item', { variant: 'error' })
     }
   }
+
+  useEffect(() => {
+    if (error) notify(String(error), { variant: 'error', title: 'Failed to load budget' })
+  }, [error, notify])
 
   return (
     <PremiumDashboardLayout>
@@ -143,9 +155,33 @@ export default function BudgetPage() {
         )}
 
         {isLoading ? (
-          <div className="text-sm text-dark-6">Loading budget…</div>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_,i)=>(
+                <div key={i} className="bg-white dark:bg-gray-50 p-6 rounded-lg border shadow-sm">
+                  <div className="h-4 w-24 bg-gray-200 animate-pulse rounded mb-3" />
+                  <div className="h-6 w-32 bg-gray-200 animate-pulse rounded" />
+                </div>
+              ))}
+            </div>
+            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
+              <div className="h-6 w-56 bg-gray-200 animate-pulse rounded mb-3" />
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
+                <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
+                <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
+              </div>
+            </div>
+          </div>
         ) : error ? (
           <div className="text-sm text-red-600">{String(error)}</div>
+        ) : items.length === 0 ? (
+          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
+            <div className="text-3xl mb-2">💸</div>
+            <h3 className="text-lg font-semibold mb-1">No budget items yet</h3>
+            <p className="text-sm text-gray-600 mb-4">Add your first expense or line item to track your budget.</p>
+            <Button onClick={onAdd}>Add Item</Button>
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -155,7 +191,7 @@ export default function BudgetPage() {
                 <TableHead className="text-right">Allocated</TableHead>
                 <TableHead className="text-right">Actual</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead></TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -55,6 +55,7 @@ export const GuestResponseDto = z.object({
   coupleId: z.string(),
   firstName: z.string(),
   lastName: z.string(),
+  rsvpStatus: z.enum(['pending', 'accepted', 'declined']).optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
@@ -66,10 +67,10 @@ export const GuestResponseDto = z.object({
   dietaryRestrictions: z.string().optional(),
   notes: z.string().optional(),
   attendingCount: z.number(),
-  invitationSentAt: z.date().optional(),
-  rsvpDeadline: z.date().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date()
+  invitationSentAt: z.union([z.string(), z.date()]).optional(),
+  rsvpDeadline: z.union([z.string(), z.date()]).optional(),
+  createdAt: z.union([z.string(), z.date()]),
+  updatedAt: z.union([z.string(), z.date()])
 })
 
 export const GuestListResponseDto = z.object({

@@ -30,13 +30,14 @@ export class JWTService {
       role: user.role
     }
 
-    return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn })
+    // Cast to any to satisfy jsonwebtoken v9 types without adding more deps
+    return (jwt as any).sign(payload, this.secret, { expiresIn: this.expiresIn })
   }
 
   static generateImpersonationToken(user: User, adminUserId: string, ttl: string = '1h'): string {
     if (!this.secret) throw new Error('JWT_SECRET environment variable is required')
     const payload: JWTPayload = { userId: user.id, email: user.email, role: user.role, impBy: adminUserId }
-    return jwt.sign(payload, this.secret, { expiresIn: ttl })
+    return (jwt as any).sign(payload, this.secret, { expiresIn: ttl })
   }
 
   static verifyToken(token: string): JWTPayload {

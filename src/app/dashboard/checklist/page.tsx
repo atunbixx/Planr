@@ -42,7 +42,8 @@ export default function ChecklistPage() {
     const loadChecklist = async () => {
       try {
         const token = AuthClient.getToken()
-        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        const headers: Record<string, string> = {}
+        if (token) headers['Authorization'] = `Bearer ${token}`
         
         const response = await fetch('/api/dashboard/checklist', { headers })
         const result = await response.json()
@@ -178,4 +179,3 @@ export default function ChecklistPage() {
     </PremiumDashboardLayout>
   )
 }
-

@@ -14,9 +14,9 @@ async function handler(request: AuthenticatedRequest) {
       prisma.budget.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' }, take: 5 }),
     ])
     let items: ActivityItem[] = []
-    items.push(...guests.map(g => ({ type: 'guest', title: `Guest updated: ${g.name}`, when: g.updatedAt.toISOString(), detail: g.rsvpStatus as any })))
-    items.push(...vendors.map(v => ({ type: 'vendor', title: `Vendor ${v.status ? 'updated' : 'added'}: ${v.name}`, when: v.updatedAt.toISOString(), detail: v.status as any })))
-    items.push(...budgets.map(b => ({ type: 'budget', title: `Budget item updated: ${b.category}`, when: b.updatedAt.toISOString(), detail: `$${Number(b.actual).toLocaleString()}` })))
+    items.push(...guests.map(g => ({ type: 'guest' as const, title: `Guest updated: ${g.name}`, when: g.updatedAt.toISOString(), detail: g.rsvpStatus as any })))
+    items.push(...vendors.map(v => ({ type: 'vendor' as const, title: `Vendor ${v.status ? 'updated' : 'added'}: ${v.name}`, when: v.updatedAt.toISOString(), detail: v.status as any })))
+    items.push(...budgets.map(b => ({ type: 'budget' as const, title: `Budget item updated: ${b.category}`, when: b.updatedAt.toISOString(), detail: `$${Number(b.actual).toLocaleString()}` })))
     items.sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime())
     items = items.slice(0, 8)
     return NextResponse.json({ success: true, data: { items } })
@@ -42,4 +42,3 @@ async function handler(request: AuthenticatedRequest) {
 }
 
 export const GET = requireOnboarding(handler)
-

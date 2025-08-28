@@ -9,9 +9,7 @@ import { z } from 'zod'
 export const RSVPSubmissionSchema = z.object({
   inviteId: z.string().uuid('Invalid invite ID format'),
   email: z.string().email('Invalid email format').toLowerCase(),
-  status: z.enum(['pending', 'accepted', 'declined'], {
-    errorMap: () => ({ message: 'Status must be pending, accepted, or declined' })
-  }),
+  status: z.enum(['pending', 'accepted', 'declined']),
   partySize: z.number()
     .int('Party size must be a whole number')
     .min(1, 'Party size must be at least 1')

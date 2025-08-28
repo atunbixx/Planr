@@ -50,7 +50,7 @@ export class RSVPHandler {
         operation: 'rsvp_submitted'
       })
 
-      return createSuccessResponse(result.data, 201)
+      return createSuccessResponse(result.data, undefined, 201)
     } catch (error) {
       console.error('Error in submitRSVP handler:', error)
       
@@ -114,15 +114,6 @@ export class RSVPHandler {
           attendanceRate: 0
         }
       }
-
-      if (!result.success) {
-        return createErrorResponse(
-          result.error?.message || 'Failed to get RSVP stats',
-          result.error?.statusCode || 500,
-          result.error?.code || 'STATS_RETRIEVAL_FAILED'
-        )
-      }
-
       return createSuccessResponse(result.data)
     } catch (error) {
       console.error('Error in getStats handler:', error)

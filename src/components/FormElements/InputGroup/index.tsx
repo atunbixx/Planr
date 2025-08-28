@@ -60,13 +60,18 @@ const InputGroup: React.FC<InputGroupProps> = ({
           value={props.value}
           defaultValue={props.defaultValue}
           className={cn(
-            "w-full rounded-lg border-[1.5px] border-stroke bg-transparent outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 data-[active=true]:border-primary dark:border-dark-3 dark:bg-dark-2 dark:focus:border-primary dark:disabled:bg-dark dark:data-[active=true]:border-primary",
+            "w-full rounded-lg border-[1.5px] border-stroke bg-white outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 data-[active=true]:border-primary dark:border-dark-3 dark:bg-dark-2 dark:focus:border-primary dark:disabled:bg-dark dark:data-[active=true]:border-primary",
             type === "file"
               ? getFileStyles(props.fileStyleVariant!)
-              : "px-5.5 py-3 text-dark placeholder:text-dark-6 dark:text-white",
+              : "px-5.5 py-3 text-black placeholder:text-slate-500 dark:text-white dark:placeholder:text-neutral-400",
             props.iconPosition === "left" && "pl-12.5",
             props.height === "sm" && "py-2.5",
           )}
+          style={{
+            color: 'var(--input-fg)',
+            WebkitTextFillColor: 'var(--input-fg)' as any,
+            backgroundColor: 'var(--input-bg)'
+          }}
           required={required}
           disabled={disabled}
           data-active={active}

@@ -60,6 +60,7 @@ export class MessagingService {
    * Send a single message
    */
   async sendMessage(request: SendMessageRequest): Promise<RepositoryResult<MessageSendResult>> {
+    try {
     // Ensure service is initialized
     const initResult = await this.initialize()
     if (!initResult.success) {
@@ -206,35 +207,6 @@ export class MessagingService {
     })
 
     return createSuccessResult(monitoringResult.data!)
-      } else {
-        // Refund credits on failed send
-        await this.refundCredits(request.userId, pricing.cost)
-        
-        // Log failed send
-        console.error('Message send failed', {
-          messageId: sendResult.messageId,
-          channel: request.channel,
-          provider: pricing.provider,
-          error: sendResult.error,
-          userId: request.userId,
-          operation: 'message_send_failed'
-        })
-      }
-
-      const result: MessageSendResult = {
-        messageId: sendResult.messageId,
-        providerMessageId: sendResult.providerMessageId,
-        status: sendResult.status,
-        channel: request.channel,
-        provider: pricing.provider,
-        cost: pricing.cost,
-        currency: pricing.currency,
-        timestamp: sendResult.timestamp,
-        success: sendResult.success,
-        error: sendResult.error
-      }
-
-      return createSuccessResult(result)
     } catch (error) {
       console.error('Error sending message:', error)
       return createErrorResult(

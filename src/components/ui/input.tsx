@@ -19,8 +19,8 @@ export function Input({
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
   const variantClasses = {
-    default: 'bg-white border-[#E2E8F0] focus:bg-white dark:bg-dark-2',
-    filled: 'bg-[#F8FAFC] border-[#E2E8F0] focus:bg-white dark:bg-dark-2'
+    default: 'bg-white border-slate-200 focus:bg-white dark:bg-dark-2',
+    filled: 'bg-slate-50 border-slate-200 focus:bg-white dark:bg-dark-2'
   }
 
   return (
@@ -33,13 +33,21 @@ export function Input({
       <input
         id={inputId}
         className={`
-          w-full px-4 py-3 border-2 rounded-xl shadow-sm text-[#1E293B] dark:text-white transition-all duration-200
-          placeholder-[#94A3B8] dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#722F37]/20 focus:border-[#722F37]
+          w-full px-4 py-3 border-2 rounded-xl shadow-sm transition-all duration-200
+          text-black dark:text-white
+          placeholder:text-slate-500 dark:placeholder:text-neutral-400
+          focus:outline-none focus:ring-2 focus:ring-[color:hsl(var(--primary))/0.2] focus:border-[hsl(var(--primary))]
           ${variantClasses[variant]}
           dark:bg-dark-2 dark:border-dark-3
           ${error ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : ''}
           ${className}
         `}
+        style={{ 
+          color: 'var(--input-fg)',
+          WebkitTextFillColor: 'var(--input-fg)' as any,
+          backgroundColor: 'var(--input-bg)',
+          ...(props.style as any)
+        }}
         {...props}
       />
       {error && (

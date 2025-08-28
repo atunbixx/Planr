@@ -429,6 +429,7 @@ export class GuestService {
       coupleId: guest.userId, // Map userId to coupleId for enterprise response
       firstName: firstName,
       lastName: lastName,
+      rsvpStatus: (guest as any).rsvpStatus || 'pending',
       email: undefined, // Not in current schema
       phone: undefined, // Not in current schema
       address: undefined, // Not in current schema

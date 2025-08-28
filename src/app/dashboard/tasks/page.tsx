@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useApiQuery } from '@/lib/api/useApiQuery'
+import { useToast } from '@/components/ui/toast-provider'
 
 type Task = {
   id: string
@@ -33,6 +34,7 @@ type Task = {
 }
 
 export default function TasksPage() {
+  const { notify } = useToast()
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [localError, setLocalError] = useState<string | null>(null)
@@ -48,10 +50,11 @@ export default function TasksPage() {
   })
 
   const { data, error, isLoading, refetch } = useApiQuery('tasks:list', async () => {
-    const data = await TasksClient.list({ limit: 100, includeCompleted: true })
+    const data = await TasksClient.list({ limit: 100, offset: 0, includeCompleted: true })
     return { tasks: data.tasks as any }
   })
   useEffect(() => { if (data?.tasks) setTasks(data.tasks) }, [data])
+  useEffect(() => { if (error) notify(String(error), { variant: 'error', title: 'Failed to load tasks' }) }, [error, notify])
 
   // Calculate task statistics
   const stats = {
@@ -65,10 +68,14 @@ export default function TasksPage() {
   const markCompleted = async (taskId: string) => {
     try {
       setUpdating(taskId)
+      // optimistic update
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed', completedAt: new Date() as any } : t))
       await TasksClient.update(taskId, { status: 'completed' })
-      await refetch()
+      notify('Task marked as completed', { variant: 'success' })
     } catch (e) {
-      setLocalError(e instanceof Error ? e.message : 'Failed to update task')
+      notify(e instanceof Error ? e.message : 'Failed to update task', { variant: 'error' })
+      // revert by refetching
+      await refetch()
     } finally {
       setUpdating(null)
     }
@@ -83,14 +90,17 @@ export default function TasksPage() {
         description: newTask.description || undefined,
         category: newTask.category || undefined,
         priority: newTask.priority,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate).toISOString() : undefined,
+        status: 'pending',
+        tags: []
       })
       
       setShowCreateDialog(false)
       setNewTask({ title: '', description: '', category: '', priority: 'medium', dueDate: '' })
+      notify('Task created', { variant: 'success' })
       await refetch()
     } catch (e) {
-      setLocalError(e instanceof Error ? e.message : 'Failed to create task')
+      notify(e instanceof Error ? e.message : 'Failed to create task', { variant: 'error' })
     }
   }
 
@@ -98,9 +108,10 @@ export default function TasksPage() {
     try {
       await TasksClient.createFromTemplate(timeline)
       setShowTemplateDialog(false)
+      notify('Tasks added from template', { variant: 'success' })
       await refetch()
     } catch (e) {
-      setLocalError(e instanceof Error ? e.message : 'Failed to create tasks from template')
+      notify(e instanceof Error ? e.message : 'Failed to create tasks from template', { variant: 'error' })
     }
   }
 
@@ -228,9 +239,28 @@ export default function TasksPage() {
         )}
 
         {isLoading ? (
-          <div className="text-sm text-dark-6">Loading tasks…</div>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
+              <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mb-3" />
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
+                <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
+                <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
+              </div>
+            </div>
+          </div>
         ) : error || localError ? (
           <div className="text-sm text-red-600">{String(error || localError)}</div>
+        ) : tasks.length === 0 ? (
+          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
+            <div className="text-3xl mb-2">📋</div>
+            <h3 className="text-lg font-semibold mb-1">No tasks yet</h3>
+            <p className="text-sm text-gray-600 mb-4">Create a task or add a full planning template to get started.</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => setShowCreateDialog(true)}>Add Task</Button>
+              <Button variant="outline" onClick={() => setShowTemplateDialog(true)}>Add from Template</Button>
+            </div>
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -242,7 +272,7 @@ export default function TasksPage() {
                 <TableHead>Due</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Timeline</TableHead>
-                <TableHead></TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -196,7 +196,7 @@ export class TaskRepository extends BaseRepository {
   /**
    * Update a task
    */
-  async update(taskId: string, data: UpdateTaskInput): Promise<RepositoryResult<Task>> {
+  async update(taskId: string, data: UpdateTaskInput): Promise<RepositoryResult<Task | null>> {
     try {
       const updateData: any = {}
       

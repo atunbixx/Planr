@@ -146,6 +146,22 @@ export class RSVPRepository extends BaseRepository {
   }
 
   /**
+   * Get RSVP by invite ID (latest entry)
+   */
+  async getByInviteId(inviteId: string): Promise<RepositoryResult<InviteRSVPRecord | null>> {
+    try {
+      const rsvp = await this.db.inviteRSVP.findFirst({
+        where: { inviteId },
+        orderBy: { updatedAt: 'desc' }
+      })
+      return createSuccessResult(rsvp as InviteRSVPRecord | null)
+    } catch (error) {
+      console.error('Failed to get RSVP by invite ID:', error)
+      return createErrorResult('Failed to get RSVP', 'RSVP_GET_FAILED', 500)
+    }
+  }
+
+  /**
    * Delete RSVP by ID (for user's own RSVPs only)
    */
   async delete(userId: string, rsvpId: string): Promise<RepositoryResult<boolean>> {

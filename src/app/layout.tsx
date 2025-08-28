@@ -1,22 +1,10 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ToastProvider } from '@/components/ui/toast-provider'
 
-
-const playfair = Playfair_Display({
-  weight: ['400', '500', '600', '700', '800', '900'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-playfair',
-});
-
-const inter = Inter({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
+// NOTE: Avoid next/font Google fetch in restricted environments.
+// Using system fonts fallback for builds/smoke tests.
 
 export const metadata: Metadata = {
   title: "Wedding Planner - Plan Your Perfect Day",
@@ -29,15 +17,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} h-full`}>
+    <html lang="en" className="h-full">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;0,6..96,800;0,6..96,900;1,6..96,400;1,6..96,500;1,6..96,600;1,6..96,700;1,6..96,800;1,6..96,900&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

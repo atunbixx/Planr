@@ -13,75 +13,88 @@ export class VendorService {
 
   /**
    * Get vendor by slug (public endpoint for SSR)
+   * Uses DirectoryVendor as the public directory source. We treat id as the slug.
    */
   async getVendorBySlug(slug: string): Promise<RepositoryResult<PublicVendor | null>> {
     try {
-      const vendor = await this.prisma.vendor.findUnique({
-        where: { slug },
+      const v = await this.prisma.directoryVendor.findUnique({
+        where: { id: slug },
         select: {
           id: true,
-          slug: true,
-          businessName: true,
-          description: true,
+          name: true,
           category: true,
-          location: true,
-          contactEmail: true,
-          contactPhone: true,
-          website: true,
-          socialMedia: true,
-          images: true,
-          pricing: true,
-          availability: true,
-          features: true,
-          reviews: true,
-          rating: true,
+          city: true,
+          region: true,
+          priceBand: true,
+          averageRating: true,
           reviewCount: true,
-          isActive: true,
+          shortDescription: true,
+          description: true,
+          photos: true,
+          website: true,
+          email: true,
+          phone: true,
+          address: true,
+          tags: true,
+          updatedAt: true,
           createdAt: true,
-          updatedAt: true
+          isSuspended: true,
         }
       })
 
-      if (!vendor) {
-        return createSuccessResult(null)
+      if (!v || v.isSuspended) return createSuccessResult(null)
+
+      const images: VendorImage[] = []
+      if (v.photos) {
+        try {
+          // photos may be a JSON array or a single URL string
+          const parsed = JSON.parse(v.photos)
+          if (Array.isArray(parsed)) {
+            parsed.forEach((url: string, idx: number) => {
+              images.push({ id: `${v.id}_img_${idx}`, url, alt: `${v.name} photo ${idx+1}`, isPrimary: idx===0, order: idx })
+            })
+          }
+        } catch {
+          images.push({ id: `${v.id}_img_0`, url: v.photos, alt: `${v.name} photo`, isPrimary: true, order: 0 })
+        }
       }
 
-      // Only return active vendors for public access
-      if (!vendor.isActive) {
-        return createSuccessResult(null)
+      const pricing: PricingInfo = {
+        startingPrice: 0,
+        currency: 'NGN',
+        priceRange: v.priceBand || '',
+        packages: []
       }
 
-      // Transform to public vendor format
+      const features = (v.tags ? v.tags.split(',').map(s=>s.trim()).filter(Boolean) : [])
+      const location = [v.city, v.region].filter(Boolean).join(', ')
+
       const publicVendor: PublicVendor = {
-        id: vendor.id,
-        slug: vendor.slug,
-        businessName: vendor.businessName,
-        description: vendor.description,
-        category: vendor.category,
-        location: vendor.location,
-        contactEmail: vendor.contactEmail,
-        contactPhone: vendor.contactPhone,
-        website: vendor.website,
-        socialMedia: vendor.socialMedia as SocialMediaLinks,
-        images: vendor.images as VendorImage[],
-        pricing: vendor.pricing as PricingInfo,
-        availability: vendor.availability as AvailabilityInfo,
-        features: vendor.features as string[],
-        reviews: vendor.reviews as Review[],
-        rating: vendor.rating,
-        reviewCount: vendor.reviewCount,
-        createdAt: vendor.createdAt,
-        updatedAt: vendor.updatedAt
+        id: v.id,
+        slug: v.id,
+        businessName: v.name,
+        description: v.description || v.shortDescription || '',
+        category: v.category,
+        location,
+        contactEmail: v.email || '',
+        contactPhone: v.phone || undefined,
+        website: v.website || undefined,
+        socialMedia: v.website?.includes('instagram.com') ? { instagram: v.website } : { },
+        images,
+        pricing,
+        availability: { isAvailable: true, bookingLeadTime: 30, workingDays: ['Mon','Tue','Wed','Thu','Fri','Sat'], workingHours: { start: '09:00', end: '17:00' } },
+        features,
+        reviews: [],
+        rating: v.averageRating || 0,
+        reviewCount: v.reviewCount || 0,
+        createdAt: v.createdAt,
+        updatedAt: v.updatedAt,
       }
 
       return createSuccessResult(publicVendor)
     } catch (error) {
       console.error('Error getting vendor by slug:', error)
-      return createErrorResult(
-        'Failed to get vendor',
-        'VENDOR_GET_FAILED',
-        500
-      )
+      return createErrorResult('Failed to get vendor', 'VENDOR_GET_FAILED', 500)
     }
   }
 
@@ -90,46 +103,36 @@ export class VendorService {
    */
   async getPopularVendors(limit: number = 50): Promise<RepositoryResult<PopularVendor[]>> {
     try {
-      const vendors = await this.prisma.vendor.findMany({
-        where: {
-          isActive: true,
-          rating: {
-            gte: 4.0
-          }
-        },
+      const vendors = await this.prisma.directoryVendor.findMany({
+        where: { isSuspended: false },
         select: {
-          slug: true,
-          businessName: true,
+          id: true,
+          name: true,
           category: true,
-          rating: true,
+          averageRating: true,
           reviewCount: true,
-          updatedAt: true
+          updatedAt: true,
         },
         orderBy: [
-          { rating: 'desc' },
+          { averageRating: 'desc' },
           { reviewCount: 'desc' },
           { updatedAt: 'desc' }
         ],
-        take: limit
+        take: limit,
       })
 
-      const popularVendors: PopularVendor[] = vendors.map(vendor => ({
-        slug: vendor.slug,
-        businessName: vendor.businessName,
-        category: vendor.category,
-        rating: vendor.rating,
-        reviewCount: vendor.reviewCount,
-        lastUpdated: vendor.updatedAt
+      const popularVendors: PopularVendor[] = vendors.map(v => ({
+        slug: v.id,
+        businessName: v.name,
+        category: v.category,
+        rating: v.averageRating || 0,
+        reviewCount: v.reviewCount || 0,
+        lastUpdated: v.updatedAt,
       }))
-
       return createSuccessResult(popularVendors)
     } catch (error) {
       console.error('Error getting popular vendors:', error)
-      return createErrorResult(
-        'Failed to get popular vendors',
-        'POPULAR_VENDORS_FAILED',
-        500
-      )
+      return createErrorResult('Failed to get popular vendors', 'POPULAR_VENDORS_FAILED', 500)
     }
   }
 
@@ -138,19 +141,10 @@ export class VendorService {
    */
   async getVendorCategories(): Promise<RepositoryResult<VendorCategory[]>> {
     try {
-      const categories = await this.prisma.vendor.groupBy({
+      const categories = await this.prisma.directoryVendor.groupBy({
         by: ['category'],
-        where: {
-          isActive: true
-        },
-        _count: {
-          category: true
-        },
-        orderBy: {
-          _count: {
-            category: 'desc'
-          }
-        }
+        _count: { category: true },
+        orderBy: { _count: { category: 'desc' } },
       })
 
       const vendorCategories: VendorCategory[] = categories.map(cat => ({
@@ -188,63 +182,67 @@ export class VendorService {
 
       // Build where clause
       const where: any = {
-        isActive: true,
-        rating: {
-          gte: minRating
-        }
+        isSuspended: false,
+        averageRating: { gte: minRating },
       }
 
       if (category) {
-        where.category = {
-          contains: category,
-          mode: 'insensitive'
-        }
+        where.category = { contains: category, mode: 'insensitive' }
       }
 
       if (location) {
-        where.location = {
-          contains: location,
-          mode: 'insensitive'
-        }
+        where.region = { contains: location, mode: 'insensitive' }
       }
 
       // Get total count
-      const total = await this.prisma.vendor.count({ where })
+      const total = await this.prisma.directoryVendor.count({ where })
 
       // Get vendors
-      const vendors = await this.prisma.vendor.findMany({
+      const vendors = await this.prisma.directoryVendor.findMany({
         where,
         select: {
           id: true,
-          slug: true,
-          businessName: true,
+          name: true,
           description: true,
+          shortDescription: true,
           category: true,
-          location: true,
-          images: true,
-          pricing: true,
-          rating: true,
-          reviewCount: true
+          city: true,
+          region: true,
+          photos: true,
+          priceBand: true,
+          averageRating: true,
+          reviewCount: true,
         },
         orderBy: [
-          { rating: 'desc' },
+          { averageRating: 'desc' },
           { reviewCount: 'desc' }
         ],
         skip,
         take: limit
       })
 
-      const searchResults: VendorSearchItem[] = vendors.map(vendor => ({
-        id: vendor.id,
-        slug: vendor.slug,
-        businessName: vendor.businessName,
-        description: vendor.description,
-        category: vendor.category,
-        location: vendor.location,
-        images: vendor.images as VendorImage[],
-        pricing: vendor.pricing as PricingInfo,
-        rating: vendor.rating,
-        reviewCount: vendor.reviewCount
+      const searchResults: VendorSearchItem[] = vendors.map(v => ({
+        id: v.id,
+        slug: v.id,
+        businessName: v.name,
+        description: v.description || v.shortDescription || '',
+        category: v.category,
+        location: [v.city, v.region].filter(Boolean).join(', '),
+        images: ((): VendorImage[] => {
+          const arr: VendorImage[] = []
+          if (v.photos) {
+            try {
+              const parsed = JSON.parse(v.photos)
+              if (Array.isArray(parsed)) {
+                parsed.forEach((url: string, idx: number) => arr.push({ id: `${v.id}_img_${idx}`, url, alt: `${v.name} photo ${idx+1}`, isPrimary: idx===0, order: idx }))
+              }
+            } catch { arr.push({ id: `${v.id}_img_0`, url: v.photos!, alt: `${v.name} photo`, isPrimary: true, order: 0 }) }
+          }
+          return arr
+        })(),
+        pricing: { startingPrice: 0, currency: 'NGN', priceRange: v.priceBand || '', packages: [] },
+        rating: v.averageRating || 0,
+        reviewCount: v.reviewCount || 0,
       }))
 
       const result: VendorSearchResult = {
@@ -273,16 +271,8 @@ export class VendorService {
    */
   async incrementViewCount(slug: string): Promise<RepositoryResult<boolean>> {
     try {
-      await this.prisma.vendor.update({
-        where: { slug },
-        data: {
-          viewCount: {
-            increment: 1
-          }
-        }
-      })
-
-      return createSuccessResult(true)
+      // DirectoryVendor model does not track views; noop.
+      return createSuccessResult(false)
     } catch (error) {
       console.error('Error incrementing view count:', error)
       // Don't fail the request if view count update fails

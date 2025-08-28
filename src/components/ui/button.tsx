@@ -22,10 +22,13 @@ export function Button({
   const baseClasses = 'inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0'
   
   const variantClasses = {
-    primary: 'bg-[#722F37] text-white hover:bg-[#5A252A] focus:ring-[#722F37] shadow-md hover:shadow-lg',
-    secondary: 'bg-[#6B7C32] text-white hover:bg-[#556028] focus:ring-[#6B7C32] shadow-md hover:shadow-lg',
-    outline: 'border-2 border-[#E2E8F0] bg-white text-[#475569] hover:border-[#722F37] hover:bg-[#F8FAFC] hover:text-[#722F37] focus:ring-[#722F37]',
-    ghost: 'text-[#722F37] hover:bg-[#722F37]/10 focus:ring-[#722F37]'
+    primary: 'bg-[hsl(var(--primary))] text-white hover:brightness-95 focus:ring-[hsl(var(--primary))] shadow-md hover:shadow-lg',
+    secondary: 'bg-[hsl(var(--secondary))] text-white hover:brightness-95 focus:ring-[hsl(var(--secondary))] shadow-md hover:shadow-lg',
+    outline: [
+      'border-2 border-slate-200 bg-white text-slate-600 hover:border-[hsl(var(--primary))] hover:bg-slate-50 hover:text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]',
+      'dark:border-dark-3 dark:bg-transparent dark:text-neutral-100 dark:hover:bg-dark-2 dark:hover:text-white'
+    ].join(' '),
+    ghost: 'text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/0.1] focus:ring-[hsl(var(--primary))] dark:text-neutral-100 dark:hover:bg-white/5'
   }
   
   const sizeClasses = {

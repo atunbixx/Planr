@@ -97,10 +97,9 @@ export function ContactForm({ vendor, isOpen, onClose }: ContactFormProps) {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {}
-        error.errors.forEach(err => {
-          if (err.path[0]) {
-            newErrors[err.path[0] as string] = err.message
-          }
+        error.issues.forEach((issue) => {
+          const key = issue.path[0]
+          if (key) newErrors[String(key)] = issue.message
         })
         setErrors(newErrors)
       }

@@ -75,7 +75,7 @@ export default async function RSVPPage({ params }: RSVPPageProps) {
 
     // Check for existing RSVP
     const existingRSVPResult = await rsvpService.getRSVPByInviteId(invite.id)
-    const existingRSVP = existingRSVPResult.success ? existingRSVPResult.data : null
+    const existingRSVP = existingRSVPResult.success ? (existingRSVPResult.data ?? null) : null
 
     // Server-rendered content for SEO and noscript
     return (
@@ -89,7 +89,7 @@ export default async function RSVPPage({ params }: RSVPPageProps) {
                   Wedding RSVP
                 </h1>
                 <p className="text-lg text-gray-600">
-                  Dear {invite.guestName || 'Guest'},
+                  Dear {invite.email || 'Guest'},
                 </p>
                 <p className="text-gray-600 mt-2">
                   You have been invited to a special wedding celebration.
@@ -107,7 +107,7 @@ export default async function RSVPPage({ params }: RSVPPageProps) {
                     {existingRSVP.notes && (
                       <p><strong>Notes:</strong> {existingRSVP.notes}</p>
                     )}
-                    <p><strong>Submitted:</strong> {new Date(existingRSVP.submittedAt).toLocaleDateString()}</p>
+                    <p><strong>Submitted:</strong> {new Date(existingRSVP.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
               ) : (
@@ -117,11 +117,8 @@ export default async function RSVPPage({ params }: RSVPPageProps) {
                       Invitation Details
                     </h2>
                     <div className="space-y-2 text-blue-700">
-                      <p><strong>Guest:</strong> {invite.guestName}</p>
-                      {invite.guestEmail && (
-                        <p><strong>Email:</strong> {invite.guestEmail}</p>
-                      )}
-                      <p><strong>Maximum Party Size:</strong> {invite.maxPartySize}</p>
+                      <p><strong>Email:</strong> {invite.email}</p>
+                      <p><strong>Maximum Party Size:</strong> 10</p>
                       <p><strong>Invited:</strong> {new Date(invite.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>

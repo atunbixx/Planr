@@ -20,6 +20,7 @@ export interface APIResponse<T = any> {
  */
 export function createSuccessResponse<T>(
   data: T, 
+  message?: string,
   status: number = 200
 ): NextResponse<APIResponse<T>> {
   const response: APIResponse<T> = {

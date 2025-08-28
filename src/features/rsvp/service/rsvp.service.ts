@@ -55,6 +55,7 @@ export class RSVPService {
    * Validates invite token and creates/updates RSVP with idempotency
    */
   async submitRSVP(data: unknown): Promise<RSVPServiceResult<InviteRSVPRecord>> {
+    try {
     // Validate input data first
     const validation = validateRSVPSubmission(data)
     if (!validation.success) {
@@ -153,7 +154,7 @@ export class RSVPService {
       isUpdate,
       attendanceStatus: rsvpData.status,
       guestCount: rsvpData.partySize,
-      responseTime: monitoringResult.duration,
+      responseTime: monitoringResult.duration ?? undefined,
     })
 
     return createSuccessResult(monitoringResult.data!)

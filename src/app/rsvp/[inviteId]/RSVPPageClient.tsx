@@ -66,11 +66,11 @@ export function RSVPPageClient({ invite, existingRSVP, inviteToken }: RSVPPageCl
         id: 'temp-' + Date.now(),
         userId: invite.userId,
         inviteId: invite.id,
-        email: invite.guestEmail || '',
-        status: rsvpData.attending ? 'ATTENDING' : 'NOT_ATTENDING',
+        email: invite.email,
+        status: rsvpData.attending ? 'accepted' : 'declined',
         partySize: rsvpData.partySize,
-        notes: rsvpData.notes || null,
-        submittedAt: new Date(),
+        notes: rsvpData.notes || undefined,
+        createdAt: new Date(),
         updatedAt: new Date()
       }
 
@@ -85,8 +85,8 @@ export function RSVPPageClient({ invite, existingRSVP, inviteToken }: RSVPPageCl
         },
         body: JSON.stringify({
           inviteId: inviteToken,
-          email: invite.guestEmail || '',
-          status: rsvpData.attending ? 'ATTENDING' : 'NOT_ATTENDING',
+          email: invite.email,
+          status: rsvpData.attending ? 'accepted' : 'declined',
           partySize: rsvpData.partySize,
           notes: rsvpData.notes
         })
@@ -173,7 +173,7 @@ export function RSVPPageClient({ invite, existingRSVP, inviteToken }: RSVPPageCl
           </h1>
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <p className="text-xl text-gray-700 mb-2">
-              Dear <span className="font-semibold">{invite.guestName || 'Guest'}</span>,
+              Dear <span className="font-semibold">{invite.email || 'Guest'}</span>,
             </p>
             <p className="text-gray-600">
               You have been invited to a special wedding celebration. 

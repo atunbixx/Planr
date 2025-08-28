@@ -1,14 +1,14 @@
-import { PrismaClient } from '@prisma/client'
 import { RepositoryResult, createErrorResult, createSuccessResult } from '@/lib/repositories/BaseRepository'
+import { BudgetRepository, type BudgetRecord } from '@/features/budget/repo/budget.repository'
 
 /**
  * Budget service for managing wedding budget items and calculations
  */
 export class BudgetService {
-  private prisma: PrismaClient
+  private repo: BudgetRepository
 
-  constructor(prisma?: PrismaClient) {
-    this.prisma = prisma || new PrismaClient()
+  constructor() {
+    this.repo = new BudgetRepository()
   }
 
   /**
@@ -16,22 +16,17 @@ export class BudgetService {
    */
   async getBudgetSummary(userId: string): Promise<RepositoryResult<BudgetSummary>> {
     try {
-      // Get all budget items for the user
-      const budgetItems = await this.prisma.budgetItem.findMany({
-        where: { userId },
-        orderBy: [
-          { category: 'asc' },
-          { createdAt: 'asc' }
-        ]
-      })
-
-      // Calculate totals on server-side for accuracy
-      const totalBudget = budgetItems.reduce((sum, item) => sum + item.budgetedAmount, 0)
-      const totalSpent = budgetItems.reduce((sum, item) => sum + item.actualAmount, 0)
+      const listRes = await this.repo.list(userId)
+      if (!listRes.success) return createErrorResult('Failed to get budget summary', 'BUDGET_SUMMARY_FAILED', listRes.error?.statusCode || 500)
+      const items = listRes.data?.items || []
+      const totalBudget = items.reduce((sum, i) => sum + Number(i.allocated ?? i.amount ?? 0), 0)
+      const totalSpent = items.reduce((sum, i) => sum + Number(i.actual ?? 0), 0)
       const totalRemaining = totalBudget - totalSpent
-
-      // Group by category for detailed breakdown
-      const categoryBreakdown = this.calculateCategoryBreakdown(budgetItems)
+      const categoryBreakdown = this.calculateCategoryBreakdown(items.map(i => ({
+        category: i.category,
+        budgetedAmount: Number(i.allocated ?? i.amount ?? 0),
+        actualAmount: Number(i.actual ?? 0)
+      })) as any)
 
       // Calculate completion percentage
       const completionPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
@@ -44,11 +39,11 @@ export class BudgetService {
         totalSpent,
         totalRemaining,
         completionPercentage: Math.round(completionPercentage * 100) / 100,
-        itemCount: budgetItems.length,
+        itemCount: items.length,
         categoryBreakdown,
         overBudgetCategories: overBudgetCategories.map(cat => cat.category),
         lastUpdated: new Date(),
-        currency: budgetItems[0]?.currency || 'NGN'
+        currency: 'NGN'
       }
 
       return createSuccessResult(summary)
@@ -67,67 +62,15 @@ export class BudgetService {
    */
   async getBudgetItems(userId: string, filters?: BudgetFilters): Promise<RepositoryResult<BudgetItem[]>> {
     try {
-      const where: any = { userId }
+      const listRes = await this.repo.list(userId)
+      if (!listRes.success) return createErrorResult('Failed to get budget items', 'BUDGET_ITEMS_FAILED', listRes.error?.statusCode || 500)
+      let items: BudgetItem[] = (listRes.data?.items || []).map((i) => this.mapRecordToItem(i))
 
-      // Apply filters
-      if (filters?.category) {
-        where.category = filters.category
-      }
-
-      if (filters?.status) {
-        switch (filters.status) {
-          case 'over_budget':
-            where.actualAmount = { gt: this.prisma.budgetItem.fields.budgetedAmount }
-            break
-          case 'under_budget':
-            where.actualAmount = { lt: this.prisma.budgetItem.fields.budgetedAmount }
-            break
-          case 'on_budget':
-            where.actualAmount = { equals: this.prisma.budgetItem.fields.budgetedAmount }
-            break
-          case 'not_spent':
-            where.actualAmount = 0
-            break
-        }
-      }
-
-      if (filters?.minAmount !== undefined) {
-        where.budgetedAmount = { ...where.budgetedAmount, gte: filters.minAmount }
-      }
-
-      if (filters?.maxAmount !== undefined) {
-        where.budgetedAmount = { ...where.budgetedAmount, lte: filters.maxAmount }
-      }
-
-      const budgetItems = await this.prisma.budgetItem.findMany({
-        where,
-        orderBy: [
-          { category: 'asc' },
-          { budgetedAmount: 'desc' },
-          { createdAt: 'asc' }
-        ]
-      })
-
-      // Transform to service format
-      const items: BudgetItem[] = budgetItems.map(item => ({
-        id: item.id,
-        userId: item.userId,
-        category: item.category,
-        name: item.name,
-        description: item.description,
-        budgetedAmount: item.budgetedAmount,
-        actualAmount: item.actualAmount,
-        currency: item.currency,
-        priority: item.priority as BudgetPriority,
-        status: this.calculateItemStatus(item.budgetedAmount, item.actualAmount),
-        vendorId: item.vendorId,
-        dueDate: item.dueDate,
-        isPaid: item.isPaid,
-        paymentDate: item.paymentDate,
-        notes: item.notes,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt
-      }))
+      // Apply filters in-memory based on service fields
+      if (filters?.category) items = items.filter(i => i.category === filters.category)
+      if (filters?.status) items = items.filter(i => i.status === filters.status)
+      if (filters?.minAmount !== undefined) items = items.filter(i => i.budgetedAmount >= filters.minAmount!)
+      if (filters?.maxAmount !== undefined) items = items.filter(i => i.budgetedAmount <= filters.maxAmount!)
 
       return createSuccessResult(items)
     } catch (error) {
@@ -148,46 +91,17 @@ export class BudgetService {
       // Validate input data
       const validationResult = this.validateBudgetItemData(data)
       if (!validationResult.success) {
-        return validationResult
+        return createErrorResult(validationResult.error?.message || 'Invalid budget item data', 'VALIDATION_ERROR', validationResult.error?.statusCode || 400) as any
       }
-
-      const budgetItem = await this.prisma.budgetItem.create({
-        data: {
-          userId,
-          category: data.category,
-          name: data.name,
-          description: data.description,
-          budgetedAmount: data.budgetedAmount,
-          actualAmount: data.actualAmount || 0,
-          currency: data.currency || 'NGN',
-          priority: data.priority || 'MEDIUM',
-          vendorId: data.vendorId,
-          dueDate: data.dueDate,
-          isPaid: data.isPaid || false,
-          paymentDate: data.paymentDate,
-          notes: data.notes
-        }
+      const createRes = await this.repo.create(userId, {
+        category: data.category,
+        amount: data.budgetedAmount,
+        allocated: data.budgetedAmount,
+        actual: data.actualAmount ?? 0,
+        status: data.isPaid ? 'paid' : 'planned'
       })
-
-      const item: BudgetItem = {
-        id: budgetItem.id,
-        userId: budgetItem.userId,
-        category: budgetItem.category,
-        name: budgetItem.name,
-        description: budgetItem.description,
-        budgetedAmount: budgetItem.budgetedAmount,
-        actualAmount: budgetItem.actualAmount,
-        currency: budgetItem.currency,
-        priority: budgetItem.priority as BudgetPriority,
-        status: this.calculateItemStatus(budgetItem.budgetedAmount, budgetItem.actualAmount),
-        vendorId: budgetItem.vendorId,
-        dueDate: budgetItem.dueDate,
-        isPaid: budgetItem.isPaid,
-        paymentDate: budgetItem.paymentDate,
-        notes: budgetItem.notes,
-        createdAt: budgetItem.createdAt,
-        updatedAt: budgetItem.updatedAt
-      }
+      if (!createRes.success || !createRes.data) return createErrorResult('Failed to create budget item', 'BUDGET_ITEM_CREATE_FAILED', createRes.error?.statusCode || 500)
+      const item = this.mapRecordToItem(createRes.data)
 
       console.log('Budget item created', {
         userId,
@@ -216,59 +130,18 @@ export class BudgetService {
       // Validate input data
       const validationResult = this.validateBudgetItemData(data, true)
       if (!validationResult.success) {
-        return validationResult
+        return createErrorResult(validationResult.error?.message || 'Invalid budget item data', 'VALIDATION_ERROR', validationResult.error?.statusCode || 400) as any
       }
-
-      // Check if item exists and belongs to user
-      const existingItem = await this.prisma.budgetItem.findFirst({
-        where: { id: itemId, userId }
+      const updateRes = await this.repo.update(userId, itemId, {
+        category: data.category as any,
+        amount: data.budgetedAmount as any,
+        allocated: data.budgetedAmount as any,
+        actual: data.actualAmount as any,
+        status: data.isPaid ? 'paid' : undefined
       })
-
-      if (!existingItem) {
-        return createErrorResult(
-          'Budget item not found',
-          'BUDGET_ITEM_NOT_FOUND',
-          404
-        )
-      }
-
-      const budgetItem = await this.prisma.budgetItem.update({
-        where: { id: itemId },
-        data: {
-          category: data.category,
-          name: data.name,
-          description: data.description,
-          budgetedAmount: data.budgetedAmount,
-          actualAmount: data.actualAmount,
-          currency: data.currency,
-          priority: data.priority,
-          vendorId: data.vendorId,
-          dueDate: data.dueDate,
-          isPaid: data.isPaid,
-          paymentDate: data.paymentDate,
-          notes: data.notes
-        }
-      })
-
-      const item: BudgetItem = {
-        id: budgetItem.id,
-        userId: budgetItem.userId,
-        category: budgetItem.category,
-        name: budgetItem.name,
-        description: budgetItem.description,
-        budgetedAmount: budgetItem.budgetedAmount,
-        actualAmount: budgetItem.actualAmount,
-        currency: budgetItem.currency,
-        priority: budgetItem.priority as BudgetPriority,
-        status: this.calculateItemStatus(budgetItem.budgetedAmount, budgetItem.actualAmount),
-        vendorId: budgetItem.vendorId,
-        dueDate: budgetItem.dueDate,
-        isPaid: budgetItem.isPaid,
-        paymentDate: budgetItem.paymentDate,
-        notes: budgetItem.notes,
-        createdAt: budgetItem.createdAt,
-        updatedAt: budgetItem.updatedAt
-      }
+      if (!updateRes.success) return createErrorResult('Failed to update budget item', 'BUDGET_ITEM_UPDATE_FAILED', updateRes.error?.statusCode || 500)
+      if (!updateRes.data) return createErrorResult('Budget item not found', 'BUDGET_ITEM_NOT_FOUND', 404)
+      const item = this.mapRecordToItem(updateRes.data)
 
       console.log('Budget item updated', {
         userId,
@@ -295,30 +168,9 @@ export class BudgetService {
    */
   async deleteBudgetItem(userId: string, itemId: string): Promise<RepositoryResult<boolean>> {
     try {
-      // Check if item exists and belongs to user
-      const existingItem = await this.prisma.budgetItem.findFirst({
-        where: { id: itemId, userId }
-      })
-
-      if (!existingItem) {
-        return createErrorResult(
-          'Budget item not found',
-          'BUDGET_ITEM_NOT_FOUND',
-          404
-        )
-      }
-
-      await this.prisma.budgetItem.delete({
-        where: { id: itemId }
-      })
-
-      console.log('Budget item deleted', {
-        userId,
-        itemId,
-        category: existingItem.category,
-        operation: 'budget_item_deleted'
-      })
-
+      const delRes = await this.repo.delete(userId, itemId)
+      if (!delRes.success) return createErrorResult('Failed to delete budget item', 'BUDGET_ITEM_DELETE_FAILED', delRes.error?.statusCode || 500)
+      if (!delRes.data) return createErrorResult('Budget item not found', 'BUDGET_ITEM_NOT_FOUND', 404)
       return createSuccessResult(true)
     } catch (error) {
       console.error('Error deleting budget item:', error)
@@ -335,20 +187,18 @@ export class BudgetService {
    */
   async getBudgetCategories(userId: string): Promise<RepositoryResult<BudgetCategory[]>> {
     try {
-      const budgetItems = await this.prisma.budgetItem.findMany({
-        where: { userId }
-      })
-
-      const categoryBreakdown = this.calculateCategoryBreakdown(budgetItems)
-
-      return createSuccessResult(categoryBreakdown)
+      const listRes = await this.repo.list(userId)
+      if (!listRes.success) return createErrorResult('Failed to get budget categories', 'BUDGET_CATEGORIES_FAILED', listRes.error?.statusCode || 500)
+      const items = listRes.data?.items || []
+      const breakdown = this.calculateCategoryBreakdown(items.map(i => ({
+        category: i.category,
+        budgetedAmount: Number((i as any).allocated ?? i.amount ?? 0),
+        actualAmount: Number(i.actual ?? 0)
+      })) as any)
+      return createSuccessResult(breakdown)
     } catch (error) {
       console.error('Error getting budget categories:', error)
-      return createErrorResult(
-        'Failed to get budget categories',
-        'BUDGET_CATEGORIES_FAILED',
-        500
-      )
+      return createErrorResult('Failed to get budget categories', 'BUDGET_CATEGORIES_FAILED', 500)
     }
   }
 
@@ -385,6 +235,30 @@ export class BudgetService {
     }))
 
     return categories.sort((a, b) => b.budgetedAmount - a.budgetedAmount)
+  }
+
+  private mapRecordToItem(rec: BudgetRecord): BudgetItem {
+    const budgeted = Number((rec as any).allocated ?? rec.amount ?? 0)
+    const actual = Number(rec.actual ?? 0)
+    return {
+      id: rec.id,
+      userId: rec.userId,
+      category: rec.category,
+      name: (rec as any).name || rec.category,
+      description: undefined,
+      budgetedAmount: budgeted,
+      actualAmount: actual,
+      currency: 'NGN',
+      priority: 'MEDIUM',
+      status: this.calculateItemStatus(budgeted, actual),
+      vendorId: undefined,
+      dueDate: undefined,
+      isPaid: rec.status === 'paid',
+      paymentDate: undefined,
+      notes: undefined,
+      createdAt: new Date(rec.createdAt),
+      updatedAt: new Date(rec.updatedAt)
+    }
   }
 
   /**
@@ -453,7 +327,7 @@ export class BudgetService {
    */
   async cleanup(): Promise<void> {
     try {
-      await this.prisma.$disconnect()
+      // no-op since we use repository which manages prisma internally
     } catch (error) {
       console.error('Error during budget service cleanup:', error)
     }

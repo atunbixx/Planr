@@ -78,10 +78,10 @@ export function useAuth(): UseAuthReturn {
     setIsLoading(true)
     try {
       const result = await AuthClient.signin(email, password)
-      if (result.success) {
-        setUser(result.data.user)
+      if (result.success && (result as any).data) {
+        setUser((result as any).data.user)
       }
-      return result
+      return (result as unknown) as AuthResponse
     } finally {
       setIsLoading(false)
     }
@@ -91,10 +91,10 @@ export function useAuth(): UseAuthReturn {
     setIsLoading(true)
     try {
       const result = await AuthClient.signup(email, password, role)
-      if (result.success) {
-        setUser(result.data.user)
+      if (result.success && (result as any).data) {
+        setUser((result as any).data.user)
       }
-      return result
+      return (result as unknown) as AuthResponse
     } finally {
       setIsLoading(false)
     }
@@ -109,10 +109,10 @@ export function useAuth(): UseAuthReturn {
     setIsLoading(true)
     try {
       const result = await AuthClient.completeOnboarding(details)
-      if (result.success) {
-        setUser(result.data.user)
+      if (result.success && (result as any).data) {
+        setUser((result as any).data.user)
       }
-      return result
+      return (result as unknown) as AuthResponse
     } finally {
       setIsLoading(false)
     }

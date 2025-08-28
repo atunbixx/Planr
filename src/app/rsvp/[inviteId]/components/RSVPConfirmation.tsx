@@ -10,7 +10,7 @@ interface RSVPConfirmationProps {
 }
 
 export function RSVPConfirmation({ rsvp, invite, onEdit, isSubmitting }: RSVPConfirmationProps) {
-  const isAttending = rsvp.status === 'ATTENDING'
+  const isAttending = rsvp.status === 'accepted'
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -52,8 +52,8 @@ export function RSVPConfirmation({ rsvp, invite, onEdit, isSubmitting }: RSVPCon
         <div className="space-y-4">
           {/* Guest Name */}
           <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <span className="text-sm font-medium text-gray-600">Guest Name:</span>
-            <span className="text-sm text-gray-900">{invite.guestName}</span>
+            <span className="text-sm font-medium text-gray-600">Guest Email:</span>
+            <span className="text-sm text-gray-900">{invite.email}</span>
           </div>
 
           {/* Attendance Status */}
@@ -90,7 +90,7 @@ export function RSVPConfirmation({ rsvp, invite, onEdit, isSubmitting }: RSVPCon
           <div className="flex items-center justify-between py-2">
             <span className="text-sm font-medium text-gray-600">Submitted:</span>
             <span className="text-sm text-gray-900">
-              {new Date(rsvp.submittedAt).toLocaleDateString('en-US', {
+              {new Date(rsvp.createdAt).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -169,12 +169,12 @@ export function RSVPConfirmation({ rsvp, invite, onEdit, isSubmitting }: RSVPCon
           please don't hesitate to reach out to the couple directly.
         </p>
         
-        {invite.guestEmail && (
+        {invite.email && (
           <div className="flex items-center text-sm text-gray-600">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <span>Confirmation will be sent to: {invite.guestEmail}</span>
+            <span>Confirmation will be sent to: {invite.email}</span>
           </div>
         )}
       </div>

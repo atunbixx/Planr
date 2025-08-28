@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,9 +23,49 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/app/admin/**",
+    "src/nextjs-admin-dashboard-main/**",
+    "src/app/api/admin/**",
+    "src/app/api/messages/**",
+    "src/app/api/metrics/**",
+    "src/app/api/public/**",
+    "src/app/api/seating/**",
+    "src/app/api/tasks/**",
+    "src/app/api/budget/**",
+    "src/app/api/vendor-portal/**",
+    "src/app/api/vendors/**",
+    "src/app/vendors/**",
+    "src/Charts/**",
+    "src/assets/**",
+    "src/features/budget/**",
+    "src/features/messaging/**",
+    "src/Layouts/**",
+    "src/ui/**",
+    "src/Tables/**",
+    "src/FormElements/**",
+    "wedding-planner-new/**",
+    "src/lib/monitoring/**",
+    "src/lib/monitoring/*.ts",
+    "src/lib/monitoring/**/*.ts",
+    "src/ui/**",
+    "src/lib/auth/admin.ts",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "tests/**",
+    "playwright-*.ts"
+  ]
 }
