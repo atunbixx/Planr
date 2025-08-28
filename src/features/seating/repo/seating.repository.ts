@@ -118,6 +118,35 @@ export class SeatingRepository extends BaseRepository {
   }
 
   /**
+   * Auto-assign guests to seats using simple strategy
+   */
+  async autoAssign(userId: string, allGuestIds: string[], groupByRelationship: boolean): Promise<RepositoryResult<TableWithSeats[]>> {
+    try {
+      // Try database first (not implemented)
+      try {
+        throw new Error('AUTO_ASSIGN_DB_NOT_IMPLEMENTED')
+      } catch (dbError) {
+        if (process.env.NODE_ENV === 'production') {
+          return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
+        }
+        // Use temp storage helper which persists to file
+        const updated = await tempStorage.autoAssign(userId, allGuestIds, groupByRelationship)
+        // Read back user's tables and transform
+        const tempTables = await tempStorage.listSeating(userId)
+        // Attach synthesized seats per updated guestIds
+        const tablesMerged = tempTables.map((t: any) => {
+          const u = updated.find((x: any) => x.id === t.id)
+          return u ? { ...t, guestIds: u.guestIds } : t
+        })
+        return createSuccessResult(tablesMerged.map(this.transformTempTable))
+      }
+    } catch (error) {
+      console.error('Error in SeatingRepository.autoAssign:', error)
+      return createErrorResult('Failed to auto-assign seats', 'AUTO_ASSIGN_ERROR', 500)
+    }
+  }
+
+  /**
    * Find table by ID with seats and guest information
    */
   async findTableById(tableId: string): Promise<RepositoryResult<TableWithSeats | null>> {
@@ -479,6 +508,23 @@ export class SeatingRepository extends BaseRepository {
    * Transform temp storage table to repository format
    */
   private transformTempTable(tempTable: any): TableWithSeats {
+    // Synthesize seats from capacity/guestIds when not persisted in temp storage
+    const synthesizedSeats = Array.from({ length: Number(tempTable.capacity) || 0 }, (_, idx) => ({
+      id: `seat_${tempTable.id}_${idx + 1}`,
+      tableId: tempTable.id,
+      guestId: (tempTable.guestIds && tempTable.guestIds[idx]) ? tempTable.guestIds[idx] : null,
+      seatNumber: idx + 1,
+      positionX: 0,
+      positionY: 0,
+      isHost: false,
+      notes: null,
+      createdAt: tempTable.createdAt,
+      updatedAt: tempTable.updatedAt,
+      guest: null,
+    }))
+
+    const sourceSeats = (tempTable.seats && tempTable.seats.length ? tempTable.seats : synthesizedSeats)
+
     return {
       id: tempTable.id,
       userId: tempTable.userId,
@@ -495,7 +541,7 @@ export class SeatingRepository extends BaseRepository {
       notes: tempTable.notes || null,
       createdAt: new Date(tempTable.createdAt),
       updatedAt: new Date(tempTable.updatedAt),
-      seats: (tempTable.seats || []).map((seat: any) => ({
+      seats: sourceSeats.map((seat: any) => ({
         id: seat.id,
         tableId: seat.tableId,
         guestId: seat.guestId || null,

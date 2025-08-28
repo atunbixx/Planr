@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/app/api/seating/route.ts",
+    "src/app/api/seating/[id]/route.ts",
+    "src/app/api/seating/[id]/seats/route.ts",
+    "src/features/seating/api/seating.handler.ts",
+    "src/features/seating/service/seating.service.ts",
+    "src/features/seating/repo/seating.repository.ts",
+    "src/lib/api/seating.client.ts",
+    "src/app/dashboard/seating/page.ts",
+    "src/contracts/seating.ts"
+  ],
+  "exclude": [
+    ".next/**"
+  ]
+}
+

@@ -56,15 +56,16 @@ export const UpdateSeatDto = z.object({
 })
 
 export const AssignGuestToSeatDto = z.object({
-  guestId: z.string().uuid('Invalid guest ID').nullable(),
+  // Relaxed in dev to accept non-UUID temp IDs; server can enforce in DB layer
+  guestId: z.string().nullable(),
   notes: z.string().optional()
 })
 
 // Bulk operations
 export const BulkSeatAssignmentDto = z.object({
   assignments: z.array(z.object({
-    seatId: z.string().uuid('Invalid seat ID'),
-    guestId: z.string().uuid('Invalid guest ID').nullable()
+    seatId: z.string(),
+    guestId: z.string().nullable()
   }))
 })
 

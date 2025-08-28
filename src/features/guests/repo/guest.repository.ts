@@ -17,7 +17,6 @@ interface GuestUpdateData {
   plusOneAllowed?: boolean
   plusOneName?: string | null
   householdId?: string | null
-  tags?: string[]
   rsvpStatus?: 'pending' | 'accepted' | 'declined'
   invitationSent?: boolean
 }
@@ -31,10 +30,11 @@ export class GuestRepository extends BaseRepository {
     coupleId: string, 
     filters?: GuestFilterInput
   ): Promise<RepositoryResult<Guest[]>> {
+    // Hoist filters for use in catch fallback
+    const { limit = 50, offset = 0, side, rsvpStatus } = filters || {}
+    const dietary = (filters as any)?.dietary as string | undefined
+    const category = (filters as any)?.category as string | undefined
     try {
-      const { limit = 50, offset = 0, side, rsvpStatus } = filters || {}
-      const dietary = (filters as any)?.dietary as string | undefined
-      const category = (filters as any)?.category as string | undefined
 
       const where: GuestWhereClause = { userId: coupleId }
       
@@ -52,9 +52,9 @@ export class GuestRepository extends BaseRepository {
         skip: offset
       })
 
-      // Dev-friendly: if DB returns no guests (e.g., rate limited or empty),
-      // try reading from temp storage so entries created during fallback persist across refreshes.
-      if ((!guests || guests.length === 0) && process.env.NODE_ENV !== 'production') {
+      // If DB returns no guests, do NOT silently fall back to temp storage unless explicitly enabled.
+      // Enable fallback on empty only when ALLOW_TEMP_SEED_ON_EMPTY === 'true'.
+      if ((!guests || guests.length === 0) && process.env.NODE_ENV !== 'production' && process.env.ALLOW_TEMP_SEED_ON_EMPTY === 'true') {
         try {
           const tempGuests = await tempStorage.findGuestsByUserId(coupleId)
           if (tempGuests && tempGuests.length > 0) {
@@ -80,33 +80,34 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guests)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      if (process.env.NODE_ENV === 'production') {
-        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
-      }
       try {
-        // Fallback to temp storage - map coupleId to userId for now
-        const guests = await tempStorage.findGuestsByUserId(coupleId)
-        // Transform temp storage format to match Prisma Guest model
-        let transformedGuests = guests.map(guest => ({
-          id: guest.id,
-          userId: guest.userId, // Keep existing field name for compatibility  
-          name: guest.name,
-          rsvpStatus: guest.rsvpStatus,
-          mealPreference: guest.mealPreference,
-          side: guest.side || null,
-          invitationSent: guest.invitationSent,
-          relationshipCategory: (guest as any).relationshipCategory || null,
-          tags: (guest as any).tags || [],
-          createdAt: new Date(guest.createdAt),
-          updatedAt: new Date(guest.updatedAt)
-        })) as Guest[]
+        if (process.env.USE_TEMP_STORAGE_FALLBACK === 'true' && process.env.NODE_ENV !== 'production') {
+          // Fallback to temp storage - map coupleId to userId for now
+          const guests = await tempStorage.findGuestsByUserId(coupleId)
+          // Transform temp storage format to match Prisma Guest model
+          let transformedGuests = guests.map(guest => ({
+            id: guest.id,
+            userId: guest.userId, // Keep existing field name for compatibility  
+            name: guest.name,
+            rsvpStatus: guest.rsvpStatus,
+            mealPreference: guest.mealPreference,
+            side: guest.side || null,
+            invitationSent: guest.invitationSent,
+            relationshipCategory: (guest as any).relationshipCategory || null,
+            tags: (guest as any).tags || [],
+            createdAt: new Date(guest.createdAt),
+            updatedAt: new Date(guest.updatedAt)
+          })) as Guest[]
 
-        if (side) transformedGuests = transformedGuests.filter(g => g.side === side)
-        if (rsvpStatus) transformedGuests = transformedGuests.filter(g => g.rsvpStatus === rsvpStatus)
-        if (dietary) transformedGuests = transformedGuests.filter(g => (g.mealPreference || '').toLowerCase().includes(String(dietary).toLowerCase()))
-        if (category) transformedGuests = (transformedGuests as any).filter((g: any) => (g.relationshipCategory || '').toLowerCase() === String(category).toLowerCase())
+          if (side) transformedGuests = transformedGuests.filter(g => g.side === side)
+          if (rsvpStatus) transformedGuests = transformedGuests.filter(g => g.rsvpStatus === rsvpStatus)
+          if (dietary) transformedGuests = transformedGuests.filter(g => (g.mealPreference || '').toLowerCase().includes(String(dietary).toLowerCase()))
+          if (category) transformedGuests = (transformedGuests as any).filter((g: any) => (g.relationshipCategory || '').toLowerCase() === String(category).toLowerCase())
 
-        return createSuccessResult(transformedGuests)
+          return createSuccessResult(transformedGuests)
+        }
+        // If fallback disabled, surface DB error
+        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
       } catch (tempError) {
         console.error('Temp storage error:', tempError)
         return createErrorResult('Failed to fetch guests', 'FETCH_ERROR', 500)
@@ -126,9 +127,6 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guest)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      if (process.env.NODE_ENV === 'production') {
-        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
-      }
       try {
         const guest = await tempStorage.findGuestById(id)
         if (!guest) {
@@ -181,9 +179,6 @@ export class GuestRepository extends BaseRepository {
       return createSuccessResult(guest)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      if (process.env.NODE_ENV === 'production') {
-        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
-      }
       try {
         // Fallback to temp storage
         const tempGuest = await tempStorage.createGuest({
@@ -255,16 +250,13 @@ export class GuestRepository extends BaseRepository {
         
         return await tx.guest.update({
           where: { id },
-          data: updateData
+          data: updateData as any
         })
       })
 
       return createSuccessResult(guest)
     } catch (error) {
       console.error('Database error, falling back to temp storage:', error)
-      if (process.env.NODE_ENV === 'production') {
-        return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
-      }
       try {
         const updateData: GuestUpdateData = {}
         if (data.firstName || data.lastName) {

@@ -939,6 +939,27 @@ class TempStorage {
   }
 
   async assignGuestToSeat(seatId: string, guestId: string | null, notes?: string): Promise<any> {
+    // Try to persist into seating.json by mapping to tableId + seatNumber
+    const m = seatId.match(/^seat_(.+)_(\d+)(?:_\d+)?$/)
+    if (m) {
+      const tableId = m[1]
+      const seatNumber = parseInt(m[2], 10)
+      const all = this.readSeating()
+      const idx = all.findIndex((t: any) => t.id === tableId)
+      if (idx !== -1) {
+        const t = all[idx]
+        // Ensure guestIds array length === capacity
+        const arr = Array.from({ length: Math.max(0, Number(t.capacity) || 0) }, (_, i) => (t.guestIds || [])[i] || null)
+        // Remove guest from any prior position
+        for (let i = 0; i < arr.length; i++) if (arr[i] === guestId) arr[i] = null
+        // Assign into seatNumber-1
+        if (seatNumber >= 1 && seatNumber <= arr.length) {
+          arr[seatNumber - 1] = guestId
+        }
+        all[idx] = { ...t, guestIds: arr, updatedAt: new Date().toISOString() }
+        this.writeSeating(all)
+      }
+    }
     return {
       id: seatId,
       guestId,

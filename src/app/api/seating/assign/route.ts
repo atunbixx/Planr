@@ -1,11 +1,8 @@
-import { requireOnboarding, AuthenticatedRequest } from '@/lib/auth/middleware'
-import { SeatingHandler } from '@/features/seating/api/seating.handler'
+import { NextResponse } from 'next/server'
 
-const seatingHandler = new SeatingHandler()
-
-async function handler(request: AuthenticatedRequest) {
-  const userId = request.user!.id
-  return seatingHandler.assign(request as any, userId)
+export async function POST() {
+  return NextResponse.json(
+    { success: false, error: { message: 'Deprecated endpoint. Use /api/seating/seats/[id]/assign.' } },
+    { status: 410 }
+  )
 }
-
-export const POST = requireOnboarding(handler)

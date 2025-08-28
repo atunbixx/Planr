@@ -53,6 +53,30 @@ export class SeatingHandler {
   }
 
   /**
+   * POST /api/seating/[id]/seats - Create seats for a table
+   */
+  async createSeatsForTable(request: NextRequest, tableId: string) {
+    try {
+      const body = await request.json().catch(() => ({}))
+      const capacity = Number(body?.capacity)
+
+      const result = await this.service.createSeats(tableId, capacity)
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: result.error?.statusCode || 500 }
+        )
+      }
+      return NextResponse.json({ success: true, data: { seats: result.data } }, { status: 201 })
+    } catch (error) {
+      console.error('Error in SeatingHandler.createSeatsForTable:', error)
+      return NextResponse.json(
+        { success: false, error: { message: 'Internal server error' } },
+        { status: 500 }
+      )
+    }
+  }
+  /**
    * POST /api/seating/tables - Create a new table
    */
   async createTable(request: NextRequest, userId: string) {
@@ -248,4 +272,3 @@ export class SeatingHandler {
     }
   }
 }
-

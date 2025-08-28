@@ -3,21 +3,25 @@ import { SeatingHandler } from '@/features/seating/api/seating.handler'
 
 const seatingHandler = new SeatingHandler()
 
-async function putHandler(request: AuthenticatedRequest, id: string) {
-  const userId = request.user!.id
-  return seatingHandler.update(request as any, userId, id)
+async function getHandler(request: AuthenticatedRequest) {
+  const url = new URL(request.url)
+  const tableId = url.pathname.split('/').pop()!
+  return await seatingHandler.getTableById(request, tableId)
 }
 
-async function deleteHandler(request: AuthenticatedRequest, id: string) {
-  const userId = request.user!.id
-  return seatingHandler.delete(request as any, userId, id)
+async function patchHandler(request: AuthenticatedRequest) {
+  const url = new URL(request.url)
+  const tableId = url.pathname.split('/').pop()!
+  return await seatingHandler.updateTable(request, tableId)
 }
 
-export const PUT = requireOnboarding(async (request: AuthenticatedRequest) => {
-  const id = request.url.split('/').pop()!
-  return putHandler(request, id)
-})
-export const DELETE = requireOnboarding(async (request: AuthenticatedRequest) => {
-  const id = request.url.split('/').pop()!
-  return deleteHandler(request, id)
-})
+async function deleteHandler(request: AuthenticatedRequest) {
+  const url = new URL(request.url)
+  const tableId = url.pathname.split('/').pop()!
+  return await seatingHandler.deleteTable(request, tableId)
+}
+
+export const GET = requireOnboarding(getHandler)
+export const PATCH = requireOnboarding(patchHandler)
+export const DELETE = requireOnboarding(deleteHandler)
+

@@ -70,6 +70,38 @@ export class SeatingService {
   }
 
   /**
+   * Create seats for an existing table
+   */
+  async createSeats(tableId: string, capacity: number): Promise<ServiceResult<any[]>> {
+    try {
+      if (!tableId) {
+        return {
+          success: false,
+          error: { message: 'Table ID is required', code: 'VALIDATION_ERROR', statusCode: 400 }
+        }
+      }
+      if (!Number.isFinite(capacity) || capacity < 1) {
+        return {
+          success: false,
+          error: { message: 'Capacity must be a positive number', code: 'VALIDATION_ERROR', statusCode: 400 }
+        }
+      }
+
+      const result = await this.repository.createSeats(tableId, capacity)
+      if (!result.success) {
+        return { success: false, error: result.error }
+      }
+      return { success: true, data: result.data || [] }
+    } catch (error) {
+      console.error('Error in SeatingService.createSeats:', error)
+      return {
+        success: false,
+        error: { message: 'Failed to create seats', code: 'SERVICE_ERROR', statusCode: 500 }
+      }
+    }
+  }
+
+  /**
    * Get a single table by ID
    */
   async getTableById(tableId: string): Promise<ServiceResult<TableResponse | null>> {
@@ -250,6 +282,23 @@ export class SeatingService {
   }
 
   /**
+   * Auto-assign guests to seats
+   */
+  async autoAssign(userId: string, allGuestIds: string[], groupByRelationship: boolean): Promise<ServiceResult<any[]>> {
+    try {
+      if (!Array.isArray(allGuestIds)) {
+        return { success: false, error: { message: 'Invalid guest list', code: 'VALIDATION_ERROR', statusCode: 400 } }
+      }
+      const result = await this.repository.autoAssign(userId, allGuestIds, groupByRelationship)
+      if (!result.success) return { success: false, error: result.error }
+      return { success: true, data: (result.data || []).map(this.transformTableToResponse) }
+    } catch (error) {
+      console.error('Error in SeatingService.autoAssign:', error)
+      return { success: false, error: { message: 'Failed to auto-assign', code: 'SERVICE_ERROR', statusCode: 500 } }
+    }
+  }
+
+  /**
    * Assign guest to seat
    */
   async assignGuestToSeat(seatId: string, data: AssignGuestToSeatInput): Promise<ServiceResult<boolean>> {
@@ -373,4 +422,3 @@ export class SeatingService {
     }
   }
 }
-

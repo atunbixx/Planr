@@ -25,9 +25,12 @@
     "import:vendors": "node scripts/import-temp-vendors.js",
     "import:guests": "node scripts/import-temp-guests.js",
     "import:tasks": "node scripts/import-temp-tasks.js",
-    "import:all": "npm run import:vendors && npm run import:budgets && npm run import:guests && npm run import:tasks"
+    "import:all": "npm run import:vendors && npm run import:budgets && npm run import:guests && npm run import:tasks",
+    "seed:directory": "node scripts/seed-directory-vendors.js",
+    "lint:colors": "node scripts/check-no-hex.js"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
     "@heroicons/react": "^2.2.0",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/client": "^6.14.0",
