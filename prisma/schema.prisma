@@ -172,25 +172,34 @@ model DirectoryInquiry {
 }
 
 model Guest {
-  id             String     @id @default(uuid()) 
-  userId         String     
-  name           String
-  rsvpStatus     RsvpStatus @default(pending)
-  mealPreference String?
-  side           Side?
-  invitationSent Boolean    @default(false)
-  // Phase 1 enhancements (optional, non-breaking)
-  plusOneAllowed Boolean    @default(false)
-  plusOneName    String?
-  householdId    String?
-  tags           String?
+  id                   String      @id @default(uuid())
+  userId               String
+  firstName            String
+  lastName             String?
+  email                String?
+  phone                String?
+  address              String?
+  relationship         String?
   relationshipCategory String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rsvp           RSVP?
-  seats          Seat[]
+  side                 Side?
+  rsvpStatus           RsvpStatus  @default(pending)
+  plusOneAllowed       Boolean     @default(false)
+  plusOneName          String?
+  attendingCount       Int         @default(1)
+  dietaryRestrictions  String?
+  notes                String?
+  tags                 String?
+  invitationSent       Boolean     @default(false)
+  invitationSentAt     DateTime?
+  rsvpDeadline         DateTime?
+  householdId          String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rsvp                 RSVP?
+  seats                Seat[]
 
+  @@unique([userId, email])
   @@map("guests")
 }
 
