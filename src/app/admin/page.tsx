@@ -1,108 +1,73 @@
-'use client'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { DashboardAdminService } from '@/features/admin/dashboard/dashboard.service';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
+import { Terminal } from 'lucide-react';
 
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import AdminToolbar from '@/components/admin/AdminToolbar'
-import { useAuth } from '@/hooks/useAuth'
-import AuthClient from '@/lib/auth/client'
+const service = new DashboardAdminService();
 
-export default function AdminOverviewPage() {
-  const { user, isLoading } = useAuth()
-  const router = useRouter()
-  const [data, setData] = useState<{ users: number; vendors: number; directoryVendors: number; regions: Array<{ region: string|null; _count: { _all: number } }> } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string| null>(null)
+const KpiCard = ({ title, value, change, isStub }: { title: string; value: number | string; change?: string; isStub?: boolean }) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      {isStub && <span className="text-xs text-muted-foreground">Stub</span>}
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+      {change && <p className="text-xs text-muted-foreground">{change} from last period</p>}
+    </CardContent>
+  </Card>
+);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const token = AuthClient.getToken()
-        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
-        const res = await fetch('/api/admin/overview', { headers })
-        if (!res.ok) {
-          const j = await res.json().catch(()=>({}))
-          throw new Error(j?.error?.message || 'Unauthorized')
-        }
-        const j = await res.json()
-        setData(j?.data)
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          setError(e.message)
-        } else {
-          setError('Failed to load')
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    if (!isLoading && user) load()
-  }, [user, isLoading])
-
-  if (isLoading || loading) {
-    return (
-      <div className="p-4 flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="p-4">
-        <h1 className="text-xl font-bold mb-2">Admin</h1>
-        <p className="text-red-500">{error}</p>
-      </div>
-    )
-  }
+const AdminDashboardPage = async () => {
+  const data = await service.getDashboardStats();
 
   return (
-    <div className="p-3">
-      <div className="flex items-center gap-2 mb-3">
-        <h1 className="text-2xl font-bold">Super Admin</h1>
-        <Badge>Preview</Badge>
-        <div className="flex-1" />
-        <Button onClick={()=>router.push('/dashboard')}>Back to Dashboard</Button>
+    <>
+      <Breadcrumb pageName="Dashboard" />
+
+      {data.incidentBanner.show && data.incidentBanner.isStub && (
+        <Alert className="mb-6">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Heads up!</AlertTitle>
+          <AlertDescription>{data.incidentBanner.message}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <KpiCard title="DAU" value={data.kpis.dau.value} change={data.kpis.dau.change} isStub={data.kpis.dau.isStub} />
+        <KpiCard title="WAU" value={data.kpis.wau.value} change={data.kpis.wau.change} isStub={data.kpis.wau.isStub} />
+        <KpiCard title="MAU" value={data.kpis.mau.value} change={data.kpis.mau.change} isStub={data.kpis.mau.isStub} />
+        <KpiCard title="Open Tickets" value={data.kpis.openTickets.value} change={data.kpis.openTickets.change} isStub={data.kpis.openTickets.isStub} />
+        <KpiCard title="Deliverability" value={`${data.kpis.deliverability.value}%`} change={data.kpis.deliverability.change} isStub={data.kpis.deliverability.isStub} />
+        <KpiCard title="Sanctions Today" value={data.kpis.sanctionsToday.value} isStub={data.kpis.sanctionsToday.isStub} />
       </div>
-      <AdminToolbar />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div className="mt-8">
         <Card>
-            <CardHeader>
-                <CardTitle>Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-2xl font-bold">{data?.users ?? 0}</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Private Vendors</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-2xl font-bold">{data?.vendors ?? 0}</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Directory Vendors</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-2xl font-bold">{data?.directoryVendors ?? 0}</p>
-            </CardContent>
-        </Card>
-        <Card className="col-span-1 sm:col-span-2 lg:col-span-3">
-            <CardHeader>
-                <CardTitle>Regions</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-                {(data?.regions || []).map((r, i) => (
-                    <Badge key={i} variant="secondary">{r.region || 'N/A'} • {r._count?._all ?? 0}</Badge>
-                ))}
-            </CardContent>
+          <CardHeader>
+            <CardTitle>Vendor Score Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {data.vendorScoreDistribution.map((item) => (
+                <div key={item.range} className="flex items-center">
+                  <div className="w-24 text-sm text-muted-foreground">{item.range}</div>
+                  <div className="flex-1 bg-secondary rounded-full h-4">
+                    <div
+                      className="bg-primary h-4 rounded-full"
+                      style={{ width: `${item.count}%` }} // Note: This is a simple percentage, not scaled to max
+                    />
+                  </div>
+                  <div className="w-12 text-right text-sm font-bold">{item.count}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
       </div>
-    </div>
-  )
-}
+    </>
+  );
+};
+
+export default AdminDashboardPage;
