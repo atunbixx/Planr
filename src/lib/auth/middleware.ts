@@ -43,45 +43,54 @@ export async function authenticateRequest(request: NextRequest): Promise<{
     // Verify the JWT token
     const payload: JWTPayload = JWTService.verifyToken(token)
 
-    // Fetch the user from database or temp storage to ensure they still exist
-    let user: (AuthenticatedUser & { isActive?: boolean }) | null = null
+    // Fetch the user from database to ensure they still exist
+    let userWithProfile: any = null;
     try {
-      user = await prisma.user.findUnique({
+      userWithProfile = await prisma.user.findUnique({
         where: { id: payload.userId },
         select: {
           id: true,
           email: true,
-          role: true,
           onboardingCompleted: true,
           isActive: true,
-        }
-      })
-    } catch (_) {
-      console.log('Database not available, using temp storage for auth')
-      const tempUser = await tempStorage.findUserById(payload.userId)
+          profile: {
+            select: {
+              role: true,
+            },
+          },
+        },
+      });
+    } catch (e) {
+      console.error('DB error during auth, trying temp storage.', e);
+      // Fallback to temp storage if DB is down
+      const tempUser = await tempStorage.findUserById(payload.userId);
       if (tempUser) {
-        user = {
+        userWithProfile = {
           id: tempUser.id,
           email: tempUser.email,
-          role: tempUser.role,
-          onboardingCompleted: tempUser.onboardingCompleted
-        }
+          onboardingCompleted: tempUser.onboardingCompleted,
+          isActive: true,
+          // Temp storage doesn't have profiles, so assign a default role
+          profile: { role: 'USER' },
+        };
       }
     }
 
-    if (!user) {
+    if (!userWithProfile) {
       return {
         success: false,
         error: 'User not found'
       }
     }
 
-    if (user.isActive === false) {
+    if (userWithProfile.isActive === false) {
       return {
         success: false,
         error: 'Account deactivated'
       }
     }
+
+    const userRole = userWithProfile.profile?.role || 'USER';
 
     // Best-effort: record/update a session for analytics/admin
     try {
@@ -93,12 +102,12 @@ export async function authenticateRequest(request: NextRequest): Promise<{
       const city = request.headers.get('x-vercel-ip-city') || undefined
       const ipHash = ip ? hashString(ip) : null
       const uaHash = ua ? hashString(ua) : null
-      if (prisma && user.id) {
-        const existing = await prisma.session.findFirst({ where: { userId: user.id, ipHash: ipHash || undefined, uaHash: uaHash || undefined, revokedAt: null } })
+      if (prisma && userWithProfile.id) {
+        const existing = await prisma.session.findFirst({ where: { userId: userWithProfile.id, ipHash: ipHash || undefined, uaHash: uaHash || undefined, revokedAt: null } })
         if (existing) {
           await prisma.session.update({ where: { id: existing.id }, data: { lastActiveAt: new Date() } })
         } else {
-          await prisma.session.create({ data: { userId: user.id, ipHash, uaHash, region: region || null, country: country || null, city: city || null } })
+          await prisma.session.create({ data: { userId: userWithProfile.id, ipHash, uaHash, region: region || null, country: country || null, city: city || null } })
         }
       }
     } catch (_) {
@@ -108,10 +117,10 @@ export async function authenticateRequest(request: NextRequest): Promise<{
     return {
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        onboardingCompleted: user.onboardingCompleted,
+        id: userWithProfile.id,
+        email: userWithProfile.email,
+        role: userRole,
+        onboardingCompleted: userWithProfile.onboardingCompleted,
         impersonating: Boolean(payload.impBy),
         impersonatedBy: payload.impBy,
       }

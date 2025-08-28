@@ -1,168 +1,259 @@
 /* eslint-disable no-console */
-const { PrismaClient } = require('@prisma/client')
-const bcrypt = require('bcryptjs')
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
+
+// --- HELPERS ---
+const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const getRandomDate = (start, end) => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+const hashData = (data) => crypto.createHash('sha256').update(data).digest('hex');
+
+// --- DATA DEFINITIONS ---
+const ROLES = ['USER', 'USER', 'USER', 'USER', 'MODERATOR', 'SUPPORT', 'ADMIN', 'OWNER']; // Skewed towards USER
+const PLANS = ['free', 'pro', 'enterprise'];
+const LOCATIONS = [
+  { country: 'NG', state: 'Lagos', city: 'Ikeja' },
+  { country: 'NG', state: 'Abuja', city: 'Garki' },
+  { country: 'UK', state: 'London', city: 'London' },
+  { country: 'US', state: 'California', city: 'Los Angeles' },
+  { country: 'US', state: 'New York', city: 'New York City' },
+];
+const VENDOR_CATEGORIES = ['photographer', 'caterer', 'venue', 'makeup', 'decorator', 'music'];
+const VENDOR_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED', 'BANNED', 'UNLISTED'];
+const VERIFICATION_STATUSES = ['NONE', 'PENDING', 'VERIFIED', 'EXPIRED', 'REJECTED'];
+const SANCTION_TYPES = ['WARN', 'THROTTLE', 'SUSPEND', 'BAN'];
+const APPROVAL_TYPES = ['VENDOR', 'LISTING', 'KYC', 'QUOTA'];
+const CREDIT_TYPES = ['SYSTEM', 'PROMO', 'MANUAL', 'REFUND'];
+const VENDOR_EVENT_TYPES = ['LEAD_ACCEPTED', 'LEAD_IGNORED', 'DISPUTE', 'DOC_UPLOADED', 'VERIFIED'];
 
 async function main() {
-  // Try creating a local seed user if schema supports it
-  let user = null
-  try {
-    const email = process.env.SEED_EMAIL || 'seed@example.com'
-    const password = process.env.SEED_PASSWORD || 'password123'
-    const hashed = await bcrypt.hash(password, 10)
-    user = await prisma.user.findUnique({ where: { email } }).catch(() => null)
-    if (!user) {
-      user = await prisma.user.create({ data: { email, password: hashed, role: 'couple', onboardingCompleted: true } })
-      console.log(`Created user ${email} (password: ${password})`)
-    } else {
-      console.log(`Using existing user ${email}`)
-    }
-  } catch (e) {
-    console.warn('Skipping seed user creation (schema may differ):', e?.meta?.column || e?.message)
+  console.log('Starting seed...');
+
+  // --- CLEAN UP ---
+  console.log('Cleaning up old data...');
+  // In reverse order of dependency
+  await prisma.vendorEvent.deleteMany().catch(e => console.log('ignore vendor event cleanup'));
+  await prisma.vendorSanction.deleteMany().catch(e => console.log('ignore vendor sanction cleanup'));
+  await prisma.vendorVerification.deleteMany().catch(e => console.log('ignore vendor verification cleanup'));
+  await prisma.vendorSignal.deleteMany().catch(e => console.log('ignore vendor signal cleanup'));
+  await prisma.auditLog.deleteMany().catch(e => console.log('ignore audit log cleanup'));
+  await prisma.featureFlag.deleteMany().catch(e => console.log('ignore feature flag cleanup'));
+  await prisma.approvalQueue.deleteMany().catch(e => console.log('ignore approval queue cleanup'));
+  await prisma.sanction.deleteMany().catch(e => console.log('ignore sanction cleanup'));
+  await prisma.broadcast.deleteMany().catch(e => console.log('ignore broadcast cleanup'));
+  await prisma.creditLedger.deleteMany().catch(e => console.log('ignore credit ledger cleanup'));
+
+  // Have to delete vendors before user profiles because of the relation
+  await prisma.vendor.deleteMany().catch(e => console.log('ignore vendor cleanup'));
+  await prisma.userProfile.deleteMany().catch(e => console.log('ignore user profile cleanup'));
+
+  // Delete all other tables that might have relations to User
+  await prisma.weddingDetails.deleteMany().catch(e => console.log('ignore wedding details cleanup'));
+  await prisma.session.deleteMany().catch(e => console.log('ignore session cleanup'));
+  await prisma.guest.deleteMany().catch(e => console.log('ignore guest cleanup'));
+  await prisma.budget.deleteMany().catch(e => console.log('ignore budget cleanup'));
+  await prisma.task.deleteMany().catch(e => console.log('ignore task cleanup'));
+  await prisma.invite.deleteMany().catch(e => console.log('ignore invite cleanup'));
+  await prisma.creditBalance.deleteMany().catch(e => console.log('ignore credit balance cleanup'));
+  await prisma.message.deleteMany().catch(e => console.log('ignore message cleanup'));
+
+  await prisma.user.deleteMany().catch(e => console.log('ignore user cleanup'));
+
+
+  // --- CREATE USERS & PROFILES ---
+  console.log('Creating users and profiles...');
+  const users = [];
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  for (let i = 0; i < 300; i++) {
+    const email = `user${i}@planr.dev`;
+    const location = getRandomElement(LOCATIONS);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        onboardingCompleted: true,
+        profile: {
+          create: {
+            role: getRandomElement(ROLES),
+            plan: getRandomElement(PLANS),
+            country: location.country,
+            state: location.state,
+            city: location.city,
+          },
+        },
+      },
+      include: {
+        profile: true,
+      },
+    });
+    users.push(user);
   }
+  console.log(`Created ${users.length} users.`);
+  const adminUser = users.find(u => u.profile.role === 'ADMIN') || users[0];
 
-  if (user) {
-    try {
-      await prisma.weddingDetails.upsert({
-        where: { userId: user.id },
-        update: { venue: 'Garden Wedding Venue', weddingDate: new Date('2025-06-15'), budget: 25000, guestCount: 120 },
-        create: { userId: user.id, venue: 'Garden Wedding Venue', weddingDate: new Date('2025-06-15'), budget: 25000, guestCount: 120 }
-      })
+  // --- CREATE VENDORS ---
+  console.log('Creating vendors...');
+  const vendors = [];
+  for (let i = 0; i < 100; i++) {
+    const owner = getRandomElement(users);
+    const location = getRandomElement(LOCATIONS);
+    const vendor = await prisma.vendor.create({
+      data: {
+        ownerUserId: owner.id,
+        name: `${location.city} ${getRandomElement(VENDOR_CATEGORIES)} ${i}`,
+        slug: `${location.city.toLowerCase().replace(/ /g, '-')}-${getRandomElement(VENDOR_CATEGORIES)}-${i}`,
+        category: getRandomElement(VENDOR_CATEGORIES),
+        country: location.country,
+        state: location.state,
+        city: location.city,
+        status: getRandomElement(VENDOR_STATUSES),
+        verification: getRandomElement(VERIFICATION_STATUSES),
+        score: getRandomInt(20, 95),
+        flagged: Math.random() > 0.9,
+      },
+    });
+    vendors.push(vendor);
+  }
+  console.log(`Created ${vendors.length} vendors.`);
 
-      const guests = [
-        { name: 'Alice Johnson', side: 'bride', mealPreference: 'vegetarian' },
-        { name: 'Bob Smith', side: 'groom', mealPreference: 'none' },
-        { name: 'Carol White', side: 'bride', mealPreference: 'vegan' },
-      ]
-      for (const g of guests) {
-        await prisma.guest.create({ data: { userId: user.id, name: g.name, side: g.side, mealPreference: g.mealPreference } }).catch(() => {})
-      }
+  // --- CREATE DUPLICATE VENDOR CLUSTERS ---
+  console.log('Creating duplicate vendor clusters...');
+  for (let i = 0; i < 10; i++) {
+    const sharedEmail = `cluster${i}@planr.dev`;
+    const sharedPhone = `+1-555-CLUSTER-${i}`;
+    const sharedIp = `192.168.1.${i}`;
+    const sharedDevice = `device-cluster-${i}`;
 
-      const vendors = [
-        { name: 'Sunset Photography', category: 'photographer', status: 'booked', slug: 'sunset-photography' },
-        { name: 'Bloom Florals', category: 'florist', status: 'inquiry', slug: 'bloom-florals' },
-        { name: 'Grand Catering', category: 'catering', status: 'quoted', slug: 'grand-catering' },
-      ]
-      for (const v of vendors) {
-        await prisma.vendor.create({ data: { userId: user.id, name: v.name, category: v.category, status: v.status, slug: v.slug } }).catch(() => {})
-      }
+    const emailHash = hashData(sharedEmail);
+    const phoneHash = hashData(sharedPhone);
+    const ipHash = hashData(sharedIp);
+    const deviceHash = hashData(sharedDevice);
 
-      const budgets = [
-        { category: 'Venue', amount: 10000, allocated: 8000, actual: 0, status: 'planned' },
-        { category: 'Catering', amount: 8000, allocated: 0, actual: 0, status: 'planned' },
-        { category: 'Photography', amount: 3000, allocated: 0, actual: 0, status: 'planned' },
-      ]
-      for (const b of budgets) {
-        await prisma.budget.create({ data: { userId: user.id, ...b } }).catch(() => {})
-      }
-
-      // Seed RSVP and messaging data if new schema is available
-      try {
-        // Create credit balance
-        await prisma.creditBalance.upsert({
-          where: { userId: user.id },
-          update: { credits: 100 },
-          create: { userId: user.id, credits: 100 }
-        })
-
-        // Create sample invites
-        const invites = [
-          { email: 'alice@example.com', token: 'invite_alice_123', country: 'NG' },
-          { email: 'bob@example.com', token: 'invite_bob_456', country: 'US' },
-          { email: 'carol@example.com', token: 'invite_carol_789', country: 'NG' }
-        ]
-        
-        for (const invite of invites) {
-          const createdInvite = await prisma.invite.create({
-            data: { userId: user.id, ...invite }
-          }).catch(() => null)
-
-          // Create sample RSVP for first invite
-          if (createdInvite && invite.email === 'alice@example.com') {
-            await prisma.inviteRSVP.create({
-              data: {
-                userId: user.id,
-                inviteId: createdInvite.id,
-                email: invite.email,
-                status: 'accepted',
-                partySize: 2,
-                notes: 'Looking forward to celebrating with you!'
-              }
-            }).catch(() => {})
+    // Create 2-3 vendors in this cluster
+    for (let j = 0; j < getRandomInt(2, 3); j++) {
+      const owner = getRandomElement(users);
+      const location = getRandomElement(LOCATIONS);
+      const vendor = await prisma.vendor.create({
+        data: {
+          ownerUserId: owner.id,
+          name: `Cluster ${i} Vendor ${j}`,
+          slug: `cluster-${i}-vendor-${j}`,
+          category: 'venue',
+          country: location.country,
+          state: location.state,
+          city: location.city,
+          flagged: true, // Auto-flag clusters
+          signals: {
+            create: {
+              emailHash: j === 0 ? emailHash : null, // one has email
+              phoneHash: j === 1 ? phoneHash : null, // another has phone
+              ipHash: ipHash, // all share ip
+              deviceHash: deviceHash, // all share device
+            }
           }
-        }
-
-        console.log('Seeded RSVP and messaging data')
-      } catch (e) {
-        console.warn('Skipping RSVP/messaging seed data (new schema not applied yet):', e?.message)
-      }
-    } catch (e) {
-      console.warn('Skipping couple-specific seed data due to schema constraints')
+        },
+      });
     }
-    // Seed demo tasks for the user
-    try {
-      const in14d = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-      const in21d = new Date(Date.now() + 21 * 24 * 60 * 60 * 1000)
-      const in30d = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      const demoTasks = [
-        { title: 'Book photographer', category: 'Photography', priority: 'high', status: 'in_progress', dueDate: in14d },
-        { title: 'Send invites', category: 'Invitations', priority: 'medium', status: 'pending', dueDate: in21d },
-        { title: 'Finalize menu', category: 'Catering', priority: 'medium', status: 'pending', dueDate: in30d },
-      ]
-      for (const t of demoTasks) {
-        await prisma.task.create({ data: { userId: user.id, ...t } }).catch(() => {})
-      }
-      console.log('Seeded demo tasks')
-    } catch (e) {
-      console.warn('Skipping demo tasks seeding:', e?.message)
+  }
+  console.log('Created 10 duplicate vendor clusters.');
+
+  // --- CREATE OTHER ADMIN-RELATED DATA ---
+  console.log('Creating sanctions, approvals, broadcasts, etc...');
+
+  // Sanctions
+  for (let i = 0; i < 10; i++) {
+    await prisma.sanction.create({
+      data: {
+        userId: getRandomElement(users).id,
+        type: getRandomElement(SANCTION_TYPES),
+        reasonCode: `SEED_REASON_${i}`,
+        notes: 'This is a seed sanction.',
+        createdBy: adminUser.id,
+        expiresAt: Math.random() > 0.5 ? getRandomDate(new Date(), new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) : null,
+      },
+    });
+  }
+
+  // Approval Queue
+  for (let i = 0; i < 20; i++) {
+    await prisma.approvalQueue.create({
+      data: {
+        targetType: getRandomElement(APPROVAL_TYPES),
+        targetId: getRandomElement(vendors).id,
+        status: getRandomElement(['PENDING', 'APPROVED', 'REJECTED']),
+        submittedBy: getRandomElement(users).id,
+        reviewedBy: adminUser.id,
+        notes: 'Seed approval item.',
+        reviewedAt: new Date(),
+      },
+    });
+  }
+
+  // Broadcasts
+  await prisma.broadcast.create({
+    data: {
+      title: 'Welcome to Planr Pro!',
+      body: 'Here are the new features you have access to...',
+      channel: 'EMAIL',
+      segmentJson: { plan: 'pro' },
+      createdBy: adminUser.id,
+    },
+  });
+
+  // Feature Flags
+  await prisma.featureFlag.create({
+    data: {
+      key: 'new-dashboard',
+      type: 'BOOLEAN',
+      enabled: true,
+    },
+  });
+  await prisma.featureFlag.create({
+    data: {
+      key: 'new-vendor-scoring',
+      type: 'PERCENT_ROLL',
+      percent: 50,
+    },
+  });
+
+  // Credit Ledger
+  for (let i = 0; i < 50; i++) {
+    await prisma.creditLedger.create({
+      data: {
+        userId: getRandomElement(users).id,
+        delta: getRandomInt(-100, 100),
+        type: getRandomElement(CREDIT_TYPES),
+        reason: 'Seed credit entry',
+        createdBy: adminUser.id,
+      },
+    });
+  }
+
+  // Vendor Events
+  for (const vendor of vendors) {
+    if (!vendor) continue;
+    for (let i = 0; i < getRandomInt(1, 5); i++) {
+      await prisma.vendorEvent.create({
+        data: {
+          vendorId: vendor.id,
+          type: getRandomElement(VENDOR_EVENT_TYPES),
+          meta: { seed: true, detail: `Event #${i}` },
+        },
+      });
     }
   }
 
-  // Directory Vendors (public directory) - seed a few if table exists and empty
-  try {
-    const count = await prisma.directoryVendor.count()
-    if (count === 0) {
-      const dirVendors = [
-        {
-          name: 'Lumiere Photography', category: 'photographer', city: 'Lagos', region: 'NG', priceBand: '$$', averageRating: 5, reviewCount: 42,
-          shortDescription: 'Editorial wedding photography with timeless style.',
-          description: 'We capture authentic moments with refined artistry across Nigeria and destination weddings.',
-          photos: ['https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop'],
-          website: 'https://example.com/lumiere', email: 'hello@lumiere.com', phone: '+2348000000000', tags: ['editorial','timeless']
-        },
-        {
-          name: 'Emerald Events Venue', category: 'venue', city: 'Abuja', region: 'NG', priceBand: '$$$', averageRating: 4, reviewCount: 28,
-          shortDescription: 'Garden venue for ceremonies and receptions.',
-          description: 'Beautiful landscaped grounds with indoor and outdoor options for up to 300 guests.',
-          photos: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop'],
-          website: 'https://example.com/emerald', email: 'bookings@emerald.com', phone: '+2348000000001', tags: ['garden','outdoor']
-        },
-        {
-          name: 'Silk & Stone Catering', category: 'catering', city: 'Lagos', region: 'NG', priceBand: '$$', averageRating: 5, reviewCount: 61,
-          shortDescription: 'Modern menus with classic flavors.',
-          description: 'Custom wedding menus, tastings, and full-service staffing available.',
-          photos: ['https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop'],
-          website: 'https://example.com/silkstone', email: 'events@silkstone.com', phone: '+2348000000002', tags: ['modern','fusion']
-        },
-      ]
-      for (const v of dirVendors) {
-        await prisma.directoryVendor.create({ data: v })
-      }
-      console.log('Seeded directory vendors')
-    }
-  } catch (e) {
-    console.log('DirectoryVendor table not ready, skipping seed')
-  }
-
-  console.log('Seed completed')
+  console.log('Seed completed successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
