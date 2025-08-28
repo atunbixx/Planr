@@ -95,5 +95,44 @@ export class VendorsAdminService {
     });
   }
 
+  async addPromoCredits(
+    vendorId: string,
+    input: { delta: number; reason: string; },
+    actorId: string
+  ) {
+    return this.repository.withTransaction(async (tx) => {
+      // First, find the vendor to get the owner's user ID
+      const vendor = await tx.vendor.findUnique({
+        where: { id: vendorId },
+        select: { ownerUserId: true },
+      });
+
+      if (!vendor) {
+        throw new Error('Vendor not found');
+      }
+
+      const creditRecord = await this.repository.addCredits(tx, {
+        userId: vendor.ownerUserId,
+        delta: input.delta,
+        reason: input.reason,
+        type: 'PROMO', // Specifically for vendor promotions
+        createdBy: actorId,
+      });
+
+      await this.repository.logAudit(tx, {
+        actorId: actorId,
+        action: 'admin.vendor.credits.add',
+        targetId: vendorId,
+        meta: {
+          ...input,
+          ownerUserId: vendor.ownerUserId,
+          creditRecordId: creditRecord.id,
+        },
+      });
+
+      return creditRecord;
+    });
+  }
+
   // I will add more methods here for other vendor endpoints.
 }

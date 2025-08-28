@@ -114,5 +114,11 @@ export class VendorsAdminRepository extends BaseRepository {
     return tx.vendor.update({ where: { id: vendorId }, data: { status } });
   }
 
+  // This is for vendor promo credits. Note that CreditLedger is tied to a user.
+  // The service layer will handle mapping vendor -> owner user.
+  async addCredits(tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>, data: Prisma.CreditLedgerUncheckedCreateInput) {
+    return tx.creditLedger.create({ data });
+  }
+
   // I will add more methods here for other vendor endpoints.
 }

@@ -20,6 +20,12 @@ export const verifyVendorSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+export const addVendorCreditsSchema = z.object({
+  delta: z.number().int().refine(d => d !== 0, { message: 'Delta cannot be zero' }),
+  reason: z.string().min(3),
+  idempotencyKey: z.string().uuid().optional(),
+});
+
 export const sanctionVendorSchema = z.object({
   type: z.enum(['WARN', 'THROTTLE', 'SUSPEND', 'BAN', 'SHADOW_LIMIT']),
   reasonCode: z.string().min(3),
