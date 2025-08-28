@@ -120,5 +120,44 @@ export class VendorsAdminRepository extends BaseRepository {
     return tx.creditLedger.create({ data });
   }
 
+  async findVendorsWithMatchingSignals(vendorId: string) {
+    // 1. Get the primary vendor's signals
+    const primarySignal = await this.db.vendorSignal.findFirst({
+      where: { vendorId },
+    });
+
+    if (!primarySignal) {
+      return { primarySignal: null, matchingSignals: [] };
+    }
+
+    // 2. Collect all non-null hash values from the primary vendor's signal record
+    const hashesToFind: Prisma.VendorSignalWhereInput[] = [];
+    if (primarySignal.emailHash) hashesToFind.push({ emailHash: primarySignal.emailHash });
+    if (primarySignal.phoneHash) hashesToFind.push({ phoneHash: primarySignal.phoneHash });
+    if (primarySignal.deviceHash) hashesToFind.push({ deviceHash: primarySignal.deviceHash });
+    if (primarySignal.ipHash) hashesToFind.push({ ipHash: primarySignal.ipHash });
+    if (primarySignal.bankHash) hashesToFind.push({ bankHash: primarySignal.bankHash });
+    if (primarySignal.addressHash) hashesToFind.push({ addressHash: primarySignal.addressHash });
+
+    if (hashesToFind.length === 0) {
+      return { primarySignal, matchingSignals: [] };
+    }
+
+    // 3. Find other vendor signals that match any of these hashes
+    const matchingSignals = await this.db.vendorSignal.findMany({
+      where: {
+        vendorId: { not: vendorId }, // Exclude the original vendor
+        OR: hashesToFind,
+      },
+      include: {
+        vendor: {
+          select: { id: true, name: true, slug: true, status: true },
+        },
+      },
+    });
+
+    return { primarySignal, matchingSignals };
+  }
+
   // I will add more methods here for other vendor endpoints.
 }
