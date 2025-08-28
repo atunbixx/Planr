@@ -3,396 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id                  String          @id @default(uuid())
-  email               String          @unique
-  password            String
-  role                UserRole        @default(couple)
-  isActive            Boolean         @default(true)
-  onboardingCompleted Boolean         @default(false)
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  budgets             Budget[]
-  guests              Guest[]
-  vendors             Vendor[]
-  tasks               Task[]
-  tables              Table[]
-  sessions            Session[]
-  weddingDetails      WeddingDetails?
-  assignedTasks       TaskAssignment[] @relation("TaskAssignee")
-  assignedByTasks     TaskAssignment[] @relation("TaskAssigner")
-  // New RSVP and messaging relations
-  invites             Invite[]
-  inviteRsvps         InviteRSVP[]
-  credits             CreditBalance?
-  messages            Message[]
+// ENUMS
 
-  @@map("users")
-}
-
-model WeddingDetails {
-  userId      String    @id 
-  venue       String?
-  weddingDate DateTime?
-  budget      Decimal?  
-  guestCount  Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("wedding_details")
-}
-
-model Vendor {
-  id           String        @id @default(uuid()) 
-  userId       String        
-  name         String
-  category     String
-  priceRange   String?
-  contact      String?
-  website      String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  status       VendorStatus?
-  rating       Int?          
-  isfavorite   Boolean?      @default(false)
-  email        String?
-  phone        String?
-  address      String?
-  city         String?
-  tags         String?
-  notes        String?
-  quoteamount  Decimal?      
-  bookeddate   DateTime?
-  instagramurl String?
-  logourl      String?
-  slug         String?       @unique // New field for public vendor pages
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, category], map: "vendors_userid_category_idx")
-  @@index([userId, createdAt], map: "vendors_userid_createdat_idx")
-  @@index([userId, status], map: "vendors_userid_status_idx")
-  @@index([slug], map: "vendors_slug_idx")
-  @@map("vendors")
-}
-
-// Public directory vendors (global, not user-scoped)
-model DirectoryVendor {
-  id              String   @id @default(uuid()) 
-  ownerUserId     String?  
-  name            String
-  category        String
-  city            String?
-  region          String?
-  priceBand       String? // e.g., $, $$, $$$
-  averageRating   Int?     
-  reviewCount     Int?     @default(0)
-  shortDescription String?
-  description     String?
-  photos          String?
-  website         String?
-  // Normalized anti-abuse fields
-  websiteHost     String?
-  email           String?
-  emailLower      String?
-  phone           String?
-  phoneDigits     String?
-  address         String?
-  latitude        Float?
-  longitude       Float?
-  tags            String?
-  // Anti-abuse flags
-  fraudFlags      String?
-  duplicateOfId   String?  
-  isSuspended     Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([category, region], map: "dirvendors_category_region_idx")
-  @@index([averageRating, reviewCount], map: "dirvendors_rating_reviews_idx")
-  @@index([ownerUserId], map: "dirvendors_owner_idx")
-  @@index([websiteHost], map: "dirvendors_websitehost_idx")
-  @@index([emailLower], map: "dirvendors_emaillower_idx")
-  @@index([phoneDigits], map: "dirvendors_phonedigits_idx")
-  @@map("directory_vendors")
-}
-
-model AdminAuditLog {
-  id          String   @id @default(uuid()) 
-  adminUserId String   
-  action      String
-  targetType  String
-  targetId    String
-  details     Json?
-  ip          String?
-  ua          String?
-  createdAt   DateTime @default(now())
-
-  @@index([adminUserId, createdAt], map: "admin_audit_admin_created_idx")
-  @@index([targetType, targetId, createdAt], map: "admin_audit_target_idx")
-  @@map("admin_audit_logs")
-}
-
-model Session {
-  id           String   @id @default(uuid()) 
-  userId       String   
-  ipHash       String?
-  uaHash       String?
-  region       String?
-  country      String?
-  city         String?
-  createdAt    DateTime @default(now())
-  lastActiveAt DateTime @default(now())
-  revokedAt    DateTime?
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, lastActiveAt], map: "sessions_user_lastactive_idx")
-  @@index([revokedAt], map: "sessions_revoked_idx")
-  @@map("sessions")
-}
-
-model DirectoryInquiry {
-  id          String   @id @default(uuid()) 
-  vendorId    String   
-  name        String
-  email       String
-  phone       String?
-  message     String
-  eventDate   DateTime?
-  budget      Decimal? 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([vendorId, createdAt], map: "dirinquiries_vendor_created_idx")
-  @@map("directory_inquiries")
-}
-
-model Guest {
-  id             String     @id @default(uuid()) 
-  userId         String     
-  name           String
-  rsvpStatus     RsvpStatus @default(pending)
-  mealPreference String?
-  side           Side?
-  invitationSent Boolean    @default(false)
-  // Phase 1 enhancements (optional, non-breaking)
-  plusOneAllowed Boolean    @default(false)
-  plusOneName    String?
-  householdId    String?
-  tags           String?
-  relationshipCategory String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rsvp           RSVP?
-  seats          Seat[]
-
-  @@map("guests")
-}
-
-model RSVP {
-  guestId       String     @id 
-  status        RsvpStatus @default(pending)
-  dateResponded DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  guest         Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
-
-  @@map("rsvps")
-}
-
-model Budget {
-  id        String       @id @default(uuid()) 
-  userId    String       
-  category  String
-  amount    Decimal      
-  allocated Decimal      
-  actual    Decimal      @default(0) 
-  status    BudgetStatus @default(planned)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("budgets")
-}
-
-model Task {
-  id          String       @id @default(uuid()) 
-  userId      String       
-  title       String
-  description String?
-  category    String?      // e.g., "Venue", "Catering", "Photography"
-  priority    TaskPriority @default(medium)
-  status      TaskStatus   @default(pending)
-  dueDate     DateTime?
-  completedAt DateTime?
-  assignedTo  String?      // "bride", "groom", "planner", or specific user email
-  isTemplate  Boolean      @default(false) // true for template tasks
-  templateId  String?      // reference to template this task was created from
-  timeline    String?      // "12_months", "6_months", "3_months", "1_month", "1_week"
-  order       Int?         // for ordering within categories
-  tags        String?
-  notes       String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assignments TaskAssignment[]
-
-  @@index([userId, status], map: "tasks_user_status_idx")
-  @@index([userId, dueDate], map: "tasks_user_duedate_idx")
-  @@index([userId, category], map: "tasks_user_category_idx")
-  @@index([isTemplate, timeline], map: "tasks_template_timeline_idx")
-  @@map("tasks")
-}
-
-model TaskAssignment {
-  id          String     @id @default(uuid()) 
-  taskId      String     
-  assigneeId  String     
-  assignedBy  String     
-  status      TaskStatus @default(pending)
-  notes       String?
-  dueDate     DateTime?
-  assignedAt  DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
-  assigner    User       @relation("TaskAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
-
-  @@unique([taskId, assigneeId])
-  @@map("task_assignments")
-}
-
-model Table {
-  id          String      @id @default(uuid()) 
-  userId      String      
-  name        String      // e.g., "Table 1", "Head Table", "Family Table"
-  shape       TableShape  @default(round)
-  capacity    Int         // maximum number of seats
-  positionX   Float       @default(0) // x coordinate on the floor plan
-  positionY   Float       @default(0) // y coordinate on the floor plan
-  rotation    Float       @default(0) // rotation angle in degrees
-  width       Float?      // width for rectangular tables
-  height      Float?      // height for rectangular tables
-  diameter    Float?      // diameter for round tables
-  color       String?     // hex color for visual customization
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  seats       Seat[]
-
-  @@index([userId], map: "tables_user_idx")
-  @@map("tables")
-}
-
-model Seat {
-  id          String    @id @default(uuid()) 
-  tableId     String    
-  guestId     String?    // null if seat is empty
-  seatNumber  Int       // seat position at the table (1, 2, 3, etc.)
-  positionX   Float     @default(0) // relative position on the table
-  positionY   Float     @default(0) // relative position on the table
-  isHost      Boolean   @default(false) // special designation (bride, groom, etc.)
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  table       Table     @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  guest       Guest?    @relation(fields: [guestId], references: [id], onDelete: SetNull)
-
-  @@unique([tableId, seatNumber], map: "seats_table_number_unique")
-  @@index([tableId], map: "seats_table_idx")
-  @@index([guestId], map: "seats_guest_idx")
-  @@map("seats")
-}
-
-// New models for RSVP and messaging system
-model Invite {
-  id        String   @id @default(uuid()) 
-  userId    String   
-  email     String
-  token     String   @unique
-  country   String?  // ISO country code for pricing (e.g., "NG", "US")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rsvps     InviteRSVP[]
-
-  @@index([userId], map: "invites_user_idx")
-  @@index([token], map: "invites_token_idx")
-  @@map("invites")
-}
-
-model InviteRSVP {
-  id         String     @id @default(uuid()) 
-  userId     String     
-  inviteId   String     
-  email      String
-  status     RsvpStatus @default(pending)
-  partySize  Int        @default(1)
-  notes      String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invite     Invite     @relation(fields: [inviteId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, email], map: "invite_rsvps_user_email_unique")
-  @@index([userId], map: "invite_rsvps_user_idx")
-  @@index([inviteId], map: "invite_rsvps_invite_idx")
-  @@map("invite_rsvps")
-}
-
-model CreditBalance {
-  userId    String   @id 
-  credits   Int      @default(0)
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("credit_balances")
-}
-
-// Messaging history
-enum MessageStatus {
-  sent
-  queued
-  failed
-  delivered
-}
-
-model Message {
-  id                String        @id @default(uuid())
-  userId            String
-  channel           String        // 'email' | 'sms' | 'whatsapp'
-  recipient         String        // email or phone
-  subject           String?
-  content           String?
-  provider          String?
-  providerMessageId String?
-  status            MessageStatus @default(sent)
-  cost              Int           @default(0)
-  currency          String        @default("credits")
-  createdAt         DateTime      @default(now())
-  deliveredAt       DateTime?
-  errorCode         String?
-  errorMessage      String?
-  metadata          Json?
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt], map: "messages_user_created_idx")
-  @@index([status, createdAt], map: "messages_status_created_idx")
-  @@map("messages")
-}
-
-enum UserRole {
-  couple
-  planner
-  vendor
-}
-
+// Keep existing enums not explicitly replaced, for now.
+// They might be used by parts of the app I'm not touching.
 enum RsvpStatus {
   pending
   accepted
@@ -408,15 +27,6 @@ enum BudgetStatus {
   planned
   quoted
   booked
-  paid
-}
-
-enum VendorStatus {
-  inquiry
-  shortlisted
-  quoted
-  booked
-  contracted
   paid
 }
 
@@ -440,4 +50,625 @@ enum TableShape {
   rectangle
   square
   oval
+}
+
+enum MessageStatus {
+  sent
+  queued
+  failed
+  delivered
+}
+
+// New Enums from prompt
+enum Role {
+  OWNER
+  ADMIN
+  SUPPORT
+  MODERATOR
+  USER
+}
+
+enum RegionTier {
+  GLOBAL
+  COUNTRY
+  STATE
+  CITY
+}
+
+enum CreditType {
+  SYSTEM
+  PROMO
+  MANUAL
+  REFUND
+  ADJUSTMENT
+}
+
+enum SanctionType {
+  WARN
+  THROTTLE
+  SUSPEND
+  BAN
+  SHADOW_LIMIT
+}
+
+enum MessageChannel {
+  EMAIL
+  SMS
+  INAPP
+}
+
+enum ApprovalType {
+  VENDOR
+  LISTING
+  KYC
+  QUOTA
+}
+
+enum FeatureFlagType {
+  BOOLEAN
+  PERCENT_ROLL
+}
+
+// Replaces old VendorStatus
+enum VendorStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+  UNLISTED
+}
+
+enum VerificationStatus {
+  NONE
+  PENDING
+  VERIFIED
+  EXPIRED
+  REJECTED
+}
+
+enum VendorEventType {
+  LEAD_ACCEPTED
+  LEAD_IGNORED
+  LEAD_EXPIRED
+  DISPUTE
+  DOC_UPLOADED
+  VERIFIED
+  SANCTIONED
+}
+
+// MODELS
+
+// Keeping existing User model for authentication
+// The new UserProfile model will hold role and other profile data.
+model User {
+  id                  String          @id @default(uuid())
+  email               String          @unique
+  password            String
+  // This role is from the old system. Keeping it for now to avoid breaking things.
+  // The new system will use UserProfile.role.
+  role                UserRole        @default(couple)
+  isActive            Boolean         @default(true)
+  onboardingCompleted Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  // RELATIONS
+  profile             UserProfile?
+  budgets             Budget[]
+  guests              Guest[]
+  ownedVendors        Vendor[]
+  tasks               Task[]
+  tables              Table[]
+  sessions            Session[]
+  weddingDetails      WeddingDetails?
+  assignedTasks       TaskAssignment[] @relation("TaskAssignee")
+  assignedByTasks     TaskAssignment[] @relation("TaskAssigner")
+  invites             Invite[]
+  inviteRsvps         InviteRSVP[]
+  credits             CreditBalance?
+  messages            Message[]
+
+  @@map("users")
+}
+
+// Legacy UserRole enum, tied to User.role
+enum UserRole {
+  couple
+  planner
+  vendor
+}
+
+// New Models from prompt
+
+model UserProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  role      Role     @default(USER)
+  country   String?
+  state     String?
+  city      String?
+  plan      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([country, state, city, plan])
+  @@map("user_profiles")
+}
+
+model CreditLedger {
+  id        String     @id @default(uuid())
+  userId    String
+  delta     Int
+  type      CreditType
+  reason    String?
+  createdBy String
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("credit_ledger")
+}
+
+model Broadcast {
+  id          String         @id @default(uuid())
+  title       String
+  body        String
+  channel     MessageChannel
+  segmentJson Json
+  sentCount   Int            @default(0)
+  createdBy   String
+  createdAt   DateTime       @default(now())
+
+  @@map("broadcasts")
+}
+
+model Sanction {
+  id         String       @id @default(uuid())
+  userId     String
+  type       SanctionType
+  reasonCode String
+  notes      String?
+  expiresAt  DateTime?
+  createdBy  String
+  createdAt  DateTime     @default(now())
+
+  @@index([userId])
+  @@map("sanctions")
+}
+
+model ApprovalQueue {
+  id          String       @id @default(uuid())
+  targetType  ApprovalType
+  targetId    String
+  status      String       @default("PENDING")
+  submittedBy String
+  reviewedBy  String?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  reviewedAt  DateTime?
+
+  @@index([status, targetType])
+  @@map("approval_queue")
+}
+
+model FeatureFlag {
+  key       String          @id
+  type      FeatureFlagType
+  enabled   Boolean?
+  percent   Int?
+  rulesJson Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@map("feature_flags")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  action    String
+  targetId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Vendor Management
+model Vendor {
+  id                    String             @id @default(uuid())
+  ownerUserId           String
+  name                  String
+  slug                  String             @unique
+  category              String
+  country               String?
+  state                 String?
+  city                  String?
+  phone                 String?
+  email                 String?
+  website               String?
+  instagram             String?
+  status                VendorStatus       @default(PENDING)
+  verification          VerificationStatus @default(NONE)
+  score                 Int                @default(50)
+  responseMsP50         Int?
+  responseSLAHit        Float?
+  disputeRate           Float?
+  flagged               Boolean            @default(false)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  owner                 User               @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  signals               VendorSignal[]
+  verificationDetails   VendorVerification?
+  sanctions             VendorSanction[]
+  events                VendorEvent[]
+
+  @@index([ownerUserId])
+  @@index([category, country, state, city, status, verification])
+  @@map("vendors")
+}
+
+model VendorSignal {
+  id          String   @id @default(uuid())
+  vendorId    String
+  emailHash   String?
+  phoneHash   String?
+  deviceHash  String?
+  ipHash      String?
+  bankHash    String?
+  addressHash String?
+  imagesPhash String[]
+  createdAt   DateTime @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@index([emailHash])
+  @@index([phoneHash])
+  @@index([deviceHash])
+  @@index([ipHash])
+  @@map("vendor_signals")
+}
+
+model VendorVerification {
+  id         String             @id @default(uuid())
+  vendorId   String             @unique
+  status     VerificationStatus @default(PENDING)
+  docsJson   Json?
+  reviewerId String?
+  reviewedAt DateTime?
+  expiresAt  DateTime?
+  notes      String?
+  createdAt  DateTime           @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_verifications")
+}
+
+model VendorSanction {
+  id         String       @id @default(uuid())
+  vendorId   String
+  type       SanctionType
+  reasonCode String
+  notes      String?
+  expiresAt  DateTime?
+  createdBy  String
+  createdAt  DateTime     @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("vendor_sanctions")
+}
+
+model VendorEvent {
+  id        String          @id @default(uuid())
+  vendorId  String
+  type      VendorEventType
+  meta      Json?
+  createdAt DateTime        @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@index([createdAt])
+  @@map("vendor_events")
+}
+
+// OLDER MODELS
+
+model WeddingDetails {
+  userId      String    @id
+  venue       String?
+  weddingDate DateTime?
+  budget      Decimal?
+  guestCount  Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wedding_details")
+}
+
+model DirectoryVendor {
+  id               String   @id @default(uuid())
+  ownerUserId      String?
+  name             String
+  category         String
+  city             String?
+  region           String?
+  priceBand        String?
+  averageRating    Int?
+  reviewCount      Int?     @default(0)
+  shortDescription String?
+  description      String?
+  photos           String?
+  website          String?
+  websiteHost      String?
+  email            String?
+  emailLower       String?
+  phone            String?
+  phoneDigits      String?
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  tags             String?
+  fraudFlags       String?
+  duplicateOfId    String?
+  isSuspended      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([category, region], map: "dirvendors_category_region_idx")
+  @@index([averageRating, reviewCount], map: "dirvendors_rating_reviews_idx")
+  @@index([ownerUserId], map: "dirvendors_owner_idx")
+  @@index([websiteHost], map: "dirvendors_websitehost_idx")
+  @@index([emailLower], map: "dirvendors_emaillower_idx")
+  @@index([phoneDigits], map: "dirvendors_phonedigits_idx")
+  @@map("directory_vendors")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  ipHash       String?
+  uaHash       String?
+  region       String?
+  country      String?
+  city         String?
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+  revokedAt    DateTime?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lastActiveAt], map: "sessions_user_lastactive_idx")
+  @@index([revokedAt], map: "sessions_revoked_idx")
+  @@map("sessions")
+}
+
+model DirectoryInquiry {
+  id          String   @id @default(uuid())
+  vendorId    String
+  name        String
+  email       String
+  phone       String?
+  message     String
+  eventDate   DateTime?
+  budget      Decimal?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vendorId, createdAt], map: "dirinquiries_vendor_created_idx")
+  @@map("directory_inquiries")
+}
+
+model Guest {
+  id                   String     @id @default(uuid())
+  userId               String
+  name                 String
+  rsvpStatus           RsvpStatus @default(pending)
+  mealPreference       String?
+  side                 Side?
+  invitationSent       Boolean    @default(false)
+  plusOneAllowed       Boolean    @default(false)
+  plusOneName          String?
+  householdId          String?
+  tags                 String?
+  relationshipCategory String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  user                 User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rsvp                 RSVP?
+  seats                Seat[]
+
+  @@map("guests")
+}
+
+model RSVP {
+  guestId       String     @id
+  status        RsvpStatus @default(pending)
+  dateResponded DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  guest         Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@map("rsvps")
+}
+
+model Budget {
+  id        String       @id @default(uuid())
+  userId    String
+  category  String
+  amount    Decimal
+  allocated Decimal
+  actual    Decimal      @default(0)
+  status    BudgetStatus @default(planned)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  category    String?
+  priority    TaskPriority @default(medium)
+  status      TaskStatus   @default(pending)
+  dueDate     DateTime?
+  completedAt DateTime?
+  assignedTo  String?
+  isTemplate  Boolean      @default(false)
+  templateId  String?
+  timeline    String?
+  order       Int?
+  tags        String?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments TaskAssignment[]
+
+  @@index([userId, status], map: "tasks_user_status_idx")
+  @@index([userId, dueDate], map: "tasks_user_duedate_idx")
+  @@index([userId, category], map: "tasks_user_category_idx")
+  @@index([isTemplate, timeline], map: "tasks_template_timeline_idx")
+  @@map("tasks")
+}
+
+model TaskAssignment {
+  id          String     @id @default(uuid())
+  taskId      String
+  assigneeId  String
+  assignedBy  String
+  status      TaskStatus @default(pending)
+  notes       String?
+  dueDate     DateTime?
+  assignedAt  DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
+  assigner    User       @relation("TaskAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, assigneeId])
+  @@map("task_assignments")
+}
+
+model Table {
+  id          String     @id @default(uuid())
+  userId      String
+  name        String
+  shape       TableShape @default(round)
+  capacity    Int
+  positionX   Float      @default(0)
+  positionY   Float      @default(0)
+  rotation    Float      @default(0)
+  width       Float?
+  height      Float?
+  diameter    Float?
+  color       String?
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seats       Seat[]
+
+  @@index([userId], map: "tables_user_idx")
+  @@map("tables")
+}
+
+model Seat {
+  id          String   @id @default(uuid())
+  tableId     String
+  guestId     String?
+  seatNumber  Int
+  positionX   Float    @default(0)
+  positionY   Float    @default(0)
+  isHost      Boolean  @default(false)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  table       Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  guest       Guest?   @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@unique([tableId, seatNumber], map: "seats_table_number_unique")
+  @@index([tableId], map: "seats_table_idx")
+  @@index([guestId], map: "seats_guest_idx")
+  @@map("seats")
+}
+
+model Invite {
+  id        String     @id @default(uuid())
+  userId    String
+  email     String
+  token     String     @unique
+  country   String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rsvps     InviteRSVP[]
+
+  @@index([userId], map: "invites_user_idx")
+  @@index([token], map: "invites_token_idx")
+  @@map("invites")
+}
+
+model InviteRSVP {
+  id        String     @id @default(uuid())
+  userId    String
+  inviteId  String
+  email     String
+  status    RsvpStatus @default(pending)
+  partySize Int        @default(1)
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invite    Invite     @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, email], map: "invite_rsvps_user_email_unique")
+  @@index([userId], map: "invite_rsvps_user_idx")
+  @@index([inviteId], map: "invite_rsvps_invite_idx")
+  @@map("invite_rsvps")
+}
+
+model CreditBalance {
+  userId    String   @id
+  credits   Int      @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_balances")
+}
+
+model Message {
+  id                String        @id @default(uuid())
+  userId            String
+  channel           String
+  recipient         String
+  subject           String?
+  content           String?
+  provider          String?
+  providerMessageId String?
+  status            MessageStatus @default(sent)
+  cost              Int           @default(0)
+  currency          String        @default("credits")
+  createdAt         DateTime      @default(now())
+  deliveredAt       DateTime?
+  errorCode         String?
+  errorMessage      String?
+  metadata          Json?
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "messages_user_created_idx")
+  @@index([status, createdAt], map: "messages_status_created_idx")
+  @@map("messages")
 }

@@ -1,25 +1,27 @@
-import { NextResponse } from 'next/server'
-import { requireSuperAdmin } from '@/lib/auth/admin'
-import { prisma } from '@/lib/db/prisma'
+import { NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth/middleware';
+import { AuthenticatedRequest } from '@/lib/auth/middleware';
+import { UsersAdminService } from '@/features/admin/users/users.service';
+import { getUsersSchema } from '@/features/admin/users/users.dto';
 
-async function handler(request: Request) {
+const service = new UsersAdminService();
+
+async function getUsers(req: AuthenticatedRequest) {
+  const { searchParams } = new URL(req.url);
+  const queryParams = Object.fromEntries(searchParams.entries());
+
+  const validation = getUsersSchema.safeParse(queryParams);
+  if (!validation.success) {
+    return NextResponse.json({ error: 'Invalid query parameters', details: validation.error.flatten() }, { status: 400 });
+  }
+
   try {
-    const url = new URL(request.url)
-    const sp = url.searchParams
-    const q = sp.get('q') || undefined
-    const page = Math.max(1, parseInt(sp.get('page') || '1', 10))
-    const pageSize = Math.max(1, Math.min(100, parseInt(sp.get('pageSize') || '20', 10)))
-    const where: any = {}
-    if (q) where.OR = [
-      { email: { contains: q, mode: 'insensitive' } },
-    ]
-    const total = await prisma.user.count({ where }).catch(()=>0)
-    const users = await prisma.user.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page-1)*pageSize, take: pageSize }).catch(()=>[])
-    return NextResponse.json({ success: true, data: { users, total, page, pageSize } })
-  } catch (e) {
-    return NextResponse.json({ success: true, data: { users: [], total: 0, page: 1, pageSize: 20 } })
+    const result = await service.getUsers(validation.data);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
-export const GET = requireSuperAdmin(handler)
-
+export const GET = requireRole(['OWNER', 'ADMIN', 'SUPPORT', 'MODERATOR'])(getUsers);
