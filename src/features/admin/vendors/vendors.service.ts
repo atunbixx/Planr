@@ -1,14 +1,22 @@
 import { VendorsAdminRepository } from './vendors.repository';
-import type { getVendorsSchema } from './vendors.dto';
+import { FlagsAdminService } from '@/features/admin/flags/flags.service';
+import type { getVendorsSchema, verifyVendorSchema, sanctionVendorSchema, addVendorCreditsSchema, featureVendorSchema } from './vendors.dto';
 import type { z } from 'zod';
 
 type GetVendorsFilters = z.infer<typeof getVendorsSchema>;
+type VerifyVendorInput = z.infer<typeof verifyVendorSchema>;
+type SanctionVendorInput = z.infer<typeof sanctionVendorSchema>;
+type AddCreditsInput = z.infer<typeof addVendorCreditsSchema>;
+type FeatureVendorInput = z.infer<typeof featureVendorSchema>;
+
 
 export class VendorsAdminService {
   private repository: VendorsAdminRepository;
+  private flagsService: FlagsAdminService;
 
   constructor() {
     this.repository = new VendorsAdminRepository();
+    this.flagsService = new FlagsAdminService();
   }
 
   async getVendors(filters: GetVendorsFilters) {
@@ -101,7 +109,6 @@ export class VendorsAdminService {
     actorId: string
   ) {
     return this.repository.withTransaction(async (tx) => {
-      // First, find the vendor to get the owner's user ID
       const vendor = await tx.vendor.findUnique({
         where: { id: vendorId },
         select: { ownerUserId: true },
@@ -115,7 +122,7 @@ export class VendorsAdminService {
         userId: vendor.ownerUserId,
         delta: input.delta,
         reason: input.reason,
-        type: 'PROMO', // Specifically for vendor promotions
+        type: 'PROMO',
         createdBy: actorId,
       });
 
@@ -141,31 +148,19 @@ export class VendorsAdminService {
       return { nodes: [], edges: [] };
     }
 
-    const primaryVendorNode = {
-      id: vendorId,
-      label: 'Primary Vendor',
-      type: 'primary',
-    };
-
+    const primaryVendorNode = { id: vendorId, label: 'Primary Vendor', type: 'primary' };
     const nodes = [primaryVendorNode];
     const edges: { from: string; to: string; label: string; confidence: 'High' | 'Med-High' | 'Low-Med' }[] = [];
 
     for (const match of matchingSignals) {
       if (!match.vendor) continue;
-
-      // Add the matched vendor as a node if it's not already there
       if (!nodes.find(n => n.id === match.vendorId)) {
-        nodes.push({
-          id: match.vendorId,
-          label: match.vendor.name,
-          type: 'linked',
-        });
+        nodes.push({ id: match.vendorId, label: match.vendor.name, type: 'linked' });
       }
 
       let confidence: 'High' | 'Med-High' | 'Low-Med' | null = null;
       let reasons: string[] = [];
 
-      // High confidence checks
       if (match.phoneHash && match.phoneHash === primarySignal.phoneHash) {
         confidence = 'High';
         reasons.push('Shared Phone');
@@ -175,33 +170,60 @@ export class VendorsAdminService {
         reasons.push('Shared Bank Account');
       }
 
-      // Med-High confidence checks
       const hasDeviceAndIpMatch = match.deviceHash && match.deviceHash === primarySignal.deviceHash && match.ipHash && match.ipHash === primarySignal.ipHash;
       if (hasDeviceAndIpMatch) {
-        // The prompt mentions image pHash overlap, which is complex. I'll stub this logic.
-        // For now, device+ip match is enough for Med-High.
         if (confidence !== 'High') confidence = 'Med-High';
         reasons.push('Shared Device & IP');
       }
 
-      // Low-Med confidence checks
       if (match.addressHash && match.addressHash === primarySignal.addressHash) {
         if (!confidence) confidence = 'Low-Med';
         reasons.push('Shared Address');
       }
 
       if (confidence) {
-        edges.push({
-          from: vendorId,
-          to: match.vendorId,
-          label: reasons.join(', '),
-          confidence: confidence,
-        });
+        edges.push({ from: vendorId, to: match.vendorId, label: reasons.join(', '), confidence });
       }
     }
 
     return { nodes, edges };
   }
 
-  // I will add more methods here for other vendor endpoints.
+  async featureVendor(
+    vendorId: string,
+    input: FeatureVendorInput,
+    actorId: string
+  ) {
+    const { durationDays, regionRule } = input;
+    const key = `vendor-featured-${vendorId}`;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+    const rulesJson = {
+      expiresAt: expiresAt.toISOString(),
+      ...(regionRule && { region: regionRule }),
+    };
+
+    const flag = await this.flagsService.upsertFlag({
+      key,
+      type: 'BOOLEAN',
+      enabled: true,
+      rulesJson,
+    }, actorId);
+
+    return this.repository.withTransaction(async (tx) => {
+      await this.repository.logAudit(tx, {
+        actorId,
+        action: 'admin.vendor.feature',
+        targetId: vendorId,
+        meta: {
+          durationDays,
+          regionRule,
+          flagKey: key,
+          expiresAt: expiresAt.toISOString(),
+        }
+      });
+      return { flag };
+    });
+  }
 }

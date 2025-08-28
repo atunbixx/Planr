@@ -20,6 +20,11 @@ export const verifyVendorSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+export const featureVendorSchema = z.object({
+  durationDays: z.number().int().positive(),
+  regionRule: z.string().optional().nullable(),
+});
+
 export const addVendorCreditsSchema = z.object({
   delta: z.number().int().refine(d => d !== 0, { message: 'Delta cannot be zero' }),
   reason: z.string().min(3),
