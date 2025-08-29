@@ -14,6 +14,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   useDraggable,
@@ -40,8 +41,12 @@ export default function SeatingPage() {
   const [editCapacity, setEditCapacity] = useState<number>(8)
   const [savingEdit, setSavingEdit] = useState(false)
   const [activeGuestId, setActiveGuestId] = useState<string | null>(null)
+  const [liveMessage, setLiveMessage] = useState('')
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor)
+  )
 
   const load = async () => {
     try {
@@ -128,6 +133,13 @@ export default function SeatingPage() {
     if (!editingTable) return
     try {
       setSavingEdit(true)
+      // Confirm capacity shrink if it would drop assigned seats
+      const current = tables.find(t => (t as any).id === editingTable.id) as any
+      const assigned = (current?.seats || []).filter((s: any) => s.guestId).length
+      if (editCapacity < assigned) {
+        const ok = window.confirm(`Reducing capacity to ${editCapacity} will remove ${assigned - editCapacity} assigned seat(s). Continue?`)
+        if (!ok) { setSavingEdit(false); return }
+      }
       const updated = await SeatingClient.updateTable(editingTable.id, { name: editName, capacity: editCapacity } as any)
       setTables(prev => prev.map(t => (t.id === updated.id ? (updated as any) : t)))
       setEditingTable(null)
@@ -160,6 +172,7 @@ export default function SeatingPage() {
   const onDragStart = (e: DragStartEvent) => {
     const gid = (e.active.data?.current as any)?.guestId as string | undefined
     if (gid) setActiveGuestId(gid)
+    if (gid) setLiveMessage(`Start dragging ${guestMap[gid]?.name || 'guest'}`)
   }
   const onDragEnd = (e: DragEndEvent) => {
     const gid = (e.active.data?.current as any)?.guestId as string | undefined
@@ -184,6 +197,7 @@ export default function SeatingPage() {
     // Reuse existing assignment helper (optimistic + API)
     const fakeEvent = { preventDefault() {}, dataTransfer: { getData: () => gid } } as any
     handleDropOnSeat(targetSeat, fakeEvent)
+    setLiveMessage(`${guestMap[gid]?.name || 'Guest'} placed on seat`)
   }
 
   return (
@@ -269,6 +283,7 @@ export default function SeatingPage() {
         {/* Arrange seating board with drag-and-drop */}
         {!loading && !error && (
           <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+          <div className="sr-only" aria-live="polite">{liveMessage}</div>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <Card>
               <CardContent className="p-4">
@@ -369,7 +384,10 @@ function DraggableGuest({ guestId, label }: { guestId: string; label: string }) 
       style={style}
       {...listeners}
       {...attributes}
-      className={`px-3 py-2 rounded-lg border border-slate-200 bg-white text-[hsl(var(--primary))] hover:bg-slate-50 cursor-grab active:cursor-grabbing dark:border-dark-3 dark:bg-transparent dark:text-neutral-100 ${isDragging ? 'opacity-50' : ''}`}
+      tabIndex={0}
+      role="button"
+      aria-label={`Guest ${label}`}
+      className={`px-3 py-2 rounded-lg border border-slate-200 bg-white text-[hsl(var(--primary))] hover:bg-slate-50 cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] dark:border-dark-3 dark:bg-transparent dark:text-neutral-100 ${isDragging ? 'opacity-50' : ''}`}
       title="Drag to a seat"
     >
       {label}
@@ -382,7 +400,10 @@ function DroppableSeat({ id, label, hasGuest, onUnassign }: { id: string; label:
   return (
     <div
       ref={setNodeRef}
-      className={`relative h-10 rounded-md border flex items-center justify-center text-sm text-dark dark:text-white ${
+      tabIndex={0}
+      role="button"
+      aria-label={`Seat ${label}`}
+      className={`relative h-10 rounded-md border flex items-center justify-center text-sm text-dark dark:text-white focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] ${
         isOver ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))/0.07]' : 'border-slate-200 bg-slate-50 dark:border-dark-3 dark:bg-dark-2'
       }`}
       title={label}
