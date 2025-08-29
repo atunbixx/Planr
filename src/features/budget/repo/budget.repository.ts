@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db/prisma'
 import { tempStorage } from '@/lib/db/temp-storage'
+import { USE_TEMP_STORAGE_FALLBACK } from '@/lib/config/env'
 import { RepositoryResult, createErrorResult, createSuccessResult } from '@/lib/repositories/BaseRepository'
 
 export type BudgetRecord = {
@@ -26,7 +27,7 @@ export class BudgetRepository {
       }, { totalAmount: 0, totalAllocated: 0, totalActual: 0 })
       return createSuccessResult({ items: items as any, summary })
     } catch (err) {
-      if (process.env.NODE_ENV === 'production') {
+      if (!USE_TEMP_STORAGE_FALLBACK) {
         return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
       }
       try {
@@ -43,7 +44,7 @@ export class BudgetRepository {
       const item = await prisma.budget.create({ data: { ...(data as any), userId } })
       return createSuccessResult(item as any)
     } catch (err) {
-      if (process.env.NODE_ENV === 'production') {
+      if (!USE_TEMP_STORAGE_FALLBACK) {
         return createErrorResult('Database unavailable', 'DB_UNAVAILABLE', 503)
       }
       try {

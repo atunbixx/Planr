@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireOnboarding, AuthenticatedRequest } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/db/prisma'
 import { tempStorage } from '@/lib/db/temp-storage'
+import { USE_TEMP_STORAGE_FALLBACK, ALLOW_TEMP_SEED_ON_EMPTY } from '@/lib/config/env'
 
 async function handler(request: AuthenticatedRequest) {
   const userId = request.user!.id
@@ -31,7 +32,7 @@ async function handler(request: AuthenticatedRequest) {
 
     // If Prisma has no data (dev/temp mode), fall back to temp storage metrics
     try {
-      if (guestTotal === 0) {
+      if (guestTotal === 0 && ALLOW_TEMP_SEED_ON_EMPTY) {
         const guests = await tempStorage.findGuestsByUserId(userId)
         if (guests.length > 0) {
           guestTotal = guests.length
@@ -40,14 +41,14 @@ async function handler(request: AuthenticatedRequest) {
           declined = guests.filter((g: any) => g.rsvpStatus === 'declined').length
         }
       }
-      if (vendorTotal === 0) {
+      if (vendorTotal === 0 && ALLOW_TEMP_SEED_ON_EMPTY) {
         const { vendors } = await tempStorage.listVendors(userId)
         if (vendors.length > 0) {
           vendorTotal = vendors.length
           vendorBookedTotal = vendors.filter((v: any) => v.status === 'booked').length
         }
       }
-      if (!budgetItems || budgetItems.length === 0) {
+      if ((!budgetItems || budgetItems.length === 0) && ALLOW_TEMP_SEED_ON_EMPTY) {
         const { items } = await tempStorage.listBudgets(userId)
         if (items.length > 0) budgetItems = items as any
       }
@@ -83,9 +84,9 @@ async function handler(request: AuthenticatedRequest) {
   } catch (error) {
     // Final safety: return a safe, empty overview rather than an error
     try {
-      const guests = process.env.NODE_ENV !== 'production' ? await tempStorage.findGuestsByUserId(userId) : []
-      const { vendors } = process.env.NODE_ENV !== 'production' ? await tempStorage.listVendors(userId) : { vendors: [] as any[] }
-      const { items, summary } = process.env.NODE_ENV !== 'production' ? await tempStorage.listBudgets(userId) : { items: [], summary: { totalAmount: 0, totalAllocated: 0, totalActual: 0 } }
+      const guests = USE_TEMP_STORAGE_FALLBACK ? await tempStorage.findGuestsByUserId(userId) : []
+      const { vendors } = USE_TEMP_STORAGE_FALLBACK ? await tempStorage.listVendors(userId) : { vendors: [] as any[] }
+      const { items, summary } = USE_TEMP_STORAGE_FALLBACK ? await tempStorage.listBudgets(userId) : { items: [], summary: { totalAmount: 0, totalAllocated: 0, totalActual: 0 } }
 
       return NextResponse.json({
         success: true,
