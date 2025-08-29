@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { initSentry } from '@/lib/observability/sentry'
 import "./globals.css";
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/components/ui/toast-provider'
@@ -16,6 +17,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Initialize Sentry (no-op if DSN is unset or package missing)
+  if (typeof window === 'undefined') initSentry()
   return (
     <html lang="en" className="h-full">
       <head>
