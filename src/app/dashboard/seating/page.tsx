@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { SeatingClient } from '@/lib/api/seating.client'
-import { GuestsClient, type LegacyGuest } from '@/lib/api/guests.client'
+import { type LegacyGuest } from '@/lib/api/guests.client'
+import { useGuests } from '@/lib/api/queries/useGuests'
+import { useSeating, useCreateTable, useAssignSeat, useUpdateTable, useDeleteTable, useAutoAssign } from '@/lib/api/queries/useSeating'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -27,9 +29,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 type TableItem = { id: string; name: string; capacity: number; seats?: Array<{ id: string; guestId?: string | null }> }
 
 export default function SeatingPage() {
-  const [tables, setTables] = useState<TableItem[]>([])
-  const [stats, setStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const seatingQuery = useSeating()
+  const guestsQuery = useGuests()
   const [error, setError] = useState<string | null>(null)
   const [guestMap, setGuestMap] = useState<Record<string, LegacyGuest>>({})
   const [newTableOpen, setNewTableOpen] = useState(false)
@@ -48,30 +49,21 @@ export default function SeatingPage() {
     useSensor(KeyboardSensor)
   )
 
-  const load = async () => {
-    try {
-      setLoading(true)
-      const [tables, guests] = await Promise.all([
-        SeatingClient.listTables(),
-        GuestsClient.listGuests({ limit: 1000 }).catch(() => ({ guests: [] as LegacyGuest[] })),
-      ])
-      setTables(tables as any)
-      const map: Record<string, LegacyGuest> = {}
-      for (const g of guests.guests) map[g.id] = g
-      setGuestMap(map)
-      const totalTables = tables.length
-      const totalSeats = tables.reduce((sum, t:any) => sum + (t.seats?.length || 0), 0)
-      const seatedGuests = tables.reduce((sum, t:any) => sum + (t.seats || []).filter((s:any)=>s.guestId).length, 0)
-      const stats = { totalTables, totalSeats, seatedGuests, unseatedGuests: Math.max(0, totalSeats - seatedGuests) }
-      setStats(stats)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load seating')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    const guests = guestsQuery.data || []
+    const map: Record<string, LegacyGuest> = {}
+    for (const g of guests) map[g.id] = g
+    setGuestMap(map)
+  }, [guestsQuery.data])
 
-  useEffect(() => { load() }, [])
+  const tables = (seatingQuery.data as any as TableItem[]) || []
+  const loading = seatingQuery.isLoading || guestsQuery.isLoading
+  const stats = (() => {
+    const totalTables = tables.length
+    const totalSeats = tables.reduce((sum, t:any) => sum + (t.seats?.length || 0), 0)
+    const seatedGuests = tables.reduce((sum, t:any) => sum + (t.seats || []).filter((s:any)=>s.guestId).length, 0)
+    return { totalTables, totalSeats, seatedGuests, unseatedGuests: Math.max(0, totalSeats - seatedGuests) }
+  })()
 
   const unseatedGuests = (() => {
     const assignedIds = new Set<string>()
@@ -81,17 +73,19 @@ export default function SeatingPage() {
     return Object.values(guestMap).filter(g => !assignedIds.has(g.id))
   })()
 
+  const createMutation = useCreateTable()
+  const updateMutation = useUpdateTable()
+  const deleteMutation = useDeleteTable()
+  const assignMutation = useAssignSeat()
+  const autoAssignMutation = useAutoAssign()
+
   const createTable = async () => {
     try {
       setCreating(true)
-      const t = await SeatingClient.createTable({ name: newTableName || 'Table', capacity: Number(newTableCapacity) || 1 } as any)
-      // Optimistically update list
-      setTables(prev => [...prev, t as any])
+      await createMutation.mutateAsync({ name: newTableName || 'Table', capacity: Number(newTableCapacity) || 1 } as any)
       setNewTableOpen(false)
       setNewTableName('Table')
       setNewTableCapacity(8 as any)
-      // Recompute stats
-      await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create table')
     } finally {
@@ -104,23 +98,11 @@ export default function SeatingPage() {
     const guestId = ev.dataTransfer.getData('text/guest-id')
     if (!guestId) return
     // Optimistic UI update regardless of API response
-    setTables(prev => prev.map(t => {
-      const seats = (t.seats || []).map(s => {
-        if (s.id === seat.id) return { ...s, guestId }
-        if (s.guestId === guestId) return { ...s, guestId: null }
-        return s
-      })
-      return t.id === seat.tableId ? { ...t, seats } : { ...t, seats }
-    }))
-    SeatingClient.assignSeat(String(seat.id), String(guestId)).catch(() => {/* ignore in temp mode */})
+    assignMutation.mutate({ seatId: String(seat.id), guestId: String(guestId) })
   }
 
   const unassignSeat = (seat: any) => {
-    setTables(prev => prev.map(t => {
-      const seats = (t.seats || []).map(s => (s.id === seat.id ? { ...s, guestId: null } : s))
-      return t.id === seat.tableId ? { ...t, seats } : { ...t, seats }
-    }))
-    SeatingClient.assignSeat(String(seat.id), null).catch(() => {/* ignore */})
+    assignMutation.mutate({ seatId: String(seat.id), guestId: null })
   }
 
   const openEditTable = (t: any) => {
@@ -140,8 +122,7 @@ export default function SeatingPage() {
         const ok = window.confirm(`Reducing capacity to ${editCapacity} will remove ${assigned - editCapacity} assigned seat(s). Continue?`)
         if (!ok) { setSavingEdit(false); return }
       }
-      const updated = await SeatingClient.updateTable(editingTable.id, { name: editName, capacity: editCapacity } as any)
-      setTables(prev => prev.map(t => (t.id === updated.id ? (updated as any) : t)))
+      await updateMutation.mutateAsync({ id: editingTable.id, payload: { name: editName, capacity: editCapacity } })
       setEditingTable(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to update table')
@@ -152,8 +133,7 @@ export default function SeatingPage() {
 
   const deleteTable = async (id: string) => {
     try {
-      await SeatingClient.deleteTable(id)
-      setTables(prev => prev.filter(t => t.id !== id))
+      await deleteMutation.mutateAsync(id)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete table')
     }
@@ -161,8 +141,7 @@ export default function SeatingPage() {
 
   const autoAssign = async () => {
     try {
-      const tables = await SeatingClient.autoAssign(true)
-      setTables(tables as any)
+      await autoAssignMutation.mutateAsync(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to auto-assign')
     }

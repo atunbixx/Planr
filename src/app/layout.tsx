@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { initSentry } from '@/lib/observability/sentry'
 import "./globals.css";
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import QueryProvider from '@/providers/QueryProvider'
 import { ToastProvider } from '@/components/ui/toast-provider'
 
 // NOTE: Avoid next/font Google fetch in restricted environments.
@@ -25,9 +26,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
+          <QueryProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
