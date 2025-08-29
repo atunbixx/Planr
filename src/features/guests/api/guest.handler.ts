@@ -108,7 +108,9 @@ export class GuestHandler {
         limit: result.data!.limit,
         offset: result.data!.offset,
       })
-      return NextResponse.json({ success: true, data })
+      const res = NextResponse.json({ success: true, data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in getGuests handler:', error)
       return NextResponse.json({ success: false, error: { message: 'Internal server error' } }, { status: 500 })
@@ -130,7 +132,9 @@ export class GuestHandler {
       }
 
       const data = result.data ? GuestResponseDto.parse(result.data) : null
-      return NextResponse.json({ success: true, data })
+      const res = NextResponse.json({ success: true, data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in getGuest handler:', error)
       return NextResponse.json({

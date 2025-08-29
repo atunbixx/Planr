@@ -42,7 +42,9 @@ export class SeatingHandler {
         )
       }
 
-      return NextResponse.json({ success: true, data: result.data })
+      const res = NextResponse.json({ success: true, data: result.data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in SeatingHandler.getSeatingChart:', error)
       return NextResponse.json(
@@ -138,7 +140,9 @@ export class SeatingHandler {
         )
       }
 
-      return NextResponse.json({ success: true, data: result.data })
+      const res = NextResponse.json({ success: true, data: result.data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in SeatingHandler.getTableById:', error)
       return NextResponse.json(

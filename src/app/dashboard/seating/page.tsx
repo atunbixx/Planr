@@ -189,14 +189,14 @@ export default function SeatingPage() {
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-dark dark:text-white">Table Seating</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-dark dark:text-white">Table Seating</h1>
           <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={autoAssign}>Auto Assign</Button>
+          <Button data-testid="auto-assign" variant="outline" onClick={autoAssign}>Auto Assign</Button>
           <Dialog open={newTableOpen} onOpenChange={setNewTableOpen}>
-            <DialogTrigger asChild>
-              <Button variant="primary">New Table</Button>
-            </DialogTrigger>
+             <DialogTrigger asChild>
+              <Button data-testid="new-table" variant="primary">New Table</Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create Table</DialogTitle>
@@ -273,7 +273,7 @@ export default function SeatingPage() {
             <Card>
               <CardContent className="p-4">
                 <div className="font-semibold mb-2 text-dark dark:text-white">Unseated Guests</div>
-                <div className="space-y-2 max-h-96 overflow-auto">
+                <div data-testid="unseated-list" className="space-y-2 max-h-96 overflow-auto">
                   {Object.values(guestMap).length === 0 && (
                     <div className="text-sm text-dark-6">
                       No guests found. Add guests to start arranging seating.
