@@ -210,27 +210,42 @@ export class SeatingRepository extends BaseRepository {
 
       // Try database first
       try {
-        const table = await (this.db as any).table.create({
-          data: tableData,
-          include: {
-            seats: {
-              include: {
-                guest: {
-                  select: {
-                    id: true,
-                    name: true,
-                    rsvpStatus: true,
-                    side: true,
-                    relationshipCategory: true,
-                    householdId: true
-                  }
-                }
-              },
-              orderBy: { seatNumber: 'asc' }
-            }
+        const created = await this.withTransaction(async (tx: any) => {
+          const table = await tx.table.create({ data: tableData })
+          for (let i = 1; i <= data.capacity; i++) {
+            await tx.seat.create({
+              data: {
+                tableId: table.id,
+                seatNumber: i,
+                positionX: 0,
+                positionY: 0,
+                isHost: false,
+              }
+            })
           }
+          const tableWithSeats = await tx.table.findUnique({
+            where: { id: table.id },
+            include: {
+              seats: {
+                include: {
+                  guest: {
+                    select: {
+                      id: true,
+                      name: true,
+                      rsvpStatus: true,
+                      side: true,
+                      relationshipCategory: true,
+                      householdId: true
+                    }
+                  }
+                },
+                orderBy: { seatNumber: 'asc' }
+              }
+            }
+          })
+          return tableWithSeats
         })
-        return createSuccessResult(table)
+        return createSuccessResult(created)
       } catch (dbError) {
          // Fallback to temp storage (dev only)
          if (process.env.NODE_ENV === 'production') {
@@ -285,26 +300,33 @@ export class SeatingRepository extends BaseRepository {
 
       // Try database first
       try {
-        const table = await (this.db as any).table.update({
-          where: { id: tableId },
-          data: updateData,
-          include: {
-            seats: {
-              include: {
-                guest: {
-                  select: {
-                    id: true,
-                    name: true,
-                    rsvpStatus: true,
-                    side: true,
-                    relationshipCategory: true,
-                    householdId: true
-                  }
-                }
-              },
-              orderBy: { seatNumber: 'asc' }
+        const table = await this.withTransaction(async (tx: any) => {
+          const current = await tx.table.findUnique({ where: { id: tableId }, include: { seats: true } })
+          if (!current) throw new Error('TABLE_NOT_FOUND')
+          const prevCapacity = current.capacity
+          const next = await tx.table.update({ where: { id: tableId }, data: updateData })
+          const newCap = updateData.capacity ?? prevCapacity
+          if (newCap > prevCapacity) {
+            for (let i = prevCapacity + 1; i <= newCap; i++) {
+              await tx.seat.create({ data: { tableId, seatNumber: i, positionX: 0, positionY: 0, isHost: false } })
             }
+          } else if (newCap < prevCapacity) {
+            await tx.seat.deleteMany({ where: { tableId, seatNumber: { gt: newCap } } })
           }
+          const withSeats = await tx.table.findUnique({
+            where: { id: tableId },
+            include: {
+              seats: {
+                include: {
+                  guest: {
+                    select: { id: true, name: true, rsvpStatus: true, side: true, relationshipCategory: true, householdId: true }
+                  }
+                },
+                orderBy: { seatNumber: 'asc' }
+              }
+            }
+          })
+          return withSeats!
         })
         return createSuccessResult(table)
       } catch (dbError) {
@@ -391,13 +413,16 @@ export class SeatingRepository extends BaseRepository {
     try {
       // Try database first
       try {
-        const seat = await (this.db as any).seat.update({
-          where: { id: seatId },
-          data: {
-            guestId: data.guestId,
-            notes: data.notes,
-            updatedAt: new Date()
+        const seat = await this.withTransaction(async (tx: any) => {
+          // Ensure guest occupies only one seat: clear existing if any
+          if (data.guestId) {
+            await tx.seat.updateMany({ where: { guestId: data.guestId }, data: { guestId: null, updatedAt: new Date() } })
           }
+          const updated = await tx.seat.update({
+            where: { id: seatId },
+            data: { guestId: data.guestId, notes: data.notes, updatedAt: new Date() }
+          })
+          return updated
         })
         return createSuccessResult(seat)
       } catch (dbError) {

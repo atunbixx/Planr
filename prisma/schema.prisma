@@ -305,6 +305,7 @@ model Seat {
   guest       Guest?    @relation(fields: [guestId], references: [id], onDelete: SetNull)
 
   @@unique([tableId, seatNumber], map: "seats_table_number_unique")
+  @@unique([guestId], map: "seats_guest_unique")
   @@index([tableId], map: "seats_table_idx")
   @@index([guestId], map: "seats_guest_idx")
   @@map("seats")
