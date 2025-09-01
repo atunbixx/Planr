@@ -127,10 +127,10 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
 
           {/* Page Title Section */}
           <div className="hidden xl:block">
-            <h1 className="text-2xl font-bold text-[hsl(var(--primary))] dark:text-white mb-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               {getCurrentPageTitle()}
             </h1>
-            <p className="text-sm text-dark-5 dark:text-dark-6 font-medium">
+            <p className="text-sm text-slate-600 dark:text-neutral-300 font-medium">
               Wedding Planning Dashboard
             </p>
           </div>
