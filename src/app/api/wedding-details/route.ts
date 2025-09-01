@@ -29,7 +29,7 @@ export const PUT = requireOnboarding(async (request: AuthenticatedRequest) => {
   const body = await request.json().catch(() => ({}))
   const parsed = weddingDetailsSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ success: false, error: { message: 'Invalid payload' } }, { status: 400 })
+    return NextResponse.json({ success: false, error: { message: 'Invalid payload', details: parsed.error.issues } }, { status: 400 })
   }
   try {
     const data = parsed.data

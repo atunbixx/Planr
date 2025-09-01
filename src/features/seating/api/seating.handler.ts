@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SeatingService } from '../service/seating.service'
 import { CreateTableDto, UpdateTableDto, TableFilterDto, AssignGuestToSeatDto } from '../dto/seating.dto'
+import { startSpan } from '@/lib/observability/otel'
 
 export class SeatingHandler {
   private service = new SeatingService()
@@ -9,6 +10,7 @@ export class SeatingHandler {
    * GET /api/seating - Get seating chart with all tables and seats
    */
   async getSeatingChart(request: NextRequest, userId: string) {
+    const span = await startSpan('seating.getSeatingChart', { userId })
     try {
       const { searchParams } = new URL(request.url)
       
@@ -51,6 +53,8 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
+    } finally {
+      span.end()
     }
   }
 
@@ -218,6 +222,7 @@ export class SeatingHandler {
    * POST /api/seating/seats/[id]/assign - Assign guest to seat
    */
   async assignGuestToSeat(request: NextRequest, seatId: string) {
+    const span = await startSpan('seating.assignGuestToSeat', { seatId })
     try {
       const body = await request.json()
       
@@ -249,6 +254,8 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
+    } finally {
+      span.end()
     }
   }
 

@@ -66,19 +66,24 @@ export default function SettingsPage() {
 
   async function onSubmitWeddingDetails(values: WeddingDetailsForm) {
     try {
+      const prev = wdQuery.data
       await wdUpdate.mutateAsync(values)
-      notify('Wedding details updated', { variant: 'success' })
+      notify('Wedding details updated', { variant: 'success', action: prev ? { label: 'Undo', onClick: () => wdUpdate.mutate(prev).catch(()=>{}) } : undefined })
     } catch (e) {
-      notify(e instanceof Error ? e.message : 'Failed to update wedding details', { variant: 'error' })
+      // Try to show server-side validation details if available
+      const msg = e instanceof Error ? e.message : 'Failed to update wedding details'
+      notify(msg, { variant: 'error' })
     }
   }
 
   async function onSubmitPreferences(values: PreferencesForm) {
     try {
+      const prev = prefQuery.data
       await prefUpdate.mutateAsync(values)
-      notify('Preferences updated', { variant: 'success' })
+      notify('Preferences updated', { variant: 'success', action: prev ? { label: 'Undo', onClick: () => prefUpdate.mutate(prev).catch(()=>{}) } : undefined })
     } catch (e) {
-      notify(e instanceof Error ? e.message : 'Failed to update preferences', { variant: 'error' })
+      const msg = e instanceof Error ? e.message : 'Failed to update preferences'
+      notify(msg, { variant: 'error' })
     }
   }
 
@@ -128,11 +133,22 @@ export default function SettingsPage() {
           <form onSubmit={prefForm.handleSubmit(onSubmitPreferences)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="currency">Currency</Label>
-              <Input id="currency" placeholder="e.g. USD" {...prefForm.register('currency')} />
+              <select id="currency" className="w-full border rounded-md px-3 py-2 bg-white text-black dark:bg-dark-2 dark:text-white" {...prefForm.register('currency')}>
+                <option value="">Select currency</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="NGN">NGN</option>
+              </select>
             </div>
             <div>
               <Label htmlFor="language">Language</Label>
-              <Input id="language" placeholder="e.g. en" {...prefForm.register('language')} />
+              <select id="language" className="w-full border rounded-md px-3 py-2 bg-white text-black dark:bg-dark-2 dark:text-white" {...prefForm.register('language')}>
+                <option value="">Select language</option>
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+              </select>
             </div>
             <div>
               <Label htmlFor="region">Region</Label>
@@ -140,7 +156,14 @@ export default function SettingsPage() {
             </div>
             <div>
               <Label htmlFor="timeZone">Time Zone</Label>
-              <Input id="timeZone" placeholder="e.g. America/Los_Angeles" {...prefForm.register('timeZone')} />
+              <select id="timeZone" className="w-full border rounded-md px-3 py-2 bg-white text-black dark:bg-dark-2 dark:text-white" {...prefForm.register('timeZone')}>
+                <option value="">Select time zone</option>
+                <option value="UTC">UTC</option>
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Africa/Lagos">Africa/Lagos</option>
+              </select>
             </div>
             <div>
               <Label htmlFor="dateFormat">Date Format</Label>

@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
-type Toast = { id: number; title?: string; message: string; variant?: 'default'|'success'|'error'|'warning' };
+type ToastAction = { label: string; onClick: () => void }
+type Toast = { id: number; title?: string; message: string; variant?: 'default'|'success'|'error'|'warning'; action?: ToastAction };
 
 type ToastContextValue = {
   notify: (message: string, opts?: Partial<Omit<Toast,'id'|'message'>>) => void
@@ -21,7 +22,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const notify = useCallback((message: string, opts?: Partial<Omit<Toast,'id'|'message'>>) => {
     const id = Date.now() + Math.floor(Math.random() * 1000)
-    const toast: Toast = { id, message, title: opts?.title, variant: opts?.variant || 'default' }
+    const toast: Toast = { id, message, title: opts?.title, variant: opts?.variant || 'default', action: opts?.action }
     setToasts(prev => [...prev, toast])
     // auto dismiss after 3.5s
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500)
@@ -47,11 +48,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             aria-live="polite"
           >
             {t.title && <div className="font-semibold mb-0.5">{t.title}</div>}
-            <div>{t.message}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="pr-2">{t.message}</div>
+              {t.action && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); t.action?.onClick?.() }}
+                  className="px-2 py-1 rounded bg-white/20 hover:bg-white/30 text-white text-xs"
+                >
+                  {t.action.label}
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
     </ToastContext.Provider>
   )
 }
-
