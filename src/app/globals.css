@@ -4,6 +4,23 @@
 /* Force regeneration of Tailwind classes */
 
 @layer base {
+  /* Elevate contrast for commonly used low-contrast theme tokens app‑wide */
+  /* Light mode adjustments */
+  .text-dark-6 { color: #475569 !important; } /* slate-600 */
+  .text-dark-5 { color: #475569 !important; } /* slate-600 */
+  .text-dark-4 { color: #334155 !important; } /* slate-700 */
+
+  /* Dark mode adjustments */
+  .dark .text-dark-6 { color: #E5E7EB !important; } /* gray-200 */
+  .dark .text-dark-5 { color: #D1D5DB !important; } /* gray-300 */
+  .dark .text-dark-4 { color: #D1D5DB !important; } /* gray-300 */
+}
+
+@layer utilities {
+  /* Utility to force high-contrast text when needed without editing components */
+  .text-contrast { color: #111827 !important; } /* slate-900 */
+  .dark .text-contrast { color: #F9FAFB !important; }
+}
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
