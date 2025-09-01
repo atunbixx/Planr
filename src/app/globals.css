@@ -125,7 +125,7 @@
     color-scheme: light dark;
     font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #F9FAFB;
-    color: #374151;
+    color: #1F2937; /* slate-800 for stronger contrast */
     font-feature-settings: "rlig" 1, "calt" 1;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -140,6 +140,15 @@
     color: #111928;
   }
   
+  /* Ensure form labels and legends are high-contrast by default */
+  label {
+    color: #1F2937 !important; /* slate-800 */
+  }
+  fieldset legend {
+    color: #111827; /* slate-900 */
+    font-weight: 600;
+  }
+  
   /* Professional dark mode */
   .dark body {
     background: #111928;
@@ -148,6 +157,12 @@
   
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
     color: #F9FAFB;
+  }
+  .dark label {
+    color: #E5E7EB !important; /* gray-200 */
+  }
+  .dark fieldset legend {
+    color: #F3F4F6; /* gray-100 */
   }
 }
 
