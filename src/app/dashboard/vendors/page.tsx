@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/toast-provider'
 
 import { Badge } from '@/components/ui/badge'
 import { useApiQuery } from '@/lib/api/useApiQuery'
+import { formatApiError } from '@/lib/errors/format'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -62,11 +63,9 @@ export default function VendorsPage() {
       }
       setOpen(false)
       await refetch()
-    } catch (err) {
-      console.error('Error saving vendor:', err)
-      const e: any = err
-      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
-      notify(((e?.message) || 'Failed to save vendor') + (details ? ` — ${details}` : ''), { variant: 'error' })
+    } catch (e: any) {
+      console.error('Error saving vendor:', e)
+      notify(formatApiError(e, 'Failed to save vendor'), { variant: 'error' })
     }
   }
 
@@ -76,10 +75,9 @@ export default function VendorsPage() {
       console.log('Deleting vendor:', id)
       await VendorsClient.deleteVendor(id)
       await refetch()
-    } catch (err) {
-      console.error('Error deleting vendor:', err)
-      const e: any = err
-      notify((e?.message || 'Failed to delete vendor'), { variant: 'error' })
+    } catch (e: any) {
+      console.error('Error deleting vendor:', e)
+      notify(formatApiError(e, 'Failed to delete vendor'), { variant: 'error' })
     }
   }
 

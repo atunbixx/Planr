@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/toast-provider'
 import { useAuth } from '@/hooks/useAuth'
+import { formatApiError } from '@/lib/errors/format'
 import { useRouter } from 'next/navigation'
 
 export default function GuestsPage() {
@@ -83,8 +84,7 @@ export default function GuestsPage() {
       setSelected({})
       await refetch()
     } catch (e: any) {
-      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
-      notify((e?.message || 'Failed to update RSVP') + (details ? ` — ${details}` : ''), { variant: 'error' })
+      notify(formatApiError(e, 'Failed to update RSVP'), { variant: 'error' })
     }
   }
 
@@ -97,8 +97,7 @@ export default function GuestsPage() {
       setSelected({})
       await refetch()
     } catch (e: any) {
-      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
-      notify((e?.message || 'Failed to update invitations') + (details ? ` — ${details}` : ''), { variant: 'error' })
+      notify(formatApiError(e, 'Failed to update invitations'), { variant: 'error' })
     }
   }
 
@@ -114,8 +113,7 @@ export default function GuestsPage() {
       setOpen(false)
       await refetch()
     } catch (e: any) {
-      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
-      notify((e?.message || 'Failed to add guest') + (details ? ` — ${details}` : ''), { variant: 'error' })
+      notify(formatApiError(e, 'Failed to add guest'), { variant: 'error' })
     }
   }
 
