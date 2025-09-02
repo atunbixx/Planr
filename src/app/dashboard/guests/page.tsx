@@ -83,7 +83,8 @@ export default function GuestsPage() {
       setSelected({})
       await refetch()
     } catch (e: any) {
-      notify(e?.message || 'Failed to update RSVP', { variant: 'error' })
+      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
+      notify((e?.message || 'Failed to update RSVP') + (details ? ` — ${details}` : ''), { variant: 'error' })
     }
   }
 
@@ -96,7 +97,8 @@ export default function GuestsPage() {
       setSelected({})
       await refetch()
     } catch (e: any) {
-      notify(e?.message || 'Failed to update invitations', { variant: 'error' })
+      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
+      notify((e?.message || 'Failed to update invitations') + (details ? ` — ${details}` : ''), { variant: 'error' })
     }
   }
 

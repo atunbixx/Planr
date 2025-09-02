@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { startSpan } from '@/lib/observability/otel'
 import { GuestService } from '../service/guest.service'
 import { tempStorage } from '@/lib/db/temp-storage'
 import { CreateGuestDto, UpdateGuestDto, GuestFilterDto } from '../dto/guest.dto'
@@ -15,6 +16,7 @@ export class GuestHandler {
    * POST /api/guests/bulk - Bulk updates for RSVP, invitation, household
    */
   async bulkUpdate(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.bulkUpdate', { coupleId })
     try {
       const body = await request.json().catch(() => ({}))
       const action = String(body?.action || '')
@@ -50,6 +52,8 @@ export class GuestHandler {
     } catch (error) {
       console.error('Error in bulkUpdate handler:', error)
       return NextResponse.json({ success: false, error: { message: 'Internal server error', statusCode: 500 } }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
@@ -57,6 +61,7 @@ export class GuestHandler {
    * GET /api/guests - List all guests for the authenticated couple
    */
   async getGuests(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.getGuests', { coupleId })
     try {
       // Parse query parameters for filtering
       const url = new URL(request.url)
@@ -114,6 +119,8 @@ export class GuestHandler {
     } catch (error) {
       console.error('Error in getGuests handler:', error)
       return NextResponse.json({ success: false, error: { message: 'Internal server error' } }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
@@ -151,6 +158,7 @@ export class GuestHandler {
    * POST /api/guests - Create a new guest
    */
   async createGuest(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.createGuest', { coupleId })
     try {
       const body = await request.json()
 
@@ -190,6 +198,8 @@ export class GuestHandler {
           statusCode: 500
         }
       }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
@@ -197,6 +207,7 @@ export class GuestHandler {
    * PUT /api/guests/[id] - Update a guest
    */
   async updateGuest(request: NextRequest, guestId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.updateGuest', { guestId })
     try {
       const body = await request.json()
 
@@ -236,6 +247,8 @@ export class GuestHandler {
           statusCode: 500
         }
       }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
