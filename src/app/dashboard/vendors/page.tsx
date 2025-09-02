@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { VendorsClient, type Vendor } from '@/lib/api/vendors.client'
+import { useToast } from '@/components/ui/toast-provider'
 
 import { Badge } from '@/components/ui/badge'
 import { useApiQuery } from '@/lib/api/useApiQuery'
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function VendorsPage() {
+  const { notify } = useToast()
   const { data, error, isLoading, refetch } = useApiQuery('vendors:list', async () => {
     try {
       console.log('Fetching vendors...')
@@ -62,7 +64,9 @@ export default function VendorsPage() {
       await refetch()
     } catch (err) {
       console.error('Error saving vendor:', err)
-      alert('Failed to save vendor: ' + (err instanceof Error ? err.message : 'Unknown error'))
+      const e: any = err
+      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
+      notify(((e?.message) || 'Failed to save vendor') + (details ? ` — ${details}` : ''), { variant: 'error' })
     }
   }
 
@@ -74,7 +78,8 @@ export default function VendorsPage() {
       await refetch()
     } catch (err) {
       console.error('Error deleting vendor:', err)
-      alert('Failed to delete vendor: ' + (err instanceof Error ? err.message : 'Unknown error'))
+      const e: any = err
+      notify((e?.message || 'Failed to delete vendor'), { variant: 'error' })
     }
   }
 

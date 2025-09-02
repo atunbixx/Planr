@@ -112,7 +112,8 @@ export default function GuestsPage() {
       setOpen(false)
       await refetch()
     } catch (e: any) {
-      notify(e?.message || 'Failed to add guest', { variant: 'error' })
+      const details = Array.isArray(e?.details) ? e.details.map((d:any)=>`${d.field||''}: ${d.message||'Invalid'}`).join(' • ') : ''
+      notify((e?.message || 'Failed to add guest') + (details ? ` — ${details}` : ''), { variant: 'error' })
     }
   }
 
