@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useToast } from '@/components/ui/toast-provider'
 import { z } from 'zod'
 import { PublicVendor } from '@/features/vendors/service/vendor.service'
 
@@ -25,6 +26,7 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>
 
 export function ContactForm({ vendor, isOpen, onClose }: ContactFormProps) {
+  const { notify } = useToast()
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
@@ -119,37 +121,49 @@ export function ContactForm({ vendor, isOpen, onClose }: ContactFormProps) {
     setSubmitStatus('idle')
 
     try {
-      // TODO: Replace with actual API call
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Simulate success/error randomly for demo
-      const success = Math.random() > 0.2 // 80% success rate
-      
-      if (success) {
-        setSubmitStatus('success')
-        
-        // Reset form after success
-        setTimeout(() => {
-          setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            eventDate: '',
-            guestCount: '',
-            budget: '',
-            message: '',
-            preferredContact: 'email'
-          })
-          setSubmitStatus('idle')
-          onClose()
-        }, 2000)
-      } else {
-        throw new Error('Submission failed')
+      // Call public inquiry API
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        message: formData.message,
       }
-    } catch (error) {
+      if (formData.budget) {
+        const b = Number(formData.budget)
+        if (!Number.isNaN(b)) payload.budget = b
+      }
+      if (formData.eventDate) payload.eventDate = new Date(formData.eventDate).toISOString()
+      const res = await fetch(`/api/public/vendors/${vendor.slug}/inquire`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json?.success) {
+        const details = Array.isArray(json?.error?.details) ? json.error.details.map((d:any)=>`${(d.path||d.field||[]).join?.('.') || ''}: ${d.message || 'Invalid'}`).join(' • ') : ''
+        throw new Error((json?.error?.message || `Request failed ${res.status}`) + (details ? ` — ${details}` : ''))
+      }
+      setSubmitStatus('success')
+      notify('Inquiry submitted. The vendor will contact you shortly.', { variant: 'success' })
+      // Reset form after success
+      setTimeout(() => {
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          eventDate: '',
+          guestCount: '',
+          budget: '',
+          message: '',
+          preferredContact: 'email'
+        })
+        setSubmitStatus('idle')
+        onClose()
+      }, 1500)
+    } catch (error: any) {
       console.error('Form submission error:', error)
       setSubmitStatus('error')
+      notify(error?.message || 'Failed to submit inquiry', { variant: 'error' })
     } finally {
       setIsSubmitting(false)
     }

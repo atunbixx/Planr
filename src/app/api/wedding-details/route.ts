@@ -3,9 +3,11 @@ import { requireOnboarding, AuthenticatedRequest } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/db/prisma'
 import { tempStorage } from '@/lib/db/temp-storage'
 import { weddingDetailsSchema } from '@/lib/validation/auth'
+import { startSpan } from '@/lib/observability/otel'
 
 async function handler(request: AuthenticatedRequest) {
   const userId = request.user!.id
+  const span = await startSpan('settings.getWeddingDetails', { userId })
   try {
     const details = await prisma.weddingDetails.findUnique({ where: { userId } })
     return NextResponse.json({ success: true, data: details })
@@ -19,7 +21,7 @@ async function handler(request: AuthenticatedRequest) {
     } catch (err) {
       return NextResponse.json({ success: false, error: { message: 'Internal server error' } }, { status: 500 })
     }
-  }
+  } finally { span.end() }
 }
 
 export const GET = requireOnboarding(handler)
@@ -31,6 +33,7 @@ export const PUT = requireOnboarding(async (request: AuthenticatedRequest) => {
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: { message: 'Invalid payload', details: parsed.error.issues } }, { status: 400 })
   }
+  const span = await startSpan('settings.updateWeddingDetails', { userId })
   try {
     const data = parsed.data
     const updated = await prisma.weddingDetails.upsert({
@@ -62,5 +65,5 @@ export const PUT = requireOnboarding(async (request: AuthenticatedRequest) => {
       guestCount: data.guestCount as any,
     })
     return NextResponse.json({ success: true, data: updated })
-  }
+  } finally { span.end() }
 })

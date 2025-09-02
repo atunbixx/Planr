@@ -62,6 +62,7 @@ export class SeatingHandler {
    * POST /api/seating/[id]/seats - Create seats for a table
    */
   async createSeatsForTable(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.createSeatsForTable', { tableId })
     try {
       const body = await request.json().catch(() => ({}))
       const capacity = Number(body?.capacity)
@@ -80,12 +81,13 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
   /**
    * POST /api/seating/tables - Create a new table
    */
   async createTable(request: NextRequest, userId: string) {
+    const span = await startSpan('seating.createTable', { userId })
     try {
       const body = await request.json()
       
@@ -120,13 +122,14 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * GET /api/seating/tables/[id] - Get a single table
    */
   async getTableById(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.getTableById', { tableId })
     try {
       const result = await this.service.getTableById(tableId)
       
@@ -153,13 +156,14 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * PATCH /api/seating/tables/[id] - Update a table
    */
   async updateTable(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.updateTable', { tableId })
     try {
       const body = await request.json()
       
@@ -191,13 +195,14 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * DELETE /api/seating/tables/[id] - Delete a table
    */
   async deleteTable(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.deleteTable', { tableId })
     try {
       const result = await this.service.deleteTable(tableId)
       
@@ -215,7 +220,7 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
@@ -263,6 +268,7 @@ export class SeatingHandler {
    * GET /api/seating/stats - Get seating statistics
    */
   async getStats(request: NextRequest, userId: string) {
+    const span = await startSpan('seating.getStats', { userId })
     try {
       const result = await this.service.getStats(userId)
       
@@ -280,6 +286,6 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 }
