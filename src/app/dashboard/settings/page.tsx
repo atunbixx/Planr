@@ -64,14 +64,24 @@ export default function SettingsPage() {
     })
   }, [prefQuery.data])
 
+  function formatIssues(err: unknown): string | null {
+    const issues = (err as any)?.details as Array<{ path?: any[]; message?: string }>
+    if (!Array.isArray(issues) || issues.length === 0) return null
+    const items = issues.map((i) => {
+      const path = Array.isArray(i.path) ? i.path.join('.') : ''
+      return `${path ? `${path}: ` : ''}${i.message || 'Invalid value'}`
+    })
+    return items.join(' • ')
+  }
+
   async function onSubmitWeddingDetails(values: WeddingDetailsForm) {
     try {
       const prev = wdQuery.data
       await wdUpdate.mutateAsync(values)
       notify('Wedding details updated', { variant: 'success', action: prev ? { label: 'Undo', onClick: () => wdUpdate.mutate(prev).catch(()=>{}) } : undefined })
     } catch (e) {
-      // Try to show server-side validation details if available
-      const msg = e instanceof Error ? e.message : 'Failed to update wedding details'
+      const details = formatIssues(e)
+      const msg = (e instanceof Error ? e.message : 'Failed to update wedding details') + (details ? ` — ${details}` : '')
       notify(msg, { variant: 'error' })
     }
   }
@@ -82,7 +92,8 @@ export default function SettingsPage() {
       await prefUpdate.mutateAsync(values)
       notify('Preferences updated', { variant: 'success', action: prev ? { label: 'Undo', onClick: () => prefUpdate.mutate(prev).catch(()=>{}) } : undefined })
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to update preferences'
+      const details = formatIssues(e)
+      const msg = (e instanceof Error ? e.message : 'Failed to update preferences') + (details ? ` — ${details}` : '')
       notify(msg, { variant: 'error' })
     }
   }
