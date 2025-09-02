@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { TaskService } from '../service/task.service'
+import { startSpan } from '@/lib/observability/otel'
 import { CreateTaskDto, UpdateTaskDto, TaskFilterDto } from '../dto/task.dto'
 
 export class TaskHandler {
@@ -9,6 +10,7 @@ export class TaskHandler {
    * GET /api/tasks - List tasks with filtering
    */
   async list(request: NextRequest, userId: string) {
+    const span = await startSpan('tasks.list', { userId })
     try {
       const { searchParams } = new URL(request.url)
       
@@ -58,13 +60,14 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * POST /api/tasks - Create a new task
    */
   async create(request: NextRequest, userId: string) {
+    const span = await startSpan('tasks.create', { userId })
     try {
       const body = await request.json()
       
@@ -111,13 +114,14 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * GET /api/tasks/[id] - Get a single task
    */
   async getById(request: NextRequest, taskId: string) {
+    const span = await startSpan('tasks.getById', { taskId })
     try {
       const result = await this.service.getById(taskId)
       
@@ -142,13 +146,14 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * PATCH /api/tasks/[id] - Update a task
    */
   async update(request: NextRequest, taskId: string) {
+    const span = await startSpan('tasks.update', { taskId })
     try {
       const body = await request.json()
       
@@ -182,13 +187,14 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * DELETE /api/tasks/[id] - Delete a task
    */
   async delete(request: NextRequest, taskId: string) {
+    const span = await startSpan('tasks.delete', { taskId })
     try {
       const result = await this.service.delete(taskId)
       if (result.success) {
@@ -206,13 +212,14 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * GET /api/tasks/stats - Get task statistics
    */
   async getStats(request: NextRequest, userId: string) {
+    const span = await startSpan('tasks.getStats', { userId })
     try {
       const result = await this.service.getStats(userId)
       
@@ -230,13 +237,14 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * POST /api/tasks/template - Create tasks from template
    */
   async createFromTemplate(request: NextRequest, userId: string) {
+    const span = await startSpan('tasks.createFromTemplate', { userId })
     try {
       const body = await request.json()
       const { timeline } = body
@@ -267,7 +275,7 @@ export class TaskHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
