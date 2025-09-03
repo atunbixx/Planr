@@ -3,9 +3,19 @@ import React from 'react'
 interface TableProps {
   children: React.ReactNode
   className?: string
+  variant?: 'contained' | 'bare'
 }
 
-export function Table({ children, className = '' }: TableProps) {
+export function Table({ children, className = '', variant = 'contained' }: TableProps) {
+  if (variant === 'bare') {
+    return (
+      <div className="overflow-x-auto">
+        <table className={`w-full ${className}`}>
+          {children}
+        </table>
+      </div>
+    )
+  }
   return (
     <div className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white dark:bg-dark-2 dark:border-dark-3">
       <div className="overflow-x-auto">

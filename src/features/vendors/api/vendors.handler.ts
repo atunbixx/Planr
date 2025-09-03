@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { VendorsService } from '../service/vendors.service'
 import { startSpan } from '@/lib/observability/otel'
 import { VendorDto, VendorListResponseDto } from '@/contracts/vendors'
+import { NotificationRepository } from '@/features/notifications/repo/notification.repository'
 
 export class VendorsHandler {
   private service = new VendorsService()
+  private notifications = new NotificationRepository()
 
   async list(request: NextRequest, userId: string) {
     const span = await startSpan('vendors.list', { userId })
@@ -52,7 +54,9 @@ export class VendorsHandler {
       const body = await request.json()
       const result = await this.service.create(userId, body)
       if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-      return NextResponse.json({ success: true, data: VendorDto.parse(result.data) }, { status: 201 })
+      const data = VendorDto.parse(result.data)
+      try { await this.notifications.create(userId, { type: 'vendor', title: 'Vendor added', body: data.name || data.category, entityRef: data.id }) } catch {}
+      return NextResponse.json({ success: true, data }, { status: 201 })
     } finally { span.end() }
   }
 
@@ -73,7 +77,11 @@ export class VendorsHandler {
       const result = await this.service.update(userId, id, body)
       if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
       if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
-      return NextResponse.json({ success: true, data: VendorDto.parse(result.data) })
+      const data = VendorDto.parse(result.data)
+      if ((body as any).status) {
+        try { await this.notifications.create(userId, { type: 'vendor', title: `Vendor ${String((body as any).status).toLowerCase()}`, body: data.name, entityRef: data.id }) } catch {}
+      }
+      return NextResponse.json({ success: true, data })
     } finally { span.end() }
   }
 

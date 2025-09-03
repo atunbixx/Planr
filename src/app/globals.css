@@ -9,11 +9,14 @@
   .text-dark-6 { color: #475569 !important; } /* slate-600 */
   .text-dark-5 { color: #475569 !important; } /* slate-600 */
   .text-dark-4 { color: #334155 !important; } /* slate-700 */
+  /* Ensure generic text-dark token is high-contrast */
+  .text-dark { color: #0f172a !important; } /* slate-900 */
 
   /* Dark mode adjustments */
   .dark .text-dark-6 { color: #E5E7EB !important; } /* gray-200 */
   .dark .text-dark-5 { color: #D1D5DB !important; } /* gray-300 */
   .dark .text-dark-4 { color: #D1D5DB !important; } /* gray-300 */
+  .dark .text-dark { color: #F9FAFB !important; } /* gray-50 */
 }
 
 @layer utilities {
@@ -21,6 +24,7 @@
   .text-contrast { color: #111827 !important; } /* slate-900 */
   .dark .text-contrast { color: #F9FAFB !important; }
 }
+@layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -109,6 +113,9 @@
   select {
     color: #000 !important;
     background-color: #fff !important;
+    -webkit-text-fill-color: #000 !important;
+    mix-blend-mode: normal !important;
+    background-clip: padding-box !important;
   }
   select option {
     color: #111827 !important; /* slate-900 */
@@ -126,6 +133,9 @@
     color: #fff !important;
     background-color: var(--dark-2, #1F2A37) !important;
     caret-color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    mix-blend-mode: normal !important;
+    background-clip: padding-box !important;
   }
   .dark input::placeholder,
   .dark textarea::placeholder {
@@ -137,7 +147,57 @@
   }
 }
 
+/* Force light form theme (used for dialogs/cards to avoid black inputs) */
 @layer base {
+  .form-light {
+    --input-bg: #ffffff;
+    --input-fg: #0f172a; /* slate-900 */
+    --input-border: #CBD5E1; /* slate-300 */
+    color-scheme: light;
+  }
+  .form-light input,
+  .form-light textarea,
+  .form-light select {
+    background-color: var(--input-bg) !important;
+    color: var(--input-fg) !important;
+    -webkit-text-fill-color: var(--input-fg) !important;
+    border-color: var(--input-border) !important;
+  }
+  .form-light label {
+    color: #1F2937 !important; /* slate-800: strong label contrast */
+  }
+
+  /* Alternative elegant light form palette */
+  .form-elegant {
+    --input-bg: #FAFAFA; /* slightly warm field bg */
+    --input-fg: #0f172a;
+    --input-border: #CBD5E1; /* slate-300 */
+    color-scheme: light;
+  }
+  .form-elegant input,
+  .form-elegant textarea,
+  .form-elegant select {
+    background-color: var(--input-bg) !important;
+    color: var(--input-fg) !important;
+    -webkit-text-fill-color: var(--input-fg) !important;
+    border-color: var(--input-border) !important;
+  }
+  .form-elegant label {
+    color: #111827 !important; /* slate-900 for headings */
+  }
+}
+
+@layer base {
+  /* Default readable text color sitewide (scoped to content containers to avoid unintended overrides) */
+  .content-defaults :where(*):not(svg):not([class*="text-"]) {
+    color: #0f172a !important; /* slate-900 */
+    -webkit-text-fill-color: #0f172a !important;
+  }
+  .dark .content-defaults :where(*):not(svg):not([class*="text-"]) {
+    color: #F9FAFB !important; /* gray-50 */
+    -webkit-text-fill-color: #F9FAFB !important;
+  }
+
   body {
     color-scheme: light dark;
     font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -169,7 +229,7 @@
   /* Professional dark mode */
   .dark body {
     background: #111928;
-    color: #9CA3AF;
+    color: #E5E7EB; /* brighter base text to avoid blending */
   }
   
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
@@ -180,6 +240,12 @@
   }
   .dark fieldset legend {
     color: #F3F4F6; /* gray-100 */
+  }
+  /* Ensure high-contrast default text inside dark panels/cards */
+  .dark .bg-dark-2,
+  .dark .card,
+  .dark .panel {
+    color: #E5E7EB; /* gray-200 */
   }
 }
 
@@ -209,6 +275,13 @@
   .focus-ring {
     outline: 2px solid #722F37;
     outline-offset: 2px;
+  }
+  .row-highlight {
+    animation: rowflash 1.6s ease-out 0s 1;
+  }
+  @keyframes rowflash {
+    0% { background-color: rgba(114,47,55,0.18); }
+    100% { background-color: transparent; }
   }
 }
 
@@ -351,6 +424,86 @@ button {
 
 .text-wedding-primary {
   color: hsl(var(--primary));
+}
+
+/* Classic Minimalist refinements */
+@layer base {
+  /* Pull quote styling */
+  .theme-classic .pull-quote {
+    border-left: 3px solid #111;
+    padding-left: 1rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: #111;
+    letter-spacing: 0.005em;
+  }
+  /* Tables: hairline dividers, no hover fill, condensed */
+  .theme-classic table { border-collapse: collapse !important; }
+  .theme-classic thead th { border-bottom: 1px solid #DBDBDB !important; font-weight: 700; text-transform: none; }
+  .theme-classic tbody tr { border-bottom: 1px solid #ECECEC; }
+  .theme-classic tbody tr:hover { background: transparent !important; }
+  .theme-classic td, .theme-classic th { padding: 0.65rem 0.5rem; }
+  /* Badges: outline-only */
+  .theme-classic .badge { background: transparent !important; border: 1px solid #111 !important; color: #111 !important; border-radius: 0; }
+  /* Editorial hero visibility */
+  .theme-premium .classic-editorial-hero { display: none; }
+  .theme-classic .classic-editorial-hero { display: block; }
+  /* Vendor classic hero */
+  .theme-classic .vendor-editorial-hero { box-shadow: none !important; border-bottom: 1px solid #DBDBDB !important; }
+  .theme-classic .vendor-editorial-hero h1 { font-size: 2.5rem; letter-spacing: -0.02em; }
+}
+
+/* Classic Minimalist Theme (New York editorial style) */
+@layer base {
+  .theme-classic:root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 7%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 30%;
+    --accent: 0 0% 7%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 86%;
+    --input: 0 0% 96%;
+    --ring: 0 0% 7%;
+    --radius: 0;
+  }
+  .theme-classic body {
+    background: #ffffff;
+    color: #111111;
+    font-family: "Georgia", "Times New Roman", Times, serif;
+    letter-spacing: 0.005em;
+  }
+  .theme-classic h1, .theme-classic h2, .theme-classic h3, .theme-classic h4, .theme-classic h5, .theme-classic h6 {
+    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+    color: #0b0b0b;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  .theme-classic h1 { font-weight: 800; letter-spacing: -0.02em; }
+  .theme-classic h2 { font-weight: 700; letter-spacing: -0.01em; }
+  .theme-classic h3 { font-weight: 700; }
+  .theme-classic a { color: #111; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .theme-classic a:hover { opacity: 0.7; }
+  .theme-classic .rounded, .theme-classic .rounded-sm, .theme-classic .rounded-md, .theme-classic .rounded-lg, .theme-classic .rounded-xl, .theme-classic .rounded-2xl, .theme-classic .rounded-3xl, .theme-classic .rounded-full { border-radius: 0 !important; }
+  .theme-classic [class*="shadow"] { box-shadow: none !important; }
+  .theme-classic .card, .theme-classic .bg-white, .theme-classic .border, .theme-classic .border-stroke { border-color: #DBDBDB !important; }
+  .theme-classic header { background: #fff !important; border-bottom: 1px solid #DBDBDB !important; }
+  .theme-classic button, .theme-classic .btn, .theme-classic .btn-wedding-primary { background: transparent !important; color: #111 !important; border: 1px solid #111 !important; }
+  .theme-classic button:hover { background: #111 !important; color: #fff !important; }
+  .theme-classic input, .theme-classic textarea, .theme-classic select { border: 1px solid #111 !important; background: #fff !important; color: #111 !important; }
+  .theme-classic input::placeholder, .theme-classic textarea::placeholder { color: #6b7280 !important; }
+  .theme-classic .meta { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; color: #6b7280; }
 }
 
 .text-wedding-secondary {

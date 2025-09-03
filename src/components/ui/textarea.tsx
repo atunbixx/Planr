@@ -28,6 +28,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           color: 'var(--input-fg)',
           WebkitTextFillColor: 'var(--input-fg)' as any,
           backgroundColor: 'var(--input-bg)',
+          borderColor: 'var(--input-border)',
           ...(props.style as any),
         }}
         ref={ref}

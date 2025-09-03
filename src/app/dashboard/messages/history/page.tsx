@@ -5,7 +5,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { MessagesHistoryClient, type MessageItem } from '@/lib/api/messages.history.client'
 import { useApiQuery } from '@/lib/api/useApiQuery'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { PageHeader } from '@/components/ui/page-header'
+import { SectionCard, SectionCardBody } from '@/components/ui/section-card'
+import { EmptyState } from '@/components/ui/empty-state'
+import { TableSectionSkeleton } from '@/components/ui/section-skeletons'
 
 export default function MessagesHistoryPage() {
   const [status, setStatus] = useState('')
@@ -23,14 +28,10 @@ export default function MessagesHistoryPage() {
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-dark dark:text-white">Sent Messages</h1>
-            <p className="text-dark-6 dark:text-dark-4 mt-1">History of messages you have sent</p>
-          </div>
+        <PageHeader kicker="MESSAGES" title="Sent Messages" subtitle="History of messages you have sent" actions={
           <div className="flex gap-3">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Status</label>
+              <Label className="mb-1 block">Status</Label>
               <Select value={status || 'all'} onValueChange={(v:any)=>setStatus(v==='all'?'':v)}>
                 <SelectTrigger className="w-40"><SelectValue placeholder="All" /></SelectTrigger>
                 <SelectContent>
@@ -43,7 +44,7 @@ export default function MessagesHistoryPage() {
               </Select>
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Channel</label>
+              <Label className="mb-1 block">Channel</Label>
               <Select value={channel || 'all'} onValueChange={(v:any)=>setChannel(v==='all'?'':v)}>
                 <SelectTrigger className="w-40"><SelectValue placeholder="All" /></SelectTrigger>
                 <SelectContent>
@@ -55,27 +56,18 @@ export default function MessagesHistoryPage() {
               </Select>
             </div>
           </div>
-        </div>
+        } />
 
         {isLoading ? (
-          <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-            <div className="h-6 w-56 bg-gray-200 animate-pulse rounded mb-3" />
-            <div className="space-y-2">
-              <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-              <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-              <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
-            </div>
-          </div>
+          <TableSectionSkeleton columns={7} rows={8} />
         ) : error ? (
           <div className="text-sm text-red-600">{String(error)}</div>
         ) : items.length === 0 ? (
-          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
-            <div className="text-3xl mb-2">✉️</div>
-            <h3 className="text-lg font-semibold mb-1">No messages yet</h3>
-            <p className="text-sm text-gray-600">Send your first message from the Messages page.</p>
-          </div>
+          <EmptyState icon={<span>✉️</span>} title="No messages yet" description="Send your first message from the Messages page." />
         ) : (
-          <Table>
+          <SectionCard>
+            <SectionCardBody>
+          <Table variant="bare">
             <TableHeader>
               <TableRow>
                 <TableHead>To</TableHead>
@@ -101,9 +93,10 @@ export default function MessagesHistoryPage() {
               ))}
             </TableBody>
           </Table>
+            </SectionCardBody>
+          </SectionCard>
         )}
       </div>
     </PremiumDashboardLayout>
   )
 }
-

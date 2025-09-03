@@ -33,6 +33,7 @@ const SelectTrigger = React.forwardRef<
       "disabled:cursor-not-allowed disabled:opacity-50",
       className
     )}
+    style={{ backgroundColor: 'var(--input-bg)', color: 'var(--input-fg)', borderColor: 'var(--input-border)' }}
     {...props}
   >
     {children}

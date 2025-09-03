@@ -2,15 +2,22 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { useSearchParams } from 'next/navigation'
 import { BudgetClient, type RawBudgetItem, type BudgetSummary } from '@/lib/api/budget.client'
-import { Card, CardContent } from '@/components/ui/card'
+import { MetricCard } from '@/components/ui/metric-card'
+import { PageHeader } from '@/components/ui/page-header'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useApiQuery } from '@/lib/api/useApiQuery'
+import { SectionCard, SectionCardBody } from '@/components/ui/section-card'
+import { FormField } from '@/components/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast-provider'
+import { MetricCardsSkeleton, TableSectionSkeleton } from '@/components/ui/section-skeletons'
 
 export default function BudgetPage() {
   const { notify } = useToast()
@@ -68,44 +75,49 @@ export default function BudgetPage() {
     }
   }
 
+  // Error toast is emitted centrally via fetcher
+
+  // Highlight deep-linked row
+  const sp = useSearchParams()
+  const highlightId = sp.get('highlight')
   useEffect(() => {
-    if (error) notify(String(error), { variant: 'error', title: 'Failed to load budget' })
-  }, [error, notify])
+    if (!highlightId) return
+    const el = document.querySelector(`[data-row-id="${CSS.escape(highlightId)}"]`)
+    if (el) {
+      el.classList.add('row-highlight')
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => el.classList.remove('row-highlight'), 1800)
+    }
+  }, [highlightId, items])
 
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-end justify-between">
-          <h1 className="text-2xl font-bold text-dark dark:text-white">Budget</h1>
+        <PageHeader kicker="BUDGET" title="Budget" actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={onAdd}>Add Item</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="content-defaults form-elegant">
               <DialogHeader>
                 <DialogTitle>{form.id ? 'Edit Budget Item' : 'Add Budget Item'}</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Name</label>
+                <FormField label="Name" required>
                   <Input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Venue deposit" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Category</label>
+                </FormField>
+                <FormField label="Category" required>
                   <Input value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} placeholder="e.g. venue" />
-                </div>
+                </FormField>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Allocated</label>
+                  <FormField label="Allocated" required>
                     <Input type="number" value={form.allocated} onChange={e=>setForm(f=>({...f,allocated:e.target.value}))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Actual</label>
+                  </FormField>
+                  <FormField label="Actual">
                     <Input type="number" value={form.actual} onChange={e=>setForm(f=>({...f,actual:e.target.value}))} />
-                  </div>
+                  </FormField>
                 </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Status</label>
+                <FormField label="Status" required>
                   <Select value={form.status} onValueChange={(v:any)=>setForm(f=>({...f,status:v}))}>
                     <SelectTrigger className="w-full"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
@@ -115,7 +127,7 @@ export default function BudgetPage() {
                       <SelectItem value="paid">Paid</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FormField>
               </div>
               <DialogFooter className="mt-4">
                 <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
@@ -123,67 +135,43 @@ export default function BudgetPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
+        } />
 
         {summary && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-sm text-[#475569]">Total Budget</div>
-                <div className="text-2xl font-bold mt-2">${summary.totalAmount.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-sm text-[#475569]">Allocated</div>
-                <div className="text-2xl font-bold mt-2">${summary.totalAllocated.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-sm text-[#475569]">Actual</div>
-                <div className="text-2xl font-bold mt-2">${summary.totalActual.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-sm text-[#475569]">Remaining</div>
-                <div className="text-2xl font-bold mt-2">${summary.remainingBudget.toLocaleString()}</div>
-              </CardContent>
-            </Card>
+            <MetricCard
+              label="Total Budget"
+              value={`$${summary.totalAmount.toLocaleString()}`}
+            />
+            <MetricCard
+              label="Allocated"
+              value={`$${summary.totalAllocated.toLocaleString()}`}
+            />
+            <MetricCard
+              label="Actual"
+              value={`$${summary.totalActual.toLocaleString()}`}
+              subtitle={`${summary.percentSpent}% of budget`}
+            />
+            <MetricCard
+              label="Remaining"
+              value={`$${summary.remainingBudget.toLocaleString()}`}
+            />
           </div>
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[...Array(4)].map((_,i)=>(
-                <div key={i} className="bg-white dark:bg-gray-50 p-6 rounded-lg border shadow-sm">
-                  <div className="h-4 w-24 bg-gray-200 animate-pulse rounded mb-3" />
-                  <div className="h-6 w-32 bg-gray-200 animate-pulse rounded" />
-                </div>
-              ))}
-            </div>
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="h-6 w-56 bg-gray-200 animate-pulse rounded mb-3" />
-              <div className="space-y-2">
-                <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-                <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-                <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
-              </div>
-            </div>
+          <div className="space-y-4">
+            <MetricCardsSkeleton count={4} />
+            <TableSectionSkeleton columns={6} rows={6} />
           </div>
         ) : error ? (
           <div className="text-sm text-red-600">{String(error)}</div>
         ) : items.length === 0 ? (
-          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
-            <div className="text-3xl mb-2">💸</div>
-            <h3 className="text-lg font-semibold mb-1">No budget items yet</h3>
-            <p className="text-sm text-gray-600 mb-4">Add your first expense or line item to track your budget.</p>
-            <Button onClick={onAdd}>Add Item</Button>
-          </div>
+          <EmptyState icon={<span>💸</span>} title="No budget items yet" description="Add your first expense or line item to track your budget." action={<Button onClick={onAdd}>Add Item</Button>} />
         ) : (
-          <Table>
+          <SectionCard>
+            <SectionCardBody>
+          <Table variant="bare">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -196,7 +184,7 @@ export default function BudgetPage() {
             </TableHeader>
             <TableBody>
               {items.map((i) => (
-                <TableRow key={i.id}>
+                <TableRow key={i.id} data-row-id={i.id as any}>
                   <TableCell className="font-medium">{(i as any).name || '—'}</TableCell>
                   <TableCell className="capitalize">{i.category}</TableCell>
                   <TableCell className="text-right">${Number(i.allocated).toLocaleString()}</TableCell>
@@ -210,6 +198,8 @@ export default function BudgetPage() {
               ))}
             </TableBody>
           </Table>
+            </SectionCardBody>
+          </SectionCard>
         )}
       </div>
     </PremiumDashboardLayout>

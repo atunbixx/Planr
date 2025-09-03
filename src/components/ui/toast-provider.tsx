@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { ToastPayload } from '@/lib/ui/toast-bus'
 
 type ToastAction = { label: string; onClick: () => void }
 type Toast = { id: number; title?: string; message: string; variant?: 'default'|'success'|'error'|'warning'; action?: ToastAction };
@@ -33,6 +34,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
+      {/* Listen for global toast events */}
+      <ToastEventBridge onNotify={notify} />
       {/* Container */}
       <div className="fixed z-[9999] bottom-4 right-4 space-y-2 pointer-events-none">
         {toasts.map(t => (
@@ -64,4 +67,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       </div>
     </ToastContext.Provider>
   )
+}
+
+function ToastEventBridge({ onNotify }: { onNotify: (message: string, opts?: any) => void }) {
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<ToastPayload>).detail
+      if (!detail) return
+      onNotify(detail.message, { title: detail.title, variant: detail.variant, action: detail.action })
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('app:toast', handler as any)
+      return () => window.removeEventListener('app:toast', handler as any)
+    }
+  }, [onNotify])
+  return null
 }

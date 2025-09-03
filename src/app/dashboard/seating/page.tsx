@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { PageHeader } from '@/components/ui/page-header'
+import { SectionCard, SectionCardBody } from '@/components/ui/section-card'
 import { SeatingClient } from '@/lib/api/seating.client'
-import { type LegacyGuest } from '@/lib/api/guests.client'
+import type { GuestResponse } from '@/features/guests/dto/guest.dto'
 import { useGuests } from '@/lib/api/queries/useGuests'
 import { useSeating, useCreateTable, useAssignSeat, useUpdateTable, useDeleteTable, useAutoAssign } from '@/lib/api/queries/useSeating'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,6 +27,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { MetricCardsSkeleton, TableSectionSkeleton } from '@/components/ui/section-skeletons'
 
 type TableItem = { id: string; name: string; capacity: number; seats?: Array<{ id: string; guestId?: string | null }> }
 
@@ -32,7 +35,7 @@ export default function SeatingPage() {
   const seatingQuery = useSeating()
   const guestsQuery = useGuests()
   const [error, setError] = useState<string | null>(null)
-  const [guestMap, setGuestMap] = useState<Record<string, LegacyGuest>>({})
+  const [guestMap, setGuestMap] = useState<Record<string, GuestResponse>>({})
   const [newTableOpen, setNewTableOpen] = useState(false)
   const [newTableName, setNewTableName] = useState('Table')
   const [newTableCapacity, setNewTableCapacity] = useState<number>(8)
@@ -50,11 +53,13 @@ export default function SeatingPage() {
   )
 
   useEffect(() => {
-    const guests = guestsQuery.data || []
-    const map: Record<string, LegacyGuest> = {}
+    const guests = (guestsQuery.data || []) as GuestResponse[]
+    const map: Record<string, GuestResponse> = {}
     for (const g of guests) map[g.id] = g
     setGuestMap(map)
   }, [guestsQuery.data])
+
+  const displayName = (g?: GuestResponse) => g ? `${g.firstName}${g.lastName ? ` ${g.lastName}` : ''}` : ''
 
   const tables = (seatingQuery.data as any as TableItem[]) || []
   const loading = seatingQuery.isLoading || guestsQuery.isLoading
@@ -151,7 +156,7 @@ export default function SeatingPage() {
   const onDragStart = (e: DragStartEvent) => {
     const gid = (e.active.data?.current as any)?.guestId as string | undefined
     if (gid) setActiveGuestId(gid)
-    if (gid) setLiveMessage(`Start dragging ${guestMap[gid]?.name || 'guest'}`)
+    if (gid) setLiveMessage(`Start dragging ${displayName(guestMap[gid]) || 'guest'}`)
   }
   const onDragEnd = (e: DragEndEvent) => {
     const gid = (e.active.data?.current as any)?.guestId as string | undefined
@@ -176,60 +181,66 @@ export default function SeatingPage() {
     // Reuse existing assignment helper (optimistic + API)
     const fakeEvent = { preventDefault() {}, dataTransfer: { getData: () => gid } } as any
     handleDropOnSeat(targetSeat, fakeEvent)
-    setLiveMessage(`${guestMap[gid]?.name || 'Guest'} placed on seat`)
+    setLiveMessage(`${displayName(guestMap[gid]) || 'Guest'} placed on seat`)
   }
 
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-dark dark:text-white">Table Seating</h1>
-          <div className="flex items-center gap-2">
-          <Button data-testid="auto-assign" variant="outline" onClick={autoAssign}>Auto Assign</Button>
-          <Dialog open={newTableOpen} onOpenChange={setNewTableOpen}>
-             <DialogTrigger asChild>
-              <Button data-testid="new-table" variant="primary">New Table</Button>
-              </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Table</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="tname">Name</Label>
-                    <Input id="tname" value={newTableName} onChange={e => setNewTableName(e.target.value)} placeholder="Table name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="tcap">Capacity</Label>
-                    <Input id="tcap" type="number" min={1} max={20} value={newTableCapacity} onChange={e => setNewTableCapacity(parseInt(e.target.value || '0'))} />
+          <PageHeader kicker="SEATING" title="Table Seating" actions={
+            <div className="flex items-center gap-2">
+              <Button data-testid="auto-assign" variant="outline" onClick={autoAssign}>Auto Assign</Button>
+              <Dialog open={newTableOpen} onOpenChange={setNewTableOpen}>
+                <DialogTrigger asChild>
+                  <Button data-testid="new-table" variant="primary">New Table</Button>
+                </DialogTrigger>
+                <DialogContent className="content-defaults form-elegant">
+                  <DialogHeader>
+                    <DialogTitle>Create Table</DialogTitle>
+                  </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField label="Name" htmlFor="tname" required>
+                      <Input id="tname" value={newTableName} onChange={e => setNewTableName(e.target.value)} placeholder="Table name" />
+                    </FormField>
+                    <FormField label="Capacity" htmlFor="tcap" required help="1–20">
+                      <Input id="tcap" type="number" min={1} max={20} value={newTableCapacity} onChange={e => setNewTableCapacity(parseInt(e.target.value || '0'))} />
+                    </FormField>
                   </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setNewTableOpen(false)}>Cancel</Button>
-                <Button variant="primary" onClick={createTable} isLoading={creating}>Create</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          </div>
-        </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setNewTableOpen(false)}>Cancel</Button>
+                    <Button variant="primary" onClick={createTable} isLoading={creating}>Create</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          } />
 
         {stats && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Tables</div><div className="text-2xl font-bold mt-2">{stats.totalTables}</div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Seats</div><div className="text-2xl font-bold mt-2">{stats.totalSeats}</div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Seated</div><div className="text-2xl font-bold mt-2">{stats.seatedGuests}</div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Unseated</div><div className="text-2xl font-bold mt-2">{stats.unseatedGuests}</div></CardContent></Card>
-          </div>
+          <SectionCard>
+            <SectionCardBody>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Tables</div><div className="text-2xl font-bold mt-2">{stats.totalTables}</div></CardContent></Card>
+                <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Seats</div><div className="text-2xl font-bold mt-2">{stats.totalSeats}</div></CardContent></Card>
+                <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Seated</div><div className="text-2xl font-bold mt-2">{stats.seatedGuests}</div></CardContent></Card>
+                <Card><CardContent className="p-6"><div className="text-sm text-[#475569]">Unseated</div><div className="text-2xl font-bold mt-2">{stats.unseatedGuests}</div></CardContent></Card>
+              </div>
+            </SectionCardBody>
+          </SectionCard>
         )}
 
         {loading ? (
-          <div className="text-sm text-dark-6">Loading seating…</div>
+          <div className="space-y-4">
+            <MetricCardsSkeleton count={4} />
+            <TableSectionSkeleton columns={4} rows={6} />
+          </div>
         ) : error ? (
           <div className="text-sm text-red-600">{error}</div>
         ) : (
-          <Table>
+          <SectionCard>
+            <SectionCardBody>
+          <Table variant="bare">
             <TableHeader>
               <TableRow>
                 <TableHead>Table</TableHead>
@@ -243,7 +254,7 @@ export default function SeatingPage() {
                 const assigned = (t.seats || []).filter(s => s.guestId).length
                 const names = (t.seats || [])
                   .filter(s => s.guestId)
-                  .map((s: any) => s.guest?.name || (s.guestId ? guestMap[s.guestId]?.name : undefined))
+                  .map((s: any) => s.guest?.name || (s.guestId ? displayName(guestMap[s.guestId]) : undefined))
                   .filter(Boolean)
                   .join(', ')
                 return (
@@ -257,6 +268,8 @@ export default function SeatingPage() {
               })}
             </TableBody>
           </Table>
+            </SectionCardBody>
+          </SectionCard>
         )}
 
         {/* Arrange seating board with drag-and-drop */}
@@ -282,7 +295,7 @@ export default function SeatingPage() {
                     <div className="text-sm text-dark-6">All guests are seated</div>
                   )}
                   {unseatedGuests.map(g => (
-                    <DraggableGuest key={g.id} guestId={g.id} label={g.name} />
+                    <DraggableGuest key={g.id} guestId={g.id} label={displayName(g)} />
                   ))}
                 </div>
               </CardContent>
@@ -304,7 +317,7 @@ export default function SeatingPage() {
                         <DroppableSeat
                           key={s.id}
                           id={`seat-${s.id}`}
-                          label={s.guestId ? (guestMap[s.guestId]?.name || 'Assigned') : 'Empty'}
+                          label={s.guestId ? (displayName(guestMap[s.guestId]) || 'Assigned') : 'Empty'}
                           onUnassign={() => unassignSeat({ ...s, tableId: t.id })}
                           hasGuest={Boolean(s.guestId)}
                         />
@@ -318,7 +331,7 @@ export default function SeatingPage() {
           <DragOverlay>
             {activeGuestId ? (
               <div className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-[hsl(var(--primary))] shadow-md dark:border-dark-3 dark:bg-dark-2 dark:text-neutral-100">
-                {guestMap[activeGuestId]?.name || 'Guest'}
+                {displayName(guestMap[activeGuestId]) || 'Guest'}
               </div>
             ) : null}
           </DragOverlay>
@@ -327,20 +340,18 @@ export default function SeatingPage() {
 
         {/* Edit Table Dialog */}
         <Dialog open={!!editingTable} onOpenChange={(v) => !v ? setEditingTable(null) : null}>
-          <DialogContent>
+          <DialogContent className="content-defaults form-elegant">
             <DialogHeader>
               <DialogTitle>Edit Table</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="ename">Name</Label>
+                <FormField label="Name" htmlFor="ename" required>
                   <Input id="ename" value={editName} onChange={e => setEditName(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="ecap">Capacity</Label>
+                </FormField>
+                <FormField label="Capacity" htmlFor="ecap" required help="1–20">
                   <Input id="ecap" type="number" min={1} max={20} value={editCapacity} onChange={e => setEditCapacity(parseInt(e.target.value || '0'))} />
-                </div>
+                </FormField>
               </div>
             </div>
             <DialogFooter>
@@ -356,7 +367,7 @@ export default function SeatingPage() {
 
 function DraggableGuest({ guestId, label }: { guestId: string; label: string }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: `guest-${guestId}`, data: { guestId } })
-  const style: React.CSSProperties = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined
+  const style: React.CSSProperties = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : {}
   return (
     <div
       ref={setNodeRef}

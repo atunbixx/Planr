@@ -388,6 +388,61 @@ model Message {
   @@map("messages")
 }
 
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // 'guest' | 'vendor' | 'budget' | 'rsvp' | 'system'
+  title     String
+  body      String?
+  entityRef String?  // e.g., budget item id
+  status    String   @default("unread") // 'unread' | 'read'
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt], map: "notifications_user_status_created_idx")
+  @@map("notifications")
+}
+
+// Photo gallery
+model PhotoAlbum {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  description  String?
+  coverPhotoId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos       Photo[]
+
+  @@index([userId, createdAt], map: "photo_albums_user_created_idx")
+  @@map("photo_albums")
+}
+
+model Photo {
+  id         String      @id @default(uuid())
+  userId     String
+  albumId    String?
+  url        String
+  alt        String?
+  caption    String?
+  width      Int?
+  height     Int?
+  size       Int?
+  order      Int         @default(0)
+  isPrimary  Boolean     @default(false)
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  album      PhotoAlbum? @relation(fields: [albumId], references: [id], onDelete: SetNull)
+
+  @@index([userId, albumId, order], map: "photos_user_album_order_idx")
+  @@map("photos")
+}
+
 enum UserRole {
   couple
   planner

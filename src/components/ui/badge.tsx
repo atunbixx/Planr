@@ -31,7 +31,7 @@ export function Badge({
 
   return (
     <span className={`
-      inline-flex items-center font-semibold rounded-full border transition-all duration-200
+      badge inline-flex items-center font-semibold rounded-full border transition-all duration-200
       ${variantClasses[variant]} ${sizeClasses[size]} ${className}
     `}>
       {children}

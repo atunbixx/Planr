@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { startSpan } from '@/lib/observability/otel'
 import { GuestService } from '../service/guest.service'
-import { tempStorage } from '@/lib/db/temp-storage'
 import { CreateGuestDto, UpdateGuestDto, GuestFilterDto } from '../dto/guest.dto'
 import { GuestListResponseDto, GuestResponseDto } from '@/contracts/guests'
+import { NotificationRepository } from '@/features/notifications/repo/notification.repository'
 
 export class GuestHandler {
   private guestService: GuestService
+  private notifications = new NotificationRepository()
 
   constructor() {
     this.guestService = new GuestService()
@@ -32,6 +33,9 @@ export class GuestHandler {
         for (const id of ids) {
           await this.guestService.updateGuest(id, { rsvpStatus: status } as any)
         }
+        try {
+          await this.notifications.create(coupleId, { type: 'guest', title: 'RSVP statuses updated', body: `${ids.length} guest(s) → ${status}` })
+        } catch {}
         return NextResponse.json({ success: true, data: { updated: ids.length } })
       }
       if (action === 'setInvitationSent') {

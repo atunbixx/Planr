@@ -6,11 +6,14 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { FormField } from '@/components/ui/form-field'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast-provider'
 import { formatApiError } from '@/lib/errors/format'
 import { useEffect } from 'react'
 import { usePreferences, useUpdatePreferences, useWeddingDetails, useUpdateWeddingDetails } from '@/lib/api/queries/useSettings'
+import { PageHeader } from '@/components/ui/page-header'
+import { SectionCard, SectionCardBody, SectionCardHeader, SectionCardTitle } from '@/components/ui/section-card'
 
 const WeddingDetailsSchema = z.object({
   venue: z.string().optional().default(''),
@@ -89,48 +92,39 @@ export default function SettingsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-6 space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-          <p className="text-slate-600 dark:text-neutral-300 mt-2">Manage your wedding details and app preferences.</p>
-        </div>
+      <div className={`p-6 space-y-8 content-defaults form-elegant`}>
+        <PageHeader title="Settings" subtitle="Manage your wedding details and app preferences." />
 
         {/* Wedding Details */}
-        <section className="rounded-xl border border-[#E5E7EB] bg-white p-6 dark:bg-dark-2 dark:border-dark-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Wedding Details</h2>
-          <form onSubmit={wdForm.handleSubmit(onSubmitWeddingDetails)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="venue">Venue</Label>
+        <SectionCard>
+          <SectionCardTitle kicker="SETTINGS" title={<span>Wedding Details</span>} />
+          <SectionCardBody>
+            <form onSubmit={wdForm.handleSubmit(onSubmitWeddingDetails)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField label="Venue" htmlFor="venue" error={wdForm.formState.errors.venue?.message}>
               <Input id="venue" placeholder="e.g. Grand Ballroom" {...wdForm.register('venue')} />
-              {wdForm.formState.errors.venue && <p className="text-xs text-rose-600 mt-1">{wdForm.formState.errors.venue.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="weddingDate">Wedding Date</Label>
+            </FormField>
+            <FormField label="Wedding Date" htmlFor="weddingDate" error={wdForm.formState.errors.weddingDate?.message}>
               <Input id="weddingDate" type="date" {...wdForm.register('weddingDate')} />
-              {wdForm.formState.errors.weddingDate && <p className="text-xs text-rose-600 mt-1">{wdForm.formState.errors.weddingDate.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="budget">Budget</Label>
+            </FormField>
+            <FormField label="Budget" htmlFor="budget" error={wdForm.formState.errors.budget?.message}>
               <Input id="budget" type="number" step="0.01" min="0" placeholder="e.g. 25000" {...wdForm.register('budget')} />
-              {wdForm.formState.errors.budget && <p className="text-xs text-rose-600 mt-1">{wdForm.formState.errors.budget.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="guestCount">Guest Count</Label>
+            </FormField>
+            <FormField label="Guest Count" htmlFor="guestCount" error={wdForm.formState.errors.guestCount?.message}>
               <Input id="guestCount" type="number" min="0" placeholder="e.g. 150" {...wdForm.register('guestCount')} />
-              {wdForm.formState.errors.guestCount && <p className="text-xs text-rose-600 mt-1">{wdForm.formState.errors.guestCount.message}</p>}
-            </div>
+            </FormField>
             <div className="sm:col-span-2 flex gap-2 justify-end mt-2">
               <Button type="submit" variant="primary" isLoading={wdUpdate.isPending || loading} data-testid="save-wedding-details">Save Wedding Details</Button>
             </div>
-          </form>
-        </section>
+            </form>
+          </SectionCardBody>
+        </SectionCard>
 
         {/* Preferences */}
-        <section className="rounded-xl border border-[#E5E7EB] bg-white p-6 dark:bg-dark-2 dark:border-dark-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Preferences</h2>
-          <form onSubmit={prefForm.handleSubmit(onSubmitPreferences)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="currency">Currency</Label>
+        <SectionCard>
+          <SectionCardTitle kicker="SETTINGS" title={<span>Preferences</span>} />
+          <SectionCardBody>
+            <form onSubmit={prefForm.handleSubmit(onSubmitPreferences)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField label="Currency" htmlFor="currency">
               <select id="currency" className="w-full border rounded-md px-3 py-2 bg-white text-black dark:bg-dark-2 dark:text-white" {...prefForm.register('currency')}>
                 <option value="">Select currency</option>
                 <option value="USD">USD</option>
@@ -138,22 +132,19 @@ export default function SettingsPage() {
                 <option value="GBP">GBP</option>
                 <option value="NGN">NGN</option>
               </select>
-            </div>
-            <div>
-              <Label htmlFor="language">Language</Label>
+            </FormField>
+            <FormField label="Language" htmlFor="language">
               <select id="language" className="w-full border rounded-md px-3 py-2 bg-white text-black dark:bg-dark-2 dark:text-white" {...prefForm.register('language')}>
                 <option value="">Select language</option>
                 <option value="en">English</option>
                 <option value="es">Spanish</option>
                 <option value="fr">French</option>
               </select>
-            </div>
-            <div>
-              <Label htmlFor="region">Region</Label>
+            </FormField>
+            <FormField label="Region" htmlFor="region">
               <Input id="region" placeholder="e.g. US" {...prefForm.register('region')} />
-            </div>
-            <div>
-              <Label htmlFor="timeZone">Time Zone</Label>
+            </FormField>
+            <FormField label="Time Zone" htmlFor="timeZone">
               <select id="timeZone" className="w-full border rounded-md px-3 py-2 bg-white text-black dark:bg-dark-2 dark:text-white" {...prefForm.register('timeZone')}>
                 <option value="">Select time zone</option>
                 <option value="UTC">UTC</option>
@@ -162,20 +153,19 @@ export default function SettingsPage() {
                 <option value="Europe/London">Europe/London</option>
                 <option value="Africa/Lagos">Africa/Lagos</option>
               </select>
-            </div>
-            <div>
-              <Label htmlFor="dateFormat">Date Format</Label>
+            </FormField>
+            <FormField label="Date Format" htmlFor="dateFormat">
               <Input id="dateFormat" placeholder="e.g. YYYY-MM-DD" {...prefForm.register('dateFormat')} />
-            </div>
-            <div>
-              <Label htmlFor="timeFormat">Time Format</Label>
+            </FormField>
+            <FormField label="Time Format" htmlFor="timeFormat">
               <Input id="timeFormat" placeholder="e.g. HH:mm" {...prefForm.register('timeFormat')} />
-            </div>
+            </FormField>
             <div className="sm:col-span-2 flex gap-2 justify-end mt-2">
               <Button type="submit" variant="primary" isLoading={prefUpdate.isPending || loading} data-testid="save-preferences">Save Preferences</Button>
             </div>
-          </form>
-        </section>
+            </form>
+          </SectionCardBody>
+        </SectionCard>
       </div>
     </PremiumDashboardLayout>
   );

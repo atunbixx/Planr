@@ -186,7 +186,7 @@ export default function PremiumDashboardLayout({ children }: { children: React.R
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 min-h-0 bg-gray-1 dark:bg-dark overflow-auto">
+        <main className="flex-1 min-w-0 min-h-0 bg-gray-1 dark:bg-dark overflow-auto content-defaults">
           {children}
         </main>
       </div>

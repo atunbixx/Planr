@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useToast } from '@/components/ui/toast-provider'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { FormField } from '@/components/ui/form-field'
+import { Textarea } from '@/components/ui/textarea'
 import { z } from 'zod'
 import { PublicVendor } from '@/features/vendors/service/vendor.service'
 
@@ -207,164 +212,105 @@ export function ContactForm({ vendor, isOpen, onClose }: ContactFormProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 form-elegant">
           {/* Personal Information */}
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name *
-              </label>
-              <input
-                ref={firstInputRef}
+            <FormField label="Full Name" htmlFor="name" required error={errors.name}>
+              <Input
+                ref={firstInputRef as any}
                 type="text"
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
                 placeholder="Enter your full name"
-                aria-describedby={errors.name ? 'name-error' : undefined}
               />
-              {errors.name && (
-                <p id="name-error" className="text-red-500 text-sm mt-1" role="alert">
-                  {errors.name}
-                </p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address *
-              </label>
-              <input
+            <FormField label="Email Address" htmlFor="email" required error={errors.email}>
+              <Input
                 type="email"
                 id="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
                 placeholder="Enter your email address"
-                aria-describedby={errors.email ? 'email-error' : undefined}
               />
-              {errors.email && (
-                <p id="email-error" className="text-red-500 text-sm mt-1" role="alert">
-                  {errors.email}
-                </p>
-              )}
-            </div>
+            </FormField>
           </div>
 
           {/* Phone and Preferred Contact */}
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
-              </label>
-              <input
+            <FormField label="Phone Number" htmlFor="phone">
+              <Input
                 type="tel"
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your phone number"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label htmlFor="preferredContact" className="block text-sm font-medium text-gray-700 mb-1">
-                Preferred Contact Method
-              </label>
-              <select
-                id="preferredContact"
-                value={formData.preferredContact}
-                onChange={(e) => handleInputChange('preferredContact', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="email">Email</option>
-                <option value="phone">Phone</option>
-                <option value="either">Either</option>
-              </select>
-            </div>
+            <FormField label="Preferred Contact Method">
+              <Select value={formData.preferredContact} onValueChange={(v:any)=>handleInputChange('preferredContact', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="phone">Phone</SelectItem>
+                  <SelectItem value="either">Either</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
           </div>
 
           {/* Event Details */}
           <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Event Date
-              </label>
-              <input
+            <FormField label="Event Date" htmlFor="eventDate">
+              <Input
                 type="date"
                 id="eventDate"
                 value={formData.eventDate}
                 onChange={(e) => handleInputChange('eventDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 min={new Date().toISOString().split('T')[0]}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label htmlFor="guestCount" className="block text-sm font-medium text-gray-700 mb-1">
-                Guest Count
-              </label>
-              <input
+            <FormField label="Guest Count" htmlFor="guestCount">
+              <Input
                 type="number"
                 id="guestCount"
                 value={formData.guestCount}
                 onChange={(e) => handleInputChange('guestCount', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Number of guests"
-                min="1"
+                min={1 as any}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">
-                Budget Range
-              </label>
-              <select
-                id="budget"
-                value={formData.budget}
-                onChange={(e) => handleInputChange('budget', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select budget range</option>
-                <option value="under-50k">Under ₦50,000</option>
-                <option value="50k-100k">₦50,000 - ₦100,000</option>
-                <option value="100k-250k">₦100,000 - ₦250,000</option>
-                <option value="250k-500k">₦250,000 - ₦500,000</option>
-                <option value="500k-1m">₦500,000 - ₦1,000,000</option>
-                <option value="over-1m">Over ₦1,000,000</option>
-              </select>
-            </div>
+            <FormField label="Budget Range">
+              <Select value={formData.budget} onValueChange={(v:any)=>handleInputChange('budget', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select budget range" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Select budget range</SelectItem>
+                  <SelectItem value="under-50k">Under ₦50,000</SelectItem>
+                  <SelectItem value="50k-100k">₦50,000 - ₦100,000</SelectItem>
+                  <SelectItem value="100k-250k">₦100,000 - ₦250,000</SelectItem>
+                  <SelectItem value="250k-500k">₦250,000 - ₦500,000</SelectItem>
+                  <SelectItem value="500k-1m">₦500,000 - ₦1,000,000</SelectItem>
+                  <SelectItem value="over-1m">Over ₦1,000,000</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-              Message *
-            </label>
-            <textarea
-              id="message"
-              rows={4}
-              value={formData.message}
-              onChange={(e) => handleInputChange('message', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${
-                errors.message ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Tell us about your event and what services you're looking for..."
-              aria-describedby={errors.message ? 'message-error' : undefined}
-            />
-            {errors.message && (
-              <p id="message-error" className="text-red-500 text-sm mt-1" role="alert">
-                {errors.message}
-              </p>
-            )}
-            <p className="text-gray-500 text-sm mt-1">
-              {formData.message.length}/1000 characters
-            </p>
+            <FormField label="Message" htmlFor="message" required error={errors.message} help={`${formData.message.length}/1000 characters`}>
+              <Textarea
+                id="message"
+                rows={4}
+                value={formData.message}
+                onChange={(e) => handleInputChange('message', e.target.value)}
+                placeholder="Tell us about your event and what services you're looking for..."
+              />
+            </FormField>
           </div>
 
           {/* Submit Status */}

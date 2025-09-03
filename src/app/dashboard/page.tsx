@@ -151,6 +151,14 @@ export default function DashboardPage() {
 
   return (
     <PremiumDashboardLayout>
+      {/* Classic editorial hero (hidden on premium) */}
+      <div className="classic-editorial-hero">
+        <div className="mx-auto max-w-6xl px-6 py-10 border-b">
+          <div className="meta mb-2">THE PLANNER • YOUR WEDDING DASHBOARD</div>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">A Clear View of Your Day</h1>
+          <p className="mt-3 max-w-2xl text-slate-700">Guests, vendors, budget, and timeline — distilled to essentials with an editorial eye.</p>
+        </div>
+      </div>
       {loading ? (
         <div className="p-6 flex items-center justify-center min-h-96">
           <div className="text-center">

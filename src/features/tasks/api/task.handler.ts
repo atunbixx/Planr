@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TaskService } from '../service/task.service'
 import { startSpan } from '@/lib/observability/otel'
 import { CreateTaskDto, UpdateTaskDto, TaskFilterDto } from '../dto/task.dto'
+import { NotificationRepository } from '@/features/notifications/repo/notification.repository'
 
 export class TaskHandler {
   private service = new TaskService()
+  private notifications = new NotificationRepository()
 
   /**
    * GET /api/tasks - List tasks with filtering
@@ -43,6 +45,20 @@ export class TaskHandler {
         // Validate shape defensively using DTO
         const { TaskListResponseDto } = await import('@/features/tasks/dto/task.dto')
         const data = TaskListResponseDto.parse(result.data)
+        // Overdue notifications (best-effort, deduped)
+        try {
+          const { NotificationRepository } = await import('@/features/notifications/repo/notification.repository')
+          const repo = new NotificationRepository()
+          const now = Date.now()
+          for (const t of data.tasks as any[]) {
+            if (t.dueDate && t.status !== 'completed') {
+              const due = new Date(t.dueDate).getTime()
+              if (!Number.isNaN(due) && due < now) {
+                await repo.createOnce(userId, { type: 'task', title: 'Task overdue', body: t.title, entityRef: t.id })
+              }
+            }
+          }
+        } catch {}
         return NextResponse.json({ success: true, data })
       }
       // Dev fallback: use temp-storage in non-production
@@ -87,6 +103,7 @@ export class TaskHandler {
       if (result.success) {
         const { TaskResponseDto } = await import('@/features/tasks/dto/task.dto')
         const data = TaskResponseDto.parse(result.data)
+        try { await this.notifications.create(userId, { type: 'task', title: 'Task created', body: data.title, entityRef: data.id }) } catch {}
         return NextResponse.json({ success: true, data }, { status: 201 })
       }
       if (process.env.NODE_ENV !== 'production') {
@@ -178,7 +195,10 @@ export class TaskHandler {
       if (process.env.NODE_ENV !== 'production') {
         const { tempStorage } = await import('@/lib/db/temp-storage')
         const updated = await tempStorage.updateTask(taskId, validationResult.data as any)
-        if (updated) return NextResponse.json({ success: true, data: updated })
+        if (updated) {
+          try { await this.notifications.create((updated as any).userId, { type: 'task', title: 'Task updated', body: updated.title, entityRef: updated.id }) } catch {}
+          return NextResponse.json({ success: true, data: updated })
+        }
       }
       return NextResponse.json({ success: false, error: { message: 'Task not found' } }, { status: 404 })
     } catch (error) {

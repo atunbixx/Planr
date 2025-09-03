@@ -7,15 +7,18 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   variant?: 'default' | 'filled'
 }
 
-export function Input({ 
-  label, 
-  error, 
-  helpText, 
-  variant = 'default',
-  className = '', 
-  id,
-  ...props 
-}: InputProps) {
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
+  { 
+    label, 
+    error, 
+    helpText, 
+    variant = 'default',
+    className = '', 
+    id,
+    ...props 
+  }: InputProps,
+  ref
+) {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
   const variantClasses = {
@@ -46,8 +49,10 @@ export function Input({
           color: 'var(--input-fg)',
           WebkitTextFillColor: 'var(--input-fg)' as any,
           backgroundColor: 'var(--input-bg)',
+          borderColor: 'var(--input-border)',
           ...(props.style as any)
         }}
+        ref={ref}
         {...props}
       />
       {error && (
@@ -63,4 +68,4 @@ export function Input({
       )}
     </div>
   )
-}
+})

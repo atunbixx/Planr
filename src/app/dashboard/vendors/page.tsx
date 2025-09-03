@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
+import { useSearchParams } from 'next/navigation'
 import { VendorsClient, type Vendor } from '@/lib/api/vendors.client'
 import { useToast } from '@/components/ui/toast-provider'
 
@@ -11,7 +12,11 @@ import { formatApiError } from '@/lib/errors/format'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { FormField } from '@/components/ui/form-field'
+import { PageHeader } from '@/components/ui/page-header'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export default function VendorsPage() {
   const { notify } = useToast()
@@ -81,30 +86,39 @@ export default function VendorsPage() {
     }
   }
 
+  // Highlight deep-linked vendor
+  const sp = useSearchParams()
+  const highlightId = sp.get('highlight')
+  useEffect(() => {
+    if (!highlightId) return
+    const el = document.querySelector(`[data-card-id="${CSS.escape(highlightId)}"]`)
+    if (el) {
+      el.classList.add('row-highlight')
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => el.classList.remove('row-highlight'), 1800)
+    }
+  }, [highlightId, vendors])
+
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-end justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Vendors</h1>
+        <PageHeader kicker="VENDORS" title="My Vendors" actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={onAdd}>Add Vendor</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="content-defaults form-elegant">
               <DialogHeader>
                 <DialogTitle>{form.id ? 'Edit Vendor' : 'Add Vendor'}</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Name</label>
+                <FormField label="Name" required>
                   <Input value={form.name || ''} onChange={e=>setForm(f=>({ ...(f||{}), name: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Category</label>
+                </FormField>
+                <FormField label="Category" required>
                   <Input value={form.category || ''} onChange={e=>setForm(f=>({ ...(f||{}), category: e.target.value }))} placeholder="e.g. photography" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Status</label>
+                </FormField>
+                <FormField label="Status">
                   <Select value={(form.status as any) || 'inquiry'} onValueChange={(v:any)=>setForm(f=>({ ...(f||{}), status: v }))}>
                     <SelectTrigger className="w-full"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
@@ -116,23 +130,19 @@ export default function VendorsPage() {
                       <SelectItem value="paid">Paid</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Contact</label>
+                </FormField>
+                <FormField label="Contact">
                   <Input value={form.contact || ''} onChange={e=>setForm(f=>({ ...(f||{}), contact: e.target.value }))} placeholder="email or phone" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Logo URL</label>
+                </FormField>
+                <FormField label="Logo URL">
                   <Input value={form.logoUrl || ''} onChange={e=>setForm(f=>({ ...(f||{}), logoUrl: e.target.value }))} placeholder="https://example.com/logo.jpg" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Price Range</label>
+                </FormField>
+                <FormField label="Price Range">
                   <Input value={form.priceRange || ''} onChange={e=>setForm(f=>({ ...(f||{}), priceRange: e.target.value }))} placeholder="e.g. $, $$, $$$" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Notes</label>
+                </FormField>
+                <FormField label="Notes">
                   <Input value={form.notes || ''} onChange={e=>setForm(f=>({ ...(f||{}), notes: e.target.value }))} placeholder="Additional notes..." />
-                </div>
+                </FormField>
               </div>
               <DialogFooter className="mt-4">
                 <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
@@ -140,16 +150,18 @@ export default function VendorsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
+        } />
 
         {isLoading ? (
           <div className="text-sm text-gray-600">Loading vendors…</div>
         ) : error ? (
           <div className="text-sm text-red-600">{String(error)}</div>
+        ) : vendors.length === 0 ? (
+          <EmptyState icon={<span>🏢</span>} title="No vendors yet" description="Add your first vendor to start managing bookings and quotes." action={<Button onClick={onAdd}>Add Vendor</Button>} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {vendors.map(v => (
-              <div key={v.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={v.id} data-card-id={v.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Vendor Image */}
                 <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 relative">
                   {v.logoUrl ? (

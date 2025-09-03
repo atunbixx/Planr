@@ -3,10 +3,16 @@
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { FormField } from '@/components/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { MessagingClient } from '@/lib/api/messaging.client'
+import { formatApiError } from '@/lib/errors/format'
 import { useToast } from '@/components/ui/toast-provider'
+import { PageHeader } from '@/components/ui/page-header'
+import { SectionCard, SectionCardBody, SectionCardHeader, SectionCardTitle } from '@/components/ui/section-card'
 
 export default function MessagesPage() {
   const { notify } = useToast()
@@ -22,7 +28,7 @@ export default function MessagesPage() {
       setPricing({ cost: p.cost, currency: p.currency })
       notify(`Current cost: ${p.cost} ${p.currency}`, { variant: 'default' })
     } catch (e: any) {
-      notify(e?.message || 'Failed to get pricing', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to get pricing'), { variant: 'error' })
     }
   }
 
@@ -37,7 +43,7 @@ export default function MessagesPage() {
       notify('Message sent', { variant: 'success' })
       setForm(prev => ({ ...prev, subject: '', body: '' }))
     } catch (e: any) {
-      notify(e?.message || 'Failed to send message', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to send message'), { variant: 'error' })
     } finally {
       setIsSending(false)
     }
@@ -46,15 +52,13 @@ export default function MessagesPage() {
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-dark dark:text-white">Messages</h1>
-          <Button variant="outline" onClick={checkPricing}>Check Pricing</Button>
-        </div>
+        <PageHeader kicker="MESSAGING" title="Messages" actions={<Button variant="outline" onClick={checkPricing}>Check Pricing</Button>} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-50 border rounded-lg p-6 space-y-4">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Channel</label>
+          <SectionCard>
+            <SectionCardTitle kicker="MESSAGES" title={<span>Compose</span>} />
+            <SectionCardBody className="space-y-4 form-elegant">
+            <FormField label="Channel">
               <Select value={form.channel} onValueChange={(v: any) => update('channel', v)}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -63,44 +67,42 @@ export default function MessagesPage() {
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Country (pricing)</label>
+            </FormField>
+            <FormField label="Country (pricing)">
               <Input value={form.country} onChange={e=>update('country', e.target.value.toUpperCase())} placeholder="e.g. NG, US" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">To</label>
+            </FormField>
+            <FormField label="To">
               <Input value={form.to} onChange={e=>update('to', e.target.value)} placeholder="email or phone" />
-            </div>
+            </FormField>
             {form.channel === 'email' && (
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Subject</label>
+              <FormField label="Subject">
                 <Input value={form.subject} onChange={e=>update('subject', e.target.value)} placeholder="Subject" />
-              </div>
+              </FormField>
             )}
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Message</label>
-              <textarea className="w-full border rounded p-2 h-32" value={form.body} onChange={e=>update('body', e.target.value)} placeholder="Write your message..." />
-            </div>
+            <FormField label="Message">
+              <Textarea value={form.body} onChange={e=>update('body', e.target.value)} placeholder="Write your message..." className="min-h-32" />
+            </FormField>
             <div className="flex items-center justify-between">
               {pricing && (
                 <div className="text-sm text-gray-600">Est. Cost: {pricing.cost} {pricing.currency}</div>
               )}
               <Button onClick={send} isLoading={isSending}>Send</Button>
             </div>
-          </div>
+            </SectionCardBody>
+          </SectionCard>
 
-          <div className="bg-white dark:bg-gray-50 border rounded-lg p-6">
-            <h2 className="font-semibold mb-2">Tips</h2>
+          <SectionCard>
+            <SectionCardTitle kicker="MESSAGES" title={<span>Tips</span>} />
+            <SectionCardBody>
             <ul className="list-disc ml-5 text-sm text-gray-600 space-y-2">
               <li>Use email for rich invitations; SMS for quick reminders.</li>
               <li>Country affects SMS/WhatsApp pricing; email is flat.</li>
               <li>Keep messages concise for higher engagement.</li>
             </ul>
-          </div>
+            </SectionCardBody>
+          </SectionCard>
         </div>
       </div>
     </PremiumDashboardLayout>
   )
 }
-
