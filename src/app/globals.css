@@ -99,9 +99,9 @@
     --dark-2: #1F2A37;
     --dark-3: #374151;
     --stroke-dark: #27303E;
-    /* Form field variables */
-    --input-fg: #ffffff;
-    --input-bg: var(--dark-2);
+    /* Form field variables: keep inputs light even in dark mode for readability */
+    --input-fg: #0f172a; /* slate-900 */
+    --input-bg: #ffffff;
   }
 }
 
@@ -499,10 +499,10 @@ button {
   .theme-classic [class*="shadow"] { box-shadow: none !important; }
   .theme-classic .card, .theme-classic .bg-white, .theme-classic .border, .theme-classic .border-stroke { border-color: #DBDBDB !important; }
   .theme-classic header { background: #fff !important; border-bottom: 1px solid #DBDBDB !important; }
-  .theme-classic button, .theme-classic .btn, .theme-classic .btn-wedding-primary { background: transparent !important; color: #111 !important; border: 1px solid #111 !important; }
-  .theme-classic button:hover { background: #111 !important; color: #fff !important; }
-  .theme-classic input, .theme-classic textarea, .theme-classic select { border: 1px solid #111 !important; background: #fff !important; color: #111 !important; }
-  .theme-classic input::placeholder, .theme-classic textarea::placeholder { color: #6b7280 !important; }
+  /* Preserve our component-driven button and input styling; do not globally override */
+  /* If you want retro-styled buttons, add a class like .classic-button to the element instead. */
+  /* .theme-classic .classic-button { background: transparent; color: #111; border: 1px solid #111; } */
+  /* .theme-classic .classic-button:hover { background: #111; color: #fff; } */
   .theme-classic .meta { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; color: #6b7280; }
 }
 
