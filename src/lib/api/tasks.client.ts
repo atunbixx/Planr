@@ -94,8 +94,9 @@ export class TasksClient {
   static async createFromTemplate(timeline: string): Promise<TaskResponse[]> {
     const result = await api.post<ApiEnvelope<unknown>>('/api/tasks/template', { timeline })
     if (!result.success) throw new Error(result.error?.message || 'Failed to create tasks from template')
-    // For brevity, skip strict parsing of arrays here
-    return result.data as any
+    const parsed = TaskResponseDto.array().safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task array shape')
+    return parsed.data
   }
 
   /**
@@ -107,7 +108,9 @@ export class TasksClient {
   ): Promise<TaskResponse[]> {
     const result = await api.patch<ApiEnvelope<unknown>>('/api/tasks/bulk', { taskIds, status })
     if (!result.success) throw new Error(result.error?.message || 'Failed to bulk update tasks')
-    return result.data as any
+    const parsed = TaskResponseDto.array().safeParse(result.data)
+    if (!parsed.success) throw new Error('Invalid task array shape')
+    return parsed.data
   }
 
   /**

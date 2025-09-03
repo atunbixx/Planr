@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { startSpan } from '@/lib/observability/otel'
 import { GuestService } from '../service/guest.service'
-import { tempStorage } from '@/lib/db/temp-storage'
 import { CreateGuestDto, UpdateGuestDto, GuestFilterDto } from '../dto/guest.dto'
 import { GuestListResponseDto, GuestResponseDto } from '@/contracts/guests'
+import { NotificationRepository } from '@/features/notifications/repo/notification.repository'
 
 export class GuestHandler {
   private guestService: GuestService
+  private notifications = new NotificationRepository()
 
   constructor() {
     this.guestService = new GuestService()
@@ -15,6 +17,7 @@ export class GuestHandler {
    * POST /api/guests/bulk - Bulk updates for RSVP, invitation, household
    */
   async bulkUpdate(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.bulkUpdate', { coupleId })
     try {
       const body = await request.json().catch(() => ({}))
       const action = String(body?.action || '')
@@ -30,6 +33,9 @@ export class GuestHandler {
         for (const id of ids) {
           await this.guestService.updateGuest(id, { rsvpStatus: status } as any)
         }
+        try {
+          await this.notifications.create(coupleId, { type: 'guest', title: 'RSVP statuses updated', body: `${ids.length} guest(s) → ${status}` })
+        } catch {}
         return NextResponse.json({ success: true, data: { updated: ids.length } })
       }
       if (action === 'setInvitationSent') {
@@ -50,6 +56,8 @@ export class GuestHandler {
     } catch (error) {
       console.error('Error in bulkUpdate handler:', error)
       return NextResponse.json({ success: false, error: { message: 'Internal server error', statusCode: 500 } }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
@@ -57,6 +65,7 @@ export class GuestHandler {
    * GET /api/guests - List all guests for the authenticated couple
    */
   async getGuests(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.getGuests', { coupleId })
     try {
       // Parse query parameters for filtering
       const url = new URL(request.url)
@@ -108,10 +117,14 @@ export class GuestHandler {
         limit: result.data!.limit,
         offset: result.data!.offset,
       })
-      return NextResponse.json({ success: true, data })
+      const res = NextResponse.json({ success: true, data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in getGuests handler:', error)
       return NextResponse.json({ success: false, error: { message: 'Internal server error' } }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
@@ -130,7 +143,9 @@ export class GuestHandler {
       }
 
       const data = result.data ? GuestResponseDto.parse(result.data) : null
-      return NextResponse.json({ success: true, data })
+      const res = NextResponse.json({ success: true, data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in getGuest handler:', error)
       return NextResponse.json({
@@ -147,6 +162,7 @@ export class GuestHandler {
    * POST /api/guests - Create a new guest
    */
   async createGuest(request: NextRequest, coupleId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.createGuest', { coupleId })
     try {
       const body = await request.json()
 
@@ -186,6 +202,8 @@ export class GuestHandler {
           statusCode: 500
         }
       }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
@@ -193,6 +211,7 @@ export class GuestHandler {
    * PUT /api/guests/[id] - Update a guest
    */
   async updateGuest(request: NextRequest, guestId: string): Promise<NextResponse> {
+    const span = await startSpan('guests.updateGuest', { guestId })
     try {
       const body = await request.json()
 
@@ -232,6 +251,8 @@ export class GuestHandler {
           statusCode: 500
         }
       }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 

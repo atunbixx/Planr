@@ -109,12 +109,13 @@ export function ClientPage({ vendor }: ClientPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 content-defaults">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
+      <header className="bg-white shadow-sm sticky top-0 z-40 vendor-editorial-hero">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
             <div>
+              <div className="meta mb-1">VENDOR</div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {vendor.businessName}
               </h1>

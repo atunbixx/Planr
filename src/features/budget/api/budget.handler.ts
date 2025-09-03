@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BudgetService } from '../service/budget.service'
 import { tempStorage } from '@/lib/db/temp-storage'
 import { BudgetItemDto, BudgetListResponseDto } from '@/contracts/budget'
+import { NotificationRepository } from '@/features/notifications/repo/notification.repository'
 
 export class BudgetHandler {
   private service = new BudgetService()
+  private notifications = new NotificationRepository()
 
   async list(_request: NextRequest, userId: string) {
     try {
@@ -85,6 +87,20 @@ export class BudgetHandler {
       const result = await this.service.createBudgetItem(userId, mapped as any)
       if (result.success) {
         const data = BudgetItemDto.parse(result.data)
+        // Create notification (best-effort)
+        try {
+          await this.notifications.create(userId, { type: 'budget', title: 'Budget item added', body: data.name || data.category, entityRef: data.id })
+          const allocated = Number((result.data as any).budgetedAmount ?? 0)
+          const actual = Number((result.data as any).actualAmount ?? 0)
+          if (allocated > 0) {
+            const ratio = actual / allocated
+            if (actual > allocated) {
+              await this.notifications.createOnce(userId, { type: 'budget', title: 'Budget over allocated', body: `${data.name || data.category}: ${actual.toLocaleString()} > ${allocated.toLocaleString()}`, entityRef: data.id })
+            } else if (ratio >= 0.9) {
+              await this.notifications.createOnce(userId, { type: 'budget', title: 'Budget nearing limit', body: `${data.name || data.category}: ${Math.round(ratio*100)}% used`, entityRef: data.id })
+            }
+          }
+        } catch {}
         return NextResponse.json({ success: true, data }, { status: 201 })
       }
 
@@ -99,6 +115,19 @@ export class BudgetHandler {
           status: body.status || (mapped.isPaid ? 'paid' : 'planned'),
           name: mapped.name,
         })
+      try {
+        await this.notifications.create(userId, { type: 'budget', title: 'Budget item added', body: temp.name || temp.category, entityRef: temp.id })
+        const allocated = Number((temp as any).allocated ?? (temp as any).amount ?? 0)
+        const actual = Number((temp as any).actual ?? 0)
+        if (allocated > 0) {
+          const ratio = actual / allocated
+          if (actual > allocated) {
+            await this.notifications.createOnce(userId, { type: 'budget', title: 'Budget over allocated', body: `${temp.name || temp.category}: ${actual.toLocaleString()} > ${allocated.toLocaleString()}`, entityRef: temp.id })
+          } else if (ratio >= 0.9) {
+            await this.notifications.createOnce(userId, { type: 'budget', title: 'Budget nearing limit', body: `${temp.name || temp.category}: ${Math.round(ratio*100)}% used`, entityRef: temp.id })
+          }
+        }
+      } catch {}
       return NextResponse.json({ success: true, data: BudgetItemDto.parse(temp) }, { status: 201 })
       }
       return NextResponse.json({ success: false, error: { message: 'Database unavailable' } }, { status: 500 })
@@ -146,7 +175,22 @@ export class BudgetHandler {
           actual: typeof mapped.actualAmount === 'number' ? mapped.actualAmount : undefined as any,
           status: body.status,
         } as any)
-      if (updated) return NextResponse.json({ success: true, data: BudgetItemDto.parse(updated) })
+      if (updated) {
+        try {
+          await this.notifications.create(userId, { type: 'budget', title: 'Budget item updated', body: updated.name || updated.category, entityRef: updated.id })
+          const allocated = Number((updated as any).allocated ?? (updated as any).amount ?? 0)
+          const actual = Number((updated as any).actual ?? 0)
+          if (allocated > 0) {
+            const ratio = actual / allocated
+            if (actual > allocated) {
+              await this.notifications.createOnce(userId, { type: 'budget', title: 'Budget over allocated', body: `${updated.name || updated.category}: ${actual.toLocaleString()} > ${allocated.toLocaleString()}`, entityRef: updated.id })
+            } else if (ratio >= 0.9) {
+              await this.notifications.createOnce(userId, { type: 'budget', title: 'Budget nearing limit', body: `${updated.name || updated.category}: ${Math.round(ratio*100)}% used`, entityRef: updated.id })
+            }
+          }
+        } catch {}
+        return NextResponse.json({ success: true, data: BudgetItemDto.parse(updated) })
+      }
       }
       return NextResponse.json({ success: false, error: { message: 'Budget item not found' } }, { status: 404 })
     } catch (e: any) {

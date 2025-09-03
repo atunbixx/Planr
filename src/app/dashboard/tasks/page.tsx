@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
 import { TasksClient } from '@/lib/api/tasks.client'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -8,9 +9,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useApiQuery } from '@/lib/api/useApiQuery'
 import { useToast } from '@/components/ui/toast-provider'
+import { formatApiError } from '@/lib/errors/format'
+import { PageHeader } from '@/components/ui/page-header'
+import { EmptyState } from '@/components/ui/empty-state'
+import { MetricCard } from '@/components/ui/metric-card'
+import { SectionCard, SectionCardBody } from '@/components/ui/section-card'
+import { TableSectionSkeleton } from '@/components/ui/section-skeletons'
+import { FormField } from '@/components/ui/form-field'
 
 type Task = {
   id: string
@@ -54,7 +63,7 @@ export default function TasksPage() {
     return { tasks: data.tasks as any }
   })
   useEffect(() => { if (data?.tasks) setTasks(data.tasks) }, [data])
-  useEffect(() => { if (error) notify(String(error), { variant: 'error', title: 'Failed to load tasks' }) }, [error, notify])
+  // Error toast is emitted centrally via fetcher
 
   // Calculate task statistics
   const stats = {
@@ -73,7 +82,7 @@ export default function TasksPage() {
       await TasksClient.update(taskId, { status: 'completed' })
       notify('Task marked as completed', { variant: 'success' })
     } catch (e) {
-      notify(e instanceof Error ? e.message : 'Failed to update task', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to update task'), { variant: 'error' })
       // revert by refetching
       await refetch()
     } finally {
@@ -100,7 +109,7 @@ export default function TasksPage() {
       notify('Task created', { variant: 'success' })
       await refetch()
     } catch (e) {
-      notify(e instanceof Error ? e.message : 'Failed to create task', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to create task'), { variant: 'error' })
     }
   }
 
@@ -111,158 +120,137 @@ export default function TasksPage() {
       notify('Tasks added from template', { variant: 'success' })
       await refetch()
     } catch (e) {
-      notify(e instanceof Error ? e.message : 'Failed to create tasks from template', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to create tasks from template'), { variant: 'error' })
     }
   }
 
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-dark dark:text-white">Tasks</h1>
-          <div className="flex gap-2">
-            <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline">Add from Template</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Tasks from Template</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-600">Choose a wedding planning timeline to add relevant tasks:</p>
-                  {Object.entries(TasksClient.getAvailableTemplates()).map(([key, label]) => (
-                    <Button
-                      key={key}
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => createFromTemplate(key)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowTemplateDialog(false)}>Cancel</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button>Add Task</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Task</DialogTitle>
-                </DialogHeader>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Title</label>
-                    <Input 
-                      value={newTask.title} 
-                      onChange={e => setNewTask(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Task title"
-                    />
+        <PageHeader
+          kicker="TASKS"
+          title="Tasks"
+          actions={
+            <div className="flex gap-2">
+              <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">Add from Template</Button>
+                </DialogTrigger>
+                <DialogContent className="content-defaults form-elegant">
+                  <DialogHeader>
+                    <DialogTitle>Add Tasks from Template</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">Choose a wedding planning timeline to add relevant tasks:</p>
+                    {Object.entries(TasksClient.getAvailableTemplates()).map(([key, label]) => (
+                      <Button
+                        key={key}
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => createFromTemplate(key)}
+                      >
+                        {label}
+                      </Button>
+                    ))}
                   </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Description</label>
-                    <Input 
-                      value={newTask.description} 
-                      onChange={e => setNewTask(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Task description (optional)"
-                    />
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowTemplateDialog(false)}>Cancel</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <DialogTrigger asChild>
+                  <Button>Add Task</Button>
+                </DialogTrigger>
+                <DialogContent className="content-defaults form-elegant">
+                  <DialogHeader>
+                    <DialogTitle>Create New Task</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField label="Title" required>
+                      <Input 
+                        value={newTask.title} 
+                        onChange={e => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Task title"
+                      />
+                    </FormField>
+                    <FormField label="Description">
+                      <Input 
+                        value={newTask.description} 
+                        onChange={e => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Task description (optional)"
+                      />
+                    </FormField>
+                    <FormField label="Category">
+                      <Input 
+                        value={newTask.category} 
+                        onChange={e => setNewTask(prev => ({ ...prev, category: e.target.value }))}
+                        placeholder="e.g. Planning, Venue, Catering"
+                      />
+                    </FormField>
+                    <FormField label="Priority">
+                      <Select value={newTask.priority} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, priority: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+                    <FormField label="Due Date">
+                      <Input 
+                        type="date"
+                        value={newTask.dueDate} 
+                        onChange={e => setNewTask(prev => ({ ...prev, dueDate: e.target.value }))}
+                      />
+                    </FormField>
                   </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Category</label>
-                    <Input 
-                      value={newTask.category} 
-                      onChange={e => setNewTask(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="e.g. Planning, Venue, Catering"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Priority</label>
-                    <Select value={newTask.priority} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, priority: value }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Due Date</label>
-                    <Input 
-                      type="date"
-                      value={newTask.dueDate} 
-                      onChange={e => setNewTask(prev => ({ ...prev, dueDate: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-                  <Button onClick={createTask} disabled={!newTask.title.trim()}>Create Task</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
+                    <Button onClick={createTask} disabled={!newTask.title.trim()}>Create Task</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          }
+        />
+        {/* Deep-link highlight */}
+        <DeepLinkHighlighter items={tasks} />
         {/* Task Statistics */}
         {!isLoading && !error && !localError && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-700">Total Tasks</div>
-            </div>
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-700">Pending</div>
-            </div>
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-700">In Progress</div>
-            </div>
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-700">Completed</div>
-            </div>
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-700">Overdue</div>
-            </div>
+            <MetricCard label="Total Tasks" value={<span className="text-blue-600">{stats.total}</span>} />
+            <MetricCard label="Pending" value={<span className="text-yellow-600">{stats.pending}</span>} />
+            <MetricCard label="In Progress" value={<span className="text-blue-600">{stats.inProgress}</span>} />
+            <MetricCard label="Completed" value={<span className="text-green-600">{stats.completed}</span>} />
+            <MetricCard label="Overdue" value={<span className="text-red-600">{stats.overdue}</span>} />
           </div>
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4">
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mb-3" />
-              <div className="space-y-2">
-                <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-                <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-                <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
-              </div>
-            </div>
-          </div>
+          <TableSectionSkeleton columns={8} rows={8} />
         ) : error || localError ? (
           <div className="text-sm text-red-600">{String(error || localError)}</div>
         ) : tasks.length === 0 ? (
-          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
-            <div className="text-3xl mb-2">📋</div>
-            <h3 className="text-lg font-semibold mb-1">No tasks yet</h3>
-            <p className="text-sm text-gray-600 mb-4">Create a task or add a full planning template to get started.</p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={() => setShowCreateDialog(true)}>Add Task</Button>
-              <Button variant="outline" onClick={() => setShowTemplateDialog(true)}>Add from Template</Button>
-            </div>
-          </div>
+          <EmptyState
+            icon={<span>📋</span>}
+            title="No tasks yet"
+            description="Create a task or add a full planning template to get started."
+            action={
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => setShowCreateDialog(true)}>Add Task</Button>
+                <Button variant="outline" onClick={() => setShowTemplateDialog(true)}>Add from Template</Button>
+              </div>
+            }
+          />
         ) : (
-          <Table>
+          <SectionCard>
+            <SectionCardBody>
+          <Table variant="bare">
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
@@ -277,7 +265,7 @@ export default function TasksPage() {
             </TableHeader>
             <TableBody>
               {tasks.map(t => (
-                <TableRow key={t.id}>
+                <TableRow key={t.id} data-row-id={t.id}>
                   <TableCell className="font-medium">
                     <div>
                       <div>{t.title}</div>
@@ -309,8 +297,25 @@ export default function TasksPage() {
               ))}
             </TableBody>
           </Table>
+            </SectionCardBody>
+          </SectionCard>
         )}
       </div>
     </PremiumDashboardLayout>
   )
+}
+
+function DeepLinkHighlighter({ items }: { items: { id: string }[] }) {
+  const sp = useSearchParams()
+  const highlightId = sp.get('highlight')
+  useEffect(() => {
+    if (!highlightId) return
+    const el = document.querySelector(`[data-row-id="${CSS.escape(highlightId)}"]`)
+    if (el) {
+      el.classList.add('row-highlight')
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => el.classList.remove('row-highlight'), 1800)
+    }
+  }, [highlightId, items])
+  return null
 }

@@ -22,12 +22,22 @@ import {
 import { cn } from '@/lib/utils';
 
 const ThemeSwitcher: React.FC = () => {
-  const [themeMode, setThemeMode] = useState<'default' | 'premium'>('premium');
+  const [themeMode, setThemeMode] = useState<'default' | 'premium'>(() => {
+    if (typeof window === 'undefined') return 'premium'
+    return (localStorage.getItem('appTheme') as 'default' | 'premium') || 'premium'
+  });
+
+  // Apply root theme class
+  React.useEffect(() => {
+    const root = document.documentElement
+    root.classList.remove('theme-classic', 'theme-premium')
+    if (themeMode === 'default') root.classList.add('theme-classic')
+    else root.classList.add('theme-premium')
+    localStorage.setItem('appTheme', themeMode)
+  }, [themeMode])
 
   const handleThemeSelect = (mode: 'default' | 'premium') => {
     setThemeMode(mode);
-    // Since we're using pure shadcn/ui now, this is just for UI state
-    // The actual styling is handled by CSS and Tailwind
   };
 
   return (
@@ -87,7 +97,7 @@ const ThemeSwitcher: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Clean, minimal design with sharp edges
+                New York–style editorial layout, bold typography, minimalist chrome
               </p>
             </div>
           </DropdownMenuItem>

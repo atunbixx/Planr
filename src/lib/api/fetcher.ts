@@ -1,6 +1,7 @@
 "use client"
 
 import AuthClient from '@/lib/auth/client'
+import { emitToast } from '@/lib/ui/toast-bus'
 
 type FetcherOptions = RequestInit & {
   parseJson?: boolean
@@ -46,7 +47,13 @@ export async function apiFetch<T = any>(input: string, options: FetcherOptions =
   const json = await res.json().catch(() => undefined)
   if (!res.ok) {
     const msg = json?.error?.message || `Request failed with ${res.status}`
-    throw new Error(msg)
+    const err: any = new Error(msg)
+    if (json?.error?.details) err.details = json.error.details
+    // Emit a standardized toast on client for GET requests only,
+    // to avoid duplicating action-level toasts handled by pages.
+    const method = (options.method || 'GET').toString().toUpperCase()
+    if (isBrowser() && method === 'GET') emitToast({ title: 'Request failed', message: msg, variant: 'error' })
+    throw err
   }
   return json as T
 }
@@ -58,4 +65,3 @@ export const api = {
   put: <T>(url: string, body?: any, init?: FetcherOptions) => apiFetch<T>(url, { ...(init || {}), method: 'PUT', body: JSON.stringify(body ?? {}) }),
   delete: <T>(url: string, init?: FetcherOptions) => apiFetch<T>(url, { ...(init || {}), method: 'DELETE' }),
 }
-

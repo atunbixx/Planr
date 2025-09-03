@@ -2,18 +2,9 @@
 
 import { api } from '@/lib/api/fetcher'
 import { GuestListResponseDto, GuestResponseDto } from '@/contracts/guests'
+import type { GuestListResponse, GuestResponse, CreateGuestInput, UpdateGuestInput } from '@/features/guests/dto/guest.dto'
 
-export type LegacyGuest = {
-  id: string
-  name: string
-  rsvpStatus: 'pending'|'accepted'|'declined'
-  mealPreference?: string
-  side?: 'bride'|'groom'
-  invitationSent: boolean
-  relationshipCategory?: string
-}
-
-type ApiEnvelope<T> = {
+export type ApiEnvelope<T> = {
   success: boolean
   data?: T
   error?: { message: string; code?: string; statusCode?: number }
@@ -23,7 +14,7 @@ type ApiEnvelope<T> = {
 }
 
 export const GuestsClient = {
-  async listGuests(params?: { limit?: number; offset?: number; side?: 'bride'|'groom'; status?: 'pending'|'accepted'|'declined'; category?: string; dietary?: string }): Promise<{ guests: LegacyGuest[]; total?: number; limit?: number; offset?: number }> {
+  async listGuests(params?: { limit?: number; offset?: number; side?: 'bride'|'groom'; status?: 'pending'|'accepted'|'declined'; category?: string; dietary?: string }): Promise<{ guests: GuestResponse[]; total?: number; limit?: number; offset?: number }> {
     const qs = new URLSearchParams()
     if (params?.limit) qs.set('limit', String(params.limit))
     if (params?.offset) qs.set('offset', String(params.offset))
@@ -36,66 +27,28 @@ export const GuestsClient = {
     if (!env.success) throw new Error(env.error?.message || 'Failed to load guests')
     const parsed = GuestListResponseDto.safeParse(env.data)
     if (!parsed.success) throw new Error('Invalid guests response shape')
-    // Map to LegacyGuest for page compatibility
-    const guests: LegacyGuest[] = parsed.data.guests.map((g:any) => ({
-      id: g.id,
-      name: `${g.firstName} ${g.lastName || ''}`.trim(),
-      rsvpStatus: g.rsvpStatus || 'pending',
-      mealPreference: g.dietaryRestrictions || undefined,
-      side: g.side || undefined,
-      invitationSent: Boolean(g.invitationSentAt),
-      relationshipCategory: g.relationshipCategory || undefined,
-    }))
-    return { guests, total: parsed.data.total, limit: parsed.data.limit, offset: parsed.data.offset }
+    return { guests: parsed.data.guests as GuestResponse[], total: parsed.data.total, limit: parsed.data.limit, offset: parsed.data.offset }
   },
   async getGuest(id: string) {
     const env = await api.get<ApiEnvelope<unknown>>(`/api/guests/${id}`)
     if (!env.success) throw new Error(env.error?.message || 'Failed to get guest')
     const parsed = GuestResponseDto.safeParse(env.data)
     if (!parsed.success) throw new Error('Invalid guest response shape')
-    const g: any = parsed.data
-    const legacy: LegacyGuest = {
-      id: g.id,
-      name: `${g.firstName} ${g.lastName || ''}`.trim(),
-      rsvpStatus: g.rsvpStatus || 'pending',
-      mealPreference: g.dietaryRestrictions || undefined,
-      side: g.side || undefined,
-      invitationSent: Boolean(g.invitationSentAt),
-      relationshipCategory: g.relationshipCategory || undefined,
-    }
-    return legacy
+    return parsed.data as GuestResponse
   },
-  async createGuest(payload: Partial<LegacyGuest & { plusOneAllowed?: boolean; plusOneName?: string; householdId?: string | null; tags?: string[] }>): Promise<LegacyGuest> {
+  async createGuest(payload: CreateGuestInput): Promise<GuestResponse> {
     const env = await api.post<ApiEnvelope<unknown>>('/api/guests', payload)
     if (!env.success) throw new Error(env.error?.message || 'Failed to create guest')
     const parsed = GuestResponseDto.safeParse(env.data)
     if (!parsed.success) throw new Error('Invalid guest response shape')
-    const g: any = parsed.data
-    return {
-      id: g.id,
-      name: `${g.firstName} ${g.lastName || ''}`.trim(),
-      rsvpStatus: g.rsvpStatus || 'pending',
-      mealPreference: g.dietaryRestrictions || undefined,
-      side: g.side || undefined,
-      invitationSent: Boolean(g.invitationSentAt),
-      relationshipCategory: g.relationshipCategory || undefined,
-    }
+    return parsed.data as GuestResponse
   },
-  async updateGuest(id: string, payload: Partial<LegacyGuest & { plusOneAllowed?: boolean; plusOneName?: string; householdId?: string | null; tags?: string[] }>): Promise<LegacyGuest> {
+  async updateGuest(id: string, payload: UpdateGuestInput): Promise<GuestResponse> {
     const env = await api.put<ApiEnvelope<unknown>>(`/api/guests/${id}`, payload)
     if (!env.success) throw new Error(env.error?.message || 'Failed to update guest')
     const parsed = GuestResponseDto.safeParse(env.data)
     if (!parsed.success) throw new Error('Invalid guest response shape')
-    const g: any = parsed.data
-    return {
-      id: g.id,
-      name: `${g.firstName} ${g.lastName || ''}`.trim(),
-      rsvpStatus: g.rsvpStatus || 'pending',
-      mealPreference: g.dietaryRestrictions || undefined,
-      side: g.side || undefined,
-      invitationSent: Boolean(g.invitationSentAt),
-      relationshipCategory: g.relationshipCategory || undefined,
-    }
+    return parsed.data as GuestResponse
   },
   async deleteGuest(id: string): Promise<boolean> {
     const env = await api.delete<ApiEnvelope<{ deleted: true }>>(`/api/guests/${id}`)

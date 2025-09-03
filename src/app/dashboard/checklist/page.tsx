@@ -91,10 +91,10 @@ export default function ChecklistPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 text-slate-800 dark:text-neutral-100">
         <div>
-          <h1 className="text-2xl font-bold text-dark dark:text-white">Wedding Checklist</h1>
-          <p className="text-dark-6 dark:text-dark-4 mt-2">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Wedding Checklist</h1>
+          <p className="mt-2 text-slate-600 dark:text-neutral-300">
             Track your wedding planning progress with our essential checklist.
           </p>
         </div>
@@ -104,7 +104,10 @@ export default function ChecklistPage() {
             {/* Progress Summary */}
             <div className="bg-white dark:bg-dark-2 rounded-lg p-6 border border-stroke dark:border-dark-3">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-dark dark:text-white">Progress Overview</h2>
+                <div>
+                  <div className="meta mb-1">STATUS</div>
+                  <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Progress Overview</h2>
+                </div>
                 <span className="text-2xl font-bold text-primary">
                   {completionPercentage}%
                 </span>
@@ -117,7 +120,7 @@ export default function ChecklistPage() {
                 />
               </div>
               
-              <p className="text-sm text-dark-6 dark:text-dark-4">
+              <p className="text-sm text-slate-600 dark:text-neutral-300">
                 {checklistData.completed} of {checklistData.total} tasks completed
               </p>
             </div>
@@ -125,7 +128,8 @@ export default function ChecklistPage() {
             {/* Checklist Items */}
             <div className="bg-white dark:bg-dark-2 rounded-lg border border-stroke dark:border-dark-3">
               <div className="p-6 border-b border-stroke dark:border-dark-3">
-                <h2 className="text-lg font-semibold text-dark dark:text-white">Essential Tasks</h2>
+                <div className="meta mb-1">CHECKLIST</div>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Essential Tasks</h2>
               </div>
               
               <div className="divide-y divide-stroke dark:divide-dark-3">
@@ -144,11 +148,11 @@ export default function ChecklistPage() {
                     </div>
                     
                     <div className="flex-1">
-                      <h3 className={`font-medium ${item.completed ? 'text-dark-6 line-through' : 'text-dark dark:text-white'}`}>
+                      <h3 className={`font-medium ${item.completed ? 'text-slate-500 dark:text-neutral-400 line-through' : 'text-slate-800 dark:text-white'}`}>
                         {item.title}
                       </h3>
                       {item.hint && (
-                        <p className="text-sm text-dark-6 dark:text-dark-4 mt-1">
+                        <p className="mt-1 text-sm text-slate-600 dark:text-neutral-300">
                           {item.hint}
                         </p>
                       )}

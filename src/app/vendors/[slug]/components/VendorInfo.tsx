@@ -41,8 +41,11 @@ export function VendorInfo({ vendor }: VendorInfoProps) {
       </div>
 
       {/* Description */}
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
         <p className="text-gray-700 leading-relaxed">{vendor.description}</p>
+        <blockquote className="pull-quote">
+          “{vendor.description}”
+        </blockquote>
       </div>
 
       {/* Features */}

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { VendorsService } from '../service/vendors.service'
+import { startSpan } from '@/lib/observability/otel'
 import { VendorDto, VendorListResponseDto } from '@/contracts/vendors'
+import { NotificationRepository } from '@/features/notifications/repo/notification.repository'
 
 export class VendorsHandler {
   private service = new VendorsService()
+  private notifications = new NotificationRepository()
 
   async list(request: NextRequest, userId: string) {
+    const span = await startSpan('vendors.list', { userId })
     try {
       const url = new URL(request.url)
       const sp = url.searchParams
@@ -39,35 +43,55 @@ export class VendorsHandler {
     } catch (error) {
       console.error('VendorsHandler.list error:', error)
       return NextResponse.json({ success: false, error: { message: error instanceof Error ? error.message : 'Internal server error' } }, { status: 500 })
+    } finally {
+      span.end()
     }
   }
 
   async create(request: NextRequest, userId: string) {
-    const body = await request.json()
-    const result = await this.service.create(userId, body)
-    if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    return NextResponse.json({ success: true, data: VendorDto.parse(result.data) }, { status: 201 })
+    const span = await startSpan('vendors.create', { userId })
+    try {
+      const body = await request.json()
+      const result = await this.service.create(userId, body)
+      if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
+      const data = VendorDto.parse(result.data)
+      try { await this.notifications.create(userId, { type: 'vendor', title: 'Vendor added', body: data.name || data.category, entityRef: data.id }) } catch {}
+      return NextResponse.json({ success: true, data }, { status: 201 })
+    } finally { span.end() }
   }
 
   async get(_request: NextRequest, userId: string, id: string) {
-    const result = await this.service.get(userId, id)
-    if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
-    return NextResponse.json({ success: true, data: VendorDto.parse(result.data) })
+    const span = await startSpan('vendors.get', { userId, id })
+    try {
+      const result = await this.service.get(userId, id)
+      if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
+      if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
+      return NextResponse.json({ success: true, data: VendorDto.parse(result.data) })
+    } finally { span.end() }
   }
 
   async update(request: NextRequest, userId: string, id: string) {
-    const body = await request.json()
-    const result = await this.service.update(userId, id, body)
-    if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
-    return NextResponse.json({ success: true, data: VendorDto.parse(result.data) })
+    const span = await startSpan('vendors.update', { userId, id })
+    try {
+      const body = await request.json()
+      const result = await this.service.update(userId, id, body)
+      if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
+      if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
+      const data = VendorDto.parse(result.data)
+      if ((body as any).status) {
+        try { await this.notifications.create(userId, { type: 'vendor', title: `Vendor ${String((body as any).status).toLowerCase()}`, body: data.name, entityRef: data.id }) } catch {}
+      }
+      return NextResponse.json({ success: true, data })
+    } finally { span.end() }
   }
 
   async delete(_request: NextRequest, userId: string, id: string) {
-    const result = await this.service.delete(userId, id)
-    if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
-    if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
-    return NextResponse.json({ success: true, message: 'Vendor deleted successfully' })
+    const span = await startSpan('vendors.delete', { userId, id })
+    try {
+      const result = await this.service.delete(userId, id)
+      if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: result.error?.statusCode || 500 })
+      if (!result.data) return NextResponse.json({ success: false, error: { message: 'Vendor not found' } }, { status: 404 })
+      return NextResponse.json({ success: true, message: 'Vendor deleted successfully' })
+    } finally { span.end() }
   }
 }

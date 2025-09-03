@@ -12,6 +12,7 @@ export default function AdminToolbar() {
         <Button variant="outline" size="sm" onClick={()=>router.push('/admin')}>Overview</Button>
         <Button variant="outline" size="sm" onClick={()=>router.push('/admin/users')}>Users</Button>
         <Button variant="outline" size="sm" onClick={()=>router.push('/admin/directory/vendors')}>Directory</Button>
+        <Button variant="outline" size="sm" onClick={()=>router.push('/admin/messaging')}>Messaging</Button>
         <Button variant="outline" size="sm" onClick={()=>router.push('/admin/vendor-panel')}>Vendor Panel</Button>
         <Button variant="outline" size="sm" onClick={()=>router.push('/admin/sessions')}>Sessions</Button>
         <Button variant="outline" size="sm" onClick={()=>router.push('/admin/logs')}>Logs</Button>

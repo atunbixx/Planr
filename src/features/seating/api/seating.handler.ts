@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SeatingService } from '../service/seating.service'
 import { CreateTableDto, UpdateTableDto, TableFilterDto, AssignGuestToSeatDto } from '../dto/seating.dto'
+import { startSpan } from '@/lib/observability/otel'
 
 export class SeatingHandler {
   private service = new SeatingService()
@@ -9,6 +10,7 @@ export class SeatingHandler {
    * GET /api/seating - Get seating chart with all tables and seats
    */
   async getSeatingChart(request: NextRequest, userId: string) {
+    const span = await startSpan('seating.getSeatingChart', { userId })
     try {
       const { searchParams } = new URL(request.url)
       
@@ -42,13 +44,17 @@ export class SeatingHandler {
         )
       }
 
-      return NextResponse.json({ success: true, data: result.data })
+      const res = NextResponse.json({ success: true, data: result.data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in SeatingHandler.getSeatingChart:', error)
       return NextResponse.json(
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
+    } finally {
+      span.end()
     }
   }
 
@@ -56,6 +62,7 @@ export class SeatingHandler {
    * POST /api/seating/[id]/seats - Create seats for a table
    */
   async createSeatsForTable(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.createSeatsForTable', { tableId })
     try {
       const body = await request.json().catch(() => ({}))
       const capacity = Number(body?.capacity)
@@ -74,12 +81,13 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
   /**
    * POST /api/seating/tables - Create a new table
    */
   async createTable(request: NextRequest, userId: string) {
+    const span = await startSpan('seating.createTable', { userId })
     try {
       const body = await request.json()
       
@@ -114,13 +122,14 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * GET /api/seating/tables/[id] - Get a single table
    */
   async getTableById(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.getTableById', { tableId })
     try {
       const result = await this.service.getTableById(tableId)
       
@@ -138,20 +147,23 @@ export class SeatingHandler {
         )
       }
 
-      return NextResponse.json({ success: true, data: result.data })
+      const res = NextResponse.json({ success: true, data: result.data })
+      res.headers.set('cache-control', 'private, max-age=30, stale-while-revalidate=120')
+      return res
     } catch (error) {
       console.error('Error in SeatingHandler.getTableById:', error)
       return NextResponse.json(
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * PATCH /api/seating/tables/[id] - Update a table
    */
   async updateTable(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.updateTable', { tableId })
     try {
       const body = await request.json()
       
@@ -183,13 +195,14 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * DELETE /api/seating/tables/[id] - Delete a table
    */
   async deleteTable(request: NextRequest, tableId: string) {
+    const span = await startSpan('seating.deleteTable', { tableId })
     try {
       const result = await this.service.deleteTable(tableId)
       
@@ -207,13 +220,14 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 
   /**
    * POST /api/seating/seats/[id]/assign - Assign guest to seat
    */
   async assignGuestToSeat(request: NextRequest, seatId: string) {
+    const span = await startSpan('seating.assignGuestToSeat', { seatId })
     try {
       const body = await request.json()
       
@@ -245,6 +259,8 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
+    } finally {
+      span.end()
     }
   }
 
@@ -252,6 +268,7 @@ export class SeatingHandler {
    * GET /api/seating/stats - Get seating statistics
    */
   async getStats(request: NextRequest, userId: string) {
+    const span = await startSpan('seating.getStats', { userId })
     try {
       const result = await this.service.getStats(userId)
       
@@ -269,6 +286,6 @@ export class SeatingHandler {
         { success: false, error: { message: 'Internal server error' } },
         { status: 500 }
       )
-    }
+    } finally { span.end() }
   }
 }

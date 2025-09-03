@@ -8,6 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import { useAuth } from '@/hooks/useAuth'
 import AuthClient from '@/lib/auth/client'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { FormField } from '@/components/ui/form-field'
 
 type User = { id: string; email: string; role: string; onboardingCompleted: boolean; createdAt: string }
 
@@ -21,6 +24,10 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [warnTarget, setWarnTarget] = useState<User | null>(null)
+  const [warnTitle, setWarnTitle] = useState('')
+  const [warnBody, setWarnBody] = useState('')
+  const [sending, setSending] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -75,6 +82,7 @@ export default function AdminUsersPage() {
                   <TableHead>Role</TableHead>
                   <TableHead>Onboarded</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -84,11 +92,47 @@ export default function AdminUsersPage() {
                     <TableCell>{r.role}</TableCell>
                     <TableCell>{r.onboardingCompleted ? 'Yes' : 'No'}</TableCell>
                     <TableCell>{new Date(r.createdAt).toLocaleString()}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button size="sm" variant="outline" onClick={()=>{ setWarnTarget(r); setWarnTitle(''); setWarnBody('') }}>Warn</Button>
+                      <Button size="sm" variant="outline" onClick={()=>router.push(`/admin/users/${r.id}`)}>View</Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
+          <Dialog open={Boolean(warnTarget)} onOpenChange={(open)=>{ if (!open) { setWarnTarget(null) } }}>
+            <DialogContent className="content-defaults form-elegant">
+              <DialogHeader>
+                <DialogTitle>Send Warning {warnTarget ? `to ${warnTarget.email}` : ''}</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 gap-3">
+                <FormField label="Title" required>
+                  <Input value={warnTitle} onChange={e=>setWarnTitle(e.target.value)} placeholder="Subject" />
+                </FormField>
+                <FormField label="Message" required>
+                  <Textarea rows={4} value={warnBody} onChange={e=>setWarnBody(e.target.value)} placeholder="Policy warning or announcement…" />
+                </FormField>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={()=>setWarnTarget(null)}>Cancel</Button>
+                <Button onClick={async ()=>{
+                  if (!warnTarget) return
+                  try {
+                    setSending(true)
+                    const token = AuthClient.getToken()
+                    const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+                    const res = await fetch(`/api/admin/users/${warnTarget.id}/warn`, { method: 'POST', headers, body: JSON.stringify({ title: warnTitle, body: warnBody }) })
+                    const j = await res.json().catch(()=>null)
+                    if (!res.ok || !j?.success) throw new Error(j?.error?.message || 'Failed')
+                    setWarnTarget(null)
+                  } catch (e) {
+                    console.error(e)
+                  } finally { setSending(false) }
+                }} disabled={!warnTitle.trim() || !warnBody.trim()} isLoading={sending}>Send</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           {total > pageSize && (
             <div className="flex justify-center py-2">
                 <Button variant="outline" onClick={() => setPage(p => p - 1)} disabled={page === 1}>Previous</Button>

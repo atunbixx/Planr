@@ -1,7 +1,7 @@
 "use client"
 
 import { api } from '@/lib/api/fetcher'
-import { VendorListResponseDto } from '@/contracts/vendors'
+import { VendorDto, VendorListResponseDto } from '@/contracts/vendors'
 import { z } from 'zod'
 
 export type Vendor = {
@@ -77,13 +77,17 @@ export const VendorsClient = {
   async createVendor(payload: Partial<Vendor>): Promise<Vendor> {
     const env = await api.post<ApiEnvelope<any>>('/api/vendors', payload)
     if (!env.success) throw new Error(env.error?.message || 'Failed to create vendor')
-    return normalizeVendor(env.data)
+    const parsed = VendorDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid vendor shape')
+    return normalizeVendor(parsed.data)
   },
 
   async updateVendor(id: string, payload: Partial<Vendor>): Promise<Vendor> {
     const env = await api.put<ApiEnvelope<any>>(`/api/vendors/${id}`, payload)
     if (!env.success) throw new Error(env.error?.message || 'Failed to update vendor')
-    return normalizeVendor(env.data)
+    const parsed = VendorDto.safeParse(env.data)
+    if (!parsed.success) throw new Error('Invalid vendor shape')
+    return normalizeVendor(parsed.data)
   },
 
   async deleteVendor(id: string): Promise<void> {

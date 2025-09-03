@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client'
 import { MessagingService, SendMessageRequest, BulkSendRequest } from '../service/messaging.service'
 import { CreditRepository } from '../repo/credit.repository'
 import { createErrorResponse, createSuccessResponse, createUnauthorizedResponse, createForbiddenResponse, createRateLimitResponse } from '@/lib/api/response'
+import { startSpan } from '@/lib/observability/otel'
 
 /**
  * Messaging API Handler
@@ -25,6 +26,7 @@ export class MessagingHandler {
    * POST /api/messages/send
    */
   async sendMessage(request: NextRequest): Promise<NextResponse> {
+    const span = await startSpan('messages.sendMessage')
     try {
       // TODO: Add authentication middleware
       // For now, we'll extract userId from headers or body
@@ -135,6 +137,7 @@ export class MessagingHandler {
         500,
         'INTERNAL_ERROR'
       )
+    } finally { span.end() }
     }
   }
 
@@ -143,6 +146,7 @@ export class MessagingHandler {
    * POST /api/messages/bulk
    */
   async sendBulkMessages(request: NextRequest): Promise<NextResponse> {
+    const span = await startSpan('messages.sendBulkMessages')
     try {
       // TODO: Add authentication middleware
       const userId = await this.extractUserId(request)
@@ -250,6 +254,7 @@ export class MessagingHandler {
         500,
         'INTERNAL_ERROR'
       )
+    } finally { span.end() }
     }
   }
 

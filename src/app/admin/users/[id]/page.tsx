@@ -9,6 +9,10 @@ import { Alert } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import AdminToolbar from '@/components/admin/AdminToolbar'
 import AuthClient from '@/lib/auth/client'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { FormField } from '@/components/ui/form-field'
 
 export default function AdminUserDetailPage() {
   const router = useRouter()
@@ -18,6 +22,9 @@ export default function AdminUserDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [snack, setSnack] = useState<{ open: boolean; message: string; severity?: 'success'|'error' }>({ open: false, message: '', severity: 'success' })
   const [role, setRole] = useState('')
+  const [warnOpen, setWarnOpen] = useState(false)
+  const [warnTitle, setWarnTitle] = useState('')
+  const [warnBody, setWarnBody] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -141,6 +148,40 @@ export default function AdminUserDetailPage() {
                     setSnack({ open: true, message: e?.message || 'Impersonation failed', severity: 'error' })
                   }
                 }}>Impersonate</Button>
+                <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline">Warn</Button>
+                  </DialogTrigger>
+                  <DialogContent className="content-defaults form-elegant">
+                    <DialogHeader>
+                      <DialogTitle>Send Warning</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 gap-3">
+                      <FormField label="Title" required>
+                        <Input value={warnTitle} onChange={e=>setWarnTitle(e.target.value)} placeholder="Subject" />
+                      </FormField>
+                      <FormField label="Message" required>
+                        <Textarea rows={4} value={warnBody} onChange={e=>setWarnBody(e.target.value)} placeholder="Describe the policy violation or warning details…" />
+                      </FormField>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={()=>setWarnOpen(false)}>Cancel</Button>
+                      <Button onClick={async ()=>{
+                        try {
+                          const token = AuthClient.getToken()
+                          const headers: any = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+                          const res = await fetch(`/api/admin/users/${u.id}/warn`, { method: 'POST', headers, body: JSON.stringify({ title: warnTitle, body: warnBody }) })
+                          const j = await res.json().catch(()=>null)
+                          if (!res.ok || !j?.success) throw new Error(j?.error?.message || 'Failed')
+                          setSnack({ open: true, message: 'Warning sent', severity: 'success' })
+                          setWarnTitle(''); setWarnBody(''); setWarnOpen(false)
+                        } catch (e:any) {
+                          setSnack({ open: true, message: e?.message || 'Failed to send warning', severity: 'error' })
+                        }
+                      }} disabled={!warnTitle.trim() || !warnBody.trim()}>Send</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>

@@ -2,18 +2,27 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import PremiumDashboardLayout from '@/components/layout/PremiumDashboardLayout'
-import { GuestsClient, type LegacyGuest } from '@/lib/api/guests.client'
+import { useSearchParams } from 'next/navigation'
+import { GuestsClient } from '@/lib/api/guests.client'
+import type { GuestResponse } from '@/features/guests/dto/guest.dto'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { useApiQuery } from '@/lib/api/useApiQuery'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/toast-provider'
 import { useAuth } from '@/hooks/useAuth'
+import { formatApiError } from '@/lib/errors/format'
 import { useRouter } from 'next/navigation'
+import { PageHeader } from '@/components/ui/page-header'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SectionCard, SectionCardBody } from '@/components/ui/section-card'
+import { TableSectionSkeleton, SectionBlockSkeleton } from '@/components/ui/section-skeletons'
+import { FormField } from '@/components/ui/form-field'
 
 export default function GuestsPage() {
   const { notify } = useToast()
@@ -57,16 +66,27 @@ export default function GuestsPage() {
       }
     }
   )
-  const guests = (data?.guests || []) as LegacyGuest[]
+  const guests = (data?.guests || []) as GuestResponse[]
   const stats = data?.stats || null
 
-  useEffect(() => {
-    if (error) notify(String(error), { variant: 'error', title: 'Guest load failed' })
-  }, [error, notify])
+  // Error toast is emitted centrally via fetcher
 
   // Selection
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const selectedIds = useMemo(() => Object.keys(selected).filter(id => selected[id]), [selected])
+
+  // Highlight deep-linked guest
+  const sp = useSearchParams()
+  const highlightId = sp.get('highlight')
+  useEffect(() => {
+    if (!highlightId) return
+    const el = document.querySelector(`[data-row-id="${CSS.escape(highlightId)}"]`)
+    if (el) {
+      el.classList.add('row-highlight')
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => el.classList.remove('row-highlight'), 1800)
+    }
+  }, [highlightId, guests])
 
   const toggleAll = (checked: boolean) => {
     const next: Record<string, boolean> = {}
@@ -83,7 +103,7 @@ export default function GuestsPage() {
       setSelected({})
       await refetch()
     } catch (e: any) {
-      notify(e?.message || 'Failed to update RSVP', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to update RSVP'), { variant: 'error' })
     }
   }
 
@@ -96,7 +116,7 @@ export default function GuestsPage() {
       setSelected({})
       await refetch()
     } catch (e: any) {
-      notify(e?.message || 'Failed to update invitations', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to update invitations'), { variant: 'error' })
     }
   }
 
@@ -112,7 +132,7 @@ export default function GuestsPage() {
       setOpen(false)
       await refetch()
     } catch (e: any) {
-      notify(e?.message || 'Failed to add guest', { variant: 'error' })
+      notify(formatApiError(e, 'Failed to add guest'), { variant: 'error' })
     }
   }
 
@@ -133,11 +153,7 @@ export default function GuestsPage() {
   return (
     <PremiumDashboardLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-dark dark:text-white">Guests</h1>
-            <p className="text-dark-6 dark:text-dark-4 mt-1">Manage your guest list and RSVPs</p>
-          </div>
+        <PageHeader kicker="GUEST LIST" title="Guests" subtitle="Manage your guest list and RSVPs" actions={
           <div className="flex items-center gap-3">
             {stats && (
               <>
@@ -149,29 +165,24 @@ export default function GuestsPage() {
               <DialogTrigger asChild>
                 <Button onClick={onAdd}>Add Guest</Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="content-defaults form-elegant">
                 <DialogHeader>
                   <DialogTitle>Add Guest</DialogTitle>
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">First Name</label>
+                  <FormField label="First Name" required>
                     <Input value={form.firstName} onChange={e=>setForm(f=>({...f, firstName: e.target.value}))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Last Name</label>
+                  </FormField>
+                  <FormField label="Last Name">
                     <Input value={form.lastName || ''} onChange={e=>setForm(f=>({...f, lastName: e.target.value}))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Email</label>
+                  </FormField>
+                  <FormField label="Email">
                     <Input type="email" value={form.email || ''} onChange={e=>setForm(f=>({...f, email: e.target.value}))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Phone</label>
+                  </FormField>
+                  <FormField label="Phone">
                     <Input value={form.phone || ''} onChange={e=>setForm(f=>({...f, phone: e.target.value}))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Side</label>
+                  </FormField>
+                  <FormField label="Side">
                     <Select value={form.side || ''} onValueChange={(v:any)=>setForm(f=>({...f, side: v}))}>
                       <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
@@ -179,11 +190,10 @@ export default function GuestsPage() {
                         <SelectItem value="groom">Groom</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Dietary</label>
+                  </FormField>
+                  <FormField label="Dietary">
                     <Input value={form.dietaryRestrictions || ''} onChange={e=>setForm(f=>({...f, dietaryRestrictions: e.target.value}))} />
-                  </div>
+                  </FormField>
                 </div>
                 <DialogFooter className="mt-4">
                   <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
@@ -192,11 +202,11 @@ export default function GuestsPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
+        } />
 
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Side</label>
+            <Label className="mb-1 block">Side</Label>
             <Select value={side || 'all'} onValueChange={(v:any)=>setSide(v === 'all' ? '' : v)}>
               <SelectTrigger className="w-40"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
@@ -207,7 +217,7 @@ export default function GuestsPage() {
             </Select>
           </div>
           <div>
-            <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">RSVP</label>
+            <Label className="mb-1 block">RSVP</Label>
             <Select value={status || 'all'} onValueChange={(v:any)=>setStatus(v === 'all' ? '' : v)}>
               <SelectTrigger className="w-48"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
@@ -219,7 +229,7 @@ export default function GuestsPage() {
             </Select>
           </div>
           <div>
-            <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Category</label>
+            <Label className="mb-1 block">Category</Label>
             <Select value={category || 'all'} onValueChange={(v:any)=>setCategory(v === 'all' ? '' : v)}>
               <SelectTrigger className="w-56"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
@@ -236,7 +246,7 @@ export default function GuestsPage() {
             </Select>
           </div>
           <div>
-            <label className="block text-xs text-[#475569] dark:text-neutral-300 mb-1">Dietary</label>
+            <Label className="mb-1 block">Dietary</Label>
             <Input className="w-48" value={dietary} onChange={e=>setDietary(e.target.value)} placeholder="e.g. vegan" />
           </div>
           <div className="ml-auto flex gap-2">
@@ -248,31 +258,18 @@ export default function GuestsPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4">
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="h-6 w-40 bg-gray-200 animate-pulse rounded mb-2" />
-              <div className="h-4 w-64 bg-gray-200 animate-pulse rounded" />
-            </div>
-            <div className="bg-white dark:bg-gray-50 p-4 rounded-lg border shadow-sm">
-              <div className="h-6 w-56 bg-gray-200 animate-pulse rounded mb-3" />
-              <div className="space-y-2">
-                <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-                <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-                <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
-              </div>
-            </div>
+          <div className="space-y-4">
+            <SectionBlockSkeleton lines={2} />
+            <TableSectionSkeleton columns={5} rows={6} />
           </div>
         ) : error ? (
           <div className="text-sm text-red-600">{String(error)}</div>
         ) : guests.length === 0 ? (
-          <div className="bg-white dark:bg-gray-50 p-10 rounded-lg border text-center">
-            <div className="text-3xl mb-2">🧑‍🤝‍🧑</div>
-            <h3 className="text-lg font-semibold mb-1">No guests yet</h3>
-            <p className="text-sm text-gray-600 mb-4">Start by adding your first guest to build your list.</p>
-            <Button onClick={onAdd}>Add Guest</Button>
-          </div>
+          <EmptyState icon={<span>🧑‍🤝‍🧑</span>} title="No guests yet" description="Start by adding your first guest to build your list." action={<Button onClick={onAdd}>Add Guest</Button>} />
         ) : (
-          <Table>
+          <SectionCard>
+            <SectionCardBody>
+          <Table variant="bare">
             <TableHeader>
               <TableRow>
                 <TableHead>
@@ -286,22 +283,24 @@ export default function GuestsPage() {
             </TableHeader>
             <TableBody>
               {guests.map(g => (
-                <TableRow key={g.id}>
+                <TableRow key={g.id} data-row-id={g.id}>
                   <TableCell>
                     <Checkbox checked={Boolean(selected[g.id])} onCheckedChange={(v:any)=>setSelected(s=>({...s,[g.id]: Boolean(v)}))} />
                   </TableCell>
-                  <TableCell className="font-medium">{g.name}</TableCell>
+                  <TableCell className="font-medium">{`${g.firstName}${g.lastName ? ` ${g.lastName}` : ''}`}</TableCell>
                   <TableCell className="capitalize text-[#475569]">{g.side || '—'}</TableCell>
                   <TableCell>
                     <Badge variant={g.rsvpStatus === 'accepted' ? 'success' : g.rsvpStatus === 'declined' ? 'error' : 'outline'}>
                       {g.rsvpStatus}
                     </Badge>
                   </TableCell>
-                  <TableCell>{g.invitationSent ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{g.invitationSentAt ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+            </SectionCardBody>
+          </SectionCard>
         )}
       </div>
     </PremiumDashboardLayout>

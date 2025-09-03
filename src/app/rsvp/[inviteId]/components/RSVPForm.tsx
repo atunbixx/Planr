@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { z } from 'zod'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { InviteRecord, InviteRSVPRecord } from '@/features/rsvp/repo/rsvp.repository'
 
 interface RSVPFormProps {
@@ -130,32 +134,21 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8">
+    <div className="bg-white rounded-lg shadow-lg p-8 form-elegant">
       <form onSubmit={handleSubmit} noValidate>
         {/* Guest Name */}
         <div className="mb-6">
-          <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-2">
-            Your Name *
-          </label>
-          <input
-            ref={firstInputRef}
-            type="text"
-            id="guestName"
-            value={formData.guestName}
-            onChange={(e) => handleInputChange('guestName', e.target.value)}
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.guestName ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter your full name"
-            aria-describedby={errors.guestName ? 'guestName-error' : undefined}
-            aria-invalid={!!errors.guestName}
-            required
-          />
-          {errors.guestName && (
-            <p id="guestName-error" className="text-red-500 text-sm mt-1" role="alert">
-              {errors.guestName}
-            </p>
-          )}
+          <FormField label="Your Name" htmlFor="guestName" required error={errors.guestName}>
+            <Input
+              ref={firstInputRef}
+              type="text"
+              id="guestName"
+              value={formData.guestName}
+              onChange={(e) => handleInputChange('guestName', e.target.value)}
+              placeholder="Enter your full name"
+              required
+            />
+          </FormField>
         </div>
 
         {/* Attending Status */}
@@ -163,140 +156,98 @@ export function RSVPForm({ invite, existingRSVP, onSubmit, onUpdate, isSubmittin
           <legend className="block text-sm font-medium text-gray-700 mb-3">
             Will you be attending? *
           </legend>
-          <div className="space-y-3">
+          <RadioGroup
+            value={formData.attending ? 'yes' : 'no'}
+            onValueChange={(v) => handleAttendingChange(v === 'yes')}
+            className="space-y-3"
+          >
             <div className="flex items-center">
-              <input
-                ref={attendingYesRef}
-                type="radio"
-                id="attending-yes"
-                name="attending"
-                checked={formData.attending === true}
-                onChange={() => handleAttendingChange(true)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                aria-describedby="attending-yes-desc"
-              />
-              <label htmlFor="attending-yes" className="ml-3 block text-sm font-medium text-gray-700">
+              <RadioGroupItem id="attending-yes" value="yes" aria-describedby="attending-yes-desc" />
+              <Label htmlFor="attending-yes" className="ml-3 text-sm font-medium text-gray-700">
                 Yes, I'll be there! 🎉
-              </label>
+              </Label>
             </div>
             <p id="attending-yes-desc" className="ml-7 text-sm text-gray-500">
               We're excited to celebrate with you
             </p>
 
             <div className="flex items-center">
-              <input
-                ref={attendingNoRef}
-                type="radio"
-                id="attending-no"
-                name="attending"
-                checked={formData.attending === false}
-                onChange={() => handleAttendingChange(false)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                aria-describedby="attending-no-desc"
-              />
-              <label htmlFor="attending-no" className="ml-3 block text-sm font-medium text-gray-700">
+              <RadioGroupItem id="attending-no" value="no" aria-describedby="attending-no-desc" />
+              <Label htmlFor="attending-no" className="ml-3 text-sm font-medium text-gray-700">
                 Sorry, I can't make it 😔
-              </label>
+              </Label>
             </div>
             <p id="attending-no-desc" className="ml-7 text-sm text-gray-500">
               We'll miss you, but we understand
             </p>
-          </div>
+          </RadioGroup>
         </fieldset>
 
         {/* Party Size (only if attending) */}
         {formData.attending && (
           <div className="mb-6">
-            <label htmlFor="partySize" className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Guests *
-            </label>
-            <div className="flex items-center space-x-4">
-              <input
-                type="number"
-                id="partySize"
-                min="1"
-                max={10}
-                value={formData.partySize}
-                onChange={(e) => handleInputChange('partySize', parseInt(e.target.value) || 1)}
-                className={`w-24 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.partySize ? 'border-red-500' : 'border-gray-300'
-                }`}
-                aria-describedby={errors.partySize ? 'partySize-error' : 'partySize-help'}
-                aria-invalid={!!errors.partySize}
-                required
-              />
-              <span className="text-sm text-gray-600">
-                (Maximum: 10)
-              </span>
-            </div>
-            {errors.partySize ? (
-              <p id="partySize-error" className="text-red-500 text-sm mt-1" role="alert">
-                {errors.partySize}
-              </p>
-            ) : (
-              <p id="partySize-help" className="text-gray-500 text-sm mt-1">
-                Including yourself, how many people will be attending?
-              </p>
-            )}
+            <FormField 
+              label="Number of Guests" 
+              htmlFor="partySize" 
+              required 
+              error={errors.partySize}
+              help={!errors.partySize ? 'Including yourself, how many people will be attending?' : undefined}
+            >
+              <div className="flex items-center space-x-4">
+                <Input
+                  type="number"
+                  id="partySize"
+                  min={1}
+                  max={10}
+                  value={formData.partySize as any}
+                  onChange={(e) => handleInputChange('partySize', parseInt(e.target.value) || 1)}
+                  className="w-24"
+                  required
+                />
+                <span className="text-sm text-gray-600">
+                  (Maximum: 10)
+                </span>
+              </div>
+            </FormField>
           </div>
         )}
 
         {/* Dietary Restrictions (only if attending) */}
         {formData.attending && (
           <div className="mb-6">
-            <label htmlFor="dietaryRestrictions" className="block text-sm font-medium text-gray-700 mb-2">
-              Dietary Restrictions or Allergies
-            </label>
-            <textarea
-              id="dietaryRestrictions"
-              rows={3}
-              value={formData.dietaryRestrictions}
-              onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${
-                errors.dietaryRestrictions ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Please let us know about any dietary restrictions, allergies, or special meal requirements..."
-              aria-describedby={errors.dietaryRestrictions ? 'dietaryRestrictions-error' : 'dietaryRestrictions-help'}
-              aria-invalid={!!errors.dietaryRestrictions}
-            />
-            {errors.dietaryRestrictions ? (
-              <p id="dietaryRestrictions-error" className="text-red-500 text-sm mt-1" role="alert">
-                {errors.dietaryRestrictions}
-              </p>
-            ) : (
-              <p id="dietaryRestrictions-help" className="text-gray-500 text-sm mt-1">
-                This helps us ensure everyone has a great dining experience
-              </p>
-            )}
+            <FormField 
+              label="Dietary Restrictions or Allergies" 
+              htmlFor="dietaryRestrictions" 
+              error={errors.dietaryRestrictions}
+              help={!errors.dietaryRestrictions ? 'This helps us ensure everyone has a great dining experience' : undefined}
+            >
+              <Textarea
+                id="dietaryRestrictions"
+                rows={3}
+                value={formData.dietaryRestrictions}
+                onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
+                placeholder="Please let us know about any dietary restrictions, allergies, or special meal requirements..."
+              />
+            </FormField>
           </div>
         )}
 
         {/* Additional Notes */}
         <div className="mb-8">
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Notes
-          </label>
-          <textarea
-            id="notes"
-            rows={4}
-            value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${
-              errors.notes ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Any special requests, questions, or messages for the couple..."
-            aria-describedby={errors.notes ? 'notes-error' : 'notes-help'}
-            aria-invalid={!!errors.notes}
-          />
-          {errors.notes ? (
-            <p id="notes-error" className="text-red-500 text-sm mt-1" role="alert">
-              {errors.notes}
-            </p>
-          ) : (
-            <p id="notes-help" className="text-gray-500 text-sm mt-1">
-              {formData.notes?.length || 0}/1000 characters
-            </p>
-          )}
+          <FormField 
+            label="Additional Notes" 
+            htmlFor="notes" 
+            error={errors.notes}
+            help={!errors.notes ? `${formData.notes?.length || 0}/1000 characters` : undefined}
+          >
+            <Textarea
+              id="notes"
+              rows={4}
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              placeholder="Any special requests, questions, or messages for the couple..."
+            />
+          </FormField>
         </div>
 
         {/* Submit Button */}

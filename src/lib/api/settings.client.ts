@@ -28,8 +28,12 @@ function authHeaders(): HeadersInit {
 }
 
 async function handle<T>(res: Response): Promise<T> {
-  const json = await res.json().catch(() => ({ success: false })) as ApiEnvelope<T>
-  if (!res.ok || !json.success) throw new Error(json?.error?.message || `Request failed ${res.status}`)
+  const json = await res.json().catch(() => ({ success: false })) as ApiEnvelope<T> & { error?: { details?: any } }
+  if (!res.ok || !json.success) {
+    const err: any = new Error(json?.error?.message || `Request failed ${res.status}`)
+    if ((json as any)?.error?.details) err.details = (json as any).error.details
+    throw err
+  }
   return json.data as T
 }
 
@@ -51,4 +55,3 @@ export const SettingsClient = {
     return handle<Preferences>(res)
   },
 }
-

@@ -394,7 +394,7 @@ export class GuestService {
         groomsSide: guests.filter(g => g.side === 'groom').length,
         withEmail: 0, // Email field not in current schema
         withPhone: 0, // Phone field not in current schema
-        plusOnesAllowed: 0, // plusOneAllowed field not in current schema
+        plusOnesAllowed: guests.filter((g: any) => (g as any).plusOneAllowed === true).length,
         totalAttending: guests.length // Assume 1 per guest since attendingCount not in schema
       }
 
@@ -436,8 +436,8 @@ export class GuestService {
       relationship: undefined, // Not in current schema
       relationshipCategory: (guest as any).relationshipCategory || undefined,
       side: guest.side as 'bride' | 'groom' | undefined,
-      plusOneAllowed: false, // Not in current schema, default false
-      plusOneName: undefined, // Not in current schema
+      plusOneAllowed: (guest as any).plusOneAllowed === true,
+      plusOneName: (guest as any).plusOneName || undefined,
       dietaryRestrictions: guest.mealPreference || undefined,
       notes: undefined, // Not in current schema
       attendingCount: 1, // Not in current schema, default 1

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast-provider'
+import { FormField } from '@/components/ui/form-field'
 
 export default function AdminCreditsPage() {
   const { notify } = useToast()
@@ -53,19 +54,17 @@ export default function AdminCreditsPage() {
       <div className="p-6 space-y-6">
         <h1 className="text-2xl font-bold text-dark dark:text-white">Admin: Credits</h1>
         <div className="bg-white dark:bg-gray-50 border rounded-lg p-6 space-y-4 max-w-md">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">User Email</label>
-            <Input value={email} onChange={e=>setEmail(e.target.value)} placeholder="user@example.com" />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Amount</label>
-            <Input type="number" value={amount} onChange={e=>setAmount(e.target.value)} />
+          <FormField label="User Email" htmlFor="admin-email" size="sm">
+            <Input id="admin-email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="user@example.com" />
+          </FormField>
+          <FormField label="Amount" htmlFor="admin-amount" size="sm">
+            <Input id="admin-amount" type="number" value={amount} onChange={e=>setAmount(e.target.value)} />
             <div className="mt-2 flex gap-2">
               {[10,50,100].map(v => (
                 <Button key={v} variant="outline" size="sm" onClick={()=>setAmount(String(v))}>+{v}</Button>
               ))}
             </div>
-          </div>
+          </FormField>
           <div className="flex gap-2">
             <Button variant="outline" onClick={load} isLoading={loading}>Check Balance</Button>
             <Button onClick={topup} isLoading={loading}>Top Up</Button>
@@ -79,4 +78,3 @@ export default function AdminCreditsPage() {
     </PremiumDashboardLayout>
   )
 }
-
