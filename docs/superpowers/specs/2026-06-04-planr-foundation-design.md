@@ -47,8 +47,8 @@ Two consequences drive every decision below:
 | 1 | Codebase strategy | **Fresh foundation, port the gems** | Salvage-in-place inherits invisible contamination; "clean" would be asymptotic. |
 | 2 | Tenancy | **Organization → Membership(role) → Event** | Enterprise = more members/roles/SSO, not a re-scope of every table. One-way door, built right once. |
 | 3 | Domain | **Event-centric, type-polymorphic** | Adding an event type = registering a profile, not re-architecting. |
-| 4 | Runtime + DB | **Vercel + Neon Postgres** | Standard Postgres = portable to RDS/Aurora/container by swapping `DATABASE_URL`. |
-| 5 | Auth | **Clerk; our tables are authz source of truth** | Secure sessions/MFA/SSO as a config flip; Clerk owns identity, we own authorization. |
+| 4 | Runtime + DB | **Supabase Postgres** (local via Docker; hosted later) | Standard Postgres = portable to Neon/RDS/Aurora by swapping `DATABASE_URL`. _Amended 2026-06-04: was Neon; Supabase chosen so DB + Auth come from one local Docker stack with no external accounts._ |
+| 5 | Auth | **Supabase Auth; our tables are authz source of truth** | Provider owns identity/sessions; our Organization/Membership tables own authorization. _Amended 2026-06-04: was Clerk. Swappable precisely because authz lives in our tables — see §8._ |
 | 6 | Monetization | **Entitlement engine; à-la-carte launch packaging** | Pricing/packaging change via a plan registry, zero feature-code change. |
 | 7 | Interface | **Event-type registry × entitlement engine** | A module renders ⟺ relevant-to-type AND entitled — both enforced server-side. |
 
@@ -215,10 +215,19 @@ source of truth, synced via webhooks — a Stripe outage never locks users out, 
 
 ## 8. Auth & authorization
 
-- **Clerk** owns identity: sessions, MFA, and enterprise SSO/SCIM as a config flip. Clerk
-  **Organizations** map 1:1 onto our tenancy.
-- **Our `Organization`/`Membership` tables are the authorization source of truth**, synced from Clerk
-  via webhooks. If we ever leave Clerk, the domain authz model is untouched.
+> **Amended 2026-06-04:** the provider is **Supabase Auth**, not Clerk. The rest of this section is
+> unchanged in principle — a provider owns identity/sessions, our tables own authorization. The one
+> structural difference: Supabase Auth has **no built-in organizations**, so orgs are created directly
+> in-app via the tenancy service (`provisionOrganization`/`addMember`) rather than synced from provider
+> webhooks. Only the auth *user* is synced (signup → upsert `User`). Because authorization lives
+> entirely in our tables, swapping back to Clerk (or any provider) later changes only the identity
+> adapter, not the domain.
+
+- **Supabase Auth** owns identity: sessions, MFA, OAuth, and (on a hosted plan) SSO. Local dev runs the
+  whole stack in Docker (`supabase start`) — no external accounts needed.
+- **Our `Organization`/`Membership` tables are the authorization source of truth.** Organizations are
+  app-managed (not provider-managed); the signed-in Supabase user is mapped to our `User` row, then to
+  `Membership` rows that carry the role.
 - A central **policy module** maps roles → permissions (`owner|admin|planner|editor|viewer`), checked
   in application services. No per-route copy-paste; no `x-user-id` trust; no hand-rolled JWT.
 
