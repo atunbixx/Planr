@@ -60,4 +60,31 @@ describe("resolveModuleAccess", () => {
     });
     expect(unlocked.locked).toBe(false);
   });
+
+  it("does not leak access when a plan for a DIFFERENT event type is held", () => {
+    const r = resolveModuleAccess({
+      module: "seating",
+      eventType: "wedding",
+      held: ["event_type:birthday"],
+    });
+    expect(r).toMatchObject({ visible: true, locked: true, reason: "needs_event_type_plan" });
+  });
+
+  it("locks an advanced module when held is empty", () => {
+    const r = resolveModuleAccess({
+      module: "gift_registry",
+      eventType: "wedding",
+      held: [],
+    });
+    expect(r).toMatchObject({ visible: true, locked: true, reason: "needs_pro" });
+  });
+
+  it("unlocks a core non-baseline module under all_access", () => {
+    const r = resolveModuleAccess({
+      module: "seating",
+      eventType: "wedding",
+      held: ["all_access"],
+    });
+    expect(r).toMatchObject({ visible: true, locked: false, reason: "all_access" });
+  });
 });
