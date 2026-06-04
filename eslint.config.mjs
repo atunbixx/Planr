@@ -14,15 +14,8 @@ export default tseslint.config(
       "tests/**",
       "test-results/**",
       "playwright-report/**",
-      "wedding-planner-new/**",
       "temp-data/**",
-      // Root-level legacy loose files
-      "debug-vendors.js",
-      "run-migrations.js",
-      "start-3003.js",
-      "start-dev.js",
-      "start-server-3003.js",
-      "start-server.js",
+      // Root-level legacy config files (still present)
       "next.config.ts",
       "next-env.d.ts",
       "tsconfig.json",
