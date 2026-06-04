@@ -27,4 +27,32 @@ describe("RBAC policy", () => {
   it("restricts a viewer to read-only", () => {
     expect(permissionsForRole("viewer")).toEqual(["content:view"]);
   });
+
+  it("gives owner all nine permissions", () => {
+    expect(permissionsForRole("owner")).toEqual([
+      "org:delete",
+      "billing:manage",
+      "member:invite",
+      "member:remove",
+      "event:create",
+      "event:update",
+      "event:delete",
+      "content:edit",
+      "content:view",
+    ]);
+  });
+
+  it("gives admin every permission except org:delete", () => {
+    const perms = permissionsForRole("admin");
+    expect(perms).not.toContain("org:delete");
+    expect(perms).toHaveLength(8);
+  });
+
+  it("gives editor exactly event:update, content:edit, content:view", () => {
+    expect(permissionsForRole("editor")).toEqual([
+      "event:update",
+      "content:edit",
+      "content:view",
+    ]);
+  });
 });

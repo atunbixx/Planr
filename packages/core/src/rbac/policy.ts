@@ -1,6 +1,6 @@
 import type { Role, Permission } from "../types";
 
-const ALL: Permission[] = [
+const ALL: readonly Permission[] = [
   "org:delete",
   "billing:manage",
   "member:invite",
@@ -12,7 +12,7 @@ const ALL: Permission[] = [
   "content:view",
 ];
 
-const rolePermissions: Record<Role, Permission[]> = {
+const rolePermissions: Record<Role, readonly Permission[]> = {
   owner: ALL,
   admin: ALL.filter((p) => p !== "org:delete"),
   planner: ["event:create", "event:update", "event:delete", "content:edit", "content:view"],
@@ -20,7 +20,7 @@ const rolePermissions: Record<Role, Permission[]> = {
   viewer: ["content:view"],
 };
 
-export function permissionsForRole(role: Role): Permission[] {
+export function permissionsForRole(role: Role): readonly Permission[] {
   return rolePermissions[role];
 }
 
