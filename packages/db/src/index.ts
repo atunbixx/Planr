@@ -9,3 +9,6 @@ export const prisma: PrismaClient = globalForPrisma.__planrPrisma ?? new PrismaC
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.__planrPrisma = prisma;
 }
+
+export { createRepositories } from "./repositories/index";
+export type { Repositories } from "@planr/core";

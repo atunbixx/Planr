@@ -1,7 +1,7 @@
 import type { Repositories, OrganizationRecord, MembershipRecord } from "../ports/repositories";
 import type { Role } from "../types";
 
-interface AuthUserInput {
+export interface AuthUserInput {
   authUserId: string;
   email: string;
   name: string | null;
