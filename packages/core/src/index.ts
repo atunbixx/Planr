@@ -13,3 +13,4 @@ export {
   type AccessReason,
   type ResolveInput,
 } from "./entitlements/resolver";
+export { roleHasPermission, permissionsForRole } from "./rbac/policy";
