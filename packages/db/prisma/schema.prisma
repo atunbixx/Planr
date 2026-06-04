@@ -94,6 +94,11 @@ model Entitlement {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   event          Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  // NOTE: org-level grants (eventId IS NULL) are deduped by a PARTIAL unique index
+  // ("organizationId", "key") WHERE "eventId" IS NULL — Prisma cannot express partial
+  // indexes here, so it lives only in migration 20260604125438_init/migration.sql.
+  // Do NOT rely on `prisma db push`; if you regenerate migrations, re-add that index
+  // or org-level entitlements (e.g. all_access) can duplicate.
   @@unique([organizationId, eventId, key])
   @@index([organizationId])
   @@index([eventId])
