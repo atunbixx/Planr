@@ -28,3 +28,4 @@ export type {
   Repositories,
 } from "./ports/repositories";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
+export { mapClerkRole } from "./sync/clerk-role";
