@@ -30,7 +30,33 @@ export default tseslint.config(
       "tailwind.config.ts",
       "postcss.config.js",
       "playwright.config.ts",
+      // Lint fixtures — excluded from the repo-wide gate (checked manually)
+      "packages/eslint-fixtures/**",
     ],
   },
   ...tseslint.configs.recommended,
+  {
+    // Architectural boundary: Prisma may only be imported inside @planr/db.
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["packages/db/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@prisma/client",
+              message: "Import Prisma only inside @planr/db. Use a repository instead.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["**/generated/client", "@planr/db/**/generated/**"],
+              message: "Do not reach into @planr/db internals. Import from @planr/db.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );
