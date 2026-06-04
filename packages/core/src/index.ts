@@ -14,3 +14,16 @@ export {
   type ResolveInput,
 } from "./entitlements/resolver";
 export { roleHasPermission, permissionsForRole } from "./rbac/policy";
+export type {
+  OrganizationRecord,
+  UserRecord,
+  MembershipRecord,
+  EventRecord,
+  EntitlementRecord,
+  OrganizationRepository,
+  UserRepository,
+  MembershipRepository,
+  EventRepository,
+  EntitlementRepository,
+  Repositories,
+} from "./ports/repositories";
