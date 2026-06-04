@@ -28,8 +28,7 @@ export type {
   Repositories,
 } from "./ports/repositories";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
-export { mapClerkRole } from "./sync/clerk-role";
-export { makeClerkSync, type ClerkSync } from "./sync/clerk-sync";
+export { syncAuthUser } from "./sync/auth-sync";
 export { makeEventService, type EventService, type ResolvedModule } from "./services/event.service";
 export {
   makeEntitlementService,

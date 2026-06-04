@@ -14,19 +14,31 @@ afterAll(async () => {
 });
 
 describe("Prisma repository adapters", () => {
-  it("upserts organizations idempotently by clerkOrgId", async () => {
-    const a = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_1", name: "Smith" });
-    const b = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_1", name: "Smith 2" });
+  it("creates organizations and lists them for a member", async () => {
+    const org = await repos.orgs.create({ name: "Smith" });
+    const user = await repos.users.upsertByAuthUserId({
+      authUserId: "auth_1",
+      email: "a@b.com",
+      name: "Ada",
+    });
+    await repos.memberships.upsert({ organizationId: org.id, userId: user.id, role: "owner" });
+    expect(await repos.orgs.findById(org.id)).toMatchObject({ name: "Smith" });
+    expect(await repos.orgs.listForUser(user.id)).toHaveLength(1);
+  });
+
+  it("upserts a user idempotently by authUserId", async () => {
+    const a = await repos.users.upsertByAuthUserId({ authUserId: "auth_dup", email: "x@y.com", name: "X" });
+    const b = await repos.users.upsertByAuthUserId({ authUserId: "auth_dup", email: "x2@y.com", name: "X2" });
     expect(b.id).toBe(a.id);
-    expect(b.name).toBe("Smith 2");
+    expect(b.email).toBe("x2@y.com");
   });
 
   it("enforces one membership per (org,user) and lists by org", async () => {
-    const org = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_2", name: "Jones" });
-    const user = await repos.users.upsertByClerkUserId({
-      clerkUserId: "user_1",
-      email: "a@b.com",
-      name: "Ada",
+    const org = await repos.orgs.create({ name: "Jones" });
+    const user = await repos.users.upsertByAuthUserId({
+      authUserId: "auth_2",
+      email: "c@b.com",
+      name: "Cee",
     });
     await repos.memberships.upsert({ organizationId: org.id, userId: user.id, role: "viewer" });
     await repos.memberships.upsert({ organizationId: org.id, userId: user.id, role: "admin" });
@@ -36,7 +48,7 @@ describe("Prisma repository adapters", () => {
   });
 
   it("creates events scoped to an organization and finds by id", async () => {
-    const org = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_3", name: "Lee" });
+    const org = await repos.orgs.create({ name: "Lee" });
     const event = await repos.events.create({
       organizationId: org.id,
       eventTypeKey: "wedding",
@@ -50,7 +62,7 @@ describe("Prisma repository adapters", () => {
   });
 
   it("heldFor returns org-level + matching event-level entitlement keys", async () => {
-    const org = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_4", name: "Kim" });
+    const org = await repos.orgs.create({ name: "Kim" });
     const event = await repos.events.create({
       organizationId: org.id,
       eventTypeKey: "wedding",
@@ -74,7 +86,7 @@ describe("Prisma repository adapters", () => {
   });
 
   it("heldFor for a different/null event returns only org-level grants (OR semantics)", async () => {
-    const org = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_6", name: "Ng" });
+    const org = await repos.orgs.create({ name: "Ng" });
     const event = await repos.events.create({
       organizationId: org.id,
       eventTypeKey: "wedding",
@@ -93,19 +105,17 @@ describe("Prisma repository adapters", () => {
       key: "event_type:wedding",
       source: "purchase:1",
     });
-    // querying with a different event must NOT leak the event-level grant
     const heldOther = await repos.entitlements.heldFor({
       organizationId: org.id,
       eventId: "some_other_event",
     });
     expect([...heldOther].sort()).toEqual(["all_access"]);
-    // querying with null event must also return only org-level
     const heldNull = await repos.entitlements.heldFor({ organizationId: org.id, eventId: null });
     expect([...heldNull].sort()).toEqual(["all_access"]);
   });
 
   it("partial unique index blocks duplicate org-level grants", async () => {
-    const org = await repos.orgs.upsertByClerkOrgId({ clerkOrgId: "org_5", name: "Park" });
+    const org = await repos.orgs.create({ name: "Park" });
     await repos.entitlements.grant({
       organizationId: org.id,
       eventId: null,

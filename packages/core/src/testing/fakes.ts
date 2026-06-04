@@ -19,35 +19,36 @@ export function makeFakeRepositories(): Repositories {
 
   return {
     orgs: {
-      async upsertByClerkOrgId({ clerkOrgId, name }) {
-        const existing = orgs.find((o) => o.clerkOrgId === clerkOrgId);
-        if (existing) {
-          existing.name = name;
-          return { ...existing };
-        }
-        const created: OrganizationRecord = { id: id("org"), clerkOrgId, name };
+      async create({ name }) {
+        const created: OrganizationRecord = { id: id("org"), name };
         orgs.push(created);
         return { ...created };
       },
-      async findByClerkOrgId(clerkOrgId) {
-        const found = orgs.find((o) => o.clerkOrgId === clerkOrgId);
+      async findById(orgId) {
+        const found = orgs.find((o) => o.id === orgId);
         return found ? { ...found } : null;
+      },
+      async listForUser(userId) {
+        const orgIds = new Set(
+          memberships.filter((m) => m.userId === userId).map((m) => m.organizationId),
+        );
+        return orgs.filter((o) => orgIds.has(o.id)).map((o) => ({ ...o }));
       },
     },
     users: {
-      async upsertByClerkUserId({ clerkUserId, email, name }) {
-        const existing = users.find((u) => u.clerkUserId === clerkUserId);
+      async upsertByAuthUserId({ authUserId, email, name }) {
+        const existing = users.find((u) => u.authUserId === authUserId);
         if (existing) {
           existing.email = email;
           existing.name = name;
           return { ...existing };
         }
-        const created: UserRecord = { id: id("user"), clerkUserId, email, name };
+        const created: UserRecord = { id: id("user"), authUserId, email, name };
         users.push(created);
         return { ...created };
       },
-      async findByClerkUserId(clerkUserId) {
-        const found = users.find((u) => u.clerkUserId === clerkUserId);
+      async findByAuthUserId(authUserId) {
+        const found = users.find((u) => u.authUserId === authUserId);
         return found ? { ...found } : null;
       },
     },

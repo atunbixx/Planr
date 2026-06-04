@@ -2,13 +2,13 @@ import { describe, it, expect } from "vitest";
 import { makeFakeRepositories } from "./fakes";
 
 describe("in-memory fake repositories", () => {
-  it("upserts an organization by clerkOrgId idempotently", async () => {
-    const { orgs } = makeFakeRepositories();
-    const a = await orgs.upsertByClerkOrgId({ clerkOrgId: "org_1", name: "Smith Wedding" });
-    const b = await orgs.upsertByClerkOrgId({ clerkOrgId: "org_1", name: "Smith Wedding (renamed)" });
-    expect(b.id).toBe(a.id);
-    expect(b.name).toBe("Smith Wedding (renamed)");
-    expect(await orgs.findByClerkOrgId("org_1")).toMatchObject({ id: a.id });
+  it("creates organizations and lists them for a member", async () => {
+    const { orgs, users, memberships } = makeFakeRepositories();
+    const org = await orgs.create({ name: "Smith Wedding" });
+    const user = await users.upsertByAuthUserId({ authUserId: "auth_1", email: "a@b.com", name: "Ada" });
+    await memberships.upsert({ organizationId: org.id, userId: user.id, role: "owner" });
+    expect(await orgs.findById(org.id)).toMatchObject({ name: "Smith Wedding" });
+    expect(await orgs.listForUser(user.id)).toHaveLength(1);
   });
 
   it("enforces one membership per (org,user) on upsert", async () => {

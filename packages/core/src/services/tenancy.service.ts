@@ -1,8 +1,8 @@
 import type { Repositories, OrganizationRecord, MembershipRecord } from "../ports/repositories";
 import type { Role } from "../types";
 
-interface ClerkUserInput {
-  clerkUserId: string;
+interface AuthUserInput {
+  authUserId: string;
   email: string;
   name: string | null;
 }
@@ -10,15 +10,11 @@ interface ClerkUserInput {
 export function makeTenancyService(repos: Repositories) {
   return {
     async provisionOrganization(input: {
-      clerkOrgId: string;
       name: string;
-      creator: ClerkUserInput;
+      creator: AuthUserInput;
     }): Promise<{ organization: OrganizationRecord; ownerMembership: MembershipRecord }> {
-      const organization = await repos.orgs.upsertByClerkOrgId({
-        clerkOrgId: input.clerkOrgId,
-        name: input.name,
-      });
-      const owner = await repos.users.upsertByClerkUserId(input.creator);
+      const organization = await repos.orgs.create({ name: input.name });
+      const owner = await repos.users.upsertByAuthUserId(input.creator);
       const ownerMembership = await repos.memberships.upsert({
         organizationId: organization.id,
         userId: owner.id,
@@ -29,10 +25,10 @@ export function makeTenancyService(repos: Repositories) {
 
     async addMember(input: {
       organizationId: string;
-      user: ClerkUserInput;
+      user: AuthUserInput;
       role: Role;
     }): Promise<MembershipRecord> {
-      const user = await repos.users.upsertByClerkUserId(input.user);
+      const user = await repos.users.upsertByAuthUserId(input.user);
       return repos.memberships.upsert({
         organizationId: input.organizationId,
         userId: user.id,

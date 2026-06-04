@@ -2,12 +2,11 @@ import type { Role, EventTypeKey, Entitlement } from "../types";
 
 export interface OrganizationRecord {
   id: string;
-  clerkOrgId: string;
   name: string;
 }
 export interface UserRecord {
   id: string;
-  clerkUserId: string;
+  authUserId: string;
   email: string;
   name: string | null;
 }
@@ -33,16 +32,17 @@ export interface EntitlementRecord {
 }
 
 export interface OrganizationRepository {
-  upsertByClerkOrgId(input: { clerkOrgId: string; name: string }): Promise<OrganizationRecord>;
-  findByClerkOrgId(clerkOrgId: string): Promise<OrganizationRecord | null>;
+  create(input: { name: string }): Promise<OrganizationRecord>;
+  findById(id: string): Promise<OrganizationRecord | null>;
+  listForUser(userId: string): Promise<OrganizationRecord[]>;
 }
 export interface UserRepository {
-  upsertByClerkUserId(input: {
-    clerkUserId: string;
+  upsertByAuthUserId(input: {
+    authUserId: string;
     email: string;
     name: string | null;
   }): Promise<UserRecord>;
-  findByClerkUserId(clerkUserId: string): Promise<UserRecord | null>;
+  findByAuthUserId(authUserId: string): Promise<UserRecord | null>;
 }
 export interface MembershipRepository {
   upsert(input: { organizationId: string; userId: string; role: Role }): Promise<MembershipRecord>;

@@ -3,7 +3,7 @@ import {
   makeTenancyService,
   makeEventService,
   makeEntitlementService,
-  makeClerkSync,
+  syncAuthUser,
 } from "@planr/core";
 import { startTestDb, type TestDb } from "./testing/test-db";
 import { createRepositories } from "./repositories/index";
@@ -25,15 +25,14 @@ describe("end-to-end tenancy flow (services over Prisma adapters)", () => {
     const ents = makeEntitlementService(repos);
 
     const { organization, ownerMembership } = await tenancy.provisionOrganization({
-      clerkOrgId: "org_flow",
       name: "Flow Wedding",
-      creator: { clerkUserId: "user_owner", email: "owner@x.com", name: "Owner" },
+      creator: { authUserId: "auth_owner", email: "owner@x.com", name: "Owner" },
     });
     expect(ownerMembership.role).toBe("owner");
 
     await tenancy.addMember({
       organizationId: organization.id,
-      user: { clerkUserId: "user_planner", email: "planner@x.com", name: "Planner" },
+      user: { authUserId: "auth_planner", email: "planner@x.com", name: "Planner" },
       role: "planner",
     });
     expect(await repos.memberships.listByOrganization(organization.id)).toHaveLength(2);
@@ -65,20 +64,9 @@ describe("end-to-end tenancy flow (services over Prisma adapters)", () => {
     expect(after.find((m) => m.module === "seating")).toMatchObject({ locked: false });
   });
 
-  it("syncs a Clerk membership webhook into a queryable membership", async () => {
+  it("syncs a signed-in auth user into a queryable User row", async () => {
     const repos = createRepositories(db.prisma);
-    const sync = makeClerkSync(repos);
-    await sync.organizationUpserted({ clerkOrgId: "org_sync", name: "Sync Co" });
-    await sync.membershipUpserted({
-      clerkOrgId: "org_sync",
-      clerkUserId: "user_sync",
-      email: "s@x.com",
-      name: "S",
-      clerkRole: "org:admin",
-    });
-    const org = await repos.orgs.findByClerkOrgId("org_sync");
-    const members = await repos.memberships.listByOrganization(org!.id);
-    expect(members).toHaveLength(1);
-    expect(members[0]!.role).toBe("admin");
+    const user = await syncAuthUser(repos, { authUserId: "auth_sync", email: "s@x.com", name: "S" });
+    expect(await repos.users.findByAuthUserId("auth_sync")).toMatchObject({ id: user.id });
   });
 });
