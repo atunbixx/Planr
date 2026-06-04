@@ -27,3 +27,4 @@ export type {
   EntitlementRepository,
   Repositories,
 } from "./ports/repositories";
+export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
