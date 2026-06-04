@@ -34,3 +34,7 @@ export {
   makeEntitlementService,
   type EntitlementService,
 } from "./services/entitlement.service";
+export {
+  makeAuthorizationService,
+  type AuthorizationService,
+} from "./services/authorization.service";
