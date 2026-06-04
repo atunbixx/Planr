@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  owner
+  admin
+  planner
+  editor
+  viewer
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+}
+
+model User {
+  id          String       @id @default(uuid())
+  clerkUserId String       @unique
+  email       String       @unique
+  name        String?
+  createdAt   DateTime     @default(now())
+  memberships Membership[]
+}
+
+model Organization {
+  id            String         @id @default(uuid())
+  clerkOrgId    String         @unique
+  name          String
+  createdAt     DateTime       @default(now())
+  memberships   Membership[]
+  events        Event[]
+  subscriptions Subscription[]
+  entitlements  Entitlement[]
+}
+
+model Membership {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  role           Role         @default(viewer)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Event {
+  id             String        @id @default(uuid())
+  organizationId String
+  eventTypeKey   String
+  name           String
+  date           DateTime?
+  createdAt      DateTime      @default(now())
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  entitlements   Entitlement[]
+
+  @@index([organizationId])
+  @@index([organizationId, eventTypeKey])
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  organizationId       String
+  stripeSubscriptionId String?            @unique
+  planKey              String
+  status               SubscriptionStatus @default(trialing)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model Entitlement {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String?
+  key            String
+  source         String
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  event          Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, eventId, key])
+  @@index([organizationId])
+  @@index([eventId])
+}
