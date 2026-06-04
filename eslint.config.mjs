@@ -6,8 +6,9 @@ export default tseslint.config(
       "**/dist/**",
       "**/node_modules/**",
       "**/generated/**",
+      "**/.next/**",
       // Legacy Next.js app directories — removed in a later plan task
-      ".next/**",
+      "src/**",
       "src/**",
       "prisma/**",
       "scripts/**",
@@ -17,7 +18,7 @@ export default tseslint.config(
       "temp-data/**",
       // Root-level legacy config files (still present)
       "next.config.ts",
-      "next-env.d.ts",
+      "**/next-env.d.ts",
       "tsconfig.json",
       "tsconfig.seating.json",
       "tailwind.config.ts",
