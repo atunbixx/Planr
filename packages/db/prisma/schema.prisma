@@ -25,7 +25,7 @@ enum SubscriptionStatus {
 
 model User {
   id          String       @id @default(uuid())
-  clerkUserId String       @unique
+  authUserId  String       @unique
   email       String       @unique
   name        String?
   createdAt   DateTime     @default(now())
@@ -34,7 +34,6 @@ model User {
 
 model Organization {
   id            String         @id @default(uuid())
-  clerkOrgId    String         @unique
   name          String
   createdAt     DateTime       @default(now())
   memberships   Membership[]
