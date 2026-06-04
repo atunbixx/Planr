@@ -9,7 +9,6 @@ export default tseslint.config(
       "**/.next/**",
       // Legacy Next.js app directories — removed in a later plan task
       "src/**",
-      "src/**",
       "prisma/**",
       "scripts/**",
       "tests/**",
