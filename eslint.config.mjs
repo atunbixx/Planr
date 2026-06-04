@@ -30,8 +30,6 @@ export default tseslint.config(
       "tailwind.config.ts",
       "postcss.config.js",
       "playwright.config.ts",
-      // Lint fixtures — excluded from the repo-wide gate (checked manually)
-      "packages/eslint-fixtures/**",
     ],
   },
   ...tseslint.configs.recommended,
