@@ -31,6 +31,19 @@ export class PrismaEventRepository implements EventRepository {
     return row ? this.toRecord(row) : null;
   }
 
+  async update(input: {
+    organizationId: string;
+    id: string;
+    patch: { name?: string; date?: Date | null };
+  }): Promise<EventRecord | null> {
+    const result = await this.prisma.event.updateMany({
+      where: { id: input.id, organizationId: input.organizationId },
+      data: input.patch,
+    });
+    if (result.count === 0) return null;
+    return this.findById({ organizationId: input.organizationId, id: input.id });
+  }
+
   private toRecord(row: {
     id: string;
     organizationId: string;

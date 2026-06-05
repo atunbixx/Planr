@@ -157,6 +157,13 @@ export function makeFakeRepositories(): Repositories {
         const found = events.find((e) => e.id === eventId);
         return found ? { ...found } : null;
       },
+      async update({ organizationId, id: eventId, patch }) {
+        const e = events.find((x) => x.organizationId === organizationId && x.id === eventId);
+        if (!e) return null;
+        if (patch.name !== undefined) e.name = patch.name;
+        if (patch.date !== undefined) e.date = patch.date;
+        return { ...e };
+      },
     },
     entitlements: {
       async grant({ organizationId, eventId, key, source }) {

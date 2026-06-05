@@ -350,6 +350,42 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     expect(plan.unassigned.map((g) => g.name)).toEqual(["Ada"]);
   });
 
+  it("events: get returns the event; update sets the date (gated event:update)", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_ev", email: "ev@x.com", name: "Ev" });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Dated Wedding" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Our Day",
+      date: "2027-06-12",
+    });
+    expect(event.date).not.toBeNull();
+
+    const got = await ownerCaller.events.get({ organizationId: org.id, eventId: event.id });
+    expect(got).toMatchObject({ name: "Our Day" });
+    expect(got.date && new Date(got.date).toISOString().slice(0, 10)).toBe("2027-06-12");
+
+    const updated = await ownerCaller.events.update({
+      organizationId: org.id,
+      eventId: event.id,
+      name: "Our Big Day",
+      date: "2027-07-01",
+    });
+    expect(updated.name).toBe("Our Big Day");
+
+    // a viewer cannot update
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_evv", email: "evv@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    await expect(
+      appRouter.createCaller(ctxFor(viewer)).events.update({
+        organizationId: org.id,
+        eventId: event.id,
+        name: "Nope",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
   it("admin: settings is owner/admin-only; owner renames; setMemberRole changes a role", async () => {
     const owner = await syncAuthUser(repos, { authUserId: "auth_ad1", email: "ad1@x.com", name: "Own" });
     const ownerCaller = appRouter.createCaller(ctxFor(owner));

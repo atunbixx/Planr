@@ -104,6 +104,11 @@ export interface EventRepository {
   listByOrganization(organizationId: string): Promise<EventRecord[]>;
   findById(input: { organizationId: string; id: string }): Promise<EventRecord | null>;
   getById(id: string): Promise<EventRecord | null>;
+  update(input: {
+    organizationId: string;
+    id: string;
+    patch: { name?: string; date?: Date | null };
+  }): Promise<EventRecord | null>;
 }
 export interface EntitlementRepository {
   grant(input: {

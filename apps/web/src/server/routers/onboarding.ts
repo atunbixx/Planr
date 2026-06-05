@@ -8,13 +8,15 @@ export const onboardingRouter = router({
         spaceName: z.string().min(1),
         eventTypeKey: z.enum(["wedding", "birthday", "funeral", "bridal_shower", "corporate"]),
         eventName: z.string().min(1),
+        eventDate: z.string().max(40).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const date = input.eventDate && input.eventDate.trim() !== "" ? new Date(input.eventDate) : null;
       const { organization, event } = await ctx.container.onboarding.completeIndividual({
         creator: { authUserId: ctx.user.authUserId, email: ctx.user.email, name: ctx.user.name },
         spaceName: input.spaceName,
-        firstEvent: { eventTypeKey: input.eventTypeKey, name: input.eventName },
+        firstEvent: { eventTypeKey: input.eventTypeKey, name: input.eventName, date },
       });
       return { organizationId: organization.id, eventId: event.id };
     }),

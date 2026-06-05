@@ -41,6 +41,10 @@ export default async function IndividualOnboardingPage() {
             Give it a name
             <input aria-label="Event name" name="eventName" placeholder="Our Big Day" required />
           </label>
+          <label>
+            When is it? <span className="opt">(optional)</span>
+            <input aria-label="Event date" name="eventDate" type="date" />
+          </label>
           <button type="submit">Start planning</button>
         </form>
       </div>

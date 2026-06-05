@@ -64,6 +64,7 @@ export default async function DashboardPage({
             <option value="funeral">Funeral / memorial</option>
             <option value="corporate">Party / other gathering</option>
           </select>
+          <input aria-label="Event date" name="date" type="date" />
           <button type="submit">{terms.newEvent}</button>
         </form>
       </section>

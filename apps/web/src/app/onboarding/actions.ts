@@ -12,11 +12,13 @@ export async function completeIndividualAction(formData: FormData) {
     | "funeral"
     | "bridal_shower"
     | "corporate";
+  const eventDate = String(formData.get("eventDate") ?? "");
   if (!spaceName || !eventName) return;
   const res = await (await getServerCaller()).onboarding.completeIndividual({
     spaceName,
     eventTypeKey,
     eventName,
+    eventDate,
   });
   redirect(`/dashboard/org/${res.organizationId}/event/${res.eventId}`);
 }

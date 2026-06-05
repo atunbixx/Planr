@@ -12,8 +12,9 @@ export async function createEventAction(formData: FormData) {
     | "funeral"
     | "bridal_shower"
     | "corporate";
+  const date = String(formData.get("date") ?? "");
   if (!organizationId || !name) return;
-  await (await getServerCaller()).events.create({ organizationId, eventTypeKey, name });
+  await (await getServerCaller()).events.create({ organizationId, eventTypeKey, name, date });
   revalidatePath(`/dashboard/org/${organizationId}`);
   revalidatePath("/dashboard");
 }

@@ -11,7 +11,7 @@ export function makeOnboardingService(repos: Repositories) {
     async completeIndividual(input: {
       creator: AuthUserInput;
       spaceName: string;
-      firstEvent: { eventTypeKey: EventTypeKey; name: string };
+      firstEvent: { eventTypeKey: EventTypeKey; name: string; date?: Date | null };
     }): Promise<{ organization: OrganizationRecord; event: EventRecord }> {
       const { organization } = await tenancy.provisionOrganization({
         name: input.spaceName,
@@ -22,7 +22,7 @@ export function makeOnboardingService(repos: Repositories) {
         organizationId: organization.id,
         eventTypeKey: input.firstEvent.eventTypeKey,
         name: input.firstEvent.name,
-        date: null,
+        date: input.firstEvent.date ?? null,
       });
       return { organization, event };
     },

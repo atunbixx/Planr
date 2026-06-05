@@ -22,6 +22,22 @@ export function makeEventService(repos: Repositories) {
       return repos.events.listByOrganization(organizationId);
     },
 
+    async get(input: { organizationId: string; eventId: string }): Promise<EventRecord | null> {
+      return repos.events.findById({ organizationId: input.organizationId, id: input.eventId });
+    },
+
+    async update(input: {
+      organizationId: string;
+      eventId: string;
+      patch: { name?: string; date?: Date | null };
+    }): Promise<EventRecord | null> {
+      return repos.events.update({
+        organizationId: input.organizationId,
+        id: input.eventId,
+        patch: input.patch,
+      });
+    },
+
     async resolveModules(input: {
       organizationId: string;
       eventId: string;
