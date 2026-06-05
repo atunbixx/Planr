@@ -42,4 +42,29 @@ export const collaborationRouter = router({
     .mutation(({ ctx, input }) =>
       ctx.container.collaboration.acceptByToken(ctx.user.id, input.token),
     ),
+  setMemberRole: authedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+        userId: z.string(),
+        role: z.enum(["admin", "planner", "editor", "viewer"]),
+      }),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.container.collaboration.setMemberRole({
+        organizationId: input.organizationId,
+        actorUserId: ctx.user.id,
+        targetUserId: input.userId,
+        role: input.role,
+      }),
+    ),
+  revokeInvitation: authedProcedure
+    .input(z.object({ organizationId: z.string(), invitationId: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.container.collaboration.revokeInvitation({
+        organizationId: input.organizationId,
+        actorUserId: ctx.user.id,
+        invitationId: input.invitationId,
+      }),
+    ),
 });

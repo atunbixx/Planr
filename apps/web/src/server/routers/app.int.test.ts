@@ -350,6 +350,54 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     expect(plan.unassigned.map((g) => g.name)).toEqual(["Ada"]);
   });
 
+  it("admin: settings is owner/admin-only; owner renames; setMemberRole changes a role", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_ad1", email: "ad1@x.com", name: "Own" });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Admin Co" });
+
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_ad2", email: "ad2@x.com", name: "Vee" });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    const viewerCaller = appRouter.createCaller(ctxFor(viewer));
+
+    // settings: forbidden for viewer, ok for owner
+    await expect(viewerCaller.admin.settings({ organizationId: org.id })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    const settings = await ownerCaller.admin.settings({ organizationId: org.id });
+    expect(settings.organization).toMatchObject({ name: "Admin Co" });
+    expect(settings.members.map((m) => m.role).sort()).toEqual(["owner", "viewer"]);
+
+    // rename (owner)
+    const renamed = await ownerCaller.admin.rename({ organizationId: org.id, name: "Renamed Co" });
+    expect(renamed.name).toBe("Renamed Co");
+
+    // setMemberRole: owner promotes the viewer to editor; viewer can't change roles
+    await ownerCaller.collaboration.setMemberRole({ organizationId: org.id, userId: viewer.id, role: "editor" });
+    const after = await ownerCaller.admin.settings({ organizationId: org.id });
+    expect(after.members.find((m) => m.userId === viewer.id)?.role).toBe("editor");
+    await expect(
+      viewerCaller.collaboration.setMemberRole({ organizationId: org.id, userId: owner.id, role: "viewer" }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("admin: deleteWorkspace is OWNER-only (admin without org:delete is forbidden)", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_ad3", email: "ad3@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Doomed Co" });
+    const admin = await syncAuthUser(repos, { authUserId: "auth_ad4", email: "ad4@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: admin.id, role: "admin" });
+    const adminCaller = appRouter.createCaller(ctxFor(admin));
+
+    await expect(adminCaller.admin.deleteWorkspace({ organizationId: org.id })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await ownerCaller.admin.deleteWorkspace({ organizationId: org.id });
+    // the org is gone — owner can no longer read its settings
+    await expect(ownerCaller.admin.settings({ organizationId: org.id })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
+
   it("messaging: host posts an announcement; the unauthenticated guest sees it via their token", async () => {
     const owner = await syncAuthUser(repos, { authUserId: "auth_me", email: "me@x.com", name: "ME" });
     const ownerCaller = appRouter.createCaller(ctxFor(owner));
