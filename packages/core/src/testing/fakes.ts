@@ -8,6 +8,7 @@ import type {
   InvitationRecord,
   GuestRecord,
   TaskRecord,
+  BudgetItemRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -22,6 +23,7 @@ export function makeFakeRepositories(): Repositories {
   const invitations: InvitationRecord[] = [];
   const guests: GuestRecord[] = [];
   const tasks: TaskRecord[] = [];
+  const budget: BudgetItemRecord[] = [];
 
   return {
     orgs: {
@@ -287,6 +289,58 @@ export function makeFakeRepositories(): Repositories {
           done: mine.filter((t) => t.done).length,
           remaining: mine.filter((t) => !t.done).length,
           overdue: mine.filter((t) => !t.done && t.dueDate != null && t.dueDate < now).length,
+        };
+      },
+    },
+    budget: {
+      async create({ organizationId, eventId, ...rest }) {
+        const created: BudgetItemRecord = { id: id("bdg"), organizationId, eventId, ...rest };
+        budget.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId, limit, cursor }) {
+        const all = budget
+          .filter((b) => b.organizationId === organizationId && b.eventId === eventId)
+          .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        const start = cursor ? all.findIndex((b) => b.id === cursor) + 1 : 0;
+        const page = all.slice(start, start + limit);
+        const nextCursor =
+          page.length === limit && start + limit < all.length ? page[page.length - 1]!.id : null;
+        return { items: page.map((b) => ({ ...b })), nextCursor };
+      },
+      async getById({ organizationId, eventId, id: bid }) {
+        const found = budget.find(
+          (b) => b.id === bid && b.organizationId === organizationId && b.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async update({ organizationId, eventId, id: bid, patch }) {
+        const b = budget.find(
+          (x) => x.id === bid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!b) return null;
+        Object.assign(b, patch);
+        return { ...b };
+      },
+      async remove({ organizationId, eventId, id: bid }) {
+        const i = budget.findIndex(
+          (x) => x.id === bid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        budget.splice(i, 1);
+        return true;
+      },
+      async summaryByEvent({ organizationId, eventId }) {
+        const mine = budget.filter(
+          (b) => b.organizationId === organizationId && b.eventId === eventId,
+        );
+        const totalEstimatedCents = mine.reduce((s, b) => s + b.estimatedCents, 0);
+        const totalPaidCents = mine.reduce((s, b) => s + b.paidCents, 0);
+        return {
+          itemCount: mine.length,
+          totalEstimatedCents,
+          totalPaidCents,
+          remainingCents: totalEstimatedCents - totalPaidCents,
         };
       },
     },

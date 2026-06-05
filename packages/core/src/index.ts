@@ -38,11 +38,21 @@ export type {
   TaskSummary,
   TaskWrite,
   TaskRepository,
+  BudgetItemRecord,
+  BudgetSummary,
+  BudgetItemWrite,
+  BudgetItemRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
 export { taskInput, toTaskWrite, toTaskPatch, type TaskInput } from "./tasks/task.dto";
 export { makeTaskService, type TaskService } from "./tasks/task.service";
+export {
+  budgetItemInput,
+  toBudgetItemWrite,
+  toBudgetItemPatch,
+  type BudgetItemInput,
+} from "./budget/budget.dto";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";

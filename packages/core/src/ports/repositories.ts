@@ -224,6 +224,58 @@ export interface TaskRepository {
   }): Promise<TaskSummary>;
 }
 
+export interface BudgetItemRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  label: string;
+  category: string | null;
+  estimatedCents: number;
+  paidCents: number;
+  notes: string | null;
+}
+
+export interface BudgetSummary {
+  itemCount: number;
+  totalEstimatedCents: number;
+  totalPaidCents: number;
+  // estimated - paid; may be negative when overspent.
+  remainingCents: number;
+}
+
+export interface BudgetItemWrite {
+  label: string;
+  category: string | null;
+  estimatedCents: number;
+  paidCents: number;
+  notes: string | null;
+}
+
+export interface BudgetItemRepository {
+  create(
+    input: { organizationId: string; eventId: string } & BudgetItemWrite,
+  ): Promise<BudgetItemRecord>;
+  listByEvent(input: {
+    organizationId: string;
+    eventId: string;
+    limit: number;
+    cursor?: string;
+  }): Promise<{ items: BudgetItemRecord[]; nextCursor: string | null }>;
+  getById(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<BudgetItemRecord | null>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<BudgetItemWrite>;
+  }): Promise<BudgetItemRecord | null>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+  summaryByEvent(input: { organizationId: string; eventId: string }): Promise<BudgetSummary>;
+}
+
 export interface Repositories {
   orgs: OrganizationRepository;
   users: UserRepository;
@@ -233,4 +285,5 @@ export interface Repositories {
   invitations: InvitationRepository;
   guests: GuestRepository;
   tasks: TaskRepository;
+  budget: BudgetItemRepository;
 }
