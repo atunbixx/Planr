@@ -65,6 +65,7 @@ model Organization {
   budgetItems     BudgetItem[]
   seatingTables   SeatingTable[]
   seatAssignments SeatAssignment[]
+  announcements   Announcement[]
 }
 
 model Membership {
@@ -95,6 +96,7 @@ model Event {
   budgetItems     BudgetItem[]
   seatingTables   SeatingTable[]
   seatAssignments SeatAssignment[]
+  announcements   Announcement[]
 
   @@index([organizationId])
   @@index([organizationId, eventTypeKey])
@@ -222,6 +224,22 @@ model SeatingTable {
 
   @@index([eventId])
   @@index([organizationId, eventId])
+}
+
+model Announcement {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  title          String
+  body           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, createdAt])
 }
 
 model SeatAssignment {
