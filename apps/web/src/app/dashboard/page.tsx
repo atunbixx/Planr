@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { workspaceTerms } from "@planr/core";
+import { workspaceTerms, roleHasPermission } from "@planr/core";
 import { getCurrentUser } from "../../server/auth";
 import { getServerCaller } from "../../server/caller";
-import { createEventAction } from "./actions";
+import { createEventAction, inviteMemberAction, removeMemberAction } from "./actions";
 import { SignOutButton } from "../../components/sign-out-button";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +23,9 @@ export default async function DashboardPage({
   const current = workspaces.find((ws) => ws.id === w) ?? workspaces[0]!;
   const terms = workspaceTerms(current.type);
   const events = await caller.events.list({ organizationId: current.id });
+  const members = await caller.collaboration.members({ organizationId: current.id });
+  const me = members.find((m) => m.userId === user.id);
+  const canManage = me ? roleHasPermission(me.role, "member:invite") : false;
 
   return (
     <main>
@@ -77,6 +80,48 @@ export default async function DashboardPage({
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section>
+        <h2>
+          {terms.members} ({members.length})
+        </h2>
+        <ul className="members">
+          {members.map((m) => (
+            <li key={m.userId}>
+              <span className="mwho">{m.email ?? m.userId}</span>
+              <span className="mrole">{m.role}</span>
+              {canManage && m.userId !== user.id && m.role !== "owner" && (
+                <form action={removeMemberAction} className="minline">
+                  <input type="hidden" name="organizationId" value={current.id} />
+                  <input type="hidden" name="userId" value={m.userId} />
+                  <button type="submit" className="ghost">
+                    Remove
+                  </button>
+                </form>
+              )}
+            </li>
+          ))}
+        </ul>
+        {canManage && (
+          <form action={inviteMemberAction} className="invite">
+            <input type="hidden" name="organizationId" value={current.id} />
+            <input
+              aria-label="Invite email"
+              name="email"
+              type="email"
+              placeholder="name@email.com"
+              required
+            />
+            <select aria-label="Invite role" name="role" defaultValue="editor">
+              <option value="editor">Can edit</option>
+              <option value="planner">Planner</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">View only</option>
+            </select>
+            <button type="submit">{terms.invite}</button>
+          </form>
         )}
       </section>
     </main>

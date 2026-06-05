@@ -539,6 +539,46 @@ button.ghost:hover { background: var(--paper-2); }
 }
 .hero .cta .btn.secondary:hover { background: var(--paper-2); }
 
+/* ---- members ------------------------------------------------------------ */
+.members {
+  list-style: none;
+  margin: 6px 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 560px;
+}
+.members li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 14px;
+}
+.members .mwho { font-weight: 600; }
+.members .mrole {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-left: auto;
+}
+.members .minline { margin: 0; }
+.members .minline button { padding: 6px 12px; font-size: 0.78rem; }
+.invite {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 560px;
+}
+.invite input { width: min(240px, 100%); }
+.invite select { width: auto; }
+
 @media (prefers-reduced-motion: reduce) {
   main, main > * { animation: none !important; }
   * { transition: none !important; }
