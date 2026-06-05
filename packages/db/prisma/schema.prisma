@@ -28,6 +28,12 @@ enum OrgType {
   business
 }
 
+enum InvitationStatus {
+  pending
+  accepted
+  revoked
+}
+
 model User {
   id          String       @id @default(uuid())
   authUserId  String       @unique
@@ -46,6 +52,7 @@ model Organization {
   events        Event[]
   subscriptions Subscription[]
   entitlements  Entitlement[]
+  invitations   Invitation[]
 }
 
 model Membership {
@@ -107,4 +114,19 @@ model Entitlement {
   @@unique([organizationId, eventId, key])
   @@index([organizationId])
   @@index([eventId])
+}
+
+model Invitation {
+  id              String           @id @default(uuid())
+  organizationId  String
+  email           String
+  role            Role
+  token           String           @unique
+  status          InvitationStatus @default(pending)
+  invitedByUserId String
+  createdAt       DateTime         @default(now())
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email, status])
 }

@@ -25,6 +25,8 @@ export type Role = "owner" | "admin" | "planner" | "editor" | "viewer";
 
 export type OrgType = "individual" | "business";
 
+export type InvitationStatus = "pending" | "accepted" | "revoked";
+
 export type Permission =
   | "org:delete"
   | "billing:manage"
