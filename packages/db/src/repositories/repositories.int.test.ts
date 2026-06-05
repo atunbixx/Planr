@@ -358,10 +358,12 @@ describe("Prisma repository adapters", () => {
     }
     expect(seen).toHaveLength(5);
     expect(new Set(seen).size).toBe(5); // no repeats, no skips
-    // Global order: the two earliest dueDate, then the August one, then the two null-dueDate tail.
+    // Global order: the two earliest (same) dueDate (tie order by id, so compare as a set), then the
+    // August one, then the two null-dueDate tail.
     const all = await repos.tasks.listByEvent({ organizationId: org.id, eventId: event.id, limit: 100 });
     const titles = all.tasks.map((t) => t.title);
-    expect(titles.slice(0, 3)).toEqual(["T0", "T1", "T2"]);
+    expect(titles.slice(0, 2).sort()).toEqual(["T0", "T1"]);
+    expect(titles[2]).toBe("T2");
     expect(titles.slice(3).sort()).toEqual(["T3", "T4"]);
   });
 
@@ -389,6 +391,112 @@ describe("Prisma repository adapters", () => {
       now,
     });
     expect(summary).toEqual({ total: 4, done: 1, remaining: 3, overdue: 1 });
+  });
+
+  it("creates, reads, updates, removes a budget item tenant-scoped", async () => {
+    const org = await repos.orgs.create({ name: "Budget Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Budget Wedding",
+      date: null,
+    });
+    const created = await repos.budget.create({
+      organizationId: org.id,
+      eventId: event.id,
+      label: "Venue",
+      category: "Venue",
+      estimatedCents: 1_000_000,
+      paidCents: 250_000,
+      notes: null,
+    });
+    expect(created).toMatchObject({ label: "Venue", estimatedCents: 1_000_000, paidCents: 250_000 });
+
+    expect(
+      await repos.budget.getById({ organizationId: "other", eventId: event.id, id: created.id }),
+    ).toBeNull();
+
+    const updated = await repos.budget.update({
+      organizationId: org.id,
+      eventId: event.id,
+      id: created.id,
+      patch: { paidCents: 1_000_000 },
+    });
+    expect(updated).toMatchObject({ paidCents: 1_000_000, estimatedCents: 1_000_000 });
+    expect(
+      await repos.budget.update({
+        organizationId: "other",
+        eventId: event.id,
+        id: created.id,
+        patch: { label: "Hax" },
+      }),
+    ).toBeNull();
+    expect(
+      await repos.budget.remove({ organizationId: "other", eventId: event.id, id: created.id }),
+    ).toBe(false);
+    expect(
+      await repos.budget.remove({ organizationId: org.id, eventId: event.id, id: created.id }),
+    ).toBe(true);
+  });
+
+  it("paginates budget items by id keyset and SUMs the summary (overspend → negative remaining)", async () => {
+    const org = await repos.orgs.create({ name: "Budget Sum Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Budget Sum Wedding",
+      date: null,
+    });
+    const items = [
+      { estimatedCents: 500_000, paidCents: 500_000 },
+      { estimatedCents: 300_000, paidCents: 100_000 },
+      { estimatedCents: 50_000, paidCents: 75_000 }, // overspent
+    ];
+    for (let i = 0; i < items.length; i++) {
+      await repos.budget.create({
+        organizationId: org.id,
+        eventId: event.id,
+        label: `Item ${i}`,
+        category: null,
+        notes: null,
+        ...items[i]!,
+      });
+    }
+    const seen: string[] = [];
+    let cursor: string | undefined;
+    for (let guard = 0; guard < 10; guard++) {
+      const pageRes = await repos.budget.listByEvent({
+        organizationId: org.id,
+        eventId: event.id,
+        limit: 2,
+        cursor,
+      });
+      seen.push(...pageRes.items.map((b) => b.id));
+      if (!pageRes.nextCursor) break;
+      cursor = pageRes.nextCursor;
+    }
+    expect(new Set(seen).size).toBe(3);
+
+    const summary = await repos.budget.summaryByEvent({ organizationId: org.id, eventId: event.id });
+    expect(summary).toEqual({
+      itemCount: 3,
+      totalEstimatedCents: 850_000,
+      totalPaidCents: 675_000,
+      remainingCents: 175_000,
+    });
+  });
+
+  it("budget summary of an empty event is all zeros", async () => {
+    const org = await repos.orgs.create({ name: "Budget Empty Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Budget Empty Wedding",
+      date: null,
+    });
+    expect(
+      await repos.budget.summaryByEvent({ organizationId: org.id, eventId: event.id }),
+    ).toEqual({ itemCount: 0, totalEstimatedCents: 0, totalPaidCents: 0, remainingCents: 0 });
   });
 
   it("paginates guests by id keyset and summarises rsvp counts", async () => {
