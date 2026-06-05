@@ -1,30 +1,38 @@
 import { z } from "zod";
 import type { TaskWrite } from "../ports/repositories";
 
-const blankToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
-
-// dueDate arrives as an ISO-8601 string (or blank) from the wire; normalise to Date | null.
-const dueDate = z.preprocess(
-  blankToNull,
-  z
-    .string()
-    .datetime({ offset: true })
-    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)) // accept a bare yyyy-mm-dd (date input)
-    .nullish()
-    .transform((s) => (s == null ? null : new Date(s))),
-);
+// dueDate arrives as an ISO-8601 string, a bare yyyy-mm-dd (HTML date input), "" or null on the wire.
+// Input type: optional string | null. Output type: Date | null.
+// Transforms preserve `undefined` (field absent → leave undefined so partial patches skip it) and
+// only coerce explicit blank/null → null. Create-time nulling of absent fields is the mappers' job.
+const dueDate = z
+  .union([
+    z.string().datetime({ offset: true }),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    z.literal(""),
+    z.null(),
+  ])
+  .optional()
+  .transform((s) => (s === undefined ? undefined : s === null || s === "" ? null : new Date(s)));
 
 export const taskInput = z.object({
   title: z.string().trim().min(1).max(200),
-  notes: z.preprocess(blankToNull, z.string().max(2000).nullish()),
+  notes: z
+    .string()
+    .max(2000)
+    .nullish()
+    .transform((s) => (s === undefined ? undefined : s === null || s.trim() === "" ? null : s)),
   done: z.boolean().optional(),
   dueDate,
 });
 
-export type TaskInput = z.infer<typeof taskInput>;
+/** Caller / wire-facing shape (pre-parse): dueDate is an optional string. */
+export type TaskInput = z.input<typeof taskInput>;
+/** Parsed shape (post-parse): dueDate is a Date | null. Used by the write-mappers. */
+type TaskParsed = z.output<typeof taskInput>;
 
 /** Normalise a parsed input into a full TaskWrite (optionals → null / defaults). */
-export function toTaskWrite(input: TaskInput): TaskWrite {
+export function toTaskWrite(input: TaskParsed): TaskWrite {
   return {
     title: input.title,
     notes: input.notes ?? null,
@@ -34,7 +42,7 @@ export function toTaskWrite(input: TaskInput): TaskWrite {
 }
 
 /** Partial patch (for updates): only the provided fields, normalised. */
-export function toTaskPatch(input: Partial<TaskInput>): Partial<TaskWrite> {
+export function toTaskPatch(input: Partial<TaskParsed>): Partial<TaskWrite> {
   const patch: Partial<TaskWrite> = {};
   if (input.title !== undefined) patch.title = input.title;
   if (input.notes !== undefined) patch.notes = input.notes ?? null;

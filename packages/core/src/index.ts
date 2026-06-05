@@ -42,6 +42,7 @@ export type {
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
 export { taskInput, toTaskWrite, toTaskPatch, type TaskInput } from "./tasks/task.dto";
+export { makeTaskService, type TaskService } from "./tasks/task.service";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
