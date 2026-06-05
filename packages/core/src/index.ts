@@ -42,6 +42,10 @@ export type {
   BudgetSummary,
   BudgetItemWrite,
   BudgetItemRepository,
+  SeatingTableRecord,
+  SeatAssignmentRecord,
+  SeatingTableWrite,
+  SeatingRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
@@ -54,6 +58,12 @@ export {
   type BudgetItemInput,
 } from "./budget/budget.dto";
 export { makeBudgetService, type BudgetService } from "./budget/budget.service";
+export {
+  seatingTableInput,
+  toSeatingTableWrite,
+  toSeatingTablePatch,
+  type SeatingTableInput,
+} from "./seating/seating.dto";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";

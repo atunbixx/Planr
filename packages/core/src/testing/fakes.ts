@@ -9,6 +9,7 @@ import type {
   GuestRecord,
   TaskRecord,
   BudgetItemRecord,
+  SeatingTableRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -24,6 +25,14 @@ export function makeFakeRepositories(): Repositories {
   const guests: GuestRecord[] = [];
   const tasks: TaskRecord[] = [];
   const budget: BudgetItemRecord[] = [];
+  const seatingTables: SeatingTableRecord[] = [];
+  const seatAssignments: {
+    id: string;
+    organizationId: string;
+    eventId: string;
+    tableId: string;
+    guestId: string;
+  }[] = [];
 
   return {
     orgs: {
@@ -342,6 +351,74 @@ export function makeFakeRepositories(): Repositories {
           totalPaidCents,
           remainingCents: totalEstimatedCents - totalPaidCents,
         };
+      },
+    },
+    seating: {
+      async createTable({ organizationId, eventId, label, capacity }) {
+        const created: SeatingTableRecord = { id: id("tbl"), organizationId, eventId, label, capacity };
+        seatingTables.push(created);
+        return { ...created };
+      },
+      async listTables({ organizationId, eventId }) {
+        return seatingTables
+          .filter((t) => t.organizationId === organizationId && t.eventId === eventId)
+          .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+          .map((t) => ({ ...t }));
+      },
+      async getTable({ organizationId, eventId, id: tid }) {
+        const found = seatingTables.find(
+          (t) => t.id === tid && t.organizationId === organizationId && t.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async updateTable({ organizationId, eventId, id: tid, patch }) {
+        const t = seatingTables.find(
+          (x) => x.id === tid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!t) return null;
+        Object.assign(t, patch);
+        return { ...t };
+      },
+      async removeTable({ organizationId, eventId, id: tid }) {
+        const i = seatingTables.findIndex(
+          (x) => x.id === tid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        seatingTables.splice(i, 1);
+        // cascade: free any guests seated at this table
+        for (let j = seatAssignments.length - 1; j >= 0; j--) {
+          if (seatAssignments[j]!.tableId === tid) seatAssignments.splice(j, 1);
+        }
+        return true;
+      },
+      async listAssignments({ organizationId, eventId }) {
+        return seatAssignments
+          .filter((a) => a.organizationId === organizationId && a.eventId === eventId)
+          .map((a) => ({ id: a.id, tableId: a.tableId, guestId: a.guestId }));
+      },
+      async countByTable({ organizationId, eventId, tableId }) {
+        return seatAssignments.filter(
+          (a) => a.organizationId === organizationId && a.eventId === eventId && a.tableId === tableId,
+        ).length;
+      },
+      async assign({ organizationId, eventId, tableId, guestId }) {
+        // upsert by guestId (one seat per guest) — move if already seated
+        const existing = seatAssignments.find((a) => a.guestId === guestId);
+        if (existing) {
+          existing.tableId = tableId;
+          existing.eventId = eventId;
+          existing.organizationId = organizationId;
+          return { id: existing.id, tableId: existing.tableId, guestId };
+        }
+        const created = { id: id("sat"), organizationId, eventId, tableId, guestId };
+        seatAssignments.push(created);
+        return { id: created.id, tableId, guestId };
+      },
+      async unassign({ guestId }) {
+        const i = seatAssignments.findIndex((a) => a.guestId === guestId);
+        if (i < 0) return false;
+        seatAssignments.splice(i, 1);
+        return true;
       },
     },
   };

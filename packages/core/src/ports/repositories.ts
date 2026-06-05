@@ -276,6 +276,65 @@ export interface BudgetItemRepository {
   summaryByEvent(input: { organizationId: string; eventId: string }): Promise<BudgetSummary>;
 }
 
+export interface SeatingTableRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  label: string;
+  capacity: number;
+}
+
+export interface SeatAssignmentRecord {
+  id: string;
+  tableId: string;
+  guestId: string;
+}
+
+export interface SeatingTableWrite {
+  label: string;
+  capacity: number;
+}
+
+export interface SeatingRepository {
+  createTable(
+    input: { organizationId: string; eventId: string } & SeatingTableWrite,
+  ): Promise<SeatingTableRecord>;
+  listTables(input: { organizationId: string; eventId: string }): Promise<SeatingTableRecord[]>;
+  getTable(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<SeatingTableRecord | null>;
+  updateTable(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<SeatingTableWrite>;
+  }): Promise<SeatingTableRecord | null>;
+  removeTable(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+  listAssignments(input: {
+    organizationId: string;
+    eventId: string;
+  }): Promise<SeatAssignmentRecord[]>;
+  countByTable(input: {
+    organizationId: string;
+    eventId: string;
+    tableId: string;
+  }): Promise<number>;
+  // Upsert by guestId — moves the guest if already seated elsewhere.
+  assign(input: {
+    organizationId: string;
+    eventId: string;
+    tableId: string;
+    guestId: string;
+  }): Promise<SeatAssignmentRecord>;
+  unassign(input: {
+    organizationId: string;
+    eventId: string;
+    guestId: string;
+  }): Promise<boolean>;
+}
+
 export interface Repositories {
   orgs: OrganizationRepository;
   users: UserRepository;
@@ -286,4 +345,5 @@ export interface Repositories {
   guests: GuestRepository;
   tasks: TaskRepository;
   budget: BudgetItemRepository;
+  seating: SeatingRepository;
 }
