@@ -5,7 +5,7 @@ import { getServerCaller } from "../../../../../../server/caller";
 export const dynamic = "force-dynamic";
 
 // Modules with a real page today. Everything else shows "Coming soon" (free launch: no paywall).
-const BUILT = new Set(["guests"]);
+const BUILT = new Set(["guests", "tasks"]);
 
 function pretty(module: string): string {
   return module.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
