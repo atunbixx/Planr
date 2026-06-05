@@ -1,4 +1,11 @@
-import type { Role, EventTypeKey, Entitlement, OrgType, InvitationStatus } from "../types";
+import type {
+  Role,
+  EventTypeKey,
+  Entitlement,
+  OrgType,
+  InvitationStatus,
+  RsvpStatus,
+} from "../types";
 
 export interface OrganizationRecord {
   id: string;
@@ -93,6 +100,7 @@ export interface EventRepository {
   }): Promise<EventRecord>;
   listByOrganization(organizationId: string): Promise<EventRecord[]>;
   findById(input: { organizationId: string; id: string }): Promise<EventRecord | null>;
+  getById(id: string): Promise<EventRecord | null>;
 }
 export interface EntitlementRepository {
   grant(input: {
@@ -110,6 +118,60 @@ export interface EntitlementRepository {
   heldFor(input: { organizationId: string; eventId: string | null }): Promise<Entitlement[]>;
 }
 
+export interface GuestRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  groupLabel: string | null;
+  plusOne: boolean;
+  rsvpStatus: RsvpStatus;
+  notes: string | null;
+}
+
+export interface GuestSummary {
+  total: number;
+  coming: number;
+  declined: number;
+  maybe: number;
+  awaiting: number;
+}
+
+export interface GuestWrite {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  groupLabel: string | null;
+  plusOne: boolean;
+  rsvpStatus: RsvpStatus;
+  notes: string | null;
+}
+
+export interface GuestRepository {
+  create(input: { organizationId: string; eventId: string } & GuestWrite): Promise<GuestRecord>;
+  listByEvent(input: {
+    organizationId: string;
+    eventId: string;
+    limit: number;
+    cursor?: string;
+  }): Promise<{ guests: GuestRecord[]; nextCursor: string | null }>;
+  getById(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<GuestRecord | null>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<GuestWrite>;
+  }): Promise<GuestRecord | null>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+  summaryByEvent(input: { organizationId: string; eventId: string }): Promise<GuestSummary>;
+}
+
 export interface Repositories {
   orgs: OrganizationRepository;
   users: UserRepository;
@@ -117,4 +179,5 @@ export interface Repositories {
   events: EventRepository;
   entitlements: EntitlementRepository;
   invitations: InvitationRepository;
+  guests: GuestRepository;
 }

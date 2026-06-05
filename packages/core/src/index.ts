@@ -30,7 +30,12 @@ export type {
   MemberView,
   InvitationRecord,
   InvitationRepository,
+  GuestRecord,
+  GuestSummary,
+  GuestWrite,
+  GuestRepository,
 } from "./ports/repositories";
+export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
 export { makeEventService, type EventService, type ResolvedModule } from "./services/event.service";

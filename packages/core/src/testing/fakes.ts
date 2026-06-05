@@ -6,6 +6,7 @@ import type {
   EventRecord,
   EntitlementRecord,
   InvitationRecord,
+  GuestRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -18,6 +19,7 @@ export function makeFakeRepositories(): Repositories {
   const events: EventRecord[] = [];
   const entitlements: EntitlementRecord[] = [];
   const invitations: InvitationRecord[] = [];
+  const guests: GuestRecord[] = [];
 
   return {
     orgs: {
@@ -109,6 +111,10 @@ export function makeFakeRepositories(): Repositories {
         const found = events.find((e) => e.organizationId === organizationId && e.id === eventId);
         return found ? { ...found } : null;
       },
+      async getById(eventId) {
+        const found = events.find((e) => e.id === eventId);
+        return found ? { ...found } : null;
+      },
     },
     entitlements: {
       async grant({ organizationId, eventId, key, source }) {
@@ -173,6 +179,57 @@ export function makeFakeRepositories(): Repositories {
       async setStatus({ id: invId, status }) {
         const inv = invitations.find((i) => i.id === invId);
         if (inv) inv.status = status;
+      },
+    },
+    guests: {
+      async create({ organizationId, eventId, ...rest }) {
+        const created: GuestRecord = { id: id("gst"), organizationId, eventId, ...rest };
+        guests.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId, limit, cursor }) {
+        const all = guests
+          .filter((g) => g.organizationId === organizationId && g.eventId === eventId)
+          .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        const start = cursor ? all.findIndex((g) => g.id === cursor) + 1 : 0;
+        const page = all.slice(start, start + limit);
+        const nextCursor =
+          page.length === limit && start + limit < all.length ? page[page.length - 1]!.id : null;
+        return { guests: page.map((g) => ({ ...g })), nextCursor };
+      },
+      async getById({ organizationId, eventId, id: gid }) {
+        const found = guests.find(
+          (g) => g.id === gid && g.organizationId === organizationId && g.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async update({ organizationId, eventId, id: gid, patch }) {
+        const g = guests.find(
+          (x) => x.id === gid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!g) return null;
+        Object.assign(g, patch);
+        return { ...g };
+      },
+      async remove({ organizationId, eventId, id: gid }) {
+        const i = guests.findIndex(
+          (x) => x.id === gid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        guests.splice(i, 1);
+        return true;
+      },
+      async summaryByEvent({ organizationId, eventId }) {
+        const mine = guests.filter(
+          (g) => g.organizationId === organizationId && g.eventId === eventId,
+        );
+        return {
+          total: mine.length,
+          coming: mine.filter((g) => g.rsvpStatus === "coming").length,
+          declined: mine.filter((g) => g.rsvpStatus === "declined").length,
+          maybe: mine.filter((g) => g.rsvpStatus === "maybe").length,
+          awaiting: mine.filter((g) => g.rsvpStatus === "awaiting").length,
+        };
       },
     },
   };
