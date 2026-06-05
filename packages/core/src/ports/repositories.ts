@@ -172,6 +172,58 @@ export interface GuestRepository {
   summaryByEvent(input: { organizationId: string; eventId: string }): Promise<GuestSummary>;
 }
 
+export interface TaskRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  title: string;
+  notes: string | null;
+  done: boolean;
+  dueDate: Date | null;
+}
+
+export interface TaskSummary {
+  total: number;
+  done: number;
+  remaining: number;
+  overdue: number;
+}
+
+export interface TaskWrite {
+  title: string;
+  notes: string | null;
+  done: boolean;
+  dueDate: Date | null;
+}
+
+export interface TaskRepository {
+  create(input: { organizationId: string; eventId: string } & TaskWrite): Promise<TaskRecord>;
+  listByEvent(input: {
+    organizationId: string;
+    eventId: string;
+    limit: number;
+    cursor?: string;
+  }): Promise<{ tasks: TaskRecord[]; nextCursor: string | null }>;
+  getById(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<TaskRecord | null>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<TaskWrite>;
+  }): Promise<TaskRecord | null>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+  // `now` is injected so the overdue boundary is deterministic and testable.
+  summaryByEvent(input: {
+    organizationId: string;
+    eventId: string;
+    now: Date;
+  }): Promise<TaskSummary>;
+}
+
 export interface Repositories {
   orgs: OrganizationRepository;
   users: UserRepository;
@@ -180,4 +232,5 @@ export interface Repositories {
   entitlements: EntitlementRepository;
   invitations: InvitationRepository;
   guests: GuestRepository;
+  tasks: TaskRepository;
 }

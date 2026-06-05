@@ -7,6 +7,7 @@ import type {
   EntitlementRecord,
   InvitationRecord,
   GuestRecord,
+  TaskRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -20,6 +21,7 @@ export function makeFakeRepositories(): Repositories {
   const entitlements: EntitlementRecord[] = [];
   const invitations: InvitationRecord[] = [];
   const guests: GuestRecord[] = [];
+  const tasks: TaskRecord[] = [];
 
   return {
     orgs: {
@@ -229,6 +231,62 @@ export function makeFakeRepositories(): Repositories {
           declined: mine.filter((g) => g.rsvpStatus === "declined").length,
           maybe: mine.filter((g) => g.rsvpStatus === "maybe").length,
           awaiting: mine.filter((g) => g.rsvpStatus === "awaiting").length,
+        };
+      },
+    },
+    tasks: {
+      async create({ organizationId, eventId, ...rest }) {
+        const created: TaskRecord = { id: id("tsk"), organizationId, eventId, ...rest };
+        tasks.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId, limit, cursor }) {
+        // Order: dueDate ASC (nulls last), then insertion order (createdAt proxy). Array.sort is
+        // stable and filter preserves insertion order, so a single dueDate comparator suffices.
+        const all = tasks
+          .filter((t) => t.organizationId === organizationId && t.eventId === eventId)
+          .sort((a, b) => {
+            const ad = a.dueDate ? a.dueDate.getTime() : Infinity;
+            const bd = b.dueDate ? b.dueDate.getTime() : Infinity;
+            return ad - bd;
+          });
+        const start = cursor ? all.findIndex((t) => t.id === cursor) + 1 : 0;
+        const page = all.slice(start, start + limit);
+        const nextCursor =
+          page.length === limit && start + limit < all.length ? page[page.length - 1]!.id : null;
+        return { tasks: page.map((t) => ({ ...t })), nextCursor };
+      },
+      async getById({ organizationId, eventId, id: tid }) {
+        const found = tasks.find(
+          (t) => t.id === tid && t.organizationId === organizationId && t.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async update({ organizationId, eventId, id: tid, patch }) {
+        const t = tasks.find(
+          (x) => x.id === tid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!t) return null;
+        Object.assign(t, patch);
+        return { ...t };
+      },
+      async remove({ organizationId, eventId, id: tid }) {
+        const i = tasks.findIndex(
+          (x) => x.id === tid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        tasks.splice(i, 1);
+        return true;
+      },
+      async summaryByEvent({ organizationId, eventId, now }) {
+        const mine = tasks.filter(
+          (t) => t.organizationId === organizationId && t.eventId === eventId,
+        );
+        return {
+          total: mine.length,
+          done: mine.filter((t) => t.done).length,
+          remaining: mine.filter((t) => !t.done).length,
+          overdue: mine.filter((t) => !t.done && t.dueDate != null && t.dueDate < now).length,
         };
       },
     },
