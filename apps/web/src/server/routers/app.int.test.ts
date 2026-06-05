@@ -9,6 +9,7 @@ import {
   makeOnboardingService,
   makeCollaborationService,
   makeGuestService,
+  makeTaskService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -29,6 +30,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       onboarding: makeOnboardingService(repos),
       collaboration: makeCollaborationService(repos),
       guests: makeGuestService(repos),
+      tasks: makeTaskService(repos),
     },
   };
 }
@@ -196,6 +198,56 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     const caller = appRouter.createCaller(ctxFor(owner));
     await expect(
       caller.guests.list({ eventId: "does-not-exist", limit: 10 }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("manages tasks through the router: create, list, summary(overdue n/a), update, remove", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_tk", email: "tk@x.com", name: "TK" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Taskful Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "The Big Day",
+    });
+    const a = await caller.tasks.create({
+      eventId: event.id,
+      task: { title: "Book venue", dueDate: "2026-07-01" },
+    });
+    await caller.tasks.create({ eventId: event.id, task: { title: "Send invites", notes: "" } });
+
+    const page = await caller.tasks.list({ eventId: event.id, limit: 50 });
+    expect(page.tasks.map((t) => t.title)).toContain("Book venue");
+    const summary = await caller.tasks.summary({ eventId: event.id });
+    expect(summary).toMatchObject({ total: 2, done: 0, remaining: 2 });
+
+    const updated = await caller.tasks.update({
+      eventId: event.id,
+      taskId: a.id,
+      patch: { done: true },
+    });
+    expect(updated.done).toBe(true);
+
+    await caller.tasks.remove({ eventId: event.id, taskId: a.id });
+    expect((await caller.tasks.list({ eventId: event.id, limit: 50 })).tasks).toHaveLength(1);
+  });
+
+  it("forbids a non-member from touching an event's tasks; NOT_FOUND for unknown event", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_to", email: "to@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Sealed Tasks" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sealed Day",
+    });
+    const stranger = await syncAuthUser(repos, { authUserId: "auth_ts", email: "ts@x.com", name: null });
+    const strangerCaller = appRouter.createCaller(ctxFor(stranger));
+    await expect(
+      strangerCaller.tasks.list({ eventId: event.id, limit: 10 }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      ownerCaller.tasks.list({ eventId: "does-not-exist", limit: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
