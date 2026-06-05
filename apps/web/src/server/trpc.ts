@@ -10,18 +10,21 @@ export interface TrpcContext {
 
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
 
+// tRPC middleware `next()` resolves with `{ ok: false, error }` on a downstream throw rather than
+// rejecting, and tRPC has already wrapped our domain error as a TRPCError with the original on
+// `.cause`. So we inspect the result (not a try/catch) and remap by the cause's type.
 const mapErrors = t.middleware(async ({ next }) => {
-  try {
-    return await next();
-  } catch (err) {
-    if (err instanceof NotFoundError) {
-      throw new TRPCError({ code: "NOT_FOUND", message: err.message, cause: err });
+  const result = await next();
+  if (!result.ok) {
+    const cause = result.error.cause;
+    if (cause instanceof NotFoundError) {
+      throw new TRPCError({ code: "NOT_FOUND", message: cause.message, cause });
     }
-    if (err instanceof ForbiddenError) {
-      throw new TRPCError({ code: "FORBIDDEN", message: err.message, cause: err });
+    if (cause instanceof ForbiddenError) {
+      throw new TRPCError({ code: "FORBIDDEN", message: cause.message, cause });
     }
-    throw err;
   }
+  return result;
 });
 
 export const router = t.router;

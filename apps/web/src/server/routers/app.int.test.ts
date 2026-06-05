@@ -8,6 +8,7 @@ import {
   makeAuthorizationService,
   makeOnboardingService,
   makeCollaborationService,
+  makeGuestService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -27,6 +28,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       authz: makeAuthorizationService(repos),
       onboarding: makeOnboardingService(repos),
       collaboration: makeCollaborationService(repos),
+      guests: makeGuestService(repos),
     },
   };
 }
@@ -137,5 +139,63 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await expect(
       appRouter.createCaller(ctxFor(stranger)).events.list({ organizationId: org.id }),
     ).rejects.toThrowError(/not a member/i);
+  });
+
+  it("manages guests through the router: create, list, summary, update, remove", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_gl", email: "gl@x.com", name: "GL" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Guestful Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "The Big Day",
+    });
+    const a = await caller.guests.create({
+      eventId: event.id,
+      guest: { name: "Aunt Mary", rsvpStatus: "coming" },
+    });
+    await caller.guests.create({ eventId: event.id, guest: { name: "Uncle Joe", email: "" } });
+
+    const page = await caller.guests.list({ eventId: event.id, limit: 50 });
+    expect(page.guests).toHaveLength(2);
+    const summary = await caller.guests.summary({ eventId: event.id });
+    expect(summary).toMatchObject({ total: 2, coming: 1, awaiting: 1 });
+
+    const updated = await caller.guests.update({
+      eventId: event.id,
+      guestId: a.id,
+      patch: { rsvpStatus: "declined" },
+    });
+    expect(updated.rsvpStatus).toBe("declined");
+
+    await caller.guests.remove({ eventId: event.id, guestId: a.id });
+    expect((await caller.guests.list({ eventId: event.id, limit: 50 })).guests).toHaveLength(1);
+  });
+
+  it("forbids a non-member from touching an event's guests (cross-tenant)", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_go", email: "go@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Sealed Wedding" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sealed Day",
+    });
+    const stranger = await syncAuthUser(repos, { authUserId: "auth_gs", email: "gs@x.com", name: null });
+    const strangerCaller = appRouter.createCaller(ctxFor(stranger));
+    await expect(
+      strangerCaller.guests.list({ eventId: event.id, limit: 10 }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      strangerCaller.guests.create({ eventId: event.id, guest: { name: "Hax" } }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("maps an unknown event to NOT_FOUND", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_nf", email: "nf@x.com", name: null });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    await expect(
+      caller.guests.list({ eventId: "does-not-exist", limit: 10 }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
