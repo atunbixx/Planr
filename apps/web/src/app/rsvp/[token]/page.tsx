@@ -4,6 +4,7 @@ import { respondAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 type View = { eventName: string; guestName: string; rsvpStatus: string; plusOne: boolean };
+type Announcement = { id: string; title: string; body: string };
 
 const OPTIONS = [
   { value: "coming", label: "Joyfully accepts" },
@@ -25,8 +26,11 @@ export default async function PublicRsvpPage({
   const { token } = await params;
 
   let view: View | null = null;
+  let announcements: Announcement[] = [];
   try {
-    view = await (await getServerCaller()).rsvp.get({ token });
+    const caller = await getServerCaller();
+    view = await caller.rsvp.get({ token });
+    announcements = await caller.messaging.publicForToken({ token });
   } catch {
     view = null;
   }
@@ -80,6 +84,20 @@ export default async function PublicRsvpPage({
         </label>
         <button type="submit">Send RSVP</button>
       </form>
+
+      {announcements.length > 0 ? (
+        <section className="rsvpnews">
+          <h2>News from your host</h2>
+          <ul>
+            {announcements.map((a) => (
+              <li key={a.id}>
+                <span className="ntitle">{a.title}</span>
+                <p className="nbody">{a.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

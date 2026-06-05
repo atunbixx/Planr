@@ -10,6 +10,7 @@
 @import "./styles/budget.css";
 @import "./styles/seating.css";
 @import "./styles/rsvp.css";
+@import "./styles/messaging.css";
 
 :root {
   --paper: #faf5ec;
