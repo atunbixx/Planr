@@ -32,6 +32,11 @@ export default async function DashboardPage({
       <header className="wshead">
         <h1>{current.name}</h1>
         <div className="who">
+          {canManage && (
+            <a className="ghost" href={`/dashboard/org/${current.id}/admin`}>
+              Workspace settings
+            </a>
+          )}
           <span>{user.email ?? "(no email)"}</span>
           <SignOutButton />
         </div>
