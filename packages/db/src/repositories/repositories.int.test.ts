@@ -499,6 +499,41 @@ describe("Prisma repository adapters", () => {
     ).toEqual({ itemCount: 0, totalEstimatedCents: 0, totalPaidCents: 0, remainingCents: 0 });
   });
 
+  it("messaging: announcement CRUD tenant-scoped, newest-first, cascade with event", async () => {
+    const org = await repos.orgs.create({ name: "Msg Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Msg Wedding",
+      date: null,
+    });
+    const a = await repos.announcements.create({
+      organizationId: org.id, eventId: event.id, title: "First", body: "a",
+    });
+    const b = await repos.announcements.create({
+      organizationId: org.id, eventId: event.id, title: "Second", body: "b",
+    });
+    const list = await repos.announcements.listByEvent({ organizationId: org.id, eventId: event.id });
+    expect(list.map((x) => x.id)).toEqual([b.id, a.id]); // newest first
+
+    expect(
+      await repos.announcements.getById({ organizationId: "other", eventId: event.id, id: a.id }),
+    ).toBeNull();
+    const updated = await repos.announcements.update({
+      organizationId: org.id, eventId: event.id, id: a.id, patch: { body: "edited" },
+    });
+    expect(updated).toMatchObject({ title: "First", body: "edited" });
+    expect(
+      await repos.announcements.update({ organizationId: "other", eventId: event.id, id: a.id, patch: { title: "x" } }),
+    ).toBeNull();
+    expect(await repos.announcements.remove({ organizationId: org.id, eventId: event.id, id: a.id })).toBe(true);
+    expect(await repos.announcements.remove({ organizationId: org.id, eventId: event.id, id: a.id })).toBe(false);
+
+    // cascade: deleting the event removes its announcements
+    await repos.events.create({ organizationId: org.id, eventTypeKey: "wedding", name: "x", date: null });
+    expect(await repos.announcements.listByEvent({ organizationId: org.id, eventId: event.id })).toHaveLength(1);
+  });
+
   it("rsvp: a created guest gets a unique token; findByRsvpToken + setRsvpByToken work", async () => {
     const org = await repos.orgs.create({ name: "RSVP Co" });
     const event = await repos.events.create({
