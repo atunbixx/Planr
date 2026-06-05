@@ -60,9 +60,11 @@ model Organization {
   subscriptions Subscription[]
   entitlements  Entitlement[]
   invitations   Invitation[]
-  guests        Guest[]
-  tasks         Task[]
-  budgetItems   BudgetItem[]
+  guests          Guest[]
+  tasks           Task[]
+  budgetItems     BudgetItem[]
+  seatingTables   SeatingTable[]
+  seatAssignments SeatAssignment[]
 }
 
 model Membership {
@@ -87,10 +89,12 @@ model Event {
   date           DateTime?
   createdAt      DateTime      @default(now())
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  entitlements   Entitlement[]
-  guests         Guest[]
-  tasks          Task[]
-  budgetItems    BudgetItem[]
+  entitlements    Entitlement[]
+  guests          Guest[]
+  tasks           Task[]
+  budgetItems     BudgetItem[]
+  seatingTables   SeatingTable[]
+  seatAssignments SeatAssignment[]
 
   @@index([organizationId])
   @@index([organizationId, eventTypeKey])
@@ -159,6 +163,7 @@ model Guest {
   updatedAt      DateTime     @updatedAt
   event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  seatAssignment SeatAssignment?
 
   @@index([eventId])
   @@index([organizationId, eventId])
@@ -200,4 +205,36 @@ model BudgetItem {
 
   @@index([eventId])
   @@index([organizationId, eventId])
+}
+
+model SeatingTable {
+  id             String           @id @default(uuid())
+  organizationId String
+  eventId        String
+  label          String
+  capacity       Int              @default(8)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  event          Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignments    SeatAssignment[]
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+}
+
+model SeatAssignment {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  tableId        String
+  guestId        String       @unique
+  createdAt      DateTime     @default(now())
+  table          SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  guest          Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([tableId])
 }
