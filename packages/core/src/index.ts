@@ -64,6 +64,13 @@ export {
   toSeatingTablePatch,
   type SeatingTableInput,
 } from "./seating/seating.dto";
+export {
+  makeSeatingService,
+  type SeatingService,
+  type SeatingPlan,
+  type PlanTable,
+  type SeatedGuest,
+} from "./seating/seating.service";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
