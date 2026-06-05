@@ -47,3 +47,8 @@ export {
   type PlanScope,
 } from "./billing/plans";
 export { makeBillingService, type BillingService } from "./services/billing.service";
+export {
+  makeOnboardingService,
+  type OnboardingService,
+} from "./services/onboarding.service";
+export { workspaceTerms, type WorkspaceTerms } from "./workspaces/terms";
