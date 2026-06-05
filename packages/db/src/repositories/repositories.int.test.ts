@@ -198,4 +198,126 @@ describe("Prisma repository adapters", () => {
       }),
     ).rejects.toThrow();
   });
+
+  it("getById resolves an event by id alone (no org scope)", async () => {
+    const org = await repos.orgs.create({ name: "Direct" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Direct Wedding",
+      date: null,
+    });
+    expect(await repos.events.getById(event.id)).toMatchObject({ id: event.id, organizationId: org.id });
+    expect(await repos.events.getById("missing")).toBeNull();
+  });
+
+  it("creates, reads, updates, removes a guest tenant-scoped", async () => {
+    const org = await repos.orgs.create({ name: "Guest Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Guest Wedding",
+      date: null,
+    });
+    const created = await repos.guests.create({
+      organizationId: org.id,
+      eventId: event.id,
+      name: "Aunt Mary",
+      email: null,
+      phone: null,
+      groupLabel: "Family",
+      plusOne: true,
+      rsvpStatus: "coming",
+      notes: null,
+    });
+    expect(created).toMatchObject({ name: "Aunt Mary", plusOne: true, rsvpStatus: "coming" });
+
+    expect(
+      await repos.guests.getById({ organizationId: org.id, eventId: event.id, id: created.id }),
+    ).toMatchObject({ id: created.id });
+    // wrong tenant cannot read
+    expect(
+      await repos.guests.getById({ organizationId: "other", eventId: event.id, id: created.id }),
+    ).toBeNull();
+
+    const updated = await repos.guests.update({
+      organizationId: org.id,
+      eventId: event.id,
+      id: created.id,
+      patch: { rsvpStatus: "declined", notes: "Cannot make it" },
+    });
+    expect(updated).toMatchObject({ rsvpStatus: "declined", notes: "Cannot make it" });
+    // wrong tenant cannot update
+    expect(
+      await repos.guests.update({
+        organizationId: "other",
+        eventId: event.id,
+        id: created.id,
+        patch: { name: "Hax" },
+      }),
+    ).toBeNull();
+
+    // wrong tenant cannot remove
+    expect(
+      await repos.guests.remove({ organizationId: "other", eventId: event.id, id: created.id }),
+    ).toBe(false);
+    expect(
+      await repos.guests.remove({ organizationId: org.id, eventId: event.id, id: created.id }),
+    ).toBe(true);
+    expect(
+      await repos.guests.getById({ organizationId: org.id, eventId: event.id, id: created.id }),
+    ).toBeNull();
+  });
+
+  it("paginates guests by id keyset and summarises rsvp counts", async () => {
+    const org = await repos.orgs.create({ name: "Paginate Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Paginate Wedding",
+      date: null,
+    });
+    const statuses = ["coming", "coming", "declined", "maybe", "awaiting"] as const;
+    for (let i = 0; i < statuses.length; i++) {
+      await repos.guests.create({
+        organizationId: org.id,
+        eventId: event.id,
+        name: `G${i}`,
+        email: null,
+        phone: null,
+        groupLabel: null,
+        plusOne: false,
+        rsvpStatus: statuses[i]!,
+        notes: null,
+      });
+    }
+    const first = await repos.guests.listByEvent({
+      organizationId: org.id,
+      eventId: event.id,
+      limit: 2,
+    });
+    expect(first.guests).toHaveLength(2);
+    expect(first.nextCursor).not.toBeNull();
+    const second = await repos.guests.listByEvent({
+      organizationId: org.id,
+      eventId: event.id,
+      limit: 2,
+      cursor: first.nextCursor!,
+    });
+    expect(second.guests).toHaveLength(2);
+    const third = await repos.guests.listByEvent({
+      organizationId: org.id,
+      eventId: event.id,
+      limit: 2,
+      cursor: second.nextCursor!,
+    });
+    expect(third.guests).toHaveLength(1);
+    expect(third.nextCursor).toBeNull();
+    // no id repeats across pages
+    const ids = [...first.guests, ...second.guests, ...third.guests].map((g) => g.id);
+    expect(new Set(ids).size).toBe(5);
+
+    const summary = await repos.guests.summaryByEvent({ organizationId: org.id, eventId: event.id });
+    expect(summary).toEqual({ total: 5, coming: 2, declined: 1, maybe: 1, awaiting: 1 });
+  });
 });

@@ -26,6 +26,11 @@ export class PrismaEventRepository implements EventRepository {
     return row ? this.toRecord(row) : null;
   }
 
+  async getById(id: string): Promise<EventRecord | null> {
+    const row = await this.prisma.event.findUnique({ where: { id } });
+    return row ? this.toRecord(row) : null;
+  }
+
   private toRecord(row: {
     id: string;
     organizationId: string;
