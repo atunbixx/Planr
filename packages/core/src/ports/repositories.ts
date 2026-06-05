@@ -343,6 +343,40 @@ export interface SeatingRepository {
   }): Promise<boolean>;
 }
 
+export interface AnnouncementRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  title: string;
+  body: string;
+  createdAt: Date;
+}
+
+export interface AnnouncementWrite {
+  title: string;
+  body: string;
+}
+
+export interface AnnouncementRepository {
+  create(
+    input: { organizationId: string; eventId: string } & AnnouncementWrite,
+  ): Promise<AnnouncementRecord>;
+  // Newest first.
+  listByEvent(input: { organizationId: string; eventId: string }): Promise<AnnouncementRecord[]>;
+  getById(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<AnnouncementRecord | null>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<AnnouncementWrite>;
+  }): Promise<AnnouncementRecord | null>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+}
+
 export interface Repositories {
   orgs: OrganizationRepository;
   users: UserRepository;
@@ -354,4 +388,5 @@ export interface Repositories {
   tasks: TaskRepository;
   budget: BudgetItemRepository;
   seating: SeatingRepository;
+  announcements: AnnouncementRepository;
 }

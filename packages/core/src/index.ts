@@ -46,6 +46,9 @@ export type {
   SeatAssignmentRecord,
   SeatingTableWrite,
   SeatingRepository,
+  AnnouncementRecord,
+  AnnouncementWrite,
+  AnnouncementRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
@@ -80,6 +83,19 @@ export {
   type RsvpService,
   type RsvpOverview,
 } from "./rsvp/rsvp.service";
+export {
+  announcementInput,
+  toAnnouncementWrite,
+  toAnnouncementPatch,
+  type AnnouncementInput,
+} from "./messaging/messaging.dto";
+export {
+  makeMessagingService,
+  type MessagingService,
+  makePublicMessagingService,
+  type PublicMessagingService,
+  type PublicAnnouncement,
+} from "./messaging/messaging.service";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";

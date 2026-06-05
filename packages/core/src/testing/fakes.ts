@@ -10,6 +10,7 @@ import type {
   TaskRecord,
   BudgetItemRecord,
   SeatingTableRecord,
+  AnnouncementRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -33,6 +34,8 @@ export function makeFakeRepositories(): Repositories {
     tableId: string;
     guestId: string;
   }[] = [];
+  const announcements: AnnouncementRecord[] = [];
+  let annClock = 0; // deterministic, strictly-increasing createdAt for ordering
 
   return {
     orgs: {
@@ -435,6 +438,48 @@ export function makeFakeRepositories(): Repositories {
         const i = seatAssignments.findIndex((a) => a.guestId === guestId);
         if (i < 0) return false;
         seatAssignments.splice(i, 1);
+        return true;
+      },
+    },
+    announcements: {
+      async create({ organizationId, eventId, title, body }) {
+        const created: AnnouncementRecord = {
+          id: id("ann"),
+          organizationId,
+          eventId,
+          title,
+          body,
+          createdAt: new Date(1_700_000_000_000 + annClock++ * 1000),
+        };
+        announcements.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId }) {
+        return announcements
+          .filter((a) => a.organizationId === organizationId && a.eventId === eventId)
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) // newest first
+          .map((a) => ({ ...a }));
+      },
+      async getById({ organizationId, eventId, id: aid }) {
+        const found = announcements.find(
+          (a) => a.id === aid && a.organizationId === organizationId && a.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async update({ organizationId, eventId, id: aid, patch }) {
+        const a = announcements.find(
+          (x) => x.id === aid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!a) return null;
+        Object.assign(a, patch);
+        return { ...a };
+      },
+      async remove({ organizationId, eventId, id: aid }) {
+        const i = announcements.findIndex(
+          (x) => x.id === aid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        announcements.splice(i, 1);
         return true;
       },
     },
