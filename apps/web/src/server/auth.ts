@@ -9,9 +9,13 @@ export async function getCurrentUser(): Promise<UserRecord | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  return syncAuthUser(container.repos, {
+  const record = await syncAuthUser(container.repos, {
     authUserId: user.id,
     email: user.email ?? null,
     name: (user.user_metadata?.name as string | undefined) ?? null,
   });
+  if (record.email) {
+    await container.collaboration.acceptPendingForEmail(record.id, record.email);
+  }
+  return record;
 }

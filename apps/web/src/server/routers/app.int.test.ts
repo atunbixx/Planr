@@ -7,6 +7,7 @@ import {
   makeEntitlementService,
   makeAuthorizationService,
   makeOnboardingService,
+  makeCollaborationService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -25,6 +26,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       entitlements: makeEntitlementService(repos),
       authz: makeAuthorizationService(repos),
       onboarding: makeOnboardingService(repos),
+      collaboration: makeCollaborationService(repos),
     },
   };
 }
@@ -95,6 +97,37 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     expect(workspaces.find((w) => w.id === res.organizationId)).toMatchObject({ type: "business" });
     const events = await caller.events.list({ organizationId: res.organizationId });
     expect(events).toHaveLength(0);
+  });
+
+  it("invites a member, who is auto-added on sign-in by email", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_co", email: "co@x.com", name: "Co" });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Shared Co" });
+    await ownerCaller.collaboration.invite({
+      organizationId: org.id,
+      email: "guest@x.com",
+      role: "editor",
+    });
+    const guest = await syncAuthUser(repos, { authUserId: "auth_g", email: "guest@x.com", name: null });
+    await ctxFor(guest).container.collaboration.acceptPendingForEmail(guest.id, "guest@x.com");
+
+    const members = await ownerCaller.collaboration.members({ organizationId: org.id });
+    expect(members.map((m) => m.userId)).toContain(guest.id);
+
+    const guestCaller = appRouter.createCaller(ctxFor(guest));
+    await expect(guestCaller.events.list({ organizationId: org.id })).resolves.toBeDefined();
+  });
+
+  it("forbids a non-owner from inviting", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_o3", email: "o3@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Locked Co" });
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_v3", email: "v3@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    const viewerCaller = appRouter.createCaller(ctxFor(viewer));
+    await expect(
+      viewerCaller.collaboration.invite({ organizationId: org.id, email: "x@y.com", role: "editor" }),
+    ).rejects.toThrowError(/forbidden/i);
   });
 
   it("blocks non-members from listing another org's events", async () => {

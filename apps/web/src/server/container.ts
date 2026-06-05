@@ -5,6 +5,7 @@ import {
   makeEntitlementService,
   makeAuthorizationService,
   makeOnboardingService,
+  makeCollaborationService,
 } from "@planr/core";
 
 const repos = createRepositories(prisma);
@@ -16,6 +17,7 @@ export const container = {
   entitlements: makeEntitlementService(repos),
   authz: makeAuthorizationService(repos),
   onboarding: makeOnboardingService(repos),
+  collaboration: makeCollaborationService(repos),
 };
 
 export type Container = typeof container;
