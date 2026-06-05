@@ -196,7 +196,13 @@ export function makeFakeRepositories(): Repositories {
     },
     guests: {
       async create({ organizationId, eventId, ...rest }) {
-        const created: GuestRecord = { id: id("gst"), organizationId, eventId, ...rest };
+        const created: GuestRecord = {
+          id: id("gst"),
+          organizationId,
+          eventId,
+          rsvpToken: id("tok"),
+          ...rest,
+        };
         guests.push(created);
         return { ...created };
       },
@@ -243,6 +249,17 @@ export function makeFakeRepositories(): Repositories {
           maybe: mine.filter((g) => g.rsvpStatus === "maybe").length,
           awaiting: mine.filter((g) => g.rsvpStatus === "awaiting").length,
         };
+      },
+      async findByRsvpToken(token) {
+        const found = guests.find((g) => g.rsvpToken === token);
+        return found ? { ...found } : null;
+      },
+      async setRsvpByToken({ token, rsvpStatus, plusOne }) {
+        const g = guests.find((x) => x.rsvpToken === token);
+        if (!g) return null;
+        g.rsvpStatus = rsvpStatus;
+        if (plusOne !== undefined) g.plusOne = plusOne;
+        return { ...g };
       },
     },
     tasks: {

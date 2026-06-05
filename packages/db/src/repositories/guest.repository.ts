@@ -17,6 +17,7 @@ type GuestRow = {
   groupLabel: string | null;
   plusOne: boolean;
   rsvpStatus: string;
+  rsvpToken: string;
   notes: string | null;
 };
 
@@ -118,7 +119,29 @@ export class PrismaGuestRepository implements GuestRepository {
       groupLabel: row.groupLabel,
       plusOne: row.plusOne,
       rsvpStatus: row.rsvpStatus as RsvpStatus,
+      rsvpToken: row.rsvpToken,
       notes: row.notes,
     };
+  }
+
+  async findByRsvpToken(token: string): Promise<GuestRecord | null> {
+    const row = await this.prisma.guest.findUnique({ where: { rsvpToken: token } });
+    return row ? this.toRecord(row) : null;
+  }
+
+  async setRsvpByToken(input: {
+    token: string;
+    rsvpStatus: RsvpStatus;
+    plusOne?: boolean;
+  }): Promise<GuestRecord | null> {
+    const result = await this.prisma.guest.updateMany({
+      where: { rsvpToken: input.token },
+      data: {
+        rsvpStatus: input.rsvpStatus,
+        ...(input.plusOne !== undefined ? { plusOne: input.plusOne } : {}),
+      },
+    });
+    if (result.count === 0) return null;
+    return this.findByRsvpToken(input.token);
   }
 }

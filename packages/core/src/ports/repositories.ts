@@ -128,6 +128,7 @@ export interface GuestRecord {
   groupLabel: string | null;
   plusOne: boolean;
   rsvpStatus: RsvpStatus;
+  rsvpToken: string;
   notes: string | null;
 }
 
@@ -170,6 +171,13 @@ export interface GuestRepository {
   }): Promise<GuestRecord | null>;
   remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
   summaryByEvent(input: { organizationId: string; eventId: string }): Promise<GuestSummary>;
+  // Public RSVP: resolve / mutate a single guest purely by their capability token (no tenant scope).
+  findByRsvpToken(token: string): Promise<GuestRecord | null>;
+  setRsvpByToken(input: {
+    token: string;
+    rsvpStatus: RsvpStatus;
+    plusOne?: boolean;
+  }): Promise<GuestRecord | null>;
 }
 
 export interface TaskRecord {
