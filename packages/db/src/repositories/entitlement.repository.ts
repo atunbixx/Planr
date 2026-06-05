@@ -20,6 +20,34 @@ export class PrismaEntitlementRepository implements EntitlementRepository {
     };
   }
 
+  async grantIfAbsent(input: {
+    organizationId: string;
+    eventId: string | null;
+    key: Entitlement;
+    source: string;
+  }): Promise<EntitlementRecord> {
+    const existing = await this.prisma.entitlement.findFirst({
+      where: { organizationId: input.organizationId, eventId: input.eventId, key: input.key },
+    });
+    if (existing) {
+      return {
+        id: existing.id,
+        organizationId: existing.organizationId,
+        eventId: existing.eventId,
+        key: existing.key as Entitlement,
+        source: existing.source,
+      };
+    }
+    const row = await this.prisma.entitlement.create({ data: input });
+    return {
+      id: row.id,
+      organizationId: row.organizationId,
+      eventId: row.eventId,
+      key: row.key as Entitlement,
+      source: row.source,
+    };
+  }
+
   async heldFor(input: {
     organizationId: string;
     eventId: string | null;

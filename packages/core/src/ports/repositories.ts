@@ -67,6 +67,12 @@ export interface EntitlementRepository {
     key: Entitlement;
     source: string;
   }): Promise<EntitlementRecord>;
+  grantIfAbsent(input: {
+    organizationId: string;
+    eventId: string | null;
+    key: Entitlement;
+    source: string;
+  }): Promise<EntitlementRecord>;
   heldFor(input: { organizationId: string; eventId: string | null }): Promise<Entitlement[]>;
 }
 

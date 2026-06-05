@@ -101,6 +101,15 @@ export function makeFakeRepositories(): Repositories {
         entitlements.push(created);
         return { ...created };
       },
+      async grantIfAbsent({ organizationId, eventId, key, source }) {
+        const existing = entitlements.find(
+          (e) => e.organizationId === organizationId && e.eventId === eventId && e.key === key,
+        );
+        if (existing) return { ...existing };
+        const created: EntitlementRecord = { id: id("ent"), organizationId, eventId, key, source };
+        entitlements.push(created);
+        return { ...created };
+      },
       async heldFor({ organizationId, eventId }) {
         return entitlements
           .filter(

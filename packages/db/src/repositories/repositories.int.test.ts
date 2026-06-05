@@ -121,6 +121,25 @@ describe("Prisma repository adapters", () => {
     expect([...heldNull].sort()).toEqual(["all_access"]);
   });
 
+  it("grantIfAbsent is idempotent for the same (org,event,key)", async () => {
+    const org = await repos.orgs.create({ name: "Idem" });
+    const a = await repos.entitlements.grantIfAbsent({
+      organizationId: org.id,
+      eventId: null,
+      key: "all_access",
+      source: "plan:a",
+    });
+    const b = await repos.entitlements.grantIfAbsent({
+      organizationId: org.id,
+      eventId: null,
+      key: "all_access",
+      source: "plan:b",
+    });
+    expect(b.id).toBe(a.id);
+    const held = await repos.entitlements.heldFor({ organizationId: org.id, eventId: null });
+    expect(held.filter((k) => k === "all_access")).toHaveLength(1);
+  });
+
   it("partial unique index blocks duplicate org-level grants", async () => {
     const org = await repos.orgs.create({ name: "Park" });
     await repos.entitlements.grant({
