@@ -6,7 +6,7 @@ export class PrismaUserRepository implements UserRepository {
 
   async upsertByAuthUserId(input: {
     authUserId: string;
-    email: string;
+    email: string | null;
     name: string | null;
   }): Promise<UserRecord> {
     const row = await this.prisma.user.upsert({

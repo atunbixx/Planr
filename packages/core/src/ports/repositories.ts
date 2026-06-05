@@ -7,7 +7,7 @@ export interface OrganizationRecord {
 export interface UserRecord {
   id: string;
   authUserId: string;
-  email: string;
+  email: string | null;
   name: string | null;
 }
 export interface MembershipRecord {
@@ -39,7 +39,7 @@ export interface OrganizationRepository {
 export interface UserRepository {
   upsertByAuthUserId(input: {
     authUserId: string;
-    email: string;
+    email: string | null;
     name: string | null;
   }): Promise<UserRecord>;
   findByAuthUserId(authUserId: string): Promise<UserRecord | null>;

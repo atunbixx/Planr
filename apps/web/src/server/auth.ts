@@ -11,7 +11,7 @@ export async function getCurrentUser(): Promise<UserRecord | null> {
   if (!user) return null;
   return syncAuthUser(container.repos, {
     authUserId: user.id,
-    email: user.email ?? "",
+    email: user.email ?? null,
     name: (user.user_metadata?.name as string | undefined) ?? null,
   });
 }

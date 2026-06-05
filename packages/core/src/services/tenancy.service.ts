@@ -3,7 +3,7 @@ import type { Role } from "../types";
 
 export interface AuthUserInput {
   authUserId: string;
-  email: string;
+  email: string | null;
   name: string | null;
 }
 

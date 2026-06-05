@@ -26,6 +26,13 @@ describe("Prisma repository adapters", () => {
     expect(await repos.orgs.listForUser(user.id)).toHaveLength(1);
   });
 
+  it("allows multiple users with a null email", async () => {
+    const a = await repos.users.upsertByAuthUserId({ authUserId: "auth_n1", email: null, name: null });
+    const b = await repos.users.upsertByAuthUserId({ authUserId: "auth_n2", email: null, name: null });
+    expect(a.id).not.toBe(b.id);
+    expect(a.email).toBeNull();
+  });
+
   it("upserts a user idempotently by authUserId", async () => {
     const a = await repos.users.upsertByAuthUserId({ authUserId: "auth_dup", email: "x@y.com", name: "X" });
     const b = await repos.users.upsertByAuthUserId({ authUserId: "auth_dup", email: "x2@y.com", name: "X2" });
