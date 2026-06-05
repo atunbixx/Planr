@@ -36,6 +36,8 @@ export type {
   GuestRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
+export { makeGuestService, type GuestService } from "./guests/guest.service";
+export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
 export { makeEventService, type EventService, type ResolvedModule } from "./services/event.service";
