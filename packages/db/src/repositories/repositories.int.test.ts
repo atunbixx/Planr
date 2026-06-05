@@ -499,6 +499,42 @@ describe("Prisma repository adapters", () => {
     ).toEqual({ itemCount: 0, totalEstimatedCents: 0, totalPaidCents: 0, remainingCents: 0 });
   });
 
+  it("rsvp: a created guest gets a unique token; findByRsvpToken + setRsvpByToken work", async () => {
+    const org = await repos.orgs.create({ name: "RSVP Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "RSVP Wedding",
+      date: null,
+    });
+    const a = await repos.guests.create({
+      organizationId: org.id, eventId: event.id, name: "Ada", email: null, phone: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", notes: null,
+    });
+    const b = await repos.guests.create({
+      organizationId: org.id, eventId: event.id, name: "Bo", email: null, phone: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", notes: null,
+    });
+    expect(a.rsvpToken).toBeTruthy();
+    expect(a.rsvpToken).not.toBe(b.rsvpToken); // unique per guest
+
+    const found = await repos.guests.findByRsvpToken(a.rsvpToken);
+    expect(found).toMatchObject({ id: a.id, name: "Ada" });
+    expect(await repos.guests.findByRsvpToken("not-a-real-token")).toBeNull();
+
+    const updated = await repos.guests.setRsvpByToken({
+      token: a.rsvpToken,
+      rsvpStatus: "coming",
+      plusOne: true,
+    });
+    expect(updated).toMatchObject({ rsvpStatus: "coming", plusOne: true });
+    expect(await repos.guests.setRsvpByToken({ token: "nope", rsvpStatus: "coming" })).toBeNull();
+
+    // setRsvpByToken without plusOne leaves it untouched
+    const again = await repos.guests.setRsvpByToken({ token: a.rsvpToken, rsvpStatus: "maybe" });
+    expect(again).toMatchObject({ rsvpStatus: "maybe", plusOne: true });
+  });
+
   it("seating: table CRUD, upsert-by-guestId moves a guest, countByTable", async () => {
     const org = await repos.orgs.create({ name: "Seat Co" });
     const event = await repos.events.create({
