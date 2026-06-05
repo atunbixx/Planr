@@ -8,6 +8,7 @@ import {
   makeCollaborationService,
   makeGuestService,
   makeTaskService,
+  makeBudgetService,
 } from "@planr/core";
 
 const repos = createRepositories(prisma);
@@ -23,6 +24,7 @@ export const container = {
   // freeLaunch defaults from the FREE_LAUNCH constant — gate stays wired for later.
   guests: makeGuestService(repos),
   tasks: makeTaskService(repos),
+  budget: makeBudgetService(repos),
 };
 
 export type Container = typeof container;

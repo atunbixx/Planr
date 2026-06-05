@@ -10,6 +10,7 @@ import {
   makeCollaborationService,
   makeGuestService,
   makeTaskService,
+  makeBudgetService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -31,6 +32,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       collaboration: makeCollaborationService(repos),
       guests: makeGuestService(repos),
       tasks: makeTaskService(repos),
+      budget: makeBudgetService(repos),
     },
   };
 }
@@ -248,6 +250,62 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(
       ownerCaller.tasks.list({ eventId: "does-not-exist", limit: 10 }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("manages budget items through the router with exact money + overspend summary", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_bg", email: "bg@x.com", name: "BG" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Budgetful Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "The Big Day",
+    });
+    const venue = await caller.budget.create({
+      eventId: event.id,
+      item: { label: "Venue", estimated: "10000", paid: "2500.50" },
+    });
+    expect(venue.estimatedCents).toBe(1_000_000);
+    expect(venue.paidCents).toBe(250_050);
+    await caller.budget.create({ eventId: event.id, item: { label: "Cake", estimated: "300" } });
+
+    const summary = await caller.budget.summary({ eventId: event.id });
+    expect(summary).toMatchObject({
+      itemCount: 2,
+      totalEstimatedCents: 1_030_000,
+      totalPaidCents: 250_050,
+    });
+
+    const updated = await caller.budget.update({
+      eventId: event.id,
+      itemId: venue.id,
+      patch: { paid: "11000" }, // overspend the venue
+    });
+    expect(updated.paidCents).toBe(1_100_000);
+    const after = await caller.budget.summary({ eventId: event.id });
+    expect(after.remainingCents).toBe(1_030_000 - (1_100_000 + 0)); // 300 cake unpaid → negative
+
+    await caller.budget.remove({ eventId: event.id, itemId: venue.id });
+    expect((await caller.budget.list({ eventId: event.id, limit: 50 })).items).toHaveLength(1);
+  });
+
+  it("forbids a non-member from touching an event's budget; NOT_FOUND for unknown event", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_bo", email: "bo@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Sealed Budget" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sealed Day",
+    });
+    const stranger = await syncAuthUser(repos, { authUserId: "auth_bs", email: "bs@x.com", name: null });
+    const strangerCaller = appRouter.createCaller(ctxFor(stranger));
+    await expect(
+      strangerCaller.budget.list({ eventId: event.id, limit: 10 }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      ownerCaller.budget.list({ eventId: "does-not-exist", limit: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
