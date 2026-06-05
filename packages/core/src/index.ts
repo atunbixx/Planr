@@ -38,3 +38,11 @@ export {
   makeAuthorizationService,
   type AuthorizationService,
 } from "./services/authorization.service";
+export {
+  getPlan,
+  planGrants,
+  allPlans,
+  type Plan,
+  type PlanInterval,
+  type PlanScope,
+} from "./billing/plans";
