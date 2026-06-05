@@ -46,3 +46,4 @@ export {
   type PlanInterval,
   type PlanScope,
 } from "./billing/plans";
+export { makeBillingService, type BillingService } from "./services/billing.service";
