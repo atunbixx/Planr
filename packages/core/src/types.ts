@@ -27,6 +27,8 @@ export type OrgType = "individual" | "business";
 
 export type InvitationStatus = "pending" | "accepted" | "revoked";
 
+export type RsvpStatus = "awaiting" | "coming" | "declined" | "maybe";
+
 export type Permission =
   | "org:delete"
   | "billing:manage"

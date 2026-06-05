@@ -34,6 +34,13 @@ enum InvitationStatus {
   revoked
 }
 
+enum RsvpStatus {
+  awaiting
+  coming
+  declined
+  maybe
+}
+
 model User {
   id          String       @id @default(uuid())
   authUserId  String       @unique
@@ -53,6 +60,7 @@ model Organization {
   subscriptions Subscription[]
   entitlements  Entitlement[]
   invitations   Invitation[]
+  guests        Guest[]
 }
 
 model Membership {
@@ -78,6 +86,7 @@ model Event {
   createdAt      DateTime      @default(now())
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   entitlements   Entitlement[]
+  guests         Guest[]
 
   @@index([organizationId])
   @@index([organizationId, eventTypeKey])
@@ -129,4 +138,25 @@ model Invitation {
 
   @@index([organizationId])
   @@index([email, status])
+}
+
+model Guest {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  name           String
+  email          String?
+  phone          String?
+  groupLabel     String?
+  plusOne        Boolean      @default(false)
+  rsvpStatus     RsvpStatus   @default(awaiting)
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, rsvpStatus])
 }
