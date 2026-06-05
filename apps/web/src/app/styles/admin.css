@@ -1,0 +1,51 @@
+/* ---- admin (workspace console) ------------------------------------------ */
+.orgbar { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.orgsettings { font-size: 0.82rem; padding: 7px 12px; }
+.adminsec { margin-top: 26px; }
+
+.memberlist, .invitelist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.memberlist li, .invitelist li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.invitelist li.empty { color: var(--ink-faint); font-style: italic; }
+.memberlist .mname, .invitelist .iemail { font-weight: 600; }
+.memberlist .memail { color: var(--ink-faint); font-size: 0.85rem; margin-right: auto; }
+.memberlist .mrole, .invitelist .irole {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--sage);
+  background: var(--sage-tint);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.memberlist li[data-role="owner"] .mrole { color: var(--clay-deep); background: var(--clay-tint); }
+.invitelist .irole { margin-right: auto; }
+.memberlist .ginline, .invitelist .ginline { flex-direction: row; gap: 6px; margin: 0; }
+.memberlist select, .invitelist select { width: auto; padding: 6px 8px; font-size: 0.82rem; }
+.memberlist .ginline button, .invitelist .ginline button { padding: 7px 10px; font-size: 0.74rem; }
+.inviteform { margin-bottom: 8px; }
+.inviteform input[type="email"] { width: min(260px, 100%); }
+
+.dangerzone {
+  margin-top: 30px;
+  border: 1px solid var(--clay);
+  background: var(--clay-tint);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+.dangerzone h2 { color: var(--clay-deep); margin-top: 0; }
+.dangerzone .ginline { flex-direction: row; gap: 8px; margin: 10px 0 0; flex-wrap: wrap; }
+.dangerzone input { width: min(280px, 100%); }
+button.danger {
+  background: var(--clay-deep);
+  border-color: var(--clay-deep);
+  color: #fff;
+}

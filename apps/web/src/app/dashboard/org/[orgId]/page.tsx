@@ -16,7 +16,12 @@ export default async function OrgPage({ params }: { params: Promise<{ orgId: str
       <a className="back" href="/dashboard">
         ← Dashboard
       </a>
-      <h1>Events</h1>
+      <div className="orgbar">
+        <h1>Events</h1>
+        <a className="ghost orgsettings" href={`/dashboard/org/${orgId}/admin`}>
+          Workspace settings
+        </a>
+      </div>
 
       <section className="makepanel">
         <h2>Create an event</h2>
