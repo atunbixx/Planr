@@ -8,3 +8,6 @@ dist/
 *.tsbuildinfo
 coverage/
 **/generated/**
+**/playwright-report/
+**/test-results/
+**/.playwright/
