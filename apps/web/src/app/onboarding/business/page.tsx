@@ -10,17 +10,25 @@ export default async function BusinessOnboardingPage() {
 
   return (
     <main>
-      <p>
-        <a href="/onboarding">← Back</a>
-      </p>
+      <a className="back" href="/onboarding">
+        ← Back
+      </a>
+      <p className="eyebrow">For planners</p>
       <h1>Set up your business</h1>
-      <form action={completeBusinessAction}>
-        <label>
-          Business name
-          <input aria-label="Business name" name="businessName" required />
-        </label>
-        <button type="submit">Create business</button>
-      </form>
+      <div className="card">
+        <form action={completeBusinessAction}>
+          <label>
+            Business name
+            <input
+              aria-label="Business name"
+              name="businessName"
+              placeholder="Bliss Events"
+              required
+            />
+          </label>
+          <button type="submit">Create business</button>
+        </form>
+      </div>
     </main>
   );
 }

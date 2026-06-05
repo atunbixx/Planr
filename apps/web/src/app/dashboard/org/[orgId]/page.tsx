@@ -13,22 +13,22 @@ export default async function OrgPage({ params }: { params: Promise<{ orgId: str
 
   return (
     <main>
-      <p>
-        <a href="/dashboard">← Dashboard</a>
-      </p>
+      <a className="back" href="/dashboard">
+        ← Dashboard
+      </a>
       <h1>Events</h1>
 
-      <section>
+      <section className="makepanel">
         <h2>Create an event</h2>
         <form action={createEventAction}>
           <input type="hidden" name="organizationId" value={orgId} />
-          <input aria-label="Event name" name="name" required />
+          <input aria-label="Event name" name="name" placeholder="Name your event…" required />
           <select aria-label="Event type" name="eventTypeKey" defaultValue="wedding">
             <option value="wedding">Wedding</option>
             <option value="birthday">Birthday</option>
-            <option value="funeral">Funeral</option>
-            <option value="bridal_shower">Bridal shower</option>
-            <option value="corporate">Corporate</option>
+            <option value="bridal_shower">Baby / bridal shower</option>
+            <option value="funeral">Funeral / memorial</option>
+            <option value="corporate">Party / other gathering</option>
           </select>
           <button type="submit">Create event</button>
         </form>
@@ -36,15 +36,20 @@ export default async function OrgPage({ params }: { params: Promise<{ orgId: str
 
       <section>
         <h2>Events ({events.length})</h2>
-        <ul>
-          {events.map((e) => (
-            <li key={e.id}>
-              <a href={`/dashboard/org/${orgId}/event/${e.id}`}>
-                {e.name} ({e.eventTypeKey})
-              </a>
-            </li>
-          ))}
-        </ul>
+        {events.length === 0 ? (
+          <p className="empty">No events here yet.</p>
+        ) : (
+          <ul className="events">
+            {events.map((e) => (
+              <li key={e.id}>
+                <a href={`/dashboard/org/${orgId}/event/${e.id}`}>
+                  <span className="ename">{e.name}</span>
+                  <span className="etype">{e.eventTypeKey.replace(/_/g, " ")}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );

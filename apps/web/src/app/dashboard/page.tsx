@@ -26,28 +26,29 @@ export default async function DashboardPage({
 
   return (
     <main>
-      <header>
+      <header className="wshead">
         <h1>{current.name}</h1>
-        <span>{user.email ?? "(no email)"}</span>
-        <SignOutButton />
+        <div className="who">
+          <span>{user.email ?? "(no email)"}</span>
+          <SignOutButton />
+        </div>
       </header>
 
       {workspaces.length > 1 && (
-        <nav aria-label="Workspaces">
-          <span>Switch: </span>
+        <nav className="switcher" aria-label="Workspaces">
           {workspaces.map((ws) => (
             <a key={ws.id} href={`/dashboard?w=${ws.id}`} aria-current={ws.id === current.id}>
-              {ws.name}{" "}
+              {ws.name}
             </a>
           ))}
         </nav>
       )}
 
-      <section>
+      <section className="makepanel">
         <h2>{terms.newEvent}</h2>
         <form action={createEventAction}>
           <input type="hidden" name="organizationId" value={current.id} />
-          <input aria-label="Event name" name="name" required />
+          <input aria-label="Event name" name="name" placeholder="Name your event…" required />
           <select aria-label="Event type" name="eventTypeKey" defaultValue="wedding">
             <option value="wedding">Wedding</option>
             <option value="birthday">Birthday</option>
@@ -63,15 +64,20 @@ export default async function DashboardPage({
         <h2>
           {terms.eventsHeading} ({events.length})
         </h2>
-        <ul>
-          {events.map((e) => (
-            <li key={e.id}>
-              <a href={`/dashboard/org/${current.id}/event/${e.id}`}>
-                {e.name} ({e.eventTypeKey})
-              </a>
-            </li>
-          ))}
-        </ul>
+        {events.length === 0 ? (
+          <p className="empty">Nothing planned yet — start something above.</p>
+        ) : (
+          <ul className="events">
+            {events.map((e) => (
+              <li key={e.id}>
+                <a href={`/dashboard/org/${current.id}/event/${e.id}`}>
+                  <span className="ename">{e.name}</span>
+                  <span className="etype">{e.eventTypeKey.replace(/_/g, " ")}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );

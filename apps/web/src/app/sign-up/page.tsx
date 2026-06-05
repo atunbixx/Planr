@@ -24,29 +24,40 @@ export default function SignUpPage() {
   }
 
   return (
-    <main>
-      <h1>Create your Planr account</h1>
-      <form onSubmit={onSubmit}>
-        <input
-          aria-label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          aria-label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Sign up</button>
-      </form>
-      {error && <p role="alert">{error}</p>}
-      <p>
-        Already have an account? <a href="/sign-in">Sign in</a>
-      </p>
+    <main className="auth">
+      <div className="card">
+        <p className="eyebrow">Welcome to Planr</p>
+        <h1>Create your Planr account</h1>
+        <form onSubmit={onSubmit}>
+          <label>
+            Email
+            <input
+              aria-label="Email"
+              type="email"
+              placeholder="you@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Password
+            <input
+              aria-label="Password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          <button type="submit">Sign up</button>
+        </form>
+        {error && <p role="alert">{error}</p>}
+        <p className="alt">
+          Already have an account? <a href="/sign-in">Sign in</a>
+        </p>
+      </div>
     </main>
   );
 }

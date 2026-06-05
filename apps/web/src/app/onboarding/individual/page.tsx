@@ -11,32 +11,39 @@ export default async function IndividualOnboardingPage() {
 
   return (
     <main>
-      <p>
-        <a href="/onboarding">← Back</a>
-      </p>
+      <a className="back" href="/onboarding">
+        ← Back
+      </a>
+      <p className="eyebrow">Your own event</p>
       <h1>Let&apos;s set up your planning</h1>
-      <form action={completeIndividualAction}>
-        <label>
-          Name your space
-          <input aria-label="Space name" name="spaceName" defaultValue={prefill} required />
-        </label>
-        <h2>What are you planning?</h2>
-        <label>
-          Event type
-          <select aria-label="Event type" name="eventTypeKey" defaultValue="wedding">
-            <option value="wedding">Wedding</option>
-            <option value="birthday">Birthday</option>
-            <option value="bridal_shower">Baby / bridal shower</option>
-            <option value="funeral">Funeral / memorial</option>
-            <option value="corporate">Party / other gathering</option>
-          </select>
-        </label>
-        <label>
-          Give it a name
-          <input aria-label="Event name" name="eventName" required />
-        </label>
-        <button type="submit">Start planning</button>
-      </form>
+      <div className="card">
+        <form action={completeIndividualAction}>
+          <label>
+            Name your space
+            <input
+              aria-label="Space name"
+              name="spaceName"
+              defaultValue={prefill}
+              required
+            />
+          </label>
+          <label>
+            What are you planning?
+            <select aria-label="Event type" name="eventTypeKey" defaultValue="wedding">
+              <option value="wedding">Wedding</option>
+              <option value="birthday">Birthday</option>
+              <option value="bridal_shower">Baby / bridal shower</option>
+              <option value="funeral">Funeral / memorial</option>
+              <option value="corporate">Party / other gathering</option>
+            </select>
+          </label>
+          <label>
+            Give it a name
+            <input aria-label="Event name" name="eventName" placeholder="Our Big Day" required />
+          </label>
+          <button type="submit">Start planning</button>
+        </form>
+      </div>
     </main>
   );
 }
