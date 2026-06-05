@@ -11,6 +11,7 @@ import {
   makeGuestService,
   makeTaskService,
   makeBudgetService,
+  makeSeatingService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -33,6 +34,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       guests: makeGuestService(repos),
       tasks: makeTaskService(repos),
       budget: makeBudgetService(repos),
+      seating: makeSeatingService(repos),
     },
   };
 }
@@ -306,6 +308,57 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(
       ownerCaller.budget.list({ eventId: "does-not-exist", limit: 10 }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("builds a seating plan through the router: tables, seat, move, over-capacity, unseat", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_se", email: "se@x.com", name: "SE" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Seated Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "The Big Day",
+    });
+    const ada = await caller.guests.create({ eventId: event.id, guest: { name: "Ada" } });
+    const bo = await caller.guests.create({ eventId: event.id, guest: { name: "Bo" } });
+    const t1 = await caller.seating.createTable({ eventId: event.id, table: { label: "Top", capacity: 1 } });
+    const t2 = await caller.seating.createTable({ eventId: event.id, table: { label: "Two", capacity: 8 } });
+    expect(t1.capacity).toBe(1);
+
+    await caller.seating.assign({ eventId: event.id, tableId: t1.id, guestId: ada.id });
+    await caller.seating.assign({ eventId: event.id, tableId: t1.id, guestId: bo.id }); // over capacity 1
+    let plan = await caller.seating.plan({ eventId: event.id });
+    expect(plan.summary).toMatchObject({ tableCount: 2, assignedCount: 2, unassignedCount: 0, overCapacityTables: 1 });
+
+    // move Bo to t2 → t1 no longer over capacity
+    await caller.seating.assign({ eventId: event.id, tableId: t2.id, guestId: bo.id });
+    plan = await caller.seating.plan({ eventId: event.id });
+    expect(plan.summary.overCapacityTables).toBe(0);
+    expect(plan.tables.find((t) => t.id === t2.id)!.guests.map((g) => g.name)).toEqual(["Bo"]);
+
+    await caller.seating.unassign({ eventId: event.id, guestId: ada.id });
+    plan = await caller.seating.plan({ eventId: event.id });
+    expect(plan.unassigned.map((g) => g.name)).toEqual(["Ada"]);
+  });
+
+  it("seating: FORBIDDEN for a non-member, NOT_FOUND for an unknown table", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_so", email: "so@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Sealed Seating" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sealed Day",
+    });
+    const guest = await ownerCaller.guests.create({ eventId: event.id, guest: { name: "G" } });
+    const stranger = await syncAuthUser(repos, { authUserId: "auth_ss", email: "ss@x.com", name: null });
+    const strangerCaller = appRouter.createCaller(ctxFor(stranger));
+    await expect(
+      strangerCaller.seating.plan({ eventId: event.id }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      ownerCaller.seating.assign({ eventId: event.id, tableId: "nope", guestId: guest.id }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
