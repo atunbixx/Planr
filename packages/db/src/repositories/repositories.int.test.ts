@@ -499,6 +499,81 @@ describe("Prisma repository adapters", () => {
     ).toEqual({ itemCount: 0, totalEstimatedCents: 0, totalPaidCents: 0, remainingCents: 0 });
   });
 
+  it("seating: table CRUD, upsert-by-guestId moves a guest, countByTable", async () => {
+    const org = await repos.orgs.create({ name: "Seat Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Seat Wedding",
+      date: null,
+    });
+    const guest = await repos.guests.create({
+      organizationId: org.id,
+      eventId: event.id,
+      name: "Ada",
+      email: null,
+      phone: null,
+      groupLabel: null,
+      plusOne: false,
+      rsvpStatus: "coming",
+      notes: null,
+    });
+    const t1 = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "A", capacity: 4 });
+    const t2 = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "B", capacity: 4 });
+
+    // tenant-scoped update/remove guards
+    expect(
+      await repos.seating.updateTable({ organizationId: "other", eventId: event.id, id: t1.id, patch: { label: "x" } }),
+    ).toBeNull();
+    const renamed = await repos.seating.updateTable({
+      organizationId: org.id,
+      eventId: event.id,
+      id: t1.id,
+      patch: { label: "Top", capacity: 6 },
+    });
+    expect(renamed).toMatchObject({ label: "Top", capacity: 6 });
+
+    // assign, then re-assign → moves (one seat per guest)
+    await repos.seating.assign({ organizationId: org.id, eventId: event.id, tableId: t1.id, guestId: guest.id });
+    expect(await repos.seating.countByTable({ organizationId: org.id, eventId: event.id, tableId: t1.id })).toBe(1);
+    await repos.seating.assign({ organizationId: org.id, eventId: event.id, tableId: t2.id, guestId: guest.id });
+    expect(await repos.seating.countByTable({ organizationId: org.id, eventId: event.id, tableId: t1.id })).toBe(0);
+    expect(await repos.seating.countByTable({ organizationId: org.id, eventId: event.id, tableId: t2.id })).toBe(1);
+
+    const assignments = await repos.seating.listAssignments({ organizationId: org.id, eventId: event.id });
+    expect(assignments).toHaveLength(1);
+    expect(assignments[0]).toMatchObject({ tableId: t2.id, guestId: guest.id });
+
+    expect(await repos.seating.unassign({ organizationId: org.id, eventId: event.id, guestId: guest.id })).toBe(true);
+    expect(await repos.seating.unassign({ organizationId: org.id, eventId: event.id, guestId: guest.id })).toBe(false);
+  });
+
+  it("seating: deleting a table frees its guests (FK cascade)", async () => {
+    const org = await repos.orgs.create({ name: "Cascade Tbl Co" });
+    const event = await repos.events.create({ organizationId: org.id, eventTypeKey: "wedding", name: "E", date: null });
+    const g = await repos.guests.create({
+      organizationId: org.id, eventId: event.id, name: "G", email: null, phone: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "coming", notes: null,
+    });
+    const table = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "A", capacity: 4 });
+    await repos.seating.assign({ organizationId: org.id, eventId: event.id, tableId: table.id, guestId: g.id });
+    expect(await repos.seating.removeTable({ organizationId: org.id, eventId: event.id, id: table.id })).toBe(true);
+    expect(await repos.seating.listAssignments({ organizationId: org.id, eventId: event.id })).toHaveLength(0);
+  });
+
+  it("seating: deleting a guest frees the seat (FK cascade)", async () => {
+    const org = await repos.orgs.create({ name: "Cascade Guest Co" });
+    const event = await repos.events.create({ organizationId: org.id, eventTypeKey: "wedding", name: "E", date: null });
+    const g = await repos.guests.create({
+      organizationId: org.id, eventId: event.id, name: "G", email: null, phone: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "coming", notes: null,
+    });
+    const table = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "A", capacity: 4 });
+    await repos.seating.assign({ organizationId: org.id, eventId: event.id, tableId: table.id, guestId: g.id });
+    expect(await repos.guests.remove({ organizationId: org.id, eventId: event.id, id: g.id })).toBe(true);
+    expect(await repos.seating.listAssignments({ organizationId: org.id, eventId: event.id })).toHaveLength(0);
+  });
+
   it("paginates guests by id keyset and summarises rsvp counts", async () => {
     const org = await repos.orgs.create({ name: "Paginate Co" });
     const event = await repos.events.create({
