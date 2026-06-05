@@ -16,10 +16,10 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
   fullyParallel: false,
-  use: { baseURL: "http://localhost:3000" },
+  use: { baseURL: "http://localhost:3100" },
   webServer: {
-    command: "pnpm exec next dev -p 3000",
-    url: "http://localhost:3000/sign-in",
+    command: "pnpm exec next dev -p 3100",
+    url: "http://localhost:3100/sign-in",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
@@ -27,7 +27,7 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_URL: SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: PUBLISHABLE,
       SUPABASE_SECRET_KEY: SECRET,
-      NEXT_PUBLIC_BASE_URL: "http://localhost:3000",
+      NEXT_PUBLIC_BASE_URL: "http://localhost:3100",
     },
   },
 });
