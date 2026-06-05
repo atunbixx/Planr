@@ -4,6 +4,11 @@
    Display: Fraunces (serif). Body/UI: Hanken Grotesk.
    ========================================================================== */
 
+/* Per-feature page styles — one file per module (add a new one + a line here). */
+@import "./styles/guests.css";
+@import "./styles/tasks.css";
+@import "./styles/budget.css";
+
 :root {
   --paper: #faf5ec;
   --paper-2: #f2ead9;
@@ -579,7 +584,7 @@ button.ghost:hover { background: var(--paper-2); }
 .invite input { width: min(240px, 100%); }
 .invite select { width: auto; }
 
-/* ---- guests ------------------------------------------------------------- */
+/* ---- shared: summary bar (used by every feature page) ------------------- */
 .gsummary {
   font-size: 1rem;
   color: var(--ink-soft);
@@ -590,102 +595,11 @@ button.ghost:hover { background: var(--paper-2); }
   max-width: none;
 }
 .gsummary strong { color: var(--ink); font-weight: 700; }
-.guests {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.guests li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-.guests li[data-rsvp="coming"] { border-left-color: var(--sage); }
-.guests li[data-rsvp="declined"] { border-left-color: var(--clay); }
-.guests .gname { font-weight: 600; }
-.guests .gmeta { color: var(--ink-faint); font-size: 0.85rem; }
-.guests .ginline { flex-direction: row; gap: 6px; margin: 0 0 0 auto; }
-.guests .ginline + .ginline { margin-left: 0; }
-.guests .ginline button { padding: 7px 12px; font-size: 0.78rem; }
+/* toolkit: built modules link out; unbuilt are dimmed "coming soon" */
 .modules .mlink { color: var(--ink); }
 .modules li[data-built="false"] { opacity: 0.62; }
 
-/* ---- tasks --------------------------------------------------------------- */
-.tasks {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.tasks li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-.tasks li[data-done="true"] { border-left-color: var(--sage); opacity: 0.7; }
-.tasks li[data-done="true"] .tname { text-decoration: line-through; color: var(--ink-faint); }
-.tasks li[data-overdue="true"] { border-left-color: var(--clay); }
-.tasks .tname { font-weight: 600; }
-.tasks .tmeta { color: var(--ink-faint); font-size: 0.85rem; margin-right: auto; }
-.tasks li[data-overdue="true"] .tmeta { color: var(--clay-deep); font-weight: 600; }
-.tasks .tcheck { margin: 0; }
-.tasks .ginline { flex-direction: row; gap: 6px; margin: 0; }
-.tasks .ginline button { padding: 7px 12px; font-size: 0.78rem; }
-.tasks .ginline input[type="date"] { width: auto; padding: 6px 8px; font-size: 0.8rem; }
-
-/* ---- budget -------------------------------------------------------------- */
-.gsummary .bremain { color: var(--sage); }
-.gsummary[data-remaining^="-"] .bremain { color: var(--clay-deep); }
-.budget {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.budget li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-.budget li[data-overpaid="true"] { border-left-color: var(--clay); }
-.budget .bname { font-weight: 600; }
-.budget .bcat {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--sage);
-  background: var(--sage-tint);
-  border-radius: 999px;
-  padding: 2px 9px;
-}
-.budget .bamount { color: var(--ink-soft); font-size: 0.9rem; margin-right: auto; }
-.budget li[data-overpaid="true"] .bamount { color: var(--clay-deep); font-weight: 600; }
-.budget .ginline { flex-direction: row; gap: 6px; margin: 0; }
-.budget .ginline button { padding: 7px 10px; font-size: 0.74rem; }
-.budget .ginline input[type="number"] { width: 92px; padding: 6px 8px; font-size: 0.8rem; }
+/* Per-feature blocks live in ./styles/<feature>.css (imported at the top of this file). */
 
 @media (prefers-reduced-motion: reduce) {
   main, main > * { animation: none !important; }
