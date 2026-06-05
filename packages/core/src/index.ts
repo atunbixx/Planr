@@ -55,3 +55,8 @@ export {
   type OnboardingService,
 } from "./services/onboarding.service";
 export { workspaceTerms, type WorkspaceTerms } from "./workspaces/terms";
+export {
+  makeCollaborationService,
+  type CollaborationService,
+  type InviteRole,
+} from "./services/collaboration.service";
