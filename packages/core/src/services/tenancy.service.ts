@@ -1,5 +1,5 @@
 import type { Repositories, OrganizationRecord, MembershipRecord } from "../ports/repositories";
-import type { Role } from "../types";
+import type { Role, OrgType } from "../types";
 
 export interface AuthUserInput {
   authUserId: string;
@@ -11,9 +11,10 @@ export function makeTenancyService(repos: Repositories) {
   return {
     async provisionOrganization(input: {
       name: string;
+      type?: OrgType;
       creator: AuthUserInput;
     }): Promise<{ organization: OrganizationRecord; ownerMembership: MembershipRecord }> {
-      const organization = await repos.orgs.create({ name: input.name });
+      const organization = await repos.orgs.create({ name: input.name, type: input.type });
       const owner = await repos.users.upsertByAuthUserId(input.creator);
       const ownerMembership = await repos.memberships.upsert({
         organizationId: organization.id,

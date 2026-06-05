@@ -1,8 +1,9 @@
-import type { Role, EventTypeKey, Entitlement } from "../types";
+import type { Role, EventTypeKey, Entitlement, OrgType } from "../types";
 
 export interface OrganizationRecord {
   id: string;
   name: string;
+  type: OrgType;
 }
 export interface UserRecord {
   id: string;
@@ -32,7 +33,7 @@ export interface EntitlementRecord {
 }
 
 export interface OrganizationRepository {
-  create(input: { name: string }): Promise<OrganizationRecord>;
+  create(input: { name: string; type?: OrgType }): Promise<OrganizationRecord>;
   findById(id: string): Promise<OrganizationRecord | null>;
   listForUser(userId: string): Promise<OrganizationRecord[]>;
 }

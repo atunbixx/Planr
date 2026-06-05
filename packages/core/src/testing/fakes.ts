@@ -19,8 +19,8 @@ export function makeFakeRepositories(): Repositories {
 
   return {
     orgs: {
-      async create({ name }) {
-        const created: OrganizationRecord = { id: id("org"), name };
+      async create({ name, type }) {
+        const created: OrganizationRecord = { id: id("org"), name, type: type ?? "individual" };
         orgs.push(created);
         return { ...created };
       },

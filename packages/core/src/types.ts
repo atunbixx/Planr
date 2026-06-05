@@ -23,6 +23,8 @@ export type ModuleTier = "core" | "advanced";
 
 export type Role = "owner" | "admin" | "planner" | "editor" | "viewer";
 
+export type OrgType = "individual" | "business";
+
 export type Permission =
   | "org:delete"
   | "billing:manage"

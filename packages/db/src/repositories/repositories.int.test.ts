@@ -33,6 +33,14 @@ describe("Prisma repository adapters", () => {
     expect(a.email).toBeNull();
   });
 
+  it("creates a business-typed organization and defaults others to individual", async () => {
+    const biz = await repos.orgs.create({ name: "Bliss Events", type: "business" });
+    const personal = await repos.orgs.create({ name: "Sara's Planning" });
+    expect(biz.type).toBe("business");
+    expect(personal.type).toBe("individual");
+    expect(await repos.orgs.findById(biz.id)).toMatchObject({ type: "business" });
+  });
+
   it("upserts a user idempotently by authUserId", async () => {
     const a = await repos.users.upsertByAuthUserId({ authUserId: "auth_dup", email: "x@y.com", name: "X" });
     const b = await repos.users.upsertByAuthUserId({ authUserId: "auth_dup", email: "x2@y.com", name: "X2" });
