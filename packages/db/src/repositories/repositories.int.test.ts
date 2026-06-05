@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { startTestDb, type TestDb } from "../testing/test-db";
 import { createRepositories } from "./index";
 
+type TaskWriteLite = { title: string; done: boolean; dueDate: Date | null };
+
 let db: TestDb;
 let repos: ReturnType<typeof createRepositories>;
 
@@ -267,6 +269,126 @@ describe("Prisma repository adapters", () => {
     expect(
       await repos.guests.getById({ organizationId: org.id, eventId: event.id, id: created.id }),
     ).toBeNull();
+  });
+
+  it("creates, reads, updates, removes a task tenant-scoped", async () => {
+    const org = await repos.orgs.create({ name: "Task Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Task Wedding",
+      date: null,
+    });
+    const created = await repos.tasks.create({
+      organizationId: org.id,
+      eventId: event.id,
+      title: "Book caterer",
+      notes: null,
+      done: false,
+      dueDate: new Date("2026-07-15T00:00:00.000Z"),
+    });
+    expect(created).toMatchObject({ title: "Book caterer", done: false });
+
+    expect(
+      await repos.tasks.getById({ organizationId: "other", eventId: event.id, id: created.id }),
+    ).toBeNull();
+
+    const updated = await repos.tasks.update({
+      organizationId: org.id,
+      eventId: event.id,
+      id: created.id,
+      patch: { done: true },
+    });
+    expect(updated).toMatchObject({ done: true, title: "Book caterer" });
+    // wrong tenant cannot update or remove
+    expect(
+      await repos.tasks.update({
+        organizationId: "other",
+        eventId: event.id,
+        id: created.id,
+        patch: { title: "Hax" },
+      }),
+    ).toBeNull();
+    expect(
+      await repos.tasks.remove({ organizationId: "other", eventId: event.id, id: created.id }),
+    ).toBe(false);
+    expect(
+      await repos.tasks.remove({ organizationId: org.id, eventId: event.id, id: created.id }),
+    ).toBe(true);
+  });
+
+  it("paginates tasks by composite keyset (dueDate nulls last) with no repeats or skips", async () => {
+    const org = await repos.orgs.create({ name: "Task Page Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Task Page Wedding",
+      date: null,
+    });
+    // Two share a dueDate (tie broken by createdAt,id); two are null-dueDate (the tail).
+    const due = [
+      new Date("2026-07-01T00:00:00.000Z"),
+      new Date("2026-07-01T00:00:00.000Z"),
+      new Date("2026-08-01T00:00:00.000Z"),
+      null,
+      null,
+    ];
+    for (let i = 0; i < due.length; i++) {
+      await repos.tasks.create({
+        organizationId: org.id,
+        eventId: event.id,
+        title: `T${i}`,
+        notes: null,
+        done: false,
+        dueDate: due[i]!,
+      });
+    }
+    const seen: string[] = [];
+    let cursor: string | undefined;
+    for (let guard = 0; guard < 10; guard++) {
+      const pageRes = await repos.tasks.listByEvent({
+        organizationId: org.id,
+        eventId: event.id,
+        limit: 2,
+        cursor,
+      });
+      seen.push(...pageRes.tasks.map((t) => t.id));
+      if (!pageRes.nextCursor) break;
+      cursor = pageRes.nextCursor;
+    }
+    expect(seen).toHaveLength(5);
+    expect(new Set(seen).size).toBe(5); // no repeats, no skips
+    // Global order: the two earliest dueDate, then the August one, then the two null-dueDate tail.
+    const all = await repos.tasks.listByEvent({ organizationId: org.id, eventId: event.id, limit: 100 });
+    const titles = all.tasks.map((t) => t.title);
+    expect(titles.slice(0, 3)).toEqual(["T0", "T1", "T2"]);
+    expect(titles.slice(3).sort()).toEqual(["T3", "T4"]);
+  });
+
+  it("summarises tasks: done/remaining/overdue against an injected now", async () => {
+    const org = await repos.orgs.create({ name: "Task Summary Co" });
+    const event = await repos.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Task Summary Wedding",
+      date: null,
+    });
+    const now = new Date("2026-08-01T00:00:00.000Z");
+    const rows: TaskWriteLite[] = [
+      { title: "done", done: true, dueDate: new Date("2026-07-01T00:00:00.000Z") }, // done late → not overdue
+      { title: "overdue", done: false, dueDate: new Date("2026-07-01T00:00:00.000Z") },
+      { title: "upcoming", done: false, dueDate: new Date("2026-09-01T00:00:00.000Z") },
+      { title: "no date", done: false, dueDate: null },
+    ];
+    for (const r of rows) {
+      await repos.tasks.create({ organizationId: org.id, eventId: event.id, notes: null, ...r });
+    }
+    const summary = await repos.tasks.summaryByEvent({
+      organizationId: org.id,
+      eventId: event.id,
+      now,
+    });
+    expect(summary).toEqual({ total: 4, done: 1, remaining: 3, overdue: 1 });
   });
 
   it("paginates guests by id keyset and summarises rsvp counts", async () => {

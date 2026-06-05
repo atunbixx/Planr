@@ -7,6 +7,7 @@ import { PrismaEventRepository } from "./event.repository";
 import { PrismaEntitlementRepository } from "./entitlement.repository";
 import { PrismaInvitationRepository } from "./invitation.repository";
 import { PrismaGuestRepository } from "./guest.repository";
+import { PrismaTaskRepository } from "./task.repository";
 
 export function createRepositories(prisma: PrismaClient): Repositories {
   return {
@@ -17,5 +18,6 @@ export function createRepositories(prisma: PrismaClient): Repositories {
     entitlements: new PrismaEntitlementRepository(prisma),
     invitations: new PrismaInvitationRepository(prisma),
     guests: new PrismaGuestRepository(prisma),
+    tasks: new PrismaTaskRepository(prisma),
   };
 }
