@@ -20,10 +20,15 @@ test("individual onboarding: sign up → my own event → name space → baby sh
   await page.getByLabel("Space name").fill("Ada's Planning");
   await page.getByLabel("Event type").selectOption("bridal_shower");
   await page.getByLabel("Event name").fill("Sarah's Baby Shower");
+  await page.getByLabel("Event date").fill("2099-09-01");
   await page.getByRole("button", { name: "Start planning" }).click();
 
-  // Lands inside the event's module page.
+  // Lands on the event dashboard: personalised hero, countdown, and live stat cards.
   await expect(page).toHaveURL(/\/event\/.+/);
+  await expect(page.getByRole("heading", { name: "Sarah's Baby Shower" })).toBeVisible();
+  await expect(page.getByText("days to go", { exact: false })).toBeVisible();
+  await expect(page.locator(".statcard")).toHaveCount(4);
+  // The tool tiles still carry their gating attributes.
   await expect(page.locator('[data-module="guests"]')).toHaveAttribute("data-locked", "false");
   await expect(page.locator('[data-module="seating"]')).toHaveAttribute("data-locked", "true");
 });

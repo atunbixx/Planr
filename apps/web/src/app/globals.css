@@ -12,6 +12,7 @@
 @import "./styles/rsvp.css";
 @import "./styles/messaging.css";
 @import "./styles/admin.css";
+@import "./styles/dashboard.css";
 
 :root {
   --paper: #faf5ec;

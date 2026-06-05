@@ -19,7 +19,7 @@ test("host adds budget items with exact money, overspends, sees it surfaced, rem
   await expect(page).toHaveURL(/\/event\/.+/);
 
   // Open the Budget tool from the toolkit
-  await page.getByRole("link", { name: "Budget" }).click();
+  await page.locator(`[data-module="budget"] a`).click();
   await expect(page).toHaveURL(/\/budget$/);
   await expect(page.getByText("£0.00 budgeted", { exact: false })).toBeVisible();
 

@@ -17,7 +17,7 @@ test("host adds guests, sets RSVP, sees the summary update, removes a guest", as
   await expect(page).toHaveURL(/\/event\/.+/);
 
   // Open the Guests tool from the toolkit
-  await page.getByRole("link", { name: "Guests" }).click();
+  await page.locator(`[data-module="guests"] a`).click();
   await expect(page).toHaveURL(/\/guests$/);
   await expect(page.getByText("0 guests", { exact: false })).toBeVisible();
 

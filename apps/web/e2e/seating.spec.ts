@@ -19,7 +19,7 @@ test("host builds a seating plan: tables, seat guests, overfill is surfaced, mov
   await expect(page).toHaveURL(/\/event\/.+/);
 
   // Add three guests via the Guests tool
-  await page.getByRole("link", { name: "Guests" }).click();
+  await page.locator(`[data-module="guests"] a`).click();
   await expect(page).toHaveURL(/\/guests$/);
   for (const name of ["Ada", "Bo", "Cy"]) {
     await page.getByLabel("Guest name").fill(name);
@@ -29,7 +29,7 @@ test("host builds a seating plan: tables, seat guests, overfill is surfaced, mov
 
   // Back to the event, open Seating
   await page.getByRole("link", { name: "← Event" }).click();
-  await page.getByRole("link", { name: "Seating" }).click();
+  await page.locator(`[data-module="seating"] a`).click();
   await expect(page).toHaveURL(/\/seating$/);
   await expect(page.getByText("3 unseated", { exact: false })).toBeVisible();
 

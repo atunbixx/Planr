@@ -20,14 +20,14 @@ test("a guest RSVPs via their link with no account; the host sees the response",
   await expect(page).toHaveURL(/\/event\/.+/);
 
   // Host: add a guest
-  await page.getByRole("link", { name: "Guests" }).click();
+  await page.locator(`[data-module="guests"] a`).click();
   await page.getByLabel("Guest name").fill("Aunt Mary");
   await page.getByRole("button", { name: "Add guest" }).click();
   await expect(page.getByText("Aunt Mary")).toBeVisible();
 
   // Host: open the RSVP page and read Aunt Mary's private link
   await page.getByRole("link", { name: "← Event" }).click();
-  await page.getByRole("link", { name: "RSVP" }).click();
+  await page.locator(`[data-module="rsvp"] a`).click();
   await expect(page).toHaveURL(/\/rsvp$/);
   const link = await page.getByLabel("RSVP link for Aunt Mary").inputValue();
   const token = link.split("/rsvp/")[1]!;

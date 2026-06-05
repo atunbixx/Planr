@@ -20,14 +20,14 @@ test("host posts an announcement; an unauthenticated guest sees it on their RSVP
   await expect(page).toHaveURL(/\/event\/.+/);
 
   // Host: add a guest
-  await page.getByRole("link", { name: "Guests" }).click();
+  await page.locator(`[data-module="guests"] a`).click();
   await page.getByLabel("Guest name").fill("Aunt Mary");
   await page.getByRole("button", { name: "Add guest" }).click();
   await expect(page.getByText("Aunt Mary")).toBeVisible();
 
   // Host: post an announcement
   await page.getByRole("link", { name: "← Event" }).click();
-  await page.getByRole("link", { name: "Messaging" }).click();
+  await page.locator(`[data-module="messaging"] a`).click();
   await expect(page).toHaveURL(/\/messaging$/);
   await page.getByLabel("Announcement title").fill("Parking");
   await page.getByLabel("Announcement body").fill("Please use car park B.");
