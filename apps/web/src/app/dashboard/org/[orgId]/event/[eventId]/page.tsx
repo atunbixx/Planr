@@ -4,19 +4,11 @@ import { getServerCaller } from "../../../../../../server/caller";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_LABEL: Record<string, string> = {
-  free: "Included",
-  entitled: "Included",
-  all_access: "Included",
-  needs_event_type_plan: "Unlock with a plan",
-  needs_pro: "Pro",
-  not_relevant: "—",
-};
+// Modules with a real page today. Everything else shows "Coming soon" (free launch: no paywall).
+const BUILT = new Set(["guests"]);
 
 function pretty(module: string): string {
-  return module
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return module.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export default async function EventPage({
@@ -39,16 +31,24 @@ export default async function EventPage({
       </a>
       <p className="eyebrow">Your toolkit</p>
       <h1>Plan this event</h1>
-      <p>Everything you need, in one place. Locked tools unlock when you choose a plan.</p>
+      <p>Everything you need, in one place.</p>
       <ul className="modules">
-        {modules.map((m) => (
-          <li key={m.module} data-module={m.module} data-locked={m.locked}>
-            <span className="mname">{pretty(m.module)}</span>
-            <span className="mstatus">
-              {m.locked ? STATUS_LABEL[m.reason] ?? "Locked" : "Available"}
-            </span>
-          </li>
-        ))}
+        {modules.map((m) => {
+          const built = BUILT.has(m.module);
+          const href = `/dashboard/org/${orgId}/event/${eventId}/${m.module}`;
+          return (
+            <li key={m.module} data-module={m.module} data-locked={m.locked} data-built={built}>
+              {built ? (
+                <a className="mname mlink" href={href}>
+                  {pretty(m.module)}
+                </a>
+              ) : (
+                <span className="mname">{pretty(m.module)}</span>
+              )}
+              <span className="mstatus">{built ? "Open →" : "Coming soon"}</span>
+            </li>
+          );
+        })}
       </ul>
     </main>
   );
