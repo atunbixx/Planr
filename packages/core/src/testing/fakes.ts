@@ -5,6 +5,7 @@ import type {
   MembershipRecord,
   EventRecord,
   EntitlementRecord,
+  InvitationRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -16,6 +17,7 @@ export function makeFakeRepositories(): Repositories {
   const memberships: MembershipRecord[] = [];
   const events: EventRecord[] = [];
   const entitlements: EntitlementRecord[] = [];
+  const invitations: InvitationRecord[] = [];
 
   return {
     orgs: {
@@ -80,6 +82,19 @@ export function makeFakeRepositories(): Repositories {
         );
         return found ? { ...found } : null;
       },
+      async listMembersWithUsers(organizationId) {
+        return memberships
+          .filter((m) => m.organizationId === organizationId)
+          .map((m) => {
+            const u = users.find((x) => x.id === m.userId);
+            return {
+              userId: m.userId,
+              email: u?.email ?? null,
+              name: u?.name ?? null,
+              role: m.role,
+            };
+          });
+      },
     },
     events: {
       async create({ organizationId, eventTypeKey, name, date }) {
@@ -118,6 +133,46 @@ export function makeFakeRepositories(): Repositories {
               (e.eventId === null || e.eventId === eventId),
           )
           .map((e) => e.key);
+      },
+    },
+    invitations: {
+      async create({ organizationId, email, role, token, invitedByUserId }) {
+        const created: InvitationRecord = {
+          id: id("inv"),
+          organizationId,
+          email,
+          role,
+          token,
+          status: "pending",
+          invitedByUserId,
+        };
+        invitations.push(created);
+        return { ...created };
+      },
+      async findByToken(token) {
+        const found = invitations.find((i) => i.token === token);
+        return found ? { ...found } : null;
+      },
+      async findPending({ organizationId, email }) {
+        const found = invitations.find(
+          (i) =>
+            i.organizationId === organizationId && i.email === email && i.status === "pending",
+        );
+        return found ? { ...found } : null;
+      },
+      async listPendingByEmail(email) {
+        return invitations
+          .filter((i) => i.email === email && i.status === "pending")
+          .map((i) => ({ ...i }));
+      },
+      async listPendingByOrganization(organizationId) {
+        return invitations
+          .filter((i) => i.organizationId === organizationId && i.status === "pending")
+          .map((i) => ({ ...i }));
+      },
+      async setStatus({ id: invId, status }) {
+        const inv = invitations.find((i) => i.id === invId);
+        if (inv) inv.status = status;
       },
     },
   };

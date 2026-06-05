@@ -129,6 +129,39 @@ describe("Prisma repository adapters", () => {
     expect([...heldNull].sort()).toEqual(["all_access"]);
   });
 
+  it("creates an invitation, finds it pending, and accepts it", async () => {
+    const org = await repos.orgs.create({ name: "Invite Co" });
+    const inv = await repos.invitations.create({
+      organizationId: org.id,
+      email: "guest@x.com",
+      role: "editor",
+      token: "tok_abc",
+      invitedByUserId: "u_owner",
+    });
+    expect(inv.status).toBe("pending");
+    expect(await repos.invitations.findByToken("tok_abc")).toMatchObject({ id: inv.id });
+    expect(
+      await repos.invitations.findPending({ organizationId: org.id, email: "guest@x.com" }),
+    ).toMatchObject({ id: inv.id });
+    await repos.invitations.setStatus({ id: inv.id, status: "accepted" });
+    expect(
+      await repos.invitations.findPending({ organizationId: org.id, email: "guest@x.com" }),
+    ).toBeNull();
+  });
+
+  it("lists members with their user details", async () => {
+    const org = await repos.orgs.create({ name: "Members Co" });
+    const user = await repos.users.upsertByAuthUserId({
+      authUserId: "auth_mw",
+      email: "mw@x.com",
+      name: "Em",
+    });
+    await repos.memberships.upsert({ organizationId: org.id, userId: user.id, role: "owner" });
+    const members = await repos.memberships.listMembersWithUsers(org.id);
+    expect(members).toHaveLength(1);
+    expect(members[0]).toMatchObject({ email: "mw@x.com", name: "Em", role: "owner" });
+  });
+
   it("grantIfAbsent is idempotent for the same (org,event,key)", async () => {
     const org = await repos.orgs.create({ name: "Idem" });
     const a = await repos.entitlements.grantIfAbsent({

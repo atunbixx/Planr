@@ -26,6 +26,9 @@ export type {
   EventRepository,
   EntitlementRepository,
   Repositories,
+  MemberView,
+  InvitationRecord,
+  InvitationRepository,
 } from "./ports/repositories";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";

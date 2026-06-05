@@ -1,4 +1,4 @@
-import type { Role, EventTypeKey, Entitlement, OrgType } from "../types";
+import type { Role, EventTypeKey, Entitlement, OrgType, InvitationStatus } from "../types";
 
 export interface OrganizationRecord {
   id: string;
@@ -45,11 +45,44 @@ export interface UserRepository {
   }): Promise<UserRecord>;
   findByAuthUserId(authUserId: string): Promise<UserRecord | null>;
 }
+export interface MemberView {
+  userId: string;
+  email: string | null;
+  name: string | null;
+  role: Role;
+}
+
 export interface MembershipRepository {
   upsert(input: { organizationId: string; userId: string; role: Role }): Promise<MembershipRecord>;
   remove(input: { organizationId: string; userId: string }): Promise<void>;
   listByOrganization(organizationId: string): Promise<MembershipRecord[]>;
   find(input: { organizationId: string; userId: string }): Promise<MembershipRecord | null>;
+  listMembersWithUsers(organizationId: string): Promise<MemberView[]>;
+}
+
+export interface InvitationRecord {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: Role;
+  token: string;
+  status: InvitationStatus;
+  invitedByUserId: string;
+}
+
+export interface InvitationRepository {
+  create(input: {
+    organizationId: string;
+    email: string;
+    role: Role;
+    token: string;
+    invitedByUserId: string;
+  }): Promise<InvitationRecord>;
+  findByToken(token: string): Promise<InvitationRecord | null>;
+  findPending(input: { organizationId: string; email: string }): Promise<InvitationRecord | null>;
+  listPendingByEmail(email: string): Promise<InvitationRecord[]>;
+  listPendingByOrganization(organizationId: string): Promise<InvitationRecord[]>;
+  setStatus(input: { id: string; status: InvitationStatus }): Promise<void>;
 }
 export interface EventRepository {
   create(input: {
@@ -83,4 +116,5 @@ export interface Repositories {
   memberships: MembershipRepository;
   events: EventRepository;
   entitlements: EntitlementRepository;
+  invitations: InvitationRepository;
 }

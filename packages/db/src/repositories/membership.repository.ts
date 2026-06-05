@@ -1,4 +1,4 @@
-import type { MembershipRepository, MembershipRecord, Role } from "@planr/core";
+import type { MembershipRepository, MembershipRecord, MemberView, Role } from "@planr/core";
 import type { PrismaClient } from "../generated/client";
 
 export class PrismaMembershipRepository implements MembershipRepository {
@@ -57,5 +57,19 @@ export class PrismaMembershipRepository implements MembershipRepository {
           role: row.role as Role,
         }
       : null;
+  }
+
+  async listMembersWithUsers(organizationId: string): Promise<MemberView[]> {
+    const rows = await this.prisma.membership.findMany({
+      where: { organizationId },
+      include: { user: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((row) => ({
+      userId: row.userId,
+      email: row.user.email,
+      name: row.user.name,
+      role: row.role as Role,
+    }));
   }
 }
