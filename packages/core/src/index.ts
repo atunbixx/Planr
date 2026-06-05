@@ -53,6 +53,7 @@ export {
   toBudgetItemPatch,
   type BudgetItemInput,
 } from "./budget/budget.dto";
+export { makeBudgetService, type BudgetService } from "./budget/budget.service";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
