@@ -12,6 +12,8 @@ import {
   makeTaskService,
   makeBudgetService,
   makeSeatingService,
+  makePublicRsvpService,
+  makeRsvpService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -35,6 +37,8 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       tasks: makeTaskService(repos),
       budget: makeBudgetService(repos),
       seating: makeSeatingService(repos),
+      publicRsvp: makePublicRsvpService(repos),
+      rsvp: makeRsvpService(repos),
     },
   };
 }
@@ -340,6 +344,60 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await caller.seating.unassign({ eventId: event.id, guestId: ada.id });
     plan = await caller.seating.plan({ eventId: event.id });
     expect(plan.unassigned.map((g) => g.name)).toEqual(["Ada"]);
+  });
+
+  it("rsvp: a guest responds via their token with NO auth; host sees the response", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_re", email: "re@x.com", name: "RE" });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "RSVP Wedding" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "The Big Day",
+    });
+    const guest = await ownerCaller.guests.create({ eventId: event.id, guest: { name: "Aunt Mary" } });
+    const token = guest.rsvpToken;
+
+    // PUBLIC caller — null user (unauthenticated)
+    const publicCaller = appRouter.createCaller(ctxFor(null));
+    const view = await publicCaller.rsvp.get({ token });
+    expect(view).toEqual({
+      eventName: "The Big Day",
+      guestName: "Aunt Mary",
+      rsvpStatus: "awaiting",
+      plusOne: false,
+    });
+    await publicCaller.rsvp.respond({ token, response: { rsvpStatus: "coming", plusOne: true } });
+
+    // Host overview reflects it
+    const overview = await ownerCaller.rsvp.overview({ eventId: event.id });
+    expect(overview.summary).toMatchObject({ total: 1, coming: 1 });
+    expect(overview.guests[0]).toMatchObject({ name: "Aunt Mary", rsvpStatus: "coming", token });
+  });
+
+  it("rsvp: an invalid token is NOT_FOUND; host overview is FORBIDDEN for a non-member", async () => {
+    const publicCaller = appRouter.createCaller(ctxFor(null));
+    await expect(publicCaller.rsvp.get({ token: "not-real" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      publicCaller.rsvp.respond({ token: "not-real", response: { rsvpStatus: "coming" } }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    const owner = await syncAuthUser(repos, { authUserId: "auth_ro", email: "ro@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Sealed RSVP" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sealed Day",
+    });
+    const stranger = await syncAuthUser(repos, { authUserId: "auth_rs", email: "rs@x.com", name: null });
+    await expect(
+      appRouter.createCaller(ctxFor(stranger)).rsvp.overview({ eventId: event.id }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // and overview requires auth at all
+    await expect(
+      appRouter.createCaller(ctxFor(null)).rsvp.overview({ eventId: event.id }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("seating: FORBIDDEN for a non-member, NOT_FOUND for an unknown table", async () => {
