@@ -71,6 +71,15 @@ export {
   type PlanTable,
   type SeatedGuest,
 } from "./seating/seating.service";
+export { rsvpResponseInput, type RsvpResponseInput } from "./rsvp/rsvp.dto";
+export {
+  makePublicRsvpService,
+  type PublicRsvpService,
+  type PublicRsvpView,
+  makeRsvpService,
+  type RsvpService,
+  type RsvpOverview,
+} from "./rsvp/rsvp.service";
 export { FREE_LAUNCH } from "./billing/launch";
 export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
