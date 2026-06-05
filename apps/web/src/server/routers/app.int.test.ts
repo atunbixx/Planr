@@ -14,6 +14,8 @@ import {
   makeSeatingService,
   makePublicRsvpService,
   makeRsvpService,
+  makeMessagingService,
+  makePublicMessagingService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -39,6 +41,8 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       seating: makeSeatingService(repos),
       publicRsvp: makePublicRsvpService(repos),
       rsvp: makeRsvpService(repos),
+      messaging: makeMessagingService(repos),
+      publicMessaging: makePublicMessagingService(repos),
     },
   };
 }
@@ -344,6 +348,51 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await caller.seating.unassign({ eventId: event.id, guestId: ada.id });
     plan = await caller.seating.plan({ eventId: event.id });
     expect(plan.unassigned.map((g) => g.name)).toEqual(["Ada"]);
+  });
+
+  it("messaging: host posts an announcement; the unauthenticated guest sees it via their token", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_me", email: "me@x.com", name: "ME" });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "News Wedding" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "The Big Day",
+    });
+    const guest = await ownerCaller.guests.create({ eventId: event.id, guest: { name: "Aunt Mary" } });
+
+    await ownerCaller.messaging.create({
+      eventId: event.id,
+      announcement: { title: "Parking", body: "Use lot B" },
+    });
+    const hostList = await ownerCaller.messaging.list({ eventId: event.id });
+    expect(hostList.map((a) => a.title)).toEqual(["Parking"]);
+
+    // PUBLIC, null user
+    const publicCaller = appRouter.createCaller(ctxFor(null));
+    const seen = await publicCaller.messaging.publicForToken({ token: guest.rsvpToken });
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toMatchObject({ title: "Parking", body: "Use lot B" });
+    // bad token → [] (no error)
+    expect(await publicCaller.messaging.publicForToken({ token: "nope" })).toEqual([]);
+  });
+
+  it("messaging: FORBIDDEN for a non-member, NOT_FOUND for an unknown announcement", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_mo", email: "mo@x.com", name: null });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Sealed News" });
+    const event = await ownerCaller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sealed Day",
+    });
+    const stranger = await syncAuthUser(repos, { authUserId: "auth_ms", email: "ms@x.com", name: null });
+    await expect(
+      appRouter.createCaller(ctxFor(stranger)).messaging.list({ eventId: event.id }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      ownerCaller.messaging.update({ eventId: event.id, id: "nope", patch: { title: "x" } }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
   it("rsvp: a guest responds via their token with NO auth; host sees the response", async () => {
