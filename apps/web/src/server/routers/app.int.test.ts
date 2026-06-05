@@ -6,6 +6,7 @@ import {
   makeEventService,
   makeEntitlementService,
   makeAuthorizationService,
+  makeOnboardingService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -23,6 +24,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       events: makeEventService(repos),
       entitlements: makeEntitlementService(repos),
       authz: makeAuthorizationService(repos),
+      onboarding: makeOnboardingService(repos),
     },
   };
 }
@@ -69,6 +71,30 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await expect(
       viewerCaller.events.create({ organizationId: org.id, eventTypeKey: "wedding", name: "x" }),
     ).rejects.toThrowError(/forbidden/i);
+  });
+
+  it("completeIndividual creates an individual workspace + first event and lists it", async () => {
+    const user = await syncAuthUser(repos, { authUserId: "auth_ob1", email: "ob1@x.com", name: "Ob" });
+    const caller = appRouter.createCaller(ctxFor(user));
+    const res = await caller.onboarding.completeIndividual({
+      spaceName: "Ob's Planning",
+      eventTypeKey: "birthday",
+      eventName: "Ob's 30th",
+    });
+    const workspaces = await caller.workspaces.list();
+    expect(workspaces.find((w) => w.id === res.organizationId)).toMatchObject({ type: "individual" });
+    const events = await caller.events.list({ organizationId: res.organizationId });
+    expect(events.map((e) => e.id)).toContain(res.eventId);
+  });
+
+  it("completeBusiness creates a business workspace with no events", async () => {
+    const user = await syncAuthUser(repos, { authUserId: "auth_ob2", email: "ob2@x.com", name: "Biz" });
+    const caller = appRouter.createCaller(ctxFor(user));
+    const res = await caller.onboarding.completeBusiness({ businessName: "Bliss Events" });
+    const workspaces = await caller.workspaces.list();
+    expect(workspaces.find((w) => w.id === res.organizationId)).toMatchObject({ type: "business" });
+    const events = await caller.events.list({ organizationId: res.organizationId });
+    expect(events).toHaveLength(0);
   });
 
   it("blocks non-members from listing another org's events", async () => {
