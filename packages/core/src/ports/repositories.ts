@@ -43,6 +43,9 @@ export interface OrganizationRepository {
   create(input: { name: string; type?: OrgType }): Promise<OrganizationRecord>;
   findById(id: string): Promise<OrganizationRecord | null>;
   listForUser(userId: string): Promise<OrganizationRecord[]>;
+  rename(input: { id: string; name: string }): Promise<OrganizationRecord>;
+  // FK cascade removes memberships, events, guests, … with the organization.
+  delete(id: string): Promise<void>;
 }
 export interface UserRepository {
   upsertByAuthUserId(input: {

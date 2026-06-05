@@ -499,6 +499,32 @@ describe("Prisma repository adapters", () => {
     ).toEqual({ itemCount: 0, totalEstimatedCents: 0, totalPaidCents: 0, remainingCents: 0 });
   });
 
+  it("admin: renames an organization and deletes it (cascading all children)", async () => {
+    const org = await repos.orgs.create({ name: "Old Name" });
+    const user = await repos.users.upsertByAuthUserId({ authUserId: "auth_adm", email: "adm@x.com", name: "A" });
+    await repos.memberships.upsert({ organizationId: org.id, userId: user.id, role: "owner" });
+    const event = await repos.events.create({
+      organizationId: org.id, eventTypeKey: "wedding", name: "E", date: null,
+    });
+    await repos.guests.create({
+      organizationId: org.id, eventId: event.id, name: "G", email: null, phone: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", notes: null,
+    });
+
+    const renamed = await repos.orgs.rename({ id: org.id, name: "New Name" });
+    expect(renamed.name).toBe("New Name");
+    expect(await repos.orgs.findById(org.id)).toMatchObject({ name: "New Name" });
+
+    await repos.orgs.delete(org.id);
+    expect(await repos.orgs.findById(org.id)).toBeNull();
+    // children cascaded away
+    expect(await repos.events.findById({ organizationId: org.id, id: event.id })).toBeNull();
+    expect(await repos.memberships.listMembersWithUsers(org.id)).toHaveLength(0);
+    expect(await repos.guests.summaryByEvent({ organizationId: org.id, eventId: event.id })).toMatchObject({
+      total: 0,
+    });
+  });
+
   it("messaging: announcement CRUD tenant-scoped, newest-first, cascade with event", async () => {
     const org = await repos.orgs.create({ name: "Msg Co" });
     const event = await repos.events.create({

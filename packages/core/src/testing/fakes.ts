@@ -54,6 +54,32 @@ export function makeFakeRepositories(): Repositories {
         );
         return orgs.filter((o) => orgIds.has(o.id)).map((o) => ({ ...o }));
       },
+      async rename({ id: orgId, name }) {
+        const o = orgs.find((x) => x.id === orgId);
+        if (!o) throw new Error("org not found");
+        o.name = name;
+        return { ...o };
+      },
+      async delete(orgId) {
+        // cascade: drop the org and every child row the fakes track
+        const dropOrg = <T extends { organizationId: string }>(arr: T[]) => {
+          for (let i = arr.length - 1; i >= 0; i--) {
+            if (arr[i]!.organizationId === orgId) arr.splice(i, 1);
+          }
+        };
+        dropOrg(memberships);
+        dropOrg(events);
+        dropOrg(entitlements);
+        dropOrg(invitations);
+        dropOrg(guests);
+        dropOrg(tasks);
+        dropOrg(budget);
+        dropOrg(seatingTables);
+        dropOrg(seatAssignments);
+        dropOrg(announcements);
+        const oi = orgs.findIndex((o) => o.id === orgId);
+        if (oi >= 0) orgs.splice(oi, 1);
+      },
     },
     users: {
       async upsertByAuthUserId({ authUserId, email, name }) {

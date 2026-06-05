@@ -97,7 +97,11 @@ export {
   type PublicAnnouncement,
 } from "./messaging/messaging.service";
 export { FREE_LAUNCH } from "./billing/launch";
-export { makeTenancyService, type TenancyService } from "./services/tenancy.service";
+export {
+  makeTenancyService,
+  type TenancyService,
+  type WorkspaceSettings,
+} from "./services/tenancy.service";
 export { syncAuthUser } from "./sync/auth-sync";
 export { makeEventService, type EventService, type ResolvedModule } from "./services/event.service";
 export {

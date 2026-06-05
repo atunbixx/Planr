@@ -23,4 +23,16 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     });
     return rows.map((row) => ({ id: row.id, name: row.name, type: row.type as OrgType }));
   }
+
+  async rename(input: { id: string; name: string }): Promise<OrganizationRecord> {
+    const row = await this.prisma.organization.update({
+      where: { id: input.id },
+      data: { name: input.name },
+    });
+    return { id: row.id, name: row.name, type: row.type as OrgType };
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.organization.delete({ where: { id } });
+  }
 }
