@@ -22,4 +22,5 @@ export async function createEventAction(formData: FormData) {
   if (!organizationId || !name) return;
   await (await getServerCaller()).events.create({ organizationId, eventTypeKey, name });
   revalidatePath(`/dashboard/org/${organizationId}`);
+  revalidatePath("/dashboard");
 }
