@@ -56,6 +56,22 @@ describe("seating service", () => {
     expect(plan.summary).toMatchObject({ tableCount: 1, totalCapacity: 8, assignedCount: 2, unassignedCount: 1 });
   });
 
+  it("surfaces meal choices on seated guests and a catering breakdown", async () => {
+    const { seating, guestSvc, event, ownerUserId, addGuest } = await setup();
+    const ada = await addGuest("Ada");
+    const bo = await addGuest("Bo");
+    await addGuest("Cy"); // no meal set
+    await guestSvc.update(ownerUserId, { eventId: event.id, guestId: ada.id, patch: { mealChoice: "Vegan" } });
+    await guestSvc.update(ownerUserId, { eventId: event.id, guestId: bo.id, patch: { mealChoice: "Vegan" } });
+    const table = await seating.createTable(ownerUserId, { eventId: event.id, table: { label: "A", capacity: 8 } });
+    await seating.assign(ownerUserId, { eventId: event.id, tableId: table.id, guestId: ada.id });
+
+    const plan = await seating.plan(ownerUserId, { eventId: event.id });
+    expect(plan.tables[0]!.guests.find((g) => g.id === ada.id)!.meal).toBe("Vegan");
+    expect(plan.meals).toEqual([{ choice: "Vegan", count: 2 }]);
+    expect(plan.summary.mealsChosen).toBe(2);
+  });
+
   it("moves a guest when re-assigned to another table (one seat per guest)", async () => {
     const { seating, event, ownerUserId, addGuest } = await setup();
     const ada = await addGuest("Ada");

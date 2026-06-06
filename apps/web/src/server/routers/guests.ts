@@ -11,6 +11,7 @@ const guestInput = z.object({
   groupLabel: z.string().max(80).optional(),
   plusOne: z.boolean().optional(),
   rsvpStatus: z.enum(["awaiting", "coming", "declined", "maybe"]).optional(),
+  mealChoice: z.string().max(80).optional(),
   notes: z.string().max(2000).optional(),
 });
 

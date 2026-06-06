@@ -7,7 +7,9 @@ import {
   removeTableAction,
   assignGuestAction,
   unassignGuestAction,
+  setGuestMealAction,
 } from "./actions";
+import { MEAL_OPTIONS } from "../../../../../../../lib/meals";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,7 @@ export default async function SeatingPage({
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   const plan = await (await getServerCaller()).seating.plan({ eventId });
-  const { tables, unassigned, summary } = plan;
+  const { tables, unassigned, summary, meals } = plan;
 
   return (
     <main>
@@ -46,6 +48,26 @@ export default async function SeatingPage({
           </>
         ) : null}
       </p>
+
+      {meals.length > 0 ? (
+        <section className="catering">
+          <h2>Catering · {summary.mealsChosen} meals chosen</h2>
+          <ul className="mealcounts">
+            {meals.map((m) => (
+              <li key={m.choice} data-meal={m.choice}>
+                <span className="mc-choice">{m.choice}</span>
+                <span className="mc-count">{m.count}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <datalist id="meal-options">
+        {MEAL_OPTIONS.map((m) => (
+          <option key={m} value={m} />
+        ))}
+      </datalist>
 
       <section className="makepanel">
         <h2>Add a table</h2>
@@ -98,7 +120,22 @@ export default async function SeatingPage({
             <ul className="seated">
               {t.guests.map((g) => (
                 <li key={g.id} data-guest={g.id}>
-                  <span>{g.name}</span>
+                  <span className="sg-name">{g.name}</span>
+                  <form action={setGuestMealAction} className="sg-meal">
+                    <input type="hidden" name="eventId" value={eventId} />
+                    <input type="hidden" name="orgId" value={orgId} />
+                    <input type="hidden" name="guestId" value={g.id} />
+                    <input
+                      aria-label={`Meal for ${g.name}`}
+                      name="mealChoice"
+                      list="meal-options"
+                      defaultValue={g.meal ?? ""}
+                      placeholder="meal"
+                    />
+                    <button type="submit" className="ghost" aria-label={`Save meal for ${g.name}`}>
+                      ✓
+                    </button>
+                  </form>
                   <form action={unassignGuestAction}>
                     <input type="hidden" name="eventId" value={eventId} />
                     <input type="hidden" name="orgId" value={orgId} />

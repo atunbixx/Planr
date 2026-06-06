@@ -63,3 +63,5 @@
 .rsvpchoice:has(input:checked) { border-color: var(--clay); background: var(--clay-tint); }
 .rsvpplus { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); }
 .rsvpchoice input, .rsvpplus input { width: auto; margin: 0; }
+.rsvpmeal { display: flex; flex-direction: column; gap: 6px; color: var(--ink-soft); }
+.rsvpmeal select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; min-width: 200px; }

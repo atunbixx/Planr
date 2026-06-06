@@ -12,8 +12,14 @@ describe("guestInput", () => {
       groupLabel: null,
       plusOne: false,
       rsvpStatus: "awaiting",
+      mealChoice: null,
       notes: null,
     });
+  });
+
+  it("captures a meal choice and clears it when blank", () => {
+    expect(toGuestWrite(guestInput.parse({ name: "X", mealChoice: "Vegan" })).mealChoice).toBe("Vegan");
+    expect(toGuestWrite(guestInput.parse({ name: "X", mealChoice: "" })).mealChoice).toBeNull();
   });
 
   it("rejects an empty name", () => {

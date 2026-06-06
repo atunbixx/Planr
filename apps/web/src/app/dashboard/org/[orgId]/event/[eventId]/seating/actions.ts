@@ -56,3 +56,13 @@ export async function unassignGuestAction(formData: FormData) {
   await (await getServerCaller()).seating.unassign({ eventId, guestId });
   revalidate(orgId, eventId);
 }
+
+// Set a seated guest's meal choice (for the catering headcount).
+export async function setGuestMealAction(formData: FormData) {
+  const { eventId, orgId } = paths(formData);
+  const guestId = String(formData.get("guestId") ?? "");
+  const mealChoice = String(formData.get("mealChoice") ?? "");
+  if (!eventId || !guestId) return;
+  await (await getServerCaller()).guests.update({ eventId, guestId, patch: { mealChoice } });
+  revalidate(orgId, eventId);
+}

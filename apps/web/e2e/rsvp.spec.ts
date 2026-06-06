@@ -40,9 +40,10 @@ test("a guest RSVPs via their link with no account; the host sees the response",
   await expect(guestPage.getByRole("heading", { name: "Our Wedding" })).toBeVisible();
   await expect(guestPage.getByText("Aunt Mary")).toBeVisible();
 
-  // Guest: accept + plus-one
+  // Guest: accept + plus-one + meal choice
   await guestPage.getByLabel("Joyfully accepts").check();
   await guestPage.getByLabel("I'll bring a plus-one").check();
+  await guestPage.getByLabel("Meal preference").selectOption("Vegan");
   await guestPage.getByRole("button", { name: "Send RSVP" }).click();
   await expect(guestPage.getByText(/marked as/i)).toContainText("Coming");
   await guestContext.close();
@@ -54,4 +55,13 @@ test("a guest RSVPs via their link with no account; the host sees the response",
     "data-rsvp",
     "coming",
   );
+
+  // Host: the guest's meal choice shows on the guest list and the seating catering breakdown
+  await page.getByRole("link", { name: "← Event" }).click();
+  await page.locator(`[data-module="guests"] a`).click();
+  await expect(page.locator(".guests li", { hasText: "Aunt Mary" }).getByText("Vegan")).toBeVisible();
+  await page.getByRole("link", { name: "← Event" }).click();
+  await page.locator(`[data-module="seating"] a`).click();
+  await expect(page.getByText("1 meals chosen", { exact: false })).toBeVisible();
+  await expect(page.locator('.mealcounts li[data-meal="Vegan"]')).toContainText("Vegan");
 });

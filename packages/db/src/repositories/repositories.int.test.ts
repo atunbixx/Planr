@@ -230,6 +230,7 @@ describe("Prisma repository adapters", () => {
       groupLabel: "Family",
       plusOne: true,
       rsvpStatus: "coming",
+      mealChoice: null,
       notes: null,
     });
     expect(created).toMatchObject({ name: "Aunt Mary", plusOne: true, rsvpStatus: "coming" });
@@ -508,7 +509,7 @@ describe("Prisma repository adapters", () => {
     });
     await repos.guests.create({
       organizationId: org.id, eventId: event.id, name: "G", email: null, phone: null,
-      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", notes: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", mealChoice: null, notes: null,
     });
 
     const renamed = await repos.orgs.rename({ id: org.id, name: "New Name" });
@@ -671,11 +672,11 @@ describe("Prisma repository adapters", () => {
     });
     const a = await repos.guests.create({
       organizationId: org.id, eventId: event.id, name: "Ada", email: null, phone: null,
-      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", notes: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", mealChoice: null, notes: null,
     });
     const b = await repos.guests.create({
       organizationId: org.id, eventId: event.id, name: "Bo", email: null, phone: null,
-      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", notes: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "awaiting", mealChoice: null, notes: null,
     });
     expect(a.rsvpToken).toBeTruthy();
     expect(a.rsvpToken).not.toBe(b.rsvpToken); // unique per guest
@@ -695,6 +696,16 @@ describe("Prisma repository adapters", () => {
     // setRsvpByToken without plusOne leaves it untouched
     const again = await repos.guests.setRsvpByToken({ token: a.rsvpToken, rsvpStatus: "maybe" });
     expect(again).toMatchObject({ rsvpStatus: "maybe", plusOne: true });
+
+    // meal choice round-trips through the token path and is left untouched when omitted
+    const withMeal = await repos.guests.setRsvpByToken({
+      token: a.rsvpToken,
+      rsvpStatus: "coming",
+      mealChoice: "Vegan",
+    });
+    expect(withMeal).toMatchObject({ rsvpStatus: "coming", mealChoice: "Vegan" });
+    const keepMeal = await repos.guests.setRsvpByToken({ token: a.rsvpToken, rsvpStatus: "maybe" });
+    expect(keepMeal).toMatchObject({ rsvpStatus: "maybe", mealChoice: "Vegan" });
   });
 
   it("seating: table CRUD, upsert-by-guestId moves a guest, countByTable", async () => {
@@ -714,6 +725,7 @@ describe("Prisma repository adapters", () => {
       groupLabel: null,
       plusOne: false,
       rsvpStatus: "coming",
+      mealChoice: null,
       notes: null,
     });
     const t1 = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "A", capacity: 4 });
@@ -751,7 +763,7 @@ describe("Prisma repository adapters", () => {
     const event = await repos.events.create({ organizationId: org.id, eventTypeKey: "wedding", name: "E", date: null });
     const g = await repos.guests.create({
       organizationId: org.id, eventId: event.id, name: "G", email: null, phone: null,
-      groupLabel: null, plusOne: false, rsvpStatus: "coming", notes: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "coming", mealChoice: null, notes: null,
     });
     const table = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "A", capacity: 4 });
     await repos.seating.assign({ organizationId: org.id, eventId: event.id, tableId: table.id, guestId: g.id });
@@ -764,7 +776,7 @@ describe("Prisma repository adapters", () => {
     const event = await repos.events.create({ organizationId: org.id, eventTypeKey: "wedding", name: "E", date: null });
     const g = await repos.guests.create({
       organizationId: org.id, eventId: event.id, name: "G", email: null, phone: null,
-      groupLabel: null, plusOne: false, rsvpStatus: "coming", notes: null,
+      groupLabel: null, plusOne: false, rsvpStatus: "coming", mealChoice: null, notes: null,
     });
     const table = await repos.seating.createTable({ organizationId: org.id, eventId: event.id, label: "A", capacity: 4 });
     await repos.seating.assign({ organizationId: org.id, eventId: event.id, tableId: table.id, guestId: g.id });
@@ -791,6 +803,7 @@ describe("Prisma repository adapters", () => {
         groupLabel: null,
         plusOne: false,
         rsvpStatus: statuses[i]!,
+        mealChoice: null,
         notes: null,
       });
     }

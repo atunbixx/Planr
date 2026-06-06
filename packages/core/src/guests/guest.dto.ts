@@ -10,6 +10,7 @@ export const guestInput = z.object({
   groupLabel: z.preprocess(blankToNull, z.string().max(80).nullish()),
   plusOne: z.boolean().optional(),
   rsvpStatus: z.enum(["awaiting", "coming", "declined", "maybe"]).optional(),
+  mealChoice: z.preprocess(blankToNull, z.string().max(80).nullish()),
   notes: z.preprocess(blankToNull, z.string().max(2000).nullish()),
 });
 
@@ -24,6 +25,7 @@ export function toGuestWrite(input: GuestInput): GuestWrite {
     groupLabel: input.groupLabel ?? null,
     plusOne: input.plusOne ?? false,
     rsvpStatus: input.rsvpStatus ?? "awaiting",
+    mealChoice: input.mealChoice ?? null,
     notes: input.notes ?? null,
   };
 }
@@ -37,6 +39,7 @@ export function toGuestPatch(input: Partial<GuestInput>): Partial<GuestWrite> {
   if (input.groupLabel !== undefined) patch.groupLabel = input.groupLabel ?? null;
   if (input.plusOne !== undefined) patch.plusOne = input.plusOne;
   if (input.rsvpStatus !== undefined) patch.rsvpStatus = input.rsvpStatus;
+  if (input.mealChoice !== undefined) patch.mealChoice = input.mealChoice ?? null;
   if (input.notes !== undefined) patch.notes = input.notes ?? null;
   return patch;
 }

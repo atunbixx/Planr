@@ -180,6 +180,7 @@ model Guest {
   plusOne        Boolean      @default(false)
   rsvpStatus     RsvpStatus   @default(awaiting)
   rsvpToken      String       @unique @default(uuid())
+  mealChoice     String?
   notes          String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt

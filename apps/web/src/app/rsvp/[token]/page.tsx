@@ -1,9 +1,16 @@
 import { getServerCaller } from "../../../server/caller";
 import { respondAction, uploadPhotoAction } from "./actions";
+import { MEAL_OPTIONS } from "../../../lib/meals";
 
 export const dynamic = "force-dynamic";
 
-type View = { eventName: string; guestName: string; rsvpStatus: string; plusOne: boolean };
+type View = {
+  eventName: string;
+  guestName: string;
+  rsvpStatus: string;
+  plusOne: boolean;
+  mealChoice: string | null;
+};
 type Announcement = { id: string; title: string; body: string };
 
 const OPTIONS = [
@@ -81,6 +88,17 @@ export default async function PublicRsvpPage({
         <label className="rsvpplus">
           <input type="checkbox" name="plusOne" defaultChecked={view.plusOne} />
           <span>I&apos;ll bring a plus-one</span>
+        </label>
+        <label className="rsvpmeal">
+          <span>Meal preference</span>
+          <select name="mealChoice" defaultValue={view.mealChoice ?? ""}>
+            <option value="">No preference</option>
+            {MEAL_OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
         </label>
         <button type="submit">Send RSVP</button>
       </form>

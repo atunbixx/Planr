@@ -86,6 +86,32 @@
 .seated li.empty { background: none; color: var(--ink-faint); font-style: italic; font-size: 0.82rem; padding: 2px 0; }
 .seated form { margin: 0; }
 .seated button { padding: 2px 8px; font-size: 0.72rem; line-height: 1.4; }
+.seated .sg-name { margin-right: auto; }
+.seated .sg-meal { display: flex; gap: 4px; align-items: center; }
+.seated .sg-meal input { width: 84px; padding: 3px 6px; font-size: 0.74rem; }
+
+/* catering headcount */
+.catering { margin: 14px 0 4px; }
+.catering h2 { font-size: 1rem; margin: 0 0 8px; }
+.mealcounts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.mealcounts li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sage-tint, #e8ede2);
+  color: var(--sage);
+  border: 1px solid var(--sage);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.mealcounts .mc-count {
+  background: var(--card);
+  border-radius: 999px;
+  padding: 0 8px;
+  color: var(--ink);
+}
 
 .tableedit { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
 .tableedit .ginline { flex-direction: row; gap: 6px; margin: 0; flex-wrap: wrap; }

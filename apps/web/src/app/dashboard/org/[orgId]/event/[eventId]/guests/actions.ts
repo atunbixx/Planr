@@ -9,6 +9,7 @@ export async function addGuestAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "");
   const groupLabel = String(formData.get("groupLabel") ?? "");
+  const mealChoice = String(formData.get("mealChoice") ?? "");
   const rsvpStatus = String(formData.get("rsvpStatus") ?? "awaiting") as
     | "awaiting"
     | "coming"
@@ -17,7 +18,7 @@ export async function addGuestAction(formData: FormData) {
   if (!eventId || !name) return;
   await (await getServerCaller()).guests.create({
     eventId,
-    guest: { name, email, groupLabel, rsvpStatus },
+    guest: { name, email, groupLabel, mealChoice, rsvpStatus },
   });
   revalidatePath(`/dashboard/org/${orgId}/event/${eventId}/guests`);
 }

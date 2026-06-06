@@ -312,11 +312,12 @@ export function makeFakeRepositories(): Repositories {
         const found = guests.find((g) => g.rsvpToken === token);
         return found ? { ...found } : null;
       },
-      async setRsvpByToken({ token, rsvpStatus, plusOne }) {
+      async setRsvpByToken({ token, rsvpStatus, plusOne, mealChoice }) {
         const g = guests.find((x) => x.rsvpToken === token);
         if (!g) return null;
         g.rsvpStatus = rsvpStatus;
         if (plusOne !== undefined) g.plusOne = plusOne;
+        if (mealChoice !== undefined) g.mealChoice = mealChoice;
         return { ...g };
       },
     },

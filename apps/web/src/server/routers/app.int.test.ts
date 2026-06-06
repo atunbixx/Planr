@@ -712,13 +712,22 @@ describe("appRouter (integration, Supabase Postgres)", () => {
       guestName: "Aunt Mary",
       rsvpStatus: "awaiting",
       plusOne: false,
+      mealChoice: null,
     });
-    await publicCaller.rsvp.respond({ token, response: { rsvpStatus: "coming", plusOne: true } });
+    await publicCaller.rsvp.respond({
+      token,
+      response: { rsvpStatus: "coming", plusOne: true, mealChoice: "Vegan" },
+    });
 
     // Host overview reflects it
     const overview = await ownerCaller.rsvp.overview({ eventId: event.id });
     expect(overview.summary).toMatchObject({ total: 1, coming: 1 });
     expect(overview.guests[0]).toMatchObject({ name: "Aunt Mary", rsvpStatus: "coming", token });
+
+    // The guest's meal choice flows through to the seating plan's catering breakdown
+    const plan = await ownerCaller.seating.plan({ eventId: event.id });
+    expect(plan.meals).toEqual([{ choice: "Vegan", count: 1 }]);
+    expect(plan.unassigned[0]).toMatchObject({ name: "Aunt Mary", meal: "Vegan" });
   });
 
   it("rsvp: an invalid token is NOT_FOUND; host overview is FORBIDDEN for a non-member", async () => {

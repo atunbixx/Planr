@@ -49,6 +49,13 @@ test("host builds a seating plan: tables, seat guests, overfill is surfaced, mov
   await adaRow.getByRole("button", { name: "Seat" }).click();
   await expect(page.getByText("1 seated", { exact: false })).toBeVisible();
 
+  // Give Ada a meal choice → it shows in the catering breakdown
+  const seatedAda = page.locator(".seated li", { hasText: "Ada" });
+  await seatedAda.getByLabel("Meal for Ada", { exact: true }).fill("Vegan");
+  await seatedAda.getByRole("button", { name: "Save meal for Ada" }).click();
+  await expect(page.getByText("1 meals chosen", { exact: false })).toBeVisible();
+  await expect(page.locator('.mealcounts li[data-meal="Vegan"]')).toContainText("Vegan");
+
   // Seat Bo at Top too → over capacity (Top holds 1)
   const boRow = page.locator(".poollist li", { hasText: "Bo" });
   await boRow.getByLabel("Seat Bo at").selectOption({ label: "Top" });

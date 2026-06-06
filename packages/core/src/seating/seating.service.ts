@@ -20,6 +20,7 @@ const GUEST_CAP = 1000; // a seating chart loads the whole guest list at once
 export interface SeatedGuest {
   id: string;
   name: string;
+  meal: string | null;
 }
 export interface PlanTable {
   id: string;
@@ -31,12 +32,15 @@ export interface PlanTable {
 export interface SeatingPlan {
   tables: PlanTable[];
   unassigned: SeatedGuest[];
+  // Catering headcount: guests grouped by their chosen meal (those with one set).
+  meals: { choice: string; count: number }[];
   summary: {
     tableCount: number;
     totalCapacity: number;
     assignedCount: number;
     unassignedCount: number;
     overCapacityTables: number;
+    mealsChosen: number;
   };
 }
 
@@ -82,13 +86,17 @@ export function makeSeatingService(repos: Repositories, opts: { freeLaunch?: boo
         repos.seating.listAssignments(scope),
         repos.guests.listByEvent({ ...scope, limit: GUEST_CAP }),
       ]);
-      const guestName = new Map(guestPage.guests.map((g) => [g.id, g.name] as const));
+      const guestById = new Map(guestPage.guests.map((g) => [g.id, g] as const));
       const tableOf = new Map(assignments.map((a) => [a.guestId, a.tableId] as const));
+      const seatedGuest = (id: string): SeatedGuest => {
+        const g = guestById.get(id)!;
+        return { id: g.id, name: g.name, meal: g.mealChoice };
+      };
 
       const tablesView: PlanTable[] = tables.map((t) => {
         const seated = assignments
-          .filter((a) => a.tableId === t.id && guestName.has(a.guestId))
-          .map((a) => ({ id: a.guestId, name: guestName.get(a.guestId)! }));
+          .filter((a) => a.tableId === t.id && guestById.has(a.guestId))
+          .map((a) => seatedGuest(a.guestId));
         return {
           id: t.id,
           label: t.label,
@@ -99,18 +107,29 @@ export function makeSeatingService(repos: Repositories, opts: { freeLaunch?: boo
       });
       const unassigned: SeatedGuest[] = guestPage.guests
         .filter((g) => !tableOf.has(g.id))
-        .map((g) => ({ id: g.id, name: g.name }));
+        .map((g) => ({ id: g.id, name: g.name, meal: g.mealChoice }));
+
+      // Catering breakdown across the whole guest list, grouped by chosen meal.
+      const mealCounts = new Map<string, number>();
+      for (const g of guestPage.guests) {
+        if (g.mealChoice) mealCounts.set(g.mealChoice, (mealCounts.get(g.mealChoice) ?? 0) + 1);
+      }
+      const meals = [...mealCounts.entries()]
+        .map(([choice, count]) => ({ choice, count }))
+        .sort((a, b) => (a.choice < b.choice ? -1 : a.choice > b.choice ? 1 : 0));
 
       const assignedCount = guestPage.guests.length - unassigned.length;
       return {
         tables: tablesView,
         unassigned,
+        meals,
         summary: {
           tableCount: tables.length,
           totalCapacity: tables.reduce((s, t) => s + t.capacity, 0),
           assignedCount,
           unassignedCount: unassigned.length,
           overCapacityTables: tablesView.filter((t) => t.overCapacity).length,
+          mealsChosen: meals.reduce((s, m) => s + m.count, 0),
         },
       };
     },

@@ -36,21 +36,32 @@ describe("public rsvp service", () => {
       guestName: "Aunt Mary",
       rsvpStatus: "awaiting",
       plusOne: false,
+      mealChoice: null,
     });
     // exactly these keys — nothing leaks
-    expect(Object.keys(view).sort()).toEqual(["eventName", "guestName", "plusOne", "rsvpStatus"]);
+    expect(Object.keys(view).sort()).toEqual([
+      "eventName",
+      "guestName",
+      "mealChoice",
+      "plusOne",
+      "rsvpStatus",
+    ]);
   });
 
-  it("records a response (status + plus-one) for that guest only", async () => {
+  it("records a response (status + plus-one + meal) for that guest only", async () => {
     const { publicRsvp, guest, repos, event } = await setup();
-    const view = await publicRsvp.respond(guest.rsvpToken, { rsvpStatus: "coming", plusOne: true });
-    expect(view).toMatchObject({ rsvpStatus: "coming", plusOne: true });
+    const view = await publicRsvp.respond(guest.rsvpToken, {
+      rsvpStatus: "coming",
+      plusOne: true,
+      mealChoice: "Vegan",
+    });
+    expect(view).toMatchObject({ rsvpStatus: "coming", plusOne: true, mealChoice: "Vegan" });
     const stored = await repos.guests.getById({
       organizationId: event.organizationId,
       eventId: event.id,
       id: guest.id,
     });
-    expect(stored).toMatchObject({ rsvpStatus: "coming", plusOne: true });
+    expect(stored).toMatchObject({ rsvpStatus: "coming", plusOne: true, mealChoice: "Vegan" });
   });
 
   it("404s an invalid token on both get and respond", async () => {

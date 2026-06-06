@@ -6,6 +6,7 @@ import { router, publicProcedure, authedProcedure } from "../trpc";
 const rsvpResponseInput = z.object({
   rsvpStatus: z.enum(["coming", "declined", "maybe"]),
   plusOne: z.boolean().optional(),
+  mealChoice: z.string().max(80).optional(),
 });
 
 export const rsvpRouter = router({

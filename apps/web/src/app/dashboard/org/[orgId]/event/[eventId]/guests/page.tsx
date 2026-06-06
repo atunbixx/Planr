@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../../../../../../server/auth";
 import { getServerCaller } from "../../../../../../../server/caller";
 import { addGuestAction, setGuestRsvpAction, removeGuestAction } from "./actions";
+import { MEAL_OPTIONS } from "../../../../../../../lib/meals";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function GuestsPage({
           <input aria-label="Guest name" name="name" placeholder="Full name" required />
           <input aria-label="Guest email" name="email" type="email" placeholder="email (optional)" />
           <input aria-label="Guest group" name="groupLabel" placeholder="group (optional)" />
+          <input aria-label="Guest meal" name="mealChoice" placeholder="meal (optional)" list="meal-options" />
           <select aria-label="Guest RSVP" name="rsvpStatus" defaultValue="awaiting">
             {RSVP_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -57,11 +59,20 @@ export default async function GuestsPage({
         </form>
       </section>
 
+      <datalist id="meal-options">
+        {MEAL_OPTIONS.map((m) => (
+          <option key={m} value={m} />
+        ))}
+      </datalist>
+
       <ul className="guests">
         {guests.map((g) => (
           <li key={g.id} data-guest={g.id} data-rsvp={g.rsvpStatus}>
             <span className="gname">{g.name}</span>
-            <span className="gmeta">{g.groupLabel ?? g.email ?? ""}</span>
+            <span className="gmeta">
+              {g.groupLabel ?? g.email ?? ""}
+              {g.mealChoice ? <span className="gmeal">{g.mealChoice}</span> : null}
+            </span>
             <form action={setGuestRsvpAction} className="ginline">
               <input type="hidden" name="eventId" value={eventId} />
               <input type="hidden" name="orgId" value={orgId} />

@@ -140,6 +140,7 @@ export interface GuestRecord {
   plusOne: boolean;
   rsvpStatus: RsvpStatus;
   rsvpToken: string;
+  mealChoice: string | null;
   notes: string | null;
 }
 
@@ -158,6 +159,7 @@ export interface GuestWrite {
   groupLabel: string | null;
   plusOne: boolean;
   rsvpStatus: RsvpStatus;
+  mealChoice: string | null;
   notes: string | null;
 }
 
@@ -188,6 +190,7 @@ export interface GuestRepository {
     token: string;
     rsvpStatus: RsvpStatus;
     plusOne?: boolean;
+    mealChoice?: string | null;
   }): Promise<GuestRecord | null>;
 }
 

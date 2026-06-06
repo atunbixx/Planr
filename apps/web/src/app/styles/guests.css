@@ -20,7 +20,15 @@
 .guests li[data-rsvp="coming"] { border-left-color: var(--sage); }
 .guests li[data-rsvp="declined"] { border-left-color: var(--clay); }
 .guests .gname { font-weight: 600; }
-.guests .gmeta { color: var(--ink-faint); font-size: 0.85rem; }
+.guests .gmeta { color: var(--ink-faint); font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; }
+.guests .gmeal {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sage);
+  background: var(--sage-tint, #e8ede2);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
 .guests .ginline { flex-direction: row; gap: 6px; margin: 0 0 0 auto; }
 .guests .ginline + .ginline { margin-left: 0; }
 .guests .ginline button { padding: 7px 12px; font-size: 0.78rem; }

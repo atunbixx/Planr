@@ -11,6 +11,7 @@ export interface PublicRsvpView {
   guestName: string;
   rsvpStatus: RsvpStatus;
   plusOne: boolean;
+  mealChoice: string | null;
 }
 
 const INVALID = "This RSVP link isn't valid.";
@@ -26,6 +27,7 @@ export function makePublicRsvpService(repos: Repositories) {
     name: string;
     rsvpStatus: RsvpStatus;
     plusOne: boolean;
+    mealChoice: string | null;
   }): Promise<PublicRsvpView> {
     const event = await repos.events.getById(guest.eventId);
     if (!event) throw new NotFoundError(INVALID);
@@ -34,6 +36,7 @@ export function makePublicRsvpService(repos: Repositories) {
       guestName: guest.name,
       rsvpStatus: guest.rsvpStatus,
       plusOne: guest.plusOne,
+      mealChoice: guest.mealChoice,
     };
   }
 
@@ -50,6 +53,7 @@ export function makePublicRsvpService(repos: Repositories) {
         token,
         rsvpStatus: parsed.rsvpStatus,
         plusOne: parsed.plusOne,
+        mealChoice: parsed.mealChoice,
       });
       if (!updated) throw new NotFoundError(INVALID);
       return viewOf(updated);

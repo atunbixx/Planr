@@ -18,6 +18,7 @@ type GuestRow = {
   plusOne: boolean;
   rsvpStatus: string;
   rsvpToken: string;
+  mealChoice: string | null;
   notes: string | null;
 };
 
@@ -120,6 +121,7 @@ export class PrismaGuestRepository implements GuestRepository {
       plusOne: row.plusOne,
       rsvpStatus: row.rsvpStatus as RsvpStatus,
       rsvpToken: row.rsvpToken,
+      mealChoice: row.mealChoice,
       notes: row.notes,
     };
   }
@@ -133,12 +135,14 @@ export class PrismaGuestRepository implements GuestRepository {
     token: string;
     rsvpStatus: RsvpStatus;
     plusOne?: boolean;
+    mealChoice?: string | null;
   }): Promise<GuestRecord | null> {
     const result = await this.prisma.guest.updateMany({
       where: { rsvpToken: input.token },
       data: {
         rsvpStatus: input.rsvpStatus,
         ...(input.plusOne !== undefined ? { plusOne: input.plusOne } : {}),
+        ...(input.mealChoice !== undefined ? { mealChoice: input.mealChoice } : {}),
       },
     });
     if (result.count === 0) return null;
