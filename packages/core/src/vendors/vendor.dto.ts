@@ -27,6 +27,7 @@ export const vendorInput = z.object({
   website: optionalText(200),
   status: z.enum(["researching", "contacted", "quoted", "booked", "declined"]).optional(),
   cost: optionalCost,
+  deposit: optionalCost,
   notes: optionalText(2000),
 });
 
@@ -43,6 +44,7 @@ export function toVendorWrite(input: VendorParsed): VendorWrite {
     website: input.website ?? null,
     status: input.status ?? "researching",
     costCents: input.cost ?? 0,
+    depositPaidCents: input.deposit ?? 0,
     notes: input.notes ?? null,
   };
 }
@@ -57,6 +59,7 @@ export function toVendorPatch(input: Partial<VendorParsed>): Partial<VendorWrite
   if (input.website !== undefined) p.website = input.website ?? null;
   if (input.status !== undefined) p.status = input.status;
   if (input.cost !== undefined) p.costCents = input.cost;
+  if (input.deposit !== undefined) p.depositPaidCents = input.deposit;
   if (input.notes !== undefined) p.notes = input.notes ?? null;
   return p;
 }

@@ -40,7 +40,25 @@ describe("vendor service", () => {
     });
     expect(await vendors.list(ownerUserId, { eventId: event.id })).toHaveLength(2);
     const s = await vendors.summary(ownerUserId, { eventId: event.id });
-    expect(s).toEqual({ total: 2, booked: 1, totalBookedCents: 120000 });
+    expect(s).toEqual({
+      total: 2,
+      byStatus: { researching: 0, contacted: 0, quoted: 1, booked: 1, declined: 0 },
+      estimatedCents: 370_000,
+      paidCents: 0,
+      outstandingCents: 370_000,
+    });
+  });
+
+  it("tracks deposits paid and outstanding balance", async () => {
+    const { vendors, event, ownerUserId } = await setup();
+    await vendors.create(ownerUserId, {
+      eventId: event.id,
+      vendor: { name: "Venue", status: "booked", cost: "10000", deposit: "2500" },
+    });
+    const s = await vendors.summary(ownerUserId, { eventId: event.id });
+    expect(s.estimatedCents).toBe(1_000_000);
+    expect(s.paidCents).toBe(250_000);
+    expect(s.outstandingCents).toBe(750_000);
   });
 
   it("updates a vendor and 404s an unknown one", async () => {

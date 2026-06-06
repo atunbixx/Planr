@@ -14,35 +14,67 @@ function paths(formData: FormData): { eventId: string; orgId: string } {
 function revalidate(orgId: string, eventId: string) {
   revalidatePath(`/dashboard/org/${orgId}/event/${eventId}/vendors`);
 }
+const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
 export async function addVendorAction(formData: FormData) {
   const { eventId, orgId } = paths(formData);
-  const name = String(formData.get("name") ?? "").trim();
-  const category = String(formData.get("category") ?? "");
-  const contactEmail = String(formData.get("contactEmail") ?? "");
-  const status = String(formData.get("status") ?? "researching") as Status;
-  const cost = String(formData.get("cost") ?? "");
+  const name = str(formData, "name").trim();
   if (!eventId || !name) return;
   await (await getServerCaller()).vendors.create({
     eventId,
-    vendor: { name, category, contactEmail, status, cost },
+    vendor: {
+      name,
+      category: str(formData, "category"),
+      contactName: str(formData, "contactName"),
+      contactEmail: str(formData, "contactEmail"),
+      contactPhone: str(formData, "contactPhone"),
+      website: str(formData, "website"),
+      status: (str(formData, "status") || "researching") as Status,
+      cost: str(formData, "cost"),
+      deposit: str(formData, "deposit"),
+      notes: str(formData, "notes"),
+    },
   });
   revalidate(orgId, eventId);
 }
 
 export async function updateVendorAction(formData: FormData) {
   const { eventId, orgId } = paths(formData);
-  const vendorId = String(formData.get("vendorId") ?? "");
-  const status = String(formData.get("status") ?? "researching") as Status;
-  const cost = String(formData.get("cost") ?? "");
+  const vendorId = str(formData, "vendorId");
+  const name = str(formData, "name").trim();
+  if (!eventId || !vendorId || !name) return;
+  await (await getServerCaller()).vendors.update({
+    eventId,
+    vendorId,
+    patch: {
+      name,
+      category: str(formData, "category"),
+      contactName: str(formData, "contactName"),
+      contactEmail: str(formData, "contactEmail"),
+      contactPhone: str(formData, "contactPhone"),
+      website: str(formData, "website"),
+      status: (str(formData, "status") || "researching") as Status,
+      cost: str(formData, "cost"),
+      deposit: str(formData, "deposit"),
+      notes: str(formData, "notes"),
+    },
+  });
+  revalidate(orgId, eventId);
+}
+
+// Quick stage change from a card (the pipeline board).
+export async function moveVendorAction(formData: FormData) {
+  const { eventId, orgId } = paths(formData);
+  const vendorId = str(formData, "vendorId");
+  const status = str(formData, "status") as Status;
   if (!eventId || !vendorId) return;
-  await (await getServerCaller()).vendors.update({ eventId, vendorId, patch: { status, cost } });
+  await (await getServerCaller()).vendors.update({ eventId, vendorId, patch: { status } });
   revalidate(orgId, eventId);
 }
 
 export async function removeVendorAction(formData: FormData) {
   const { eventId, orgId } = paths(formData);
-  const vendorId = String(formData.get("vendorId") ?? "");
+  const vendorId = str(formData, "vendorId");
   if (!eventId || !vendorId) return;
   await (await getServerCaller()).vendors.remove({ eventId, vendorId });
   revalidate(orgId, eventId);

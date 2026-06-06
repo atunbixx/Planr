@@ -14,6 +14,7 @@ describe("vendorInput", () => {
       website: null,
       status: "researching",
       costCents: 0,
+      depositPaidCents: 0,
       notes: null,
     });
   });

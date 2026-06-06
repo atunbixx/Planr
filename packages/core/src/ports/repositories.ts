@@ -515,6 +515,7 @@ export interface VendorRecord {
   website: string | null;
   status: VendorStatus;
   costCents: number;
+  depositPaidCents: number;
   notes: string | null;
 }
 
@@ -527,13 +528,17 @@ export interface VendorWrite {
   website: string | null;
   status: VendorStatus;
   costCents: number;
+  depositPaidCents: number;
   notes: string | null;
 }
 
 export interface VendorSummary {
   total: number;
-  booked: number;
-  totalBookedCents: number;
+  byStatus: Record<VendorStatus, number>;
+  // Money across non-declined vendors.
+  estimatedCents: number;
+  paidCents: number;
+  outstandingCents: number;
 }
 
 export interface VendorRepository {

@@ -619,11 +619,17 @@ export function makeFakeRepositories(): Repositories {
         const mine = vendors.filter(
           (v) => v.organizationId === organizationId && v.eventId === eventId,
         );
-        const booked = mine.filter((v) => v.status === "booked");
+        const byStatus = { researching: 0, contacted: 0, quoted: 0, booked: 0, declined: 0 };
+        for (const v of mine) byStatus[v.status] += 1;
+        const active = mine.filter((v) => v.status !== "declined");
+        const estimatedCents = active.reduce((s, v) => s + v.costCents, 0);
+        const paidCents = active.reduce((s, v) => s + v.depositPaidCents, 0);
         return {
           total: mine.length,
-          booked: booked.length,
-          totalBookedCents: booked.reduce((s, v) => s + v.costCents, 0),
+          byStatus,
+          estimatedCents,
+          paidCents,
+          outstandingCents: estimatedCents - paidCents,
         };
       },
     },

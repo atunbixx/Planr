@@ -237,10 +237,11 @@ model Vendor {
   contactEmail   String?
   contactPhone   String?
   website        String?
-  status         VendorStatus @default(researching)
-  costCents      Int          @default(0)
-  notes          String?
-  createdAt      DateTime     @default(now())
+  status           VendorStatus @default(researching)
+  costCents        Int          @default(0)
+  depositPaidCents Int          @default(0)
+  notes            String?
+  createdAt        DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

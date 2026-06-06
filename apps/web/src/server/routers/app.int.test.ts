@@ -376,9 +376,9 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     expect(v.costCents).toBe(120000);
     await caller.vendors.create({ eventId: event.id, vendor: { name: "Snaps", category: "Photography" } });
     const summary = await caller.vendors.summary({ eventId: event.id });
-    expect(summary).toMatchObject({ total: 2, booked: 1, totalBookedCents: 120000 });
+    expect(summary).toMatchObject({ total: 2, byStatus: { booked: 1 }, estimatedCents: 120000 });
     await caller.vendors.update({ eventId: event.id, vendorId: v.id, patch: { status: "declined" } });
-    expect((await caller.vendors.summary({ eventId: event.id })).booked).toBe(0);
+    expect((await caller.vendors.summary({ eventId: event.id })).byStatus.booked).toBe(0);
 
     const viewer = await syncAuthUser(repos, { authUserId: "auth_venv", email: "venv@x.com", name: null });
     await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });

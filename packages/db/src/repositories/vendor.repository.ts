@@ -13,6 +13,7 @@ type Row = {
   website: string | null;
   status: string;
   costCents: number;
+  depositPaidCents: number;
   notes: string | null;
 };
 
@@ -70,19 +71,28 @@ export class PrismaVendorRepository implements VendorRepository {
 
   async summaryByEvent(input: { organizationId: string; eventId: string }): Promise<VendorSummary> {
     const where = { organizationId: input.organizationId, eventId: input.eventId };
-    const [total, booked] = await Promise.all([
-      this.prisma.vendor.count({ where }),
+    const [grouped, active] = await Promise.all([
+      this.prisma.vendor.groupBy({ by: ["status"], where, _count: { _all: true } }),
       this.prisma.vendor.aggregate({
-        where: { ...where, status: "booked" },
-        _count: { _all: true },
-        _sum: { costCents: true },
+        where: { ...where, status: { not: "declined" } },
+        _sum: { costCents: true, depositPaidCents: true },
       }),
     ]);
-    return {
-      total,
-      booked: booked._count._all,
-      totalBookedCents: booked._sum.costCents ?? 0,
-    };
+    const byStatus = {
+      researching: 0,
+      contacted: 0,
+      quoted: 0,
+      booked: 0,
+      declined: 0,
+    } as VendorSummary["byStatus"];
+    let total = 0;
+    for (const g of grouped) {
+      byStatus[g.status as keyof typeof byStatus] = g._count._all;
+      total += g._count._all;
+    }
+    const estimatedCents = active._sum.costCents ?? 0;
+    const paidCents = active._sum.depositPaidCents ?? 0;
+    return { total, byStatus, estimatedCents, paidCents, outstandingCents: estimatedCents - paidCents };
   }
 
   private toRecord(row: Row): VendorRecord {
@@ -98,6 +108,7 @@ export class PrismaVendorRepository implements VendorRepository {
       website: row.website,
       status: row.status as VendorRecord["status"],
       costCents: row.costCents,
+      depositPaidCents: row.depositPaidCents,
       notes: row.notes,
     };
   }

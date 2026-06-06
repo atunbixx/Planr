@@ -567,7 +567,7 @@ describe("Prisma repository adapters", () => {
       organizationId: org.id, eventTypeKey: "wedding", name: "V Wedding", date: null,
     });
     const base = { organizationId: org.id, eventId: event.id, contactName: null, contactEmail: null,
-      contactPhone: null, website: null, notes: null };
+      contactPhone: null, website: null, notes: null, depositPaidCents: 0 };
     await repos.vendors.create({ ...base, category: "Photography", name: "Snaps", status: "quoted", costCents: 250000 });
     const florist = await repos.vendors.create({ ...base, category: "Catering", name: "Bloom", status: "booked", costCents: 120000 });
 
@@ -581,7 +581,13 @@ describe("Prisma repository adapters", () => {
     expect(updated).toMatchObject({ costCents: 150000 });
 
     const summary = await repos.vendors.summaryByEvent({ organizationId: org.id, eventId: event.id });
-    expect(summary).toEqual({ total: 2, booked: 1, totalBookedCents: 150000 });
+    expect(summary).toEqual({
+      total: 2,
+      byStatus: { researching: 0, contacted: 0, quoted: 1, booked: 1, declined: 0 },
+      estimatedCents: 400000,
+      paidCents: 0,
+      outstandingCents: 400000,
+    });
 
     expect(await repos.vendors.remove({ organizationId: "other", eventId: event.id, id: florist.id })).toBe(false);
     expect(await repos.vendors.remove({ organizationId: org.id, eventId: event.id, id: florist.id })).toBe(true);

@@ -10,6 +10,7 @@ const vendorInput = z.object({
   website: z.string().max(200).optional(),
   status: z.enum(["researching", "contacted", "quoted", "booked", "declined"]).optional(),
   cost: z.string().max(20).optional(),
+  deposit: z.string().max(20).optional(),
   notes: z.string().max(2000).optional(),
 });
 

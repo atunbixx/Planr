@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("host tracks a vendor: add, book, see committed total, decline, remove", async ({ page }) => {
+test("host runs the vendor pipeline: add, track payment, move stage, decline, remove", async ({ page }) => {
   const email = `ven_${Date.now()}@example.com`;
 
   await page.goto("/sign-up");
@@ -18,24 +18,34 @@ test("host tracks a vendor: add, book, see committed total, decline, remove", as
   await page.locator(`[data-module="vendors"] a`).click();
   await expect(page).toHaveURL(/\/vendors$/);
 
-  // Add a booked florist with a cost
+  // Add a booked florist with a cost and a part-payment
+  await page.getByRole("group").getByText("+ Add a vendor").click();
   await page.getByLabel("Vendor name").fill("Bloom Florists");
   await page.getByLabel("Vendor category").fill("Florist");
   await page.getByLabel("Vendor cost").fill("1200");
+  await page.getByLabel("Vendor paid").fill("300");
   await page.getByLabel("Vendor status").selectOption("booked");
   await page.getByRole("button", { name: "Add vendor" }).click();
 
   await expect(page.getByText("Bloom Florists")).toBeVisible();
-  await expect(page.getByText("1 booked", { exact: false })).toBeVisible();
-  await expect(page.getByText("£1,200.00 committed", { exact: false })).toBeVisible();
+  // Summary reflects estimate, paid, outstanding + stage count
+  await expect(page.getByText("£1,200.00", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("Booked 1", { exact: false })).toBeVisible();
 
-  // Decline it → no longer counts as booked
-  const row = page.locator("li", { hasText: "Bloom Florists" });
-  await row.getByLabel("Status for Bloom Florists").selectOption("declined");
-  await row.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("0 booked", { exact: false })).toBeVisible();
+  // Card shows payment progress
+  const card = page.locator('[data-vendor]', { hasText: "Bloom Florists" });
+  await expect(card.getByText("£300.00 paid", { exact: false })).toBeVisible();
+  await expect(card.getByText("£900.00 due", { exact: false })).toBeVisible();
 
-  // Remove
-  await page.locator("li", { hasText: "Bloom Florists" }).getByRole("button", { name: "Remove" }).click();
+  // Decline via the quick stage move → no longer counts as booked
+  await card.getByLabel("Stage for Bloom Florists").selectOption("declined");
+  await card.getByRole("button", { name: "Move" }).click();
+  await expect(page.getByText("Booked 0", { exact: false })).toBeVisible();
+
+  // Declined vendors live in their own section; remove from there
+  await page.getByText(/^Declined \(1\)$/).click();
+  const declinedCard = page.locator('[data-vendor]', { hasText: "Bloom Florists" });
+  await declinedCard.getByText("Edit").click();
+  await declinedCard.getByRole("button", { name: "Remove vendor" }).click();
   await expect(page.getByText("No vendors yet", { exact: false })).toBeVisible();
 });

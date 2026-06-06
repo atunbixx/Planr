@@ -1,24 +1,133 @@
-/* ---- vendors ------------------------------------------------------------ */
-.vencat { margin-top: 22px; }
-.vencat h2 { font-size: 1.05rem; margin: 0 0 8px; }
-.vendors { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.vendors li {
+/* ---- vendors: pipeline board ------------------------------------------- */
+.vendors-page { max-width: 1100px; }
+
+.vsummary {
   display: flex;
-  align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 14px 18px;
+  margin-bottom: 14px;
 }
-.vendors li[data-status="booked"] { border-left-color: var(--sage); }
-.vendors li[data-status="declined"] { border-left-color: var(--clay); opacity: 0.7; }
-.vendors li[data-status="quoted"] { border-left-color: var(--gold); }
-.vendors .vname { font-weight: 600; }
-.vendors .vmeta { color: var(--ink-faint); font-size: 0.85rem; margin-right: auto; }
-.vendors .ginline { flex-direction: row; gap: 6px; margin: 0; }
-.vendors .ginline input[type="number"] { width: 92px; padding: 6px 8px; font-size: 0.8rem; }
-.vendors .ginline select { width: auto; padding: 6px 8px; font-size: 0.82rem; }
-.vendors .ginline button { padding: 7px 10px; font-size: 0.74rem; }
+.vsum-money { display: flex; flex-wrap: wrap; gap: 18px; color: var(--ink-soft); }
+.vsum-money strong { color: var(--ink); }
+.vsum-out strong { color: var(--clay); }
+.vsum-stages { display: flex; flex-wrap: wrap; gap: 6px; }
+.vsum-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.vsum-chip[data-status="booked"] { background: var(--sage-tint, #e8ede2); color: var(--sage); border-color: var(--sage); }
+.vsum-chip[data-status="quoted"] { color: var(--gold); border-color: var(--gold); }
+.vsum-chip[data-status="declined"] { color: var(--clay); }
+
+.vaddpanel { margin-bottom: 16px; }
+.vaddpanel > summary { cursor: pointer; font-weight: 600; }
+.vform { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.vform input, .vform select, .vform textarea { width: 100%; font: inherit; }
+.vform textarea { resize: vertical; }
+.vform-money { display: flex; gap: 8px; }
+.vform-money input { width: 50%; }
+.vform-actions { display: flex; gap: 8px; }
+
+/* board */
+.vboard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 860px) { .vboard { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .vboard { grid-template-columns: 1fr; } }
+.vcol {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 80px;
+}
+.vcol-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.vcol[data-stage="booked"] .vcol-head { color: var(--sage); }
+.vcol-count {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.72rem;
+}
+.vcol-empty { color: var(--ink-faint); text-align: center; margin: 4px 0; }
+
+/* card */
+.vcard {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vcard[data-status="booked"] { border-left-color: var(--sage); }
+.vcard[data-status="quoted"] { border-left-color: var(--gold); }
+.vcard[data-status="declined"] { border-left-color: var(--clay); opacity: 0.75; }
+.vcard-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.vcard .vname { font-weight: 700; }
+.vcard .vcat {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--sage);
+  background: var(--sage-tint, #e8ede2);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.vcontact { display: flex; flex-direction: column; gap: 2px; font-size: 0.8rem; }
+.vcontact a { color: var(--clay); }
+.vpay { display: flex; flex-direction: column; gap: 3px; }
+.vpay-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--ink-soft); }
+.vpay-bal { font-weight: 600; color: var(--clay); }
+.vpay-bar { height: 5px; border-radius: 999px; background: var(--paper); overflow: hidden; }
+.vpay-fill { display: block; height: 100%; background: var(--sage); border-radius: 999px; }
+.vpay-total { font-size: 0.72rem; color: var(--ink-faint); }
+.vnotes { font-size: 0.82rem; color: var(--ink-soft); margin: 0; white-space: pre-wrap; }
+.vcard-foot { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 8px; }
+.vcard-foot .ginline { flex-direction: row; gap: 6px; margin: 0; }
+.vcard-foot select { width: auto; flex: 1; padding: 5px 8px; font-size: 0.78rem; }
+.vcard-foot button { padding: 5px 10px; font-size: 0.74rem; }
+.vedit > summary { cursor: pointer; font-size: 0.78rem; padding: 4px 0; list-style: none; color: var(--ink-soft); }
+.vedit > summary::-webkit-details-marker { display: none; }
+.vedit .vform { margin-top: 6px; }
+.vremove { margin-top: 6px; }
+.danger-text { color: var(--clay); }
+
+.vdeclined { margin-top: 16px; }
+.vdeclined > summary { cursor: pointer; color: var(--ink-soft); font-size: 0.85rem; }
+.vboard-declined {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
