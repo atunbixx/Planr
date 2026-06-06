@@ -11,6 +11,12 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+}
+
 export default async function SeatingPage({
   params,
 }: {
@@ -68,6 +74,26 @@ export default async function SeatingPage({
                 {t.guests.length}/{t.capacity}
               </span>
             </header>
+
+            <div
+              className="tableviz"
+              style={{ ["--n" as string]: Math.max(t.capacity, t.guests.length) }}
+            >
+              <span className="surface">{t.guests.length}/{t.capacity}</span>
+              {Array.from({ length: Math.max(t.capacity, t.guests.length) }).map((_, i) => {
+                const g = t.guests[i];
+                return (
+                  <span
+                    key={i}
+                    className={`chair${g ? " filled" : ""}${i >= t.capacity ? " over" : ""}`}
+                    style={{ ["--i" as string]: i }}
+                    title={g ? g.name : "Empty seat"}
+                  >
+                    <span className="ini">{g ? initials(g.name) : ""}</span>
+                  </span>
+                );
+              })}
+            </div>
 
             <ul className="seated">
               {t.guests.map((g) => (

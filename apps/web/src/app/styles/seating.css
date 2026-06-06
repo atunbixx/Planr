@@ -22,6 +22,53 @@
   margin-bottom: 8px;
 }
 .tablehead .tname { font-weight: 700; font-size: 1.05rem; }
+
+/* visual round table with chairs placed around it (rotate + translate; no JS/trig) */
+.tableviz {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  margin: 6px auto 12px;
+}
+.tableviz .surface {
+  position: absolute;
+  inset: 46px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.tablecard[data-over-capacity="true"] .surface { border-color: var(--clay); color: var(--clay-deep); }
+.tableviz .chair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--card);
+  border: 1px dashed var(--line-strong);
+  transform: rotate(calc(var(--i) * 360deg / var(--n))) translateY(-78px);
+}
+.tableviz .chair.filled {
+  background: var(--sage-tint);
+  border: 1px solid var(--sage);
+  color: var(--sage);
+}
+.tableviz .chair.over { border-color: var(--clay); background: var(--clay-tint); color: var(--clay-deep); }
+.tableviz .chair .ini {
+  font-size: 0.66rem;
+  font-weight: 700;
+  /* counter-rotate so the initials stay upright */
+  transform: rotate(calc(-1 * var(--i) * 360deg / var(--n)));
+}
 .tablehead .tcount { font-size: 0.85rem; color: var(--ink-faint); font-weight: 600; }
 .tablecard[data-over-capacity="true"] .tcount { color: var(--clay-deep); }
 
