@@ -285,6 +285,26 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
+  it("tasks: generates a dated wedding checklist via the router (one-shot)", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_gen", email: "gen@x.com", name: "Gen" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Gen Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Our Day",
+      date: "2027-06-12",
+    });
+    const res = await caller.tasks.generateChecklist({ eventId: event.id });
+    expect(res.created).toBeGreaterThan(30);
+    const page = await caller.tasks.list({ eventId: event.id, limit: 100 });
+    expect(page.tasks.length).toBe(res.created);
+    // second run refused (one-shot)
+    await expect(caller.tasks.generateChecklist({ eventId: event.id })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
+
   it("manages budget items through the router with exact money + overspend summary", async () => {
     const owner = await syncAuthUser(repos, { authUserId: "auth_bg", email: "bg@x.com", name: "BG" });
     const caller = appRouter.createCaller(ctxFor(owner));

@@ -42,4 +42,9 @@ export const tasksRouter = router({
     .mutation(({ ctx, input }) =>
       ctx.container.tasks.remove(ctx.user.id, { eventId: input.eventId, taskId: input.taskId }),
     ),
+  generateChecklist: authedProcedure
+    .input(z.object({ eventId: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.container.tasks.generateFromTemplate(ctx.user.id, { eventId: input.eventId }),
+    ),
 });

@@ -10,6 +10,13 @@ function paths(formData: FormData): { eventId: string; orgId: string } {
   };
 }
 
+export async function generateChecklistAction(formData: FormData) {
+  const { eventId, orgId } = paths(formData);
+  if (!eventId) return;
+  await (await getServerCaller()).tasks.generateChecklist({ eventId });
+  revalidatePath(`/dashboard/org/${orgId}/event/${eventId}/tasks`);
+}
+
 export async function addTaskAction(formData: FormData) {
   const { eventId, orgId } = paths(formData);
   const title = String(formData.get("title") ?? "").trim();

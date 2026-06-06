@@ -122,6 +122,69 @@ describe("task service", () => {
     ).rejects.toThrowError(/forbidden/i);
   });
 
+  it("generates a dated wedding checklist (one-shot; requires a date)", async () => {
+    const repos = makeFakeRepositories();
+    const tenancy = makeTenancyService(repos);
+    const events = makeEventService(repos);
+    const taskSvc = makeTaskService(repos, { freeLaunch: true });
+    const { organization, ownerMembership } = await tenancy.provisionOrganization({
+      name: "W",
+      creator: { authUserId: "auth_o", email: "o@x.com", name: "O" },
+    });
+    const owner = ownerMembership.userId;
+
+    // No date → refused
+    const noDate = await events.create({
+      organizationId: organization.id,
+      eventTypeKey: "wedding",
+      name: "No date",
+      date: null,
+    });
+    await expect(
+      taskSvc.generateFromTemplate(owner, { eventId: noDate.id }),
+    ).rejects.toThrowError(/date/i);
+
+    // With a date → generates a timeline with due dates
+    const dated = await events.create({
+      organizationId: organization.id,
+      eventTypeKey: "wedding",
+      name: "Our Wedding",
+      date: new Date("2027-06-12T00:00:00.000Z"),
+    });
+    const res = await taskSvc.generateFromTemplate(owner, { eventId: dated.id });
+    expect(res.created).toBeGreaterThan(30);
+    const page = await taskSvc.list(owner, { eventId: dated.id, limit: 100 });
+    expect(page.tasks.length).toBe(res.created);
+    expect(page.tasks.every((t) => t.dueDate !== null)).toBe(true);
+    // earliest due date is well before the wedding
+    expect(page.tasks[0]!.dueDate!.getTime()).toBeLessThan(new Date("2027-06-12").getTime());
+
+    // One-shot: second run refused
+    await expect(
+      taskSvc.generateFromTemplate(owner, { eventId: dated.id }),
+    ).rejects.toThrowError(/already/i);
+  });
+
+  it("refuses to generate a checklist for an event type with no template", async () => {
+    const repos = makeFakeRepositories();
+    const tenancy = makeTenancyService(repos);
+    const events = makeEventService(repos);
+    const taskSvc = makeTaskService(repos, { freeLaunch: true });
+    const { organization, ownerMembership } = await tenancy.provisionOrganization({
+      name: "B",
+      creator: { authUserId: "auth_b", email: "b@x.com", name: "B" },
+    });
+    const birthday = await events.create({
+      organizationId: organization.id,
+      eventTypeKey: "birthday",
+      name: "Party",
+      date: new Date("2027-01-01T00:00:00.000Z"),
+    });
+    await expect(
+      taskSvc.generateFromTemplate(ownerMembership.userId, { eventId: birthday.id }),
+    ).rejects.toThrowError(/template/i);
+  });
+
   it("routes through the entitlement engine when freeLaunch is off (gate is wired)", async () => {
     const free = await setup({ freeLaunch: true });
     await expect(

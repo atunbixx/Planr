@@ -3,6 +3,7 @@ import { makeAuthorizationService } from "../services/authorization.service";
 import { resolveModuleAccess } from "../entitlements/resolver";
 import { NotFoundError, ForbiddenError } from "../errors";
 import { taskInput, toTaskWrite, toTaskPatch, type TaskInput } from "./task.dto";
+import { checklistTemplateFor } from "./checklist-template";
 import { FREE_LAUNCH } from "../billing/launch";
 
 const MAX_LIMIT = 100;
@@ -98,6 +99,46 @@ export function makeTaskService(repos: Repositories, opts: { freeLaunch?: boolea
         id: input.taskId,
       });
       if (!ok) throw new NotFoundError("Task not found.");
+    },
+
+    /**
+     * One-shot: populate the event's checklist from its event-type template, with due dates derived
+     * from the event date. Requires a date, a non-empty template, and an empty checklist (so it can't
+     * duplicate). Returns the number of tasks created.
+     */
+    async generateFromTemplate(
+      userId: string,
+      input: { eventId: string },
+    ): Promise<{ created: number }> {
+      const event = await gateWrite(userId, input.eventId);
+      if (!event.date) {
+        throw new ForbiddenError("Set an event date before generating a checklist.");
+      }
+      const template = checklistTemplateFor(event.eventTypeKey);
+      if (template.length === 0) {
+        throw new ForbiddenError("No checklist template for this event type yet.");
+      }
+      const existing = await repos.tasks.summaryByEvent({
+        organizationId: event.organizationId,
+        eventId: event.id,
+        now: new Date(),
+      });
+      if (existing.total > 0) {
+        throw new ForbiddenError("This checklist already has tasks.");
+      }
+      const eventTime = event.date.getTime();
+      for (const item of template) {
+        const dueDate = new Date(eventTime - item.offsetDays * 86_400_000);
+        await repos.tasks.create({
+          organizationId: event.organizationId,
+          eventId: event.id,
+          title: item.title,
+          notes: null,
+          done: false,
+          dueDate,
+        });
+      }
+      return { created: template.length };
     },
   };
 }

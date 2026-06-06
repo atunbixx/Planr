@@ -48,3 +48,31 @@ test("host adds tasks, marks one done, sets a past due date → overdue, removes
   await expect(page.getByText("Send invitations")).toHaveCount(0);
   await expect(page.getByText("1 tasks", { exact: false })).toBeVisible();
 });
+
+test("host generates a dated wedding checklist from the event date", async ({ page }) => {
+  const email = `chk_${Date.now()}@example.com`;
+
+  await page.goto("/sign-up");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("password123!");
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByRole("link", { name: /planning my own event/i }).click();
+  await page.getByLabel("Space name").fill("Our Wedding Space");
+  await page.getByLabel("Event type").selectOption("wedding");
+  await page.getByLabel("Event name").fill("Our Wedding");
+  await page.getByLabel("Event date").fill("2099-06-12");
+  await page.getByRole("button", { name: "Start planning" }).click();
+  await expect(page).toHaveURL(/\/event\/.+/);
+
+  // Open the checklist and generate from the template
+  await page.locator(`[data-module="tasks"] a`).click();
+  await expect(page).toHaveURL(/\/tasks$/);
+  await page.getByRole("button", { name: "Generate checklist" }).click();
+
+  // The dated timeline appears
+  await expect(page.getByText("Book your venue")).toBeVisible();
+  await expect(page.getByText("Finalise the seating plan")).toBeVisible();
+  // and the generate banner is gone (one-shot)
+  await expect(page.getByRole("button", { name: "Generate checklist" })).toHaveCount(0);
+});

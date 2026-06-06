@@ -55,6 +55,11 @@ export { makeGuestService, type GuestService } from "./guests/guest.service";
 export { taskInput, toTaskWrite, toTaskPatch, type TaskInput } from "./tasks/task.dto";
 export { makeTaskService, type TaskService } from "./tasks/task.service";
 export {
+  checklistTemplateFor,
+  hasChecklistTemplate,
+  type ChecklistTemplateItem,
+} from "./tasks/checklist-template";
+export {
   budgetItemInput,
   toBudgetItemWrite,
   toBudgetItemPatch,
