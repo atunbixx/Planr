@@ -29,7 +29,11 @@ export default async function PublicSitePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const site = await (await getServerCaller()).website.getPublic({ slug });
+  const caller = await getServerCaller();
+  const [site, gifts] = await Promise.all([
+    caller.website.getPublic({ slug }),
+    caller.registry.publicForSlug({ slug }),
+  ]);
   if (!site) notFound();
   const { website, event } = site;
   const date = event.date ? new Date(event.date) : null;
@@ -56,6 +60,26 @@ export default async function PublicSitePage({
           <p>{s.body}</p>
         </section>
       ))}
+
+      {gifts.length > 0 ? (
+        <section className="site-section">
+          <h2>Gift registry</h2>
+          <ul className="site-gifts">
+            {gifts.map((g) => (
+              <li key={g.id}>
+                {g.url ? (
+                  <a href={g.url} target="_blank" rel="noreferrer">
+                    {g.title}
+                  </a>
+                ) : (
+                  <span>{g.title}</span>
+                )}
+                {g.note ? <span className="site-gift-note"> — {g.note}</span> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <footer className="site-foot">Made with Planr</footer>
     </main>

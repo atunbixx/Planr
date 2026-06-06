@@ -13,6 +13,7 @@ import type {
   AnnouncementRecord,
   EventWebsiteRecord,
   VendorRecord,
+  RegistryItemRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -40,6 +41,7 @@ export function makeFakeRepositories(): Repositories {
   let annClock = 0; // deterministic, strictly-increasing createdAt for ordering
   const websites: EventWebsiteRecord[] = [];
   const vendors: VendorRecord[] = [];
+  const registry: RegistryItemRecord[] = [];
 
   return {
     orgs: {
@@ -620,6 +622,40 @@ export function makeFakeRepositories(): Repositories {
           booked: booked.length,
           totalBookedCents: booked.reduce((s, v) => s + v.costCents, 0),
         };
+      },
+    },
+    registry: {
+      async create({ organizationId, eventId, ...rest }) {
+        const created: RegistryItemRecord = { id: id("reg"), organizationId, eventId, ...rest };
+        registry.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId }) {
+        return registry
+          .filter((r) => r.organizationId === organizationId && r.eventId === eventId)
+          .map((r) => ({ ...r }));
+      },
+      async getById({ organizationId, eventId, id: rid }) {
+        const found = registry.find(
+          (r) => r.id === rid && r.organizationId === organizationId && r.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async update({ organizationId, eventId, id: rid, patch }) {
+        const r = registry.find(
+          (x) => x.id === rid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!r) return null;
+        Object.assign(r, patch);
+        return { ...r };
+      },
+      async remove({ organizationId, eventId, id: rid }) {
+        const i = registry.findIndex(
+          (x) => x.id === rid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        registry.splice(i, 1);
+        return true;
       },
     },
   };

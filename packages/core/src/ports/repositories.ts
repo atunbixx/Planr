@@ -442,6 +442,43 @@ export interface Repositories {
   announcements: AnnouncementRepository;
   websites: EventWebsiteRepository;
   vendors: VendorRepository;
+  registry: RegistryRepository;
+}
+
+export interface RegistryItemRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  title: string;
+  url: string | null;
+  note: string | null;
+  priceCents: number;
+}
+
+export interface RegistryItemWrite {
+  title: string;
+  url: string | null;
+  note: string | null;
+  priceCents: number;
+}
+
+export interface RegistryRepository {
+  create(
+    input: { organizationId: string; eventId: string } & RegistryItemWrite,
+  ): Promise<RegistryItemRecord>;
+  listByEvent(input: { organizationId: string; eventId: string }): Promise<RegistryItemRecord[]>;
+  getById(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<RegistryItemRecord | null>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<RegistryItemWrite>;
+  }): Promise<RegistryItemRecord | null>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
 }
 
 export interface VendorRecord {

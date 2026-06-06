@@ -19,6 +19,8 @@ import {
   makeWebsiteService,
   makePublicWebsiteService,
   makeVendorService,
+  makeRegistryService,
+  makePublicRegistryService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -49,6 +51,8 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       website: makeWebsiteService(repos),
       publicWebsite: makePublicWebsiteService(repos),
       vendors: makeVendorService(repos),
+      registry: makeRegistryService(repos),
+      publicRegistry: makePublicRegistryService(repos),
     },
   };
 }
@@ -289,6 +293,33 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await expect(
       ownerCaller.tasks.list({ eventId: "does-not-exist", limit: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("registry: host gifts appear on the published public site", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_reg", email: "reg@x.com", name: "Reg" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Gift Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Our Day",
+    });
+    await caller.registry.create({ eventId: event.id, item: { title: "Stand mixer", price: "199.99" } });
+    expect(await caller.registry.list({ eventId: event.id })).toHaveLength(1);
+
+    const site = await caller.website.editor({ eventId: event.id });
+    const pub = appRouter.createCaller(ctxFor(null));
+    expect(await pub.registry.publicForSlug({ slug: site.slug })).toEqual([]);
+    await caller.website.update({ eventId: event.id, patch: { published: true } });
+    const gifts = await pub.registry.publicForSlug({ slug: site.slug });
+    expect(gifts).toHaveLength(1);
+    expect(gifts[0]).toMatchObject({ title: "Stand mixer", priceCents: 19999 });
+
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_regv", email: "regv@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    await expect(
+      appRouter.createCaller(ctxFor(viewer)).registry.create({ eventId: event.id, item: { title: "x" } }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   it("vendors: CRUD + booked summary via the router; viewer can't write", async () => {

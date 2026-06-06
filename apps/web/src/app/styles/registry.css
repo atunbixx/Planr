@@ -1,0 +1,24 @@
+/* ---- registry (host) ---------------------------------------------------- */
+.gifts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gifts li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.gifts li.empty { color: var(--ink-faint); font-style: italic; border-left-color: var(--line-strong); }
+.gifts .gtitle { font-weight: 600; }
+.gifts .gprice { color: var(--ink-soft); font-size: 0.88rem; }
+.gifts .glink { font-size: 0.82rem; margin-left: auto; }
+.gifts .ginline { margin: 0; }
+.gifts .ginline button { padding: 7px 10px; font-size: 0.74rem; }
+
+/* ---- registry (public, on the event site) ------------------------------- */
+.site-gifts { list-style: none; margin: 0 auto; padding: 0; max-width: 46ch; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.site-gifts li { padding: 8px 0; border-bottom: 1px solid var(--s-line); }
+.site-gifts a { color: var(--s-accent); font-weight: 600; }
+.site-gift-note { color: var(--s-soft); }

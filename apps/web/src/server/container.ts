@@ -17,6 +17,8 @@ import {
   makeWebsiteService,
   makePublicWebsiteService,
   makeVendorService,
+  makeRegistryService,
+  makePublicRegistryService,
 } from "@planr/core";
 
 const repos = createRepositories(prisma);
@@ -41,6 +43,8 @@ export const container = {
   website: makeWebsiteService(repos),
   publicWebsite: makePublicWebsiteService(repos),
   vendors: makeVendorService(repos),
+  registry: makeRegistryService(repos),
+  publicRegistry: makePublicRegistryService(repos),
 };
 
 export type Container = typeof container;

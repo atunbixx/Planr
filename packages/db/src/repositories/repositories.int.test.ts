@@ -525,6 +525,24 @@ describe("Prisma repository adapters", () => {
     });
   });
 
+  it("registry: CRUD tenant-scoped", async () => {
+    const org = await repos.orgs.create({ name: "Reg Co" });
+    const event = await repos.events.create({
+      organizationId: org.id, eventTypeKey: "wedding", name: "R Wedding", date: null,
+    });
+    const item = await repos.registry.create({
+      organizationId: org.id, eventId: event.id, title: "Toaster", url: "https://x", note: null, priceCents: 4999,
+    });
+    expect(item).toMatchObject({ title: "Toaster", priceCents: 4999 });
+    expect(await repos.registry.listByEvent({ organizationId: org.id, eventId: event.id })).toHaveLength(1);
+    expect(await repos.registry.getById({ organizationId: "other", eventId: event.id, id: item.id })).toBeNull();
+    const up = await repos.registry.update({
+      organizationId: org.id, eventId: event.id, id: item.id, patch: { priceCents: 5999 },
+    });
+    expect(up).toMatchObject({ priceCents: 5999 });
+    expect(await repos.registry.remove({ organizationId: org.id, eventId: event.id, id: item.id })).toBe(true);
+  });
+
   it("vendors: CRUD tenant-scoped, category/name ordering, booked summary", async () => {
     const org = await repos.orgs.create({ name: "Vendor Co" });
     const event = await repos.events.create({

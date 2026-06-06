@@ -56,6 +56,9 @@ export type {
   VendorWrite,
   VendorSummary,
   VendorRepository,
+  RegistryItemRecord,
+  RegistryItemWrite,
+  RegistryRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
@@ -110,6 +113,19 @@ export {
 } from "./messaging/messaging.service";
 export { vendorInput, toVendorWrite, toVendorPatch, type VendorInput } from "./vendors/vendor.dto";
 export { makeVendorService, type VendorService } from "./vendors/vendor.service";
+export {
+  registryItemInput,
+  toRegistryItemWrite,
+  toRegistryItemPatch,
+  type RegistryItemInput,
+} from "./registry/registry.dto";
+export {
+  makeRegistryService,
+  type RegistryService,
+  makePublicRegistryService,
+  type PublicRegistryService,
+  type PublicGift,
+} from "./registry/registry.service";
 export { slugify } from "./website/slug";
 export {
   makeWebsiteService,

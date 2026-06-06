@@ -7,7 +7,16 @@ import { formatMoney } from "../../../../../../lib/money";
 export const dynamic = "force-dynamic";
 
 // Modules with a real page today. Everything else shows "Coming soon".
-const BUILT = new Set(["guests", "tasks", "budget", "seating", "rsvp", "messaging", "vendors"]);
+const BUILT = new Set([
+  "guests",
+  "tasks",
+  "budget",
+  "seating",
+  "rsvp",
+  "messaging",
+  "vendors",
+  "gift_registry",
+]);
 
 const EVENT_LABEL: Record<string, string> = {
   wedding: "Your wedding",
@@ -16,6 +25,9 @@ const EVENT_LABEL: Record<string, string> = {
   bridal_shower: "The celebration",
   corporate: "Your event",
 };
+
+// Module key → route segment (most match; gift_registry is the exception).
+const ROUTE_FOR: Record<string, string> = { gift_registry: "registry" };
 
 function pretty(module: string): string {
   return module.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -166,10 +178,11 @@ export default async function EventDashboard({
         <ul className="modules">
           {modules.map((m) => {
             const built = BUILT.has(m.module);
+            const route = ROUTE_FOR[m.module] ?? m.module;
             return (
               <li key={m.module} data-module={m.module} data-locked={m.locked} data-built={built}>
                 {built ? (
-                  <a className="mname mlink" href={`${base}/${m.module}`}>
+                  <a className="mname mlink" href={`${base}/${route}`}>
                     {pretty(m.module)}
                   </a>
                 ) : (
