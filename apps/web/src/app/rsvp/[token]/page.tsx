@@ -1,5 +1,5 @@
 import { getServerCaller } from "../../../server/caller";
-import { respondAction } from "./actions";
+import { respondAction, uploadPhotoAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +84,17 @@ export default async function PublicRsvpPage({
         </label>
         <button type="submit">Send RSVP</button>
       </form>
+
+      <section className="rsvpphoto">
+        <h2>Share a photo</h2>
+        <p>Add a snap from the day — it&apos;ll appear in the couple&apos;s gallery.</p>
+        <form action={uploadPhotoAction} className="rsvpphoto-form">
+          <input type="hidden" name="token" value={token} />
+          <input aria-label="Photo" name="photo" type="file" accept="image/*" required />
+          <input aria-label="Photo caption" name="caption" placeholder="caption (optional)" />
+          <button type="submit">Upload photo</button>
+        </form>
+      </section>
 
       {announcements.length > 0 ? (
         <section className="rsvpnews">

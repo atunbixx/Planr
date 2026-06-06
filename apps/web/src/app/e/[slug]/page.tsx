@@ -30,9 +30,10 @@ export default async function PublicSitePage({
 }) {
   const { slug } = await params;
   const caller = await getServerCaller();
-  const [site, gifts] = await Promise.all([
+  const [site, gifts, photos] = await Promise.all([
     caller.website.getPublic({ slug }),
     caller.registry.publicForSlug({ slug }),
+    caller.photos.publicBySlug({ slug }),
   ]);
   if (!site) notFound();
   const { website, event } = site;
@@ -78,6 +79,18 @@ export default async function PublicSitePage({
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {photos.length > 0 ? (
+        <section className="site-section">
+          <h2>Photos</h2>
+          <p>
+            {photos.length} {photos.length === 1 ? "photo" : "photos"} shared so far.
+          </p>
+          <a className="site-cta" href={`/e/${slug}/slideshow`}>
+            View the slideshow →
+          </a>
         </section>
       ) : null}
 

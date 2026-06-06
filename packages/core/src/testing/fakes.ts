@@ -14,6 +14,7 @@ import type {
   EventWebsiteRecord,
   VendorRecord,
   RegistryItemRecord,
+  PhotoRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -42,6 +43,8 @@ export function makeFakeRepositories(): Repositories {
   const websites: EventWebsiteRecord[] = [];
   const vendors: VendorRecord[] = [];
   const registry: RegistryItemRecord[] = [];
+  const photos: PhotoRecord[] = [];
+  let photoClock = 0;
 
   return {
     orgs: {
@@ -655,6 +658,34 @@ export function makeFakeRepositories(): Repositories {
         );
         if (i < 0) return false;
         registry.splice(i, 1);
+        return true;
+      },
+    },
+    photos: {
+      async create({ organizationId, eventId, storagePath, caption }) {
+        const created: PhotoRecord = {
+          id: id("pho"),
+          organizationId,
+          eventId,
+          storagePath,
+          caption,
+          createdAt: new Date(1_700_000_000_000 + photoClock++ * 1000),
+        };
+        photos.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId }) {
+        return photos
+          .filter((p) => p.organizationId === organizationId && p.eventId === eventId)
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+          .map((p) => ({ ...p }));
+      },
+      async remove({ organizationId, eventId, id: pid }) {
+        const i = photos.findIndex(
+          (x) => x.id === pid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        photos.splice(i, 1);
         return true;
       },
     },

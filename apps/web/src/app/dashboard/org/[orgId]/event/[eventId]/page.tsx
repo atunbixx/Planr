@@ -171,9 +171,14 @@ export default async function EventDashboard({
       <section className="dashtools">
         <div className="dashtools-head">
           <h2>All tools</h2>
-          <a className="ghost" href={`${base}/website`}>
-            Event website
-          </a>
+          <span className="dashtools-links">
+            <a className="ghost" href={`${base}/website`}>
+              Event website
+            </a>
+            <a className="ghost" href={`${base}/photos`}>
+              Photos
+            </a>
+          </span>
         </div>
         <ul className="modules">
           {modules.map((m) => {

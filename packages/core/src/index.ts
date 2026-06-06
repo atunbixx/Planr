@@ -59,6 +59,8 @@ export type {
   RegistryItemRecord,
   RegistryItemWrite,
   RegistryRepository,
+  PhotoRecord,
+  PhotoRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
@@ -126,6 +128,13 @@ export {
   type PublicRegistryService,
   type PublicGift,
 } from "./registry/registry.service";
+export {
+  makePhotoService,
+  type PhotoService,
+  makePublicPhotoService,
+  type PublicPhotoService,
+  type PublicPhoto,
+} from "./photos/photo.service";
 export { slugify } from "./website/slug";
 export {
   makeWebsiteService,

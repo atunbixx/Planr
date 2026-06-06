@@ -525,6 +525,24 @@ describe("Prisma repository adapters", () => {
     });
   });
 
+  it("photos: create, newest-first list, remove (tenant-scoped)", async () => {
+    const org = await repos.orgs.create({ name: "Photo Co" });
+    const event = await repos.events.create({
+      organizationId: org.id, eventTypeKey: "wedding", name: "P Wedding", date: null,
+    });
+    const a = await repos.photos.create({
+      organizationId: org.id, eventId: event.id, storagePath: "photos/a.jpg", caption: null,
+    });
+    const b = await repos.photos.create({
+      organizationId: org.id, eventId: event.id, storagePath: "photos/b.jpg", caption: "Hi",
+    });
+    const list = await repos.photos.listByEvent({ organizationId: org.id, eventId: event.id });
+    expect(list.map((p) => p.id)).toEqual([b.id, a.id]);
+    expect(await repos.photos.remove({ organizationId: "other", eventId: event.id, id: a.id })).toBe(false);
+    expect(await repos.photos.remove({ organizationId: org.id, eventId: event.id, id: a.id })).toBe(true);
+    expect(await repos.photos.listByEvent({ organizationId: org.id, eventId: event.id })).toHaveLength(1);
+  });
+
   it("registry: CRUD tenant-scoped", async () => {
     const org = await repos.orgs.create({ name: "Reg Co" });
     const event = await repos.events.create({

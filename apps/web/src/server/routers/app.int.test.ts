@@ -21,6 +21,8 @@ import {
   makeVendorService,
   makeRegistryService,
   makePublicRegistryService,
+  makePhotoService,
+  makePublicPhotoService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -53,6 +55,8 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       vendors: makeVendorService(repos),
       registry: makeRegistryService(repos),
       publicRegistry: makePublicRegistryService(repos),
+      photos: makePhotoService(repos),
+      publicPhotos: makePublicPhotoService(repos),
     },
   };
 }
@@ -293,6 +297,40 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await expect(
       ownerCaller.tasks.list({ eventId: "does-not-exist", limit: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("photos: host lists/removes; public slideshow reads a published site only", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_pho", email: "pho@x.com", name: "Pho" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Photo Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Our Day",
+    });
+    // seed a photo directly (the upload itself is storage I/O, exercised in E2E)
+    await repos.photos.create({
+      organizationId: org.id,
+      eventId: event.id,
+      storagePath: "photos/seed.jpg",
+      caption: "Hi",
+    });
+    const list = await caller.photos.list({ eventId: event.id });
+    expect(list).toHaveLength(1);
+
+    const site = await caller.website.editor({ eventId: event.id });
+    const pub = appRouter.createCaller(ctxFor(null));
+    expect(await pub.photos.publicBySlug({ slug: site.slug })).toEqual([]); // unpublished
+    await caller.website.update({ eventId: event.id, patch: { published: true } });
+    expect(await pub.photos.publicBySlug({ slug: site.slug })).toHaveLength(1);
+
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_phov", email: "phov@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    await expect(
+      appRouter.createCaller(ctxFor(viewer)).photos.remove({ eventId: event.id, photoId: list[0]!.id }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await caller.photos.remove({ eventId: event.id, photoId: list[0]!.id });
+    expect(await caller.photos.list({ eventId: event.id })).toHaveLength(0);
   });
 
   it("registry: host gifts appear on the published public site", async () => {

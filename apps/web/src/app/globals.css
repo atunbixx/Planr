@@ -16,6 +16,7 @@
 @import "./styles/website.css";
 @import "./styles/vendors.css";
 @import "./styles/registry.css";
+@import "./styles/photos.css";
 
 :root {
   --paper: #faf5ec;

@@ -78,6 +78,7 @@ model Organization {
   websites        EventWebsite[]
   vendors         Vendor[]
   registryItems   RegistryItem[]
+  photos          Photo[]
 }
 
 model Membership {
@@ -112,6 +113,7 @@ model Event {
   website         EventWebsite?
   vendors         Vendor[]
   registryItems   RegistryItem[]
+  photos          Photo[]
 
   @@index([organizationId])
   @@index([organizationId, eventTypeKey])
@@ -246,6 +248,21 @@ model Vendor {
   @@index([eventId])
   @@index([organizationId, eventId])
   @@index([eventId, status])
+}
+
+model Photo {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  storagePath    String
+  caption        String?
+  createdAt      DateTime     @default(now())
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, createdAt])
 }
 
 model RegistryItem {

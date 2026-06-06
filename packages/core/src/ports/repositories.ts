@@ -443,6 +443,28 @@ export interface Repositories {
   websites: EventWebsiteRepository;
   vendors: VendorRepository;
   registry: RegistryRepository;
+  photos: PhotoRepository;
+}
+
+export interface PhotoRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  storagePath: string;
+  caption: string | null;
+  createdAt: Date;
+}
+
+export interface PhotoRepository {
+  create(input: {
+    organizationId: string;
+    eventId: string;
+    storagePath: string;
+    caption: string | null;
+  }): Promise<PhotoRecord>;
+  // Newest first.
+  listByEvent(input: { organizationId: string; eventId: string }): Promise<PhotoRecord[]>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
 }
 
 export interface RegistryItemRecord {

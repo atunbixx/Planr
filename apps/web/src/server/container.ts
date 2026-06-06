@@ -19,6 +19,8 @@ import {
   makeVendorService,
   makeRegistryService,
   makePublicRegistryService,
+  makePhotoService,
+  makePublicPhotoService,
 } from "@planr/core";
 
 const repos = createRepositories(prisma);
@@ -45,6 +47,8 @@ export const container = {
   vendors: makeVendorService(repos),
   registry: makeRegistryService(repos),
   publicRegistry: makePublicRegistryService(repos),
+  photos: makePhotoService(repos),
+  publicPhotos: makePublicPhotoService(repos),
 };
 
 export type Container = typeof container;
