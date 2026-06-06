@@ -11,6 +11,7 @@ import { rsvpRouter } from "./rsvp";
 import { messagingRouter } from "./messaging";
 import { adminRouter } from "./admin";
 import { websiteRouter } from "./website";
+import { vendorsRouter } from "./vendors";
 
 // Composition root. Each feature owns its own router file (and its boundary Zod schema); this file
 // only assembles them so adding a feature is "new file + one line here", never editing a monolith.
@@ -31,6 +32,7 @@ export const appRouter = router({
   messaging: messagingRouter,
   admin: adminRouter,
   website: websiteRouter,
+  vendors: vendorsRouter,
 });
 
 export type AppRouter = typeof appRouter;

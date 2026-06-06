@@ -5,6 +5,7 @@ import type {
   OrgType,
   InvitationStatus,
   RsvpStatus,
+  VendorStatus,
 } from "../types";
 
 export interface OrganizationRecord {
@@ -440,4 +441,56 @@ export interface Repositories {
   seating: SeatingRepository;
   announcements: AnnouncementRepository;
   websites: EventWebsiteRepository;
+  vendors: VendorRepository;
+}
+
+export interface VendorRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  category: string | null;
+  name: string;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  website: string | null;
+  status: VendorStatus;
+  costCents: number;
+  notes: string | null;
+}
+
+export interface VendorWrite {
+  category: string | null;
+  name: string;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  website: string | null;
+  status: VendorStatus;
+  costCents: number;
+  notes: string | null;
+}
+
+export interface VendorSummary {
+  total: number;
+  booked: number;
+  totalBookedCents: number;
+}
+
+export interface VendorRepository {
+  create(input: { organizationId: string; eventId: string } & VendorWrite): Promise<VendorRecord>;
+  listByEvent(input: { organizationId: string; eventId: string }): Promise<VendorRecord[]>;
+  getById(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+  }): Promise<VendorRecord | null>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    id: string;
+    patch: Partial<VendorWrite>;
+  }): Promise<VendorRecord | null>;
+  remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+  summaryByEvent(input: { organizationId: string; eventId: string }): Promise<VendorSummary>;
 }

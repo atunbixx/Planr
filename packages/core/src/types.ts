@@ -29,6 +29,8 @@ export type InvitationStatus = "pending" | "accepted" | "revoked";
 
 export type RsvpStatus = "awaiting" | "coming" | "declined" | "maybe";
 
+export type VendorStatus = "researching" | "contacted" | "quoted" | "booked" | "declined";
+
 export type Permission =
   | "org:delete"
   | "billing:manage"

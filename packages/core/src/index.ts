@@ -52,6 +52,10 @@ export type {
   EventWebsiteRecord,
   EventWebsitePatch,
   EventWebsiteRepository,
+  VendorRecord,
+  VendorWrite,
+  VendorSummary,
+  VendorRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
@@ -104,6 +108,8 @@ export {
   type PublicMessagingService,
   type PublicAnnouncement,
 } from "./messaging/messaging.service";
+export { vendorInput, toVendorWrite, toVendorPatch, type VendorInput } from "./vendors/vendor.dto";
+export { makeVendorService, type VendorService } from "./vendors/vendor.service";
 export { slugify } from "./website/slug";
 export {
   makeWebsiteService,

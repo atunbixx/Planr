@@ -41,6 +41,14 @@ enum RsvpStatus {
   maybe
 }
 
+enum VendorStatus {
+  researching
+  contacted
+  quoted
+  booked
+  declined
+}
+
 model User {
   id          String       @id @default(uuid())
   authUserId  String       @unique
@@ -68,6 +76,7 @@ model Organization {
   seatAssignments SeatAssignment[]
   announcements   Announcement[]
   websites        EventWebsite[]
+  vendors         Vendor[]
 }
 
 model Membership {
@@ -100,6 +109,7 @@ model Event {
   seatAssignments SeatAssignment[]
   announcements   Announcement[]
   website         EventWebsite?
+  vendors         Vendor[]
 
   @@index([organizationId])
   @@index([organizationId, eventTypeKey])
@@ -211,6 +221,29 @@ model BudgetItem {
 
   @@index([eventId])
   @@index([organizationId, eventId])
+}
+
+model Vendor {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  category       String?
+  name           String
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  website        String?
+  status         VendorStatus @default(researching)
+  costCents      Int          @default(0)
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, status])
 }
 
 model EventWebsite {

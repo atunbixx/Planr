@@ -12,6 +12,7 @@ import { PrismaBudgetItemRepository } from "./budget.repository";
 import { PrismaSeatingRepository } from "./seating.repository";
 import { PrismaAnnouncementRepository } from "./messaging.repository";
 import { PrismaEventWebsiteRepository } from "./website.repository";
+import { PrismaVendorRepository } from "./vendor.repository";
 
 export function createRepositories(prisma: PrismaClient): Repositories {
   return {
@@ -27,5 +28,6 @@ export function createRepositories(prisma: PrismaClient): Repositories {
     seating: new PrismaSeatingRepository(prisma),
     announcements: new PrismaAnnouncementRepository(prisma),
     websites: new PrismaEventWebsiteRepository(prisma),
+    vendors: new PrismaVendorRepository(prisma),
   };
 }

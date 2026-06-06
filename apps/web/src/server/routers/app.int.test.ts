@@ -18,6 +18,7 @@ import {
   makePublicMessagingService,
   makeWebsiteService,
   makePublicWebsiteService,
+  makeVendorService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -47,6 +48,7 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       publicMessaging: makePublicMessagingService(repos),
       website: makeWebsiteService(repos),
       publicWebsite: makePublicWebsiteService(repos),
+      vendors: makeVendorService(repos),
     },
   };
 }
@@ -287,6 +289,33 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await expect(
       ownerCaller.tasks.list({ eventId: "does-not-exist", limit: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("vendors: CRUD + booked summary via the router; viewer can't write", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_ven", email: "ven@x.com", name: "Ven" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Vendor Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Our Day",
+    });
+    const v = await caller.vendors.create({
+      eventId: event.id,
+      vendor: { name: "Bloom", category: "Florist", status: "booked", cost: "1200" },
+    });
+    expect(v.costCents).toBe(120000);
+    await caller.vendors.create({ eventId: event.id, vendor: { name: "Snaps", category: "Photography" } });
+    const summary = await caller.vendors.summary({ eventId: event.id });
+    expect(summary).toMatchObject({ total: 2, booked: 1, totalBookedCents: 120000 });
+    await caller.vendors.update({ eventId: event.id, vendorId: v.id, patch: { status: "declined" } });
+    expect((await caller.vendors.summary({ eventId: event.id })).booked).toBe(0);
+
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_venv", email: "venv@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    await expect(
+      appRouter.createCaller(ctxFor(viewer)).vendors.create({ eventId: event.id, vendor: { name: "x" } }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   it("website: host edits + publishes; the public site is readable only when published", async () => {

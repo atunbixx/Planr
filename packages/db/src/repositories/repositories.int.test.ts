@@ -525,6 +525,32 @@ describe("Prisma repository adapters", () => {
     });
   });
 
+  it("vendors: CRUD tenant-scoped, category/name ordering, booked summary", async () => {
+    const org = await repos.orgs.create({ name: "Vendor Co" });
+    const event = await repos.events.create({
+      organizationId: org.id, eventTypeKey: "wedding", name: "V Wedding", date: null,
+    });
+    const base = { organizationId: org.id, eventId: event.id, contactName: null, contactEmail: null,
+      contactPhone: null, website: null, notes: null };
+    await repos.vendors.create({ ...base, category: "Photography", name: "Snaps", status: "quoted", costCents: 250000 });
+    const florist = await repos.vendors.create({ ...base, category: "Catering", name: "Bloom", status: "booked", costCents: 120000 });
+
+    const list = await repos.vendors.listByEvent({ organizationId: org.id, eventId: event.id });
+    expect(list.map((v) => v.name)).toEqual(["Bloom", "Snaps"]); // Catering before Photography
+
+    expect(await repos.vendors.getById({ organizationId: "other", eventId: event.id, id: florist.id })).toBeNull();
+    const updated = await repos.vendors.update({
+      organizationId: org.id, eventId: event.id, id: florist.id, patch: { status: "booked", costCents: 150000 },
+    });
+    expect(updated).toMatchObject({ costCents: 150000 });
+
+    const summary = await repos.vendors.summaryByEvent({ organizationId: org.id, eventId: event.id });
+    expect(summary).toEqual({ total: 2, booked: 1, totalBookedCents: 150000 });
+
+    expect(await repos.vendors.remove({ organizationId: "other", eventId: event.id, id: florist.id })).toBe(false);
+    expect(await repos.vendors.remove({ organizationId: org.id, eventId: event.id, id: florist.id })).toBe(true);
+  });
+
   it("messaging: announcement CRUD tenant-scoped, newest-first, cascade with event", async () => {
     const org = await repos.orgs.create({ name: "Msg Co" });
     const event = await repos.events.create({

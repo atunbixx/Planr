@@ -7,7 +7,7 @@ import { formatMoney } from "../../../../../../lib/money";
 export const dynamic = "force-dynamic";
 
 // Modules with a real page today. Everything else shows "Coming soon".
-const BUILT = new Set(["guests", "tasks", "budget", "seating", "rsvp", "messaging"]);
+const BUILT = new Set(["guests", "tasks", "budget", "seating", "rsvp", "messaging", "vendors"]);
 
 const EVENT_LABEL: Record<string, string> = {
   wedding: "Your wedding",

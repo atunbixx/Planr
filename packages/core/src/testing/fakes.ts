@@ -12,6 +12,7 @@ import type {
   SeatingTableRecord,
   AnnouncementRecord,
   EventWebsiteRecord,
+  VendorRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -38,6 +39,7 @@ export function makeFakeRepositories(): Repositories {
   const announcements: AnnouncementRecord[] = [];
   let annClock = 0; // deterministic, strictly-increasing createdAt for ordering
   const websites: EventWebsiteRecord[] = [];
+  const vendors: VendorRecord[] = [];
 
   return {
     orgs: {
@@ -567,6 +569,57 @@ export function makeFakeRepositories(): Repositories {
         if (!w) return null;
         Object.assign(w, patch);
         return { ...w };
+      },
+    },
+    vendors: {
+      async create({ organizationId, eventId, ...rest }) {
+        const created: VendorRecord = { id: id("ven"), organizationId, eventId, ...rest };
+        vendors.push(created);
+        return { ...created };
+      },
+      async listByEvent({ organizationId, eventId }) {
+        return vendors
+          .filter((v) => v.organizationId === organizationId && v.eventId === eventId)
+          .sort((a, b) => {
+            const ca = (a.category ?? "~").toLowerCase();
+            const cb = (b.category ?? "~").toLowerCase();
+            if (ca !== cb) return ca < cb ? -1 : 1;
+            return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+          })
+          .map((v) => ({ ...v }));
+      },
+      async getById({ organizationId, eventId, id: vid }) {
+        const found = vendors.find(
+          (v) => v.id === vid && v.organizationId === organizationId && v.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async update({ organizationId, eventId, id: vid, patch }) {
+        const v = vendors.find(
+          (x) => x.id === vid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!v) return null;
+        Object.assign(v, patch);
+        return { ...v };
+      },
+      async remove({ organizationId, eventId, id: vid }) {
+        const i = vendors.findIndex(
+          (x) => x.id === vid && x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (i < 0) return false;
+        vendors.splice(i, 1);
+        return true;
+      },
+      async summaryByEvent({ organizationId, eventId }) {
+        const mine = vendors.filter(
+          (v) => v.organizationId === organizationId && v.eventId === eventId,
+        );
+        const booked = mine.filter((v) => v.status === "booked");
+        return {
+          total: mine.length,
+          booked: booked.length,
+          totalBookedCents: booked.reduce((s, v) => s + v.costCents, 0),
+        };
       },
     },
   };
