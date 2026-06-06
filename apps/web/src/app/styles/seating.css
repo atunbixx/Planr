@@ -1,0 +1,139 @@
+/* ---- seating ------------------------------------------------------------ */
+.gsummary .seatover { color: var(--clay-deep); }
+
+.tablegrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  margin-top: 8px;
+}
+.tablecard {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--sage);
+  border-radius: 12px;
+  padding: 14px;
+}
+.tablecard[data-over-capacity="true"] { border-top-color: var(--clay); }
+.tablehead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.tablehead .tname { font-weight: 700; font-size: 1.05rem; }
+
+/* visual round table with chairs placed around it (rotate + translate; no JS/trig) */
+.tableviz {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  margin: 6px auto 12px;
+}
+.tableviz .surface {
+  position: absolute;
+  inset: 46px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.tablecard[data-over-capacity="true"] .surface { border-color: var(--clay); color: var(--clay-deep); }
+.tableviz .chair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--card);
+  border: 1px dashed var(--line-strong);
+  transform: rotate(calc(var(--i) * 360deg / var(--n))) translateY(-78px);
+}
+.tableviz .chair.filled {
+  background: var(--sage-tint);
+  border: 1px solid var(--sage);
+  color: var(--sage);
+}
+.tableviz .chair.over { border-color: var(--clay); background: var(--clay-tint); color: var(--clay-deep); }
+.tableviz .chair .ini {
+  font-size: 0.66rem;
+  font-weight: 700;
+  /* counter-rotate so the initials stay upright */
+  transform: rotate(calc(-1 * var(--i) * 360deg / var(--n)));
+}
+.tablehead .tcount { font-size: 0.85rem; color: var(--ink-faint); font-weight: 600; }
+.tablecard[data-over-capacity="true"] .tcount { color: var(--clay-deep); }
+
+.seated { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.seated li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--paper-2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+}
+.seated li.empty { background: none; color: var(--ink-faint); font-style: italic; font-size: 0.82rem; padding: 2px 0; }
+.seated form { margin: 0; }
+.seated button { padding: 2px 8px; font-size: 0.72rem; line-height: 1.4; }
+.seated .sg-name { margin-right: auto; }
+.seated .sg-meal { display: flex; gap: 4px; align-items: center; }
+.seated .sg-meal input { width: 84px; padding: 3px 6px; font-size: 0.74rem; }
+
+/* catering headcount */
+.catering { margin: 14px 0 4px; }
+.catering h2 { font-size: 1rem; margin: 0 0 8px; }
+.mealcounts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.mealcounts li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sage-tint, #e8ede2);
+  color: var(--sage);
+  border: 1px solid var(--sage);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.mealcounts .mc-count {
+  background: var(--card);
+  border-radius: 999px;
+  padding: 0 8px;
+  color: var(--ink);
+}
+
+.tableedit { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
+.tableedit .ginline { flex-direction: row; gap: 6px; margin: 0; flex-wrap: wrap; }
+.tableedit input[type="text"], .tableedit input:not([type]) { width: auto; flex: 1; min-width: 90px; padding: 6px 8px; font-size: 0.8rem; }
+.tableedit input[type="number"] { width: 64px; padding: 6px 8px; font-size: 0.8rem; }
+.tableedit button { padding: 6px 10px; font-size: 0.74rem; }
+
+.pool { margin-top: 22px; }
+.poolhint { color: var(--ink-faint); font-style: italic; }
+.poollist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.poollist li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.poollist li.empty { border-left-color: var(--sage); color: var(--ink-soft); }
+.poollist .gname { font-weight: 600; margin-right: auto; }
+.poollist .ginline { flex-direction: row; gap: 6px; margin: 0; }
+.poollist select { width: auto; padding: 6px 8px; font-size: 0.82rem; }
+.poollist button { padding: 7px 12px; font-size: 0.78rem; }

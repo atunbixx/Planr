@@ -1,0 +1,80 @@
+/* ---- registry (host) ---------------------------------------------------- */
+.reg-raised { color: var(--ink-soft); margin: 4px 0 12px; }
+.reg-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.reg-form input[type="text"], .reg-form input[type="url"], .reg-form input:not([type]) { width: 100%; }
+.reg-money { display: flex; gap: 8px; }
+.reg-money input { width: 50%; }
+.reg-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--ink-soft); }
+.reg-check input { width: auto; }
+
+.gifts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gifts li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.gifts li[data-fund="yes"] { border-left-color: var(--sage); }
+.gifts li.empty { color: var(--ink-faint); font-style: italic; border-left-color: var(--line-strong); }
+.gifts .grow { display: flex; align-items: center; gap: 12px; }
+.gifts .gtitle { font-weight: 600; }
+.gifts .gtag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--sage);
+  background: var(--sage-tint, #e8ede2);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.gifts .gprice { color: var(--ink-soft); font-size: 0.88rem; }
+.gifts .glink { font-size: 0.82rem; margin-left: auto; }
+.gifts .ginline { margin: 0 0 0 auto; }
+.gifts .grow .gtag + .glink, .gifts .grow .gprice + .glink { margin-left: auto; }
+.gifts .ginline button { padding: 7px 10px; font-size: 0.74rem; }
+
+/* host cash-fund progress + contributor list */
+.gfund { display: flex; flex-direction: column; gap: 6px; }
+.gfund-row { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--ink-soft); }
+.gfund-row strong { color: var(--ink); }
+.gfund-goal { color: var(--ink-faint); }
+.gfund-count { color: var(--ink-faint); font-size: 0.8rem; }
+.gfund-bar { height: 6px; border-radius: 999px; background: var(--paper); overflow: hidden; }
+.gfund-fill { display: block; height: 100%; background: var(--sage); border-radius: 999px; }
+.gfund-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.gfund-list li { display: flex; gap: 8px; font-size: 0.82rem; padding: 0; border: 0; background: none; flex-direction: row; align-items: baseline; }
+.gfund-name { font-weight: 600; }
+.gfund-amt { color: var(--sage); }
+.gfund-msg { color: var(--ink-faint); font-style: italic; }
+
+/* ---- registry (public, on the event site) ------------------------------- */
+.site-gifts { list-style: none; margin: 0 auto; padding: 0; max-width: 46ch; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.site-gifts > li { padding: 8px 0; border-bottom: 1px solid var(--s-line); }
+.site-gifts a { color: var(--s-accent); font-weight: 600; }
+.site-gift-note { color: var(--s-soft); }
+
+/* public cash fund */
+.site-fund { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; }
+.site-fund-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; align-items: baseline; }
+.site-fund-title { font-weight: 700; }
+.site-fund-raised { color: var(--s-accent); font-weight: 600; font-size: 0.9rem; }
+.site-fund-goal { color: var(--s-soft); font-weight: 400; }
+.site-fund-note { color: var(--s-soft); margin: 0; }
+.site-fund-bar { height: 7px; border-radius: 999px; background: var(--s-line); overflow: hidden; }
+.site-fund-fill { display: block; height: 100%; background: var(--s-accent); border-radius: 999px; }
+.site-fund-give > summary { cursor: pointer; color: var(--s-accent); font-size: 0.88rem; }
+.site-fund-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.site-fund-form input { flex: 1 1 120px; padding: 8px 10px; border: 1px solid var(--s-line); border-radius: 8px; font: inherit; }
+.site-fund-form button {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--s-accent);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}

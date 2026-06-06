@@ -1,0 +1,375 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  owner
+  admin
+  planner
+  editor
+  viewer
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+}
+
+enum OrgType {
+  individual
+  business
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  revoked
+}
+
+enum RsvpStatus {
+  awaiting
+  coming
+  declined
+  maybe
+}
+
+enum VendorStatus {
+  researching
+  contacted
+  quoted
+  booked
+  declined
+}
+
+model User {
+  id          String       @id @default(uuid())
+  authUserId  String       @unique
+  email       String?      @unique
+  name        String?
+  createdAt   DateTime     @default(now())
+  memberships Membership[]
+}
+
+model Organization {
+  id            String         @id @default(uuid())
+  name          String
+  type          OrgType        @default(individual)
+  currency      String         @default("GBP")
+  createdAt     DateTime       @default(now())
+  memberships   Membership[]
+  events        Event[]
+  subscriptions Subscription[]
+  entitlements  Entitlement[]
+  invitations   Invitation[]
+  guests          Guest[]
+  tasks           Task[]
+  budgetItems     BudgetItem[]
+  seatingTables   SeatingTable[]
+  seatAssignments SeatAssignment[]
+  announcements   Announcement[]
+  websites        EventWebsite[]
+  vendors         Vendor[]
+  registryItems   RegistryItem[]
+  registryContributions RegistryContribution[]
+  photos          Photo[]
+}
+
+model Membership {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  role           Role         @default(viewer)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Event {
+  id             String        @id @default(uuid())
+  organizationId String
+  eventTypeKey   String
+  name           String
+  date           DateTime?
+  createdAt      DateTime      @default(now())
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  entitlements    Entitlement[]
+  guests          Guest[]
+  tasks           Task[]
+  budgetItems     BudgetItem[]
+  seatingTables   SeatingTable[]
+  seatAssignments SeatAssignment[]
+  announcements   Announcement[]
+  website         EventWebsite?
+  vendors         Vendor[]
+  registryItems   RegistryItem[]
+  registryContributions RegistryContribution[]
+  photos          Photo[]
+
+  @@index([organizationId])
+  @@index([organizationId, eventTypeKey])
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  organizationId       String
+  stripeSubscriptionId String?            @unique
+  planKey              String
+  status               SubscriptionStatus @default(trialing)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model Entitlement {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String?
+  key            String
+  source         String
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  event          Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // NOTE: org-level grants (eventId IS NULL) are deduped by a PARTIAL unique index
+  // ("organizationId", "key") WHERE "eventId" IS NULL — Prisma cannot express partial
+  // indexes here, so it lives only in migration 20260604125438_init/migration.sql.
+  // Do NOT rely on `prisma db push`; if you regenerate migrations, re-add that index
+  // or org-level entitlements (e.g. all_access) can duplicate.
+  @@unique([organizationId, eventId, key])
+  @@index([organizationId])
+  @@index([eventId])
+}
+
+model Invitation {
+  id              String           @id @default(uuid())
+  organizationId  String
+  email           String
+  role            Role
+  token           String           @unique
+  status          InvitationStatus @default(pending)
+  invitedByUserId String
+  createdAt       DateTime         @default(now())
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email, status])
+}
+
+model Guest {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  name           String
+  email          String?
+  phone          String?
+  groupLabel     String?
+  plusOne        Boolean      @default(false)
+  rsvpStatus     RsvpStatus   @default(awaiting)
+  rsvpToken      String       @unique @default(uuid())
+  mealChoice     String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  seatAssignment SeatAssignment?
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, rsvpStatus])
+}
+
+model Task {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  title          String
+  notes          String?
+  done           Boolean      @default(false)
+  dueDate        DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, done])
+  @@index([eventId, dueDate])
+}
+
+model BudgetItem {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  label          String
+  category       String?
+  estimatedCents Int          @default(0)
+  paidCents      Int          @default(0)
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+}
+
+model Vendor {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  category       String?
+  name           String
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  website        String?
+  status           VendorStatus @default(researching)
+  costCents        Int          @default(0)
+  depositPaidCents Int          @default(0)
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, status])
+}
+
+model Photo {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  storagePath    String
+  caption        String?
+  createdAt      DateTime     @default(now())
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, createdAt])
+}
+
+model RegistryItem {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  title          String
+  url            String?
+  note           String?
+  priceCents     Int          @default(0)
+  isCashFund     Boolean      @default(false)
+  goalCents      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contributions  RegistryContribution[]
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+}
+
+model RegistryContribution {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  registryItemId String
+  name           String
+  message        String?
+  amountCents    Int
+  createdAt      DateTime     @default(now())
+  registryItem   RegistryItem @relation(fields: [registryItemId], references: [id], onDelete: Cascade)
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([registryItemId])
+}
+
+model EventWebsite {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String       @unique
+  slug           String       @unique
+  published      Boolean      @default(false)
+  theme          String       @default("classic")
+  headline       String?
+  welcomeMessage String?
+  story          String?
+  scheduleText   String?
+  travelText     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model SeatingTable {
+  id             String           @id @default(uuid())
+  organizationId String
+  eventId        String
+  label          String
+  capacity       Int              @default(8)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  event          Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignments    SeatAssignment[]
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+}
+
+model Announcement {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  title          String
+  body           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([organizationId, eventId])
+  @@index([eventId, createdAt])
+}
+
+model SeatAssignment {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  tableId        String
+  guestId        String       @unique
+  createdAt      DateTime     @default(now())
+  table          SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  guest          Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([tableId])
+}

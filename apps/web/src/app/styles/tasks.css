@@ -1,0 +1,46 @@
+/* ---- checklist generator banner ----------------------------------------- */
+.generate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(120% 140% at 0% 0%, var(--sage-tint), var(--paper-2));
+  border: 1px solid var(--line-strong);
+}
+.generate h2 { margin: 0 0 4px; font-size: 1.1rem; }
+.generate p { margin: 0; color: var(--ink-soft); max-width: 46ch; }
+.generate form { margin: 0; }
+
+/* ---- tasks --------------------------------------------------------------- */
+.tasks {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tasks li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.tasks li[data-done="true"] { border-left-color: var(--sage); opacity: 0.7; }
+.tasks li[data-done="true"] .tname { text-decoration: line-through; color: var(--ink-faint); }
+.tasks li[data-overdue="true"] { border-left-color: var(--clay); }
+.tasks .tname { font-weight: 600; }
+.tasks .tmeta { color: var(--ink-faint); font-size: 0.85rem; margin-right: auto; }
+.tasks li[data-overdue="true"] .tmeta { color: var(--clay-deep); font-weight: 600; }
+.tasks .tcheck { margin: 0; }
+.tasks .ginline { flex-direction: row; gap: 6px; margin: 0; }
+.tasks .ginline button { padding: 7px 12px; font-size: 0.78rem; }
+.tasks .ginline input[type="date"] { width: auto; padding: 6px 8px; font-size: 0.8rem; }

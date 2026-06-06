@@ -1,0 +1,61 @@
+/* ---- photos (host gallery) ---------------------------------------------- */
+.dashtools-links { display: inline-flex; gap: 8px; }
+.rsvpphoto { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.rsvpphoto-form { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 10px; }
+
+.photogrid {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+}
+.photogrid li {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+}
+.photogrid img { width: 100%; height: 150px; object-fit: cover; display: block; }
+.photogrid .pcap {
+  display: block;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.photogrid .premove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  background: rgba(255, 253, 247, 0.9);
+}
+
+/* ---- slideshow (public) ------------------------------------------------- */
+.site-cta {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--s-accent);
+  color: var(--s-accent);
+  font-weight: 600;
+}
+.site-slideshow { max-width: 760px; }
+.slideshow { margin-top: 16px; }
+.slide-stage {
+  background: #1c1714;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  display: grid;
+  place-items: center;
+}
+.slide-stage img { width: 100%; height: 100%; object-fit: contain; }
+.slide-cap { text-align: center; color: var(--ink-soft); margin: 10px 0 0; }
+.slide-dots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+.slide-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.slide-dots span[data-on="true"] { background: var(--s-accent, var(--clay)); }
+.slide-empty { text-align: center; color: var(--ink-faint); margin-top: 30px; }

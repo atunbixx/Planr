@@ -1,0 +1,15 @@
+{
+  "name": "@planr/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:validate": "prisma validate --schema prisma/schema.prisma",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "test:int": "vitest run --config vitest.int.config.ts"
+  },
+  "dependencies": { "@prisma/client": "^6.1.0", "@planr/core": "workspace:*" },
+  "devDependencies": { "prisma": "^6.1.0" }
+}
