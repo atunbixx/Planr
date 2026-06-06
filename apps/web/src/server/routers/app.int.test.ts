@@ -16,6 +16,8 @@ import {
   makeRsvpService,
   makeMessagingService,
   makePublicMessagingService,
+  makeWebsiteService,
+  makePublicWebsiteService,
   syncAuthUser,
 } from "@planr/core";
 import { appRouter } from "./app";
@@ -43,6 +45,8 @@ function ctxFor(user: Awaited<ReturnType<typeof syncAuthUser>> | null): TrpcCont
       rsvp: makeRsvpService(repos),
       messaging: makeMessagingService(repos),
       publicMessaging: makePublicMessagingService(repos),
+      website: makeWebsiteService(repos),
+      publicWebsite: makePublicWebsiteService(repos),
     },
   };
 }
@@ -283,6 +287,39 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     await expect(
       ownerCaller.tasks.list({ eventId: "does-not-exist", limit: 10 }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("website: host edits + publishes; the public site is readable only when published", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_web", email: "web@x.com", name: "Web" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Sophie & James" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Sophie & James",
+      date: "2027-06-12",
+    });
+    const draft = await caller.website.editor({ eventId: event.id });
+    expect(draft.published).toBe(false);
+    expect(draft.slug).toBeTruthy();
+
+    const pub = appRouter.createCaller(ctxFor(null));
+    expect(await pub.website.getPublic({ slug: draft.slug })).toBeNull();
+
+    await caller.website.update({
+      eventId: event.id,
+      patch: { headline: "We're getting married!", story: "How we met…", published: true },
+    });
+    const site = await pub.website.getPublic({ slug: draft.slug });
+    expect(site).not.toBeNull();
+    expect(site!.event.name).toBe("Sophie & James");
+    expect(site!.website.headline).toBe("We're getting married!");
+
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_webv", email: "webv@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    await expect(
+      appRouter.createCaller(ctxFor(viewer)).website.editor({ eventId: event.id }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   it("tasks: generates a dated wedding checklist via the router (one-shot)", async () => {

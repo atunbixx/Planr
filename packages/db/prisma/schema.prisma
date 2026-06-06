@@ -67,6 +67,7 @@ model Organization {
   seatingTables   SeatingTable[]
   seatAssignments SeatAssignment[]
   announcements   Announcement[]
+  websites        EventWebsite[]
 }
 
 model Membership {
@@ -98,6 +99,7 @@ model Event {
   seatingTables   SeatingTable[]
   seatAssignments SeatAssignment[]
   announcements   Announcement[]
+  website         EventWebsite?
 
   @@index([organizationId])
   @@index([organizationId, eventTypeKey])
@@ -209,6 +211,26 @@ model BudgetItem {
 
   @@index([eventId])
   @@index([organizationId, eventId])
+}
+
+model EventWebsite {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String       @unique
+  slug           String       @unique
+  published      Boolean      @default(false)
+  theme          String       @default("classic")
+  headline       String?
+  welcomeMessage String?
+  story          String?
+  scheduleText   String?
+  travelText     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 model SeatingTable {

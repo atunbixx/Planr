@@ -49,6 +49,9 @@ export type {
   AnnouncementRecord,
   AnnouncementWrite,
   AnnouncementRepository,
+  EventWebsiteRecord,
+  EventWebsitePatch,
+  EventWebsiteRepository,
 } from "./ports/repositories";
 export { guestInput, toGuestWrite, toGuestPatch, type GuestInput } from "./guests/guest.dto";
 export { makeGuestService, type GuestService } from "./guests/guest.service";
@@ -101,6 +104,14 @@ export {
   type PublicMessagingService,
   type PublicAnnouncement,
 } from "./messaging/messaging.service";
+export { slugify } from "./website/slug";
+export {
+  makeWebsiteService,
+  type WebsiteService,
+  makePublicWebsiteService,
+  type PublicWebsiteService,
+  type PublicSite,
+} from "./website/website.service";
 export { FREE_LAUNCH } from "./billing/launch";
 export {
   SUPPORTED_CURRENCIES,

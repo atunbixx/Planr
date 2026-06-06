@@ -1,0 +1,86 @@
+/* ---- website editor ----------------------------------------------------- */
+.gsummary[data-published="true"] { border-color: var(--sage); }
+.websiteform { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
+.wfield { display: flex; flex-direction: column; gap: 4px; }
+.wfield > span { font-size: 0.82rem; font-weight: 600; color: var(--ink-soft); }
+.websiteform input,
+.websiteform textarea,
+.websiteform select { width: 100%; font: inherit; }
+.websiteform textarea { resize: vertical; }
+.wpublish { display: flex; align-items: flex-start; gap: 8px; color: var(--ink-soft); }
+.wpublish input { width: auto; margin-top: 3px; }
+
+/* ---- public event site (themed) ----------------------------------------- */
+.site {
+  --s-bg: var(--paper);
+  --s-card: var(--card);
+  --s-ink: var(--ink);
+  --s-soft: var(--ink-soft);
+  --s-accent: var(--clay-deep);
+  --s-line: var(--line);
+  max-width: 680px;
+  margin: 0 auto;
+  color: var(--s-ink);
+}
+.site[data-theme="romantic"] {
+  --s-bg: #fdf4f3;
+  --s-accent: #b76e79;
+  --s-line: #efd9d6;
+}
+.site[data-theme="modern"] {
+  --s-bg: #f6f6f3;
+  --s-accent: #65755a;
+  --s-line: #e2e2da;
+}
+.site-hero {
+  text-align: center;
+  padding: 8vh 8px 40px;
+  border-bottom: 1px solid var(--s-line);
+}
+.site-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  color: var(--s-accent);
+  margin: 0 0 12px;
+}
+.site-title {
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  line-height: 1.05;
+  margin: 0;
+}
+.site-date { font-size: 1.05rem; color: var(--s-soft); margin: 14px 0 0; }
+.site-countdown {
+  display: inline-block;
+  margin: 16px 0 0;
+  padding: 6px 16px;
+  border: 1px solid var(--s-accent);
+  border-radius: 999px;
+  color: var(--s-accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.site-welcome {
+  max-width: 46ch;
+  margin: 22px auto 0;
+  color: var(--s-soft);
+  font-size: 1.05rem;
+}
+.site-section {
+  padding: 32px 8px;
+  border-bottom: 1px solid var(--s-line);
+  text-align: center;
+}
+.site-section h2 {
+  font-family: var(--font-display), serif;
+  color: var(--s-accent);
+  margin: 0 0 12px;
+}
+.site-section p { white-space: pre-wrap; color: var(--s-ink); margin: 0 auto; max-width: 52ch; }
+.site-foot {
+  text-align: center;
+  padding: 30px 8px;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}

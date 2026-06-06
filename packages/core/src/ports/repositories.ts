@@ -387,6 +387,46 @@ export interface AnnouncementRepository {
   remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
 }
 
+export interface EventWebsiteRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  slug: string;
+  published: boolean;
+  theme: string;
+  headline: string | null;
+  welcomeMessage: string | null;
+  story: string | null;
+  scheduleText: string | null;
+  travelText: string | null;
+}
+
+export type EventWebsitePatch = Partial<{
+  published: boolean;
+  theme: string;
+  headline: string | null;
+  welcomeMessage: string | null;
+  story: string | null;
+  scheduleText: string | null;
+  travelText: string | null;
+}>;
+
+export interface EventWebsiteRepository {
+  create(input: {
+    organizationId: string;
+    eventId: string;
+    slug: string;
+  }): Promise<EventWebsiteRecord>;
+  getByEvent(input: { organizationId: string; eventId: string }): Promise<EventWebsiteRecord | null>;
+  getBySlug(slug: string): Promise<EventWebsiteRecord | null>;
+  slugExists(slug: string): Promise<boolean>;
+  update(input: {
+    organizationId: string;
+    eventId: string;
+    patch: EventWebsitePatch;
+  }): Promise<EventWebsiteRecord | null>;
+}
+
 export interface Repositories {
   orgs: OrganizationRepository;
   users: UserRepository;
@@ -399,4 +439,5 @@ export interface Repositories {
   budget: BudgetItemRepository;
   seating: SeatingRepository;
   announcements: AnnouncementRepository;
+  websites: EventWebsiteRepository;
 }

@@ -116,4 +116,5 @@
 .statcard[data-accent="clay"] .stat-bar-fill { background: var(--clay); }
 
 .dashtools { margin-top: 28px; }
-.dashtools h2 { font-size: 1.05rem; margin-bottom: 10px; }
+.dashtools h2 { font-size: 1.05rem; margin: 0; }
+.dashtools-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }

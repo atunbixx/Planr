@@ -11,6 +11,7 @@ import type {
   BudgetItemRecord,
   SeatingTableRecord,
   AnnouncementRecord,
+  EventWebsiteRecord,
 } from "../ports/repositories";
 
 export function makeFakeRepositories(): Repositories {
@@ -36,6 +37,7 @@ export function makeFakeRepositories(): Repositories {
   }[] = [];
   const announcements: AnnouncementRecord[] = [];
   let annClock = 0; // deterministic, strictly-increasing createdAt for ordering
+  const websites: EventWebsiteRecord[] = [];
 
   return {
     orgs: {
@@ -525,6 +527,46 @@ export function makeFakeRepositories(): Repositories {
         if (i < 0) return false;
         announcements.splice(i, 1);
         return true;
+      },
+    },
+    websites: {
+      async create({ organizationId, eventId, slug }) {
+        const created: EventWebsiteRecord = {
+          id: id("web"),
+          organizationId,
+          eventId,
+          slug,
+          published: false,
+          theme: "classic",
+          headline: null,
+          welcomeMessage: null,
+          story: null,
+          scheduleText: null,
+          travelText: null,
+        };
+        websites.push(created);
+        return { ...created };
+      },
+      async getByEvent({ organizationId, eventId }) {
+        const found = websites.find(
+          (w) => w.organizationId === organizationId && w.eventId === eventId,
+        );
+        return found ? { ...found } : null;
+      },
+      async getBySlug(slug) {
+        const found = websites.find((w) => w.slug === slug);
+        return found ? { ...found } : null;
+      },
+      async slugExists(slug) {
+        return websites.some((w) => w.slug === slug);
+      },
+      async update({ organizationId, eventId, patch }) {
+        const w = websites.find(
+          (x) => x.organizationId === organizationId && x.eventId === eventId,
+        );
+        if (!w) return null;
+        Object.assign(w, patch);
+        return { ...w };
       },
     },
   };

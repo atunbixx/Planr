@@ -157,7 +157,12 @@ export default async function EventDashboard({
       </section>
 
       <section className="dashtools">
-        <h2>All tools</h2>
+        <div className="dashtools-head">
+          <h2>All tools</h2>
+          <a className="ghost" href={`${base}/website`}>
+            Event website
+          </a>
+        </div>
         <ul className="modules">
           {modules.map((m) => {
             const built = BUILT.has(m.module);
