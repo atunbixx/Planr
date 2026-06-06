@@ -42,9 +42,14 @@ test("a guest uploads a photo via their RSVP link; the host gallery shows it", a
     .getByLabel("Photo", { exact: true })
     .setInputFiles({ name: "us.png", mimeType: "image/png", buffer: PNG });
   await vp.getByLabel("Photo caption").fill("On the dance floor");
-  await vp.getByRole("button", { name: "Upload photo" }).click();
-  // give the server action a beat to finish the upload+record
-  await vp.waitForTimeout(1500);
+  // wait for the upload server-action POST to finish before closing (else it aborts mid-flight)
+  await Promise.all([
+    vp.waitForResponse(
+      (r) => r.url().includes(`/rsvp/${token}`) && r.request().method() === "POST",
+    ),
+    vp.getByRole("button", { name: "Upload photo" }).click(),
+  ]);
+  await vp.waitForTimeout(300);
   await visitor.close();
 
   // Host sees it in the gallery
