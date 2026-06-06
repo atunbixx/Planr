@@ -54,6 +54,7 @@ model Organization {
   id            String         @id @default(uuid())
   name          String
   type          OrgType        @default(individual)
+  currency      String         @default("GBP")
   createdAt     DateTime       @default(now())
   memberships   Membership[]
   events        Event[]

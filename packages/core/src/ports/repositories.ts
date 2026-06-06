@@ -11,6 +11,7 @@ export interface OrganizationRecord {
   id: string;
   name: string;
   type: OrgType;
+  currency: string;
 }
 export interface UserRecord {
   id: string;
@@ -44,6 +45,7 @@ export interface OrganizationRepository {
   findById(id: string): Promise<OrganizationRecord | null>;
   listForUser(userId: string): Promise<OrganizationRecord[]>;
   rename(input: { id: string; name: string }): Promise<OrganizationRecord>;
+  setCurrency(input: { id: string; currency: string }): Promise<OrganizationRecord>;
   // FK cascade removes memberships, events, guests, … with the organization.
   delete(id: string): Promise<void>;
 }

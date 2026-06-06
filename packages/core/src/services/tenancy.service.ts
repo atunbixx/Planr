@@ -7,6 +7,7 @@ import type {
 } from "../ports/repositories";
 import type { Role, OrgType } from "../types";
 import { makeAuthorizationService } from "./authorization.service";
+import { isSupportedCurrency } from "../billing/currencies";
 import { NotFoundError } from "../errors";
 
 export interface AuthUserInput {
@@ -86,6 +87,17 @@ export function makeTenancyService(repos: Repositories) {
       // Destructive — owner only (org:delete).
       await authz.requirePermission(userId, input.organizationId, "org:delete");
       await repos.orgs.delete(input.organizationId);
+    },
+
+    async setWorkspaceCurrency(
+      userId: string,
+      input: { organizationId: string; currency: string },
+    ): Promise<OrganizationRecord> {
+      await authz.requirePermission(userId, input.organizationId, "member:invite");
+      if (!isSupportedCurrency(input.currency)) {
+        throw new Error(`Unsupported currency "${input.currency}".`);
+      }
+      return repos.orgs.setCurrency({ id: input.organizationId, currency: input.currency });
     },
   };
 }

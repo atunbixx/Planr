@@ -7,17 +7,10 @@ import {
   setBudgetItemEstimatedAction,
   removeBudgetItemAction,
 } from "./actions";
+import { formatMoney } from "../../../../../../../lib/money";
 
 export const dynamic = "force-dynamic";
 
-// Format from integer pence (exact — no float division), with a sign for negative remaining.
-function formatGBP(cents: number): string {
-  const sign = cents < 0 ? "-" : "";
-  const abs = Math.abs(cents);
-  const pounds = Math.floor(abs / 100).toLocaleString("en-GB");
-  const pence = String(abs % 100).padStart(2, "0");
-  return `${sign}£${pounds}.${pence}`;
-}
 function centsToInput(cents: number): string {
   return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`;
 }
@@ -31,8 +24,13 @@ export default async function BudgetPage({
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   const caller = await getServerCaller();
-  const summary = await caller.budget.summary({ eventId });
-  const { items } = await caller.budget.list({ eventId, limit: 100 });
+  const [org, summary, list] = await Promise.all([
+    caller.organizations.get({ organizationId: orgId }),
+    caller.budget.summary({ eventId }),
+    caller.budget.list({ eventId, limit: 100 }),
+  ]);
+  const { items } = list;
+  const fmt = (cents: number) => formatMoney(cents, org.currency);
 
   return (
     <main>
@@ -43,9 +41,9 @@ export default async function BudgetPage({
       <h1>Where the money goes</h1>
 
       <p className="gsummary" data-remaining={summary.remainingCents}>
-        <strong>{formatGBP(summary.totalEstimatedCents)}</strong> budgeted ·{" "}
-        <strong>{formatGBP(summary.totalPaidCents)}</strong> paid ·{" "}
-        <strong className="bremain">{formatGBP(summary.remainingCents)}</strong>{" "}
+        <strong>{fmt(summary.totalEstimatedCents)}</strong> budgeted ·{" "}
+        <strong>{fmt(summary.totalPaidCents)}</strong> paid ·{" "}
+        <strong className="bremain">{fmt(summary.remainingCents)}</strong>{" "}
         {summary.remainingCents < 0 ? "over" : "to go"}
       </p>
 
@@ -84,7 +82,7 @@ export default async function BudgetPage({
               <span className="bname">{b.label}</span>
               {b.category ? <span className="bcat">{b.category}</span> : null}
               <span className="bamount">
-                {formatGBP(b.paidCents)} / {formatGBP(b.estimatedCents)}
+                {fmt(b.paidCents)} / {fmt(b.estimatedCents)}
               </span>
               <form action={setBudgetItemEstimatedAction} className="ginline">
                 <input type="hidden" name="eventId" value={eventId} />

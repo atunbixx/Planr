@@ -8,6 +8,22 @@ function adminPath(orgId: string) {
   return `/dashboard/org/${orgId}/admin`;
 }
 
+export async function setCurrencyAction(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const currency = String(formData.get("currency") ?? "") as
+    | "GBP"
+    | "USD"
+    | "EUR"
+    | "AUD"
+    | "CAD"
+    | "NZD"
+    | "ZAR"
+    | "AED";
+  if (!organizationId || !currency) return;
+  await (await getServerCaller()).organizations.setCurrency({ organizationId, currency });
+  revalidatePath(adminPath(organizationId));
+}
+
 export async function renameWorkspaceAction(formData: FormData) {
   const organizationId = String(formData.get("organizationId") ?? "");
   const name = String(formData.get("name") ?? "").trim();

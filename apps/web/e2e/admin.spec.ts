@@ -21,7 +21,7 @@ test("owner manages the workspace: rename, invite, and delete with type-to-confi
 
   // Rename the workspace
   await page.getByLabel("Workspace name", { exact: true }).fill("Bliss & Co Events");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Bliss & Co Events" })).toBeVisible();
 
   // Invite a collaborator → shows in pending invitations

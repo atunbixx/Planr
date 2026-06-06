@@ -40,7 +40,12 @@ export function makeFakeRepositories(): Repositories {
   return {
     orgs: {
       async create({ name, type }) {
-        const created: OrganizationRecord = { id: id("org"), name, type: type ?? "individual" };
+        const created: OrganizationRecord = {
+          id: id("org"),
+          name,
+          type: type ?? "individual",
+          currency: "GBP",
+        };
         orgs.push(created);
         return { ...created };
       },
@@ -58,6 +63,12 @@ export function makeFakeRepositories(): Repositories {
         const o = orgs.find((x) => x.id === orgId);
         if (!o) throw new Error("org not found");
         o.name = name;
+        return { ...o };
+      },
+      async setCurrency({ id: orgId, currency }) {
+        const o = orgs.find((x) => x.id === orgId);
+        if (!o) throw new Error("org not found");
+        o.currency = currency;
         return { ...o };
       },
       async delete(orgId) {

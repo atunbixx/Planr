@@ -155,6 +155,28 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     ).rejects.toThrowError(/not a member/i);
   });
 
+  it("organizations: get returns currency (default GBP); owner sets it, viewer cannot", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_cur", email: "cur@x.com", name: "Cur" });
+    const ownerCaller = appRouter.createCaller(ctxFor(owner));
+    const org = await ownerCaller.organizations.create({ name: "Curr Co" });
+    expect(await ownerCaller.organizations.get({ organizationId: org.id })).toMatchObject({
+      currency: "GBP",
+    });
+    await ownerCaller.organizations.setCurrency({ organizationId: org.id, currency: "EUR" });
+    expect(await ownerCaller.organizations.get({ organizationId: org.id })).toMatchObject({
+      currency: "EUR",
+    });
+
+    const viewer = await syncAuthUser(repos, { authUserId: "auth_curv", email: "curv@x.com", name: null });
+    await repos.memberships.upsert({ organizationId: org.id, userId: viewer.id, role: "viewer" });
+    await expect(
+      appRouter.createCaller(ctxFor(viewer)).organizations.setCurrency({
+        organizationId: org.id,
+        currency: "USD",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
   it("manages guests through the router: create, list, summary, update, remove", async () => {
     const owner = await syncAuthUser(repos, { authUserId: "auth_gl", email: "gl@x.com", name: "GL" });
     const caller = appRouter.createCaller(ctxFor(owner));

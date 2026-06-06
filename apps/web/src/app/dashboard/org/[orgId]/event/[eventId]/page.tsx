@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../../../../../server/auth";
 import { getServerCaller } from "../../../../../../server/caller";
 import { setEventDateAction } from "./actions";
+import { formatMoney } from "../../../../../../lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,6 @@ const EVENT_LABEL: Record<string, string> = {
 
 function pretty(module: string): string {
   return module.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-function gbp(cents: number): string {
-  const sign = cents < 0 ? "-" : "";
-  const a = Math.abs(cents);
-  return `${sign}£${Math.floor(a / 100).toLocaleString("en-GB")}`;
 }
 function pct(part: number, whole: number): number {
   return whole <= 0 ? 0 : Math.min(100, Math.round((part / whole) * 100));
@@ -53,7 +49,8 @@ export default async function EventDashboard({
   if (!user) redirect("/sign-in");
   const caller = await getServerCaller();
 
-  const [event, guests, tasks, budget, seating, modules] = await Promise.all([
+  const [org, event, guests, tasks, budget, seating, modules] = await Promise.all([
+    caller.organizations.get({ organizationId: orgId }),
     caller.events.get({ organizationId: orgId, eventId }),
     caller.guests.summary({ eventId }),
     caller.tasks.summary({ eventId }),
@@ -61,6 +58,7 @@ export default async function EventDashboard({
     caller.seating.plan({ eventId }),
     caller.events.modules({ organizationId: orgId, eventId }),
   ]);
+  const gbp = (cents: number) => formatMoney(cents, org.currency, { compact: true });
 
   const firstName = user.name?.split(" ")[0] ?? null;
   const cd = countdown(event.date);

@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../../../../server/auth";
 import { getServerCaller } from "../../../../../server/caller";
+import { SUPPORTED_CURRENCIES, CURRENCY_LABELS } from "@planr/core";
 import {
   renameWorkspaceAction,
+  setCurrencyAction,
   deleteWorkspaceAction,
   setRoleAction,
   removeMemberAction,
@@ -46,6 +48,21 @@ export default async function AdminPage({
           <input type="hidden" name="organizationId" value={orgId} />
           <input aria-label="Workspace name" name="name" defaultValue={organization.name} required />
           <button type="submit">Save</button>
+        </form>
+      </section>
+
+      <section className="makepanel">
+        <h2>Currency</h2>
+        <form action={setCurrencyAction} className="ginline">
+          <input type="hidden" name="organizationId" value={orgId} />
+          <select aria-label="Workspace currency" name="currency" defaultValue={organization.currency}>
+            {SUPPORTED_CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {CURRENCY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+          <button type="submit">Save currency</button>
         </form>
       </section>
 
