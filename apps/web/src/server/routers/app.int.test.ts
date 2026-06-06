@@ -360,6 +360,42 @@ describe("appRouter (integration, Supabase Postgres)", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
+  it("registry: guests contribute to a cash fund on the published site", async () => {
+    const owner = await syncAuthUser(repos, { authUserId: "auth_fund", email: "fund@x.com", name: "Fund" });
+    const caller = appRouter.createCaller(ctxFor(owner));
+    const org = await caller.organizations.create({ name: "Fund Wedding" });
+    const event = await caller.events.create({
+      organizationId: org.id,
+      eventTypeKey: "wedding",
+      name: "Our Day",
+    });
+    const fund = await caller.registry.create({
+      eventId: event.id,
+      item: { title: "Honeymoon fund", isCashFund: true, goal: "2000" },
+    });
+    const site = await caller.website.editor({ eventId: event.id });
+    await caller.website.update({ eventId: event.id, patch: { published: true } });
+
+    const pub = appRouter.createCaller(ctxFor(null));
+    await pub.registry.contribute({
+      slug: site.slug,
+      itemId: fund.id,
+      contribution: { name: "Aunt May", amount: "150", message: "Have fun!" },
+    });
+
+    const gifts = await pub.registry.publicForSlug({ slug: site.slug });
+    expect(gifts[0]).toMatchObject({ isCashFund: true, goalCents: 200000, raisedCents: 15000 });
+    const contribs = await caller.registry.contributions({ eventId: event.id });
+    expect(contribs).toHaveLength(1);
+    expect(contribs[0]).toMatchObject({ name: "Aunt May", amountCents: 15000 });
+
+    // contributing to a non-fund gift → BAD_REQUEST
+    const gift = await caller.registry.create({ eventId: event.id, item: { title: "Toaster", price: "30" } });
+    await expect(
+      pub.registry.contribute({ slug: site.slug, itemId: gift.id, contribution: { name: "X", amount: "10" } }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
   it("vendors: CRUD + booked summary via the router; viewer can't write", async () => {
     const owner = await syncAuthUser(repos, { authUserId: "auth_ven", email: "ven@x.com", name: "Ven" });
     const caller = appRouter.createCaller(ctxFor(owner));

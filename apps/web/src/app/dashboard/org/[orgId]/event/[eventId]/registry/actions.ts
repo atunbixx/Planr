@@ -19,8 +19,13 @@ export async function addGiftAction(formData: FormData) {
   const url = String(formData.get("url") ?? "");
   const note = String(formData.get("note") ?? "");
   const price = String(formData.get("price") ?? "");
+  const goal = String(formData.get("goal") ?? "");
+  const isCashFund = formData.get("isCashFund") === "on";
   if (!eventId || !title) return;
-  await (await getServerCaller()).registry.create({ eventId, item: { title, url, note, price } });
+  await (await getServerCaller()).registry.create({
+    eventId,
+    item: { title, url, note, price, goal, isCashFund },
+  });
   revalidate(orgId, eventId);
 }
 

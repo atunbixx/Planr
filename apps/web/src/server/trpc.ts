@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { NotFoundError, ForbiddenError, type UserRecord } from "@planr/core";
+import { NotFoundError, ForbiddenError, ValidationError, type UserRecord } from "@planr/core";
 import { container, type Container } from "./container";
 
 export interface TrpcContext {
@@ -22,6 +22,9 @@ const mapErrors = t.middleware(async ({ next }) => {
     }
     if (cause instanceof ForbiddenError) {
       throw new TRPCError({ code: "FORBIDDEN", message: cause.message, cause });
+    }
+    if (cause instanceof ValidationError) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: cause.message, cause });
     }
   }
   return result;

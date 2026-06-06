@@ -14,6 +14,7 @@ import type {
   EventWebsiteRecord,
   VendorRecord,
   RegistryItemRecord,
+  RegistryContributionRecord,
   PhotoRecord,
 } from "../ports/repositories";
 
@@ -43,6 +44,7 @@ export function makeFakeRepositories(): Repositories {
   const websites: EventWebsiteRecord[] = [];
   const vendors: VendorRecord[] = [];
   const registry: RegistryItemRecord[] = [];
+  const registryContributions: RegistryContributionRecord[] = [];
   const photos: PhotoRecord[] = [];
   let photoClock = 0;
 
@@ -665,6 +667,32 @@ export function makeFakeRepositories(): Repositories {
         if (i < 0) return false;
         registry.splice(i, 1);
         return true;
+      },
+      async addContribution({ organizationId, eventId, registryItemId, name, message, amountCents }) {
+        const created: RegistryContributionRecord = {
+          id: id("rec"),
+          organizationId,
+          eventId,
+          registryItemId,
+          name,
+          message,
+          amountCents,
+        };
+        registryContributions.push(created);
+        return { ...created };
+      },
+      async listContributionsByEvent({ organizationId, eventId }) {
+        return registryContributions
+          .filter((c) => c.organizationId === organizationId && c.eventId === eventId)
+          .map((c) => ({ ...c }));
+      },
+      async raisedByEvent({ organizationId, eventId }) {
+        const out: Record<string, number> = {};
+        for (const c of registryContributions) {
+          if (c.organizationId !== organizationId || c.eventId !== eventId) continue;
+          out[c.registryItemId] = (out[c.registryItemId] ?? 0) + c.amountCents;
+        }
+        return out;
       },
     },
     photos: {

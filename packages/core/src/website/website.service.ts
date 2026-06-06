@@ -10,7 +10,7 @@ import { slugify } from "./slug";
 
 export interface PublicSite {
   website: EventWebsiteRecord;
-  event: { name: string; date: Date | null; eventTypeKey: string };
+  event: { name: string; date: Date | null; eventTypeKey: string; currency: string };
 }
 
 const SUFFIX = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -82,9 +82,15 @@ export function makePublicWebsiteService(repos: Repositories) {
       if (!website || !website.published) return null;
       const event = await repos.events.getById(website.eventId);
       if (!event) return null;
+      const org = await repos.orgs.findById(event.organizationId);
       return {
         website,
-        event: { name: event.name, date: event.date, eventTypeKey: event.eventTypeKey },
+        event: {
+          name: event.name,
+          date: event.date,
+          eventTypeKey: event.eventTypeKey,
+          currency: org?.currency ?? "GBP",
+        },
       };
     },
   };

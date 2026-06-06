@@ -549,9 +549,10 @@ describe("Prisma repository adapters", () => {
       organizationId: org.id, eventTypeKey: "wedding", name: "R Wedding", date: null,
     });
     const item = await repos.registry.create({
-      organizationId: org.id, eventId: event.id, title: "Toaster", url: "https://x", note: null, priceCents: 4999,
+      organizationId: org.id, eventId: event.id, title: "Toaster", url: "https://x", note: null,
+      priceCents: 4999, isCashFund: false, goalCents: 0,
     });
-    expect(item).toMatchObject({ title: "Toaster", priceCents: 4999 });
+    expect(item).toMatchObject({ title: "Toaster", priceCents: 4999, isCashFund: false });
     expect(await repos.registry.listByEvent({ organizationId: org.id, eventId: event.id })).toHaveLength(1);
     expect(await repos.registry.getById({ organizationId: "other", eventId: event.id, id: item.id })).toBeNull();
     const up = await repos.registry.update({
@@ -559,6 +560,38 @@ describe("Prisma repository adapters", () => {
     });
     expect(up).toMatchObject({ priceCents: 5999 });
     expect(await repos.registry.remove({ organizationId: org.id, eventId: event.id, id: item.id })).toBe(true);
+  });
+
+  it("registry: cash-fund contributions roll up per item", async () => {
+    const org = await repos.orgs.create({ name: "Fund Co" });
+    const event = await repos.events.create({
+      organizationId: org.id, eventTypeKey: "wedding", name: "F Wedding", date: null,
+    });
+    const fund = await repos.registry.create({
+      organizationId: org.id, eventId: event.id, title: "Honeymoon", url: null, note: null,
+      priceCents: 0, isCashFund: true, goalCents: 200000,
+    });
+    const other = await repos.registry.create({
+      organizationId: org.id, eventId: event.id, title: "Spa day", url: null, note: null,
+      priceCents: 0, isCashFund: true, goalCents: 0,
+    });
+    await repos.registry.addContribution({
+      organizationId: org.id, eventId: event.id, registryItemId: fund.id, name: "May", message: "x", amountCents: 15000,
+    });
+    await repos.registry.addContribution({
+      organizationId: org.id, eventId: event.id, registryItemId: fund.id, name: "Joe", message: null, amountCents: 4950,
+    });
+    await repos.registry.addContribution({
+      organizationId: org.id, eventId: event.id, registryItemId: other.id, name: "Sam", message: null, amountCents: 1000,
+    });
+
+    const contribs = await repos.registry.listContributionsByEvent({ organizationId: org.id, eventId: event.id });
+    expect(contribs.map((c) => c.amountCents)).toEqual([15000, 4950, 1000]);
+    const raised = await repos.registry.raisedByEvent({ organizationId: org.id, eventId: event.id });
+    expect(raised[fund.id]).toBe(19950);
+    expect(raised[other.id]).toBe(1000);
+    // cross-tenant isolation
+    expect(await repos.registry.raisedByEvent({ organizationId: "other", eventId: event.id })).toEqual({});
   });
 
   it("vendors: CRUD tenant-scoped, category/name ordering, booked summary", async () => {

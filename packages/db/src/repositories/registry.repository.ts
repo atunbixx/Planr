@@ -1,4 +1,9 @@
-import type { RegistryRepository, RegistryItemRecord, RegistryItemWrite } from "@planr/core";
+import type {
+  RegistryRepository,
+  RegistryItemRecord,
+  RegistryItemWrite,
+  RegistryContributionRecord,
+} from "@planr/core";
 import type { PrismaClient } from "../generated/client";
 
 type Row = {
@@ -9,6 +14,18 @@ type Row = {
   url: string | null;
   note: string | null;
   priceCents: number;
+  isCashFund: boolean;
+  goalCents: number;
+};
+
+type ContributionRow = {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  registryItemId: string;
+  name: string;
+  message: string | null;
+  amountCents: number;
 };
 
 export class PrismaRegistryRepository implements RegistryRepository {
@@ -65,6 +82,43 @@ export class PrismaRegistryRepository implements RegistryRepository {
     return result.count > 0;
   }
 
+  async addContribution(input: {
+    organizationId: string;
+    eventId: string;
+    registryItemId: string;
+    name: string;
+    message: string | null;
+    amountCents: number;
+  }): Promise<RegistryContributionRecord> {
+    const row = await this.prisma.registryContribution.create({ data: input });
+    return this.toContribution(row);
+  }
+
+  async listContributionsByEvent(input: {
+    organizationId: string;
+    eventId: string;
+  }): Promise<RegistryContributionRecord[]> {
+    const rows = await this.prisma.registryContribution.findMany({
+      where: { organizationId: input.organizationId, eventId: input.eventId },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((r) => this.toContribution(r));
+  }
+
+  async raisedByEvent(input: {
+    organizationId: string;
+    eventId: string;
+  }): Promise<Record<string, number>> {
+    const groups = await this.prisma.registryContribution.groupBy({
+      by: ["registryItemId"],
+      where: { organizationId: input.organizationId, eventId: input.eventId },
+      _sum: { amountCents: true },
+    });
+    const out: Record<string, number> = {};
+    for (const g of groups) out[g.registryItemId] = g._sum.amountCents ?? 0;
+    return out;
+  }
+
   private toRecord(row: Row): RegistryItemRecord {
     return {
       id: row.id,
@@ -74,6 +128,20 @@ export class PrismaRegistryRepository implements RegistryRepository {
       url: row.url,
       note: row.note,
       priceCents: row.priceCents,
+      isCashFund: row.isCashFund,
+      goalCents: row.goalCents,
+    };
+  }
+
+  private toContribution(row: ContributionRow): RegistryContributionRecord {
+    return {
+      id: row.id,
+      organizationId: row.organizationId,
+      eventId: row.eventId,
+      registryItemId: row.registryItemId,
+      name: row.name,
+      message: row.message,
+      amountCents: row.amountCents,
     };
   }
 }

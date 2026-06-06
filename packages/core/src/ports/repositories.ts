@@ -475,6 +475,8 @@ export interface RegistryItemRecord {
   url: string | null;
   note: string | null;
   priceCents: number;
+  isCashFund: boolean;
+  goalCents: number;
 }
 
 export interface RegistryItemWrite {
@@ -482,6 +484,18 @@ export interface RegistryItemWrite {
   url: string | null;
   note: string | null;
   priceCents: number;
+  isCashFund: boolean;
+  goalCents: number;
+}
+
+export interface RegistryContributionRecord {
+  id: string;
+  organizationId: string;
+  eventId: string;
+  registryItemId: string;
+  name: string;
+  message: string | null;
+  amountCents: number;
 }
 
 export interface RegistryRepository {
@@ -501,6 +515,25 @@ export interface RegistryRepository {
     patch: Partial<RegistryItemWrite>;
   }): Promise<RegistryItemRecord | null>;
   remove(input: { organizationId: string; eventId: string; id: string }): Promise<boolean>;
+  // Cash-fund contributions.
+  addContribution(input: {
+    organizationId: string;
+    eventId: string;
+    registryItemId: string;
+    name: string;
+    message: string | null;
+    amountCents: number;
+  }): Promise<RegistryContributionRecord>;
+  // Oldest first.
+  listContributionsByEvent(input: {
+    organizationId: string;
+    eventId: string;
+  }): Promise<RegistryContributionRecord[]>;
+  // Total raised per registry item: { [registryItemId]: cents }.
+  raisedByEvent(input: {
+    organizationId: string;
+    eventId: string;
+  }): Promise<Record<string, number>>;
 }
 
 export interface VendorRecord {

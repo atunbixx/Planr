@@ -78,6 +78,7 @@ model Organization {
   websites        EventWebsite[]
   vendors         Vendor[]
   registryItems   RegistryItem[]
+  registryContributions RegistryContribution[]
   photos          Photo[]
 }
 
@@ -113,6 +114,7 @@ model Event {
   website         EventWebsite?
   vendors         Vendor[]
   registryItems   RegistryItem[]
+  registryContributions RegistryContribution[]
   photos          Photo[]
 
   @@index([organizationId])
@@ -274,13 +276,33 @@ model RegistryItem {
   url            String?
   note           String?
   priceCents     Int          @default(0)
+  isCashFund     Boolean      @default(false)
+  goalCents      Int          @default(0)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contributions  RegistryContribution[]
 
   @@index([eventId])
   @@index([organizationId, eventId])
+}
+
+model RegistryContribution {
+  id             String       @id @default(uuid())
+  organizationId String
+  eventId        String
+  registryItemId String
+  name           String
+  message        String?
+  amountCents    Int
+  createdAt      DateTime     @default(now())
+  registryItem   RegistryItem @relation(fields: [registryItemId], references: [id], onDelete: Cascade)
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([registryItemId])
 }
 
 model EventWebsite {

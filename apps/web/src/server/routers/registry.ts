@@ -6,12 +6,23 @@ const registryItemInput = z.object({
   url: z.string().max(500).optional(),
   note: z.string().max(2000).optional(),
   price: z.string().max(20).optional(),
+  isCashFund: z.boolean().optional(),
+  goal: z.string().max(20).optional(),
+});
+
+const contributionInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  message: z.string().max(500).optional(),
+  amount: z.string().max(20),
 });
 
 export const registryRouter = router({
   list: authedProcedure
     .input(z.object({ eventId: z.string() }))
     .query(({ ctx, input }) => ctx.container.registry.list(ctx.user.id, input)),
+  contributions: authedProcedure
+    .input(z.object({ eventId: z.string() }))
+    .query(({ ctx, input }) => ctx.container.registry.contributions(ctx.user.id, input)),
   create: authedProcedure
     .input(z.object({ eventId: z.string(), item: registryItemInput }))
     .mutation(({ ctx, input }) =>
@@ -35,4 +46,14 @@ export const registryRouter = router({
   publicForSlug: publicProcedure
     .input(z.object({ slug: z.string() }))
     .query(({ ctx, input }) => ctx.container.publicRegistry.forSlug(input.slug)),
+  // PUBLIC — a guest contributes to a cash fund on a published site.
+  contribute: publicProcedure
+    .input(z.object({ slug: z.string(), itemId: z.string(), contribution: contributionInput }))
+    .mutation(({ ctx, input }) =>
+      ctx.container.publicRegistry.contribute({
+        slug: input.slug,
+        itemId: input.itemId,
+        contribution: input.contribution,
+      }),
+    ),
 });

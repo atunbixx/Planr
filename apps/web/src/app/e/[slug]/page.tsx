@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getServerCaller } from "../../../server/caller";
+import { formatMoney } from "../../../lib/money";
+import { contributeAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,7 @@ export default async function PublicSitePage({
   const { website, event } = site;
   const date = event.date ? new Date(event.date) : null;
   const cd = countdown(date);
+  const fmt = (c: number) => formatMoney(c, event.currency);
 
   const sections: { title: string; body: string }[] = [];
   if (website.story) sections.push({ title: "Our story", body: website.story });
@@ -66,18 +69,60 @@ export default async function PublicSitePage({
         <section className="site-section">
           <h2>Gift registry</h2>
           <ul className="site-gifts">
-            {gifts.map((g) => (
-              <li key={g.id}>
-                {g.url ? (
-                  <a href={g.url} target="_blank" rel="noreferrer">
-                    {g.title}
-                  </a>
-                ) : (
-                  <span>{g.title}</span>
-                )}
-                {g.note ? <span className="site-gift-note"> — {g.note}</span> : null}
-              </li>
-            ))}
+            {gifts.map((g) => {
+              if (!g.isCashFund) {
+                return (
+                  <li key={g.id}>
+                    {g.url ? (
+                      <a href={g.url} target="_blank" rel="noreferrer">
+                        {g.title}
+                      </a>
+                    ) : (
+                      <span>{g.title}</span>
+                    )}
+                    {g.note ? <span className="site-gift-note"> — {g.note}</span> : null}
+                  </li>
+                );
+              }
+              const pct =
+                g.goalCents > 0 ? Math.min(100, Math.round((g.raisedCents / g.goalCents) * 100)) : null;
+              return (
+                <li key={g.id} className="site-fund" data-fund={g.id}>
+                  <div className="site-fund-head">
+                    <span className="site-fund-title">{g.title}</span>
+                    <span className="site-fund-raised">
+                      {fmt(g.raisedCents)} raised
+                      {g.goalCents > 0 ? <span className="site-fund-goal"> of {fmt(g.goalCents)}</span> : null}
+                    </span>
+                  </div>
+                  {g.note ? <p className="site-fund-note">{g.note}</p> : null}
+                  {pct !== null ? (
+                    <span className="site-fund-bar" aria-hidden="true">
+                      <span className="site-fund-fill" style={{ width: `${pct}%` }} />
+                    </span>
+                  ) : null}
+                  <details className="site-fund-give">
+                    <summary>Contribute to this fund</summary>
+                    <form action={contributeAction} className="site-fund-form">
+                      <input type="hidden" name="slug" value={slug} />
+                      <input type="hidden" name="itemId" value={g.id} />
+                      <input aria-label={`Your name for ${g.title}`} name="name" placeholder="your name" required />
+                      <input
+                        aria-label={`Amount for ${g.title}`}
+                        name="amount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="amount"
+                        required
+                      />
+                      <input aria-label={`Message for ${g.title}`} name="message" placeholder="message (optional)" />
+                      <button type="submit">Contribute</button>
+                    </form>
+                  </details>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}

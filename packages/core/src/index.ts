@@ -1,5 +1,5 @@
 export * from "./types";
-export { NotFoundError, ForbiddenError } from "./errors";
+export { NotFoundError, ForbiddenError, ValidationError } from "./errors";
 export { eventTypeProfiles, getEventTypeProfile } from "./event-types/registry";
 export {
   moduleDefinitions,
@@ -58,6 +58,7 @@ export type {
   VendorRepository,
   RegistryItemRecord,
   RegistryItemWrite,
+  RegistryContributionRecord,
   RegistryRepository,
   PhotoRecord,
   PhotoRepository,

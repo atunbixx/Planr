@@ -1,12 +1,19 @@
-import type { Repositories, RegistryItemRecord, EventRecord } from "../ports/repositories";
+import type {
+  Repositories,
+  RegistryItemRecord,
+  RegistryContributionRecord,
+  EventRecord,
+} from "../ports/repositories";
 import { makeAuthorizationService } from "../services/authorization.service";
 import { resolveModuleAccess } from "../entitlements/resolver";
-import { NotFoundError, ForbiddenError } from "../errors";
+import { NotFoundError, ForbiddenError, ValidationError } from "../errors";
 import {
   registryItemInput,
   toRegistryItemWrite,
   toRegistryItemPatch,
+  contributionInput,
   type RegistryItemInput,
+  type ContributionInput,
 } from "./registry.dto";
 import { FREE_LAUNCH } from "../billing/launch";
 
@@ -80,6 +87,17 @@ export function makeRegistryService(repos: Repositories, opts: { freeLaunch?: bo
       });
       if (!ok) throw new NotFoundError("Registry item not found.");
     },
+    // Host view of cash-fund contributions (oldest first).
+    async contributions(
+      userId: string,
+      input: { eventId: string },
+    ): Promise<RegistryContributionRecord[]> {
+      const event = await gateRead(userId, input.eventId);
+      return repos.registry.listContributionsByEvent({
+        organizationId: event.organizationId,
+        eventId: event.id,
+      });
+    },
   };
 }
 
@@ -91,25 +109,56 @@ export interface PublicGift {
   url: string | null;
   note: string | null;
   priceCents: number;
+  isCashFund: boolean;
+  goalCents: number;
+  raisedCents: number;
 }
 
-/** Public gift list for a PUBLISHED event website (by slug). Returns [] otherwise. */
+/** Public registry for a PUBLISHED event website (by slug). Returns [] otherwise. */
 export function makePublicRegistryService(repos: Repositories) {
   return {
     async forSlug(slug: string): Promise<PublicGift[]> {
       const website = await repos.websites.getBySlug(slug);
       if (!website || !website.published) return [];
-      const items = await repos.registry.listByEvent({
-        organizationId: website.organizationId,
-        eventId: website.eventId,
-      });
+      const scope = { organizationId: website.organizationId, eventId: website.eventId };
+      const [items, raised] = await Promise.all([
+        repos.registry.listByEvent(scope),
+        repos.registry.raisedByEvent(scope),
+      ]);
       return items.map((i) => ({
         id: i.id,
         title: i.title,
         url: i.url,
         note: i.note,
         priceCents: i.priceCents,
+        isCashFund: i.isCashFund,
+        goalCents: i.goalCents,
+        raisedCents: raised[i.id] ?? 0,
       }));
+    },
+
+    // A guest contributes to a cash fund on a PUBLISHED site. Token-free: the
+    // slug + a valid cash-fund item id are the capability.
+    async contribute(input: {
+      slug: string;
+      itemId: string;
+      contribution: ContributionInput;
+    }): Promise<{ ok: true }> {
+      const website = await repos.websites.getBySlug(input.slug);
+      if (!website || !website.published) throw new NotFoundError("This event site is not available.");
+      const scope = { organizationId: website.organizationId, eventId: website.eventId };
+      const item = await repos.registry.getById({ ...scope, id: input.itemId });
+      if (!item) throw new NotFoundError("That gift could not be found.");
+      if (!item.isCashFund) throw new ValidationError("That gift does not accept contributions.");
+      const c = contributionInput.parse(input.contribution);
+      await repos.registry.addContribution({
+        ...scope,
+        registryItemId: item.id,
+        name: c.name,
+        message: c.message ?? null,
+        amountCents: c.amount,
+      });
+      return { ok: true };
     },
   };
 }
